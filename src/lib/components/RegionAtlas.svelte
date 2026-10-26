@@ -86,6 +86,15 @@
     history.replaceState(history.state, '', url);
   }
 
+  /** Jump to a province from any level (tile map, table popup). */
+  export function openProvince(code: string) {
+    const target = provinces.find(item => item.code === code);
+    if (!target) return;
+    controller?.abort();
+    province = undefined;
+    void selectRegion(target);
+  }
+
   function mapSelect(code: string) {
     const region = regions.find(item => item.code === code);
     if (region) void selectRegion(region);
@@ -100,7 +109,8 @@
   </nav>
   <div class="atlas-body">
     <div class="atlas-view">
-      <ClayMap label={province?.name ?? m.level_national()} {geometry} selectedCode={city?.code} onselect={mapSelect} />
+      <ClayMap label={province?.name ?? m.level_national()} {geometry} selectedCode={city?.code} onselect={mapSelect}
+        {provinces} selectedProvince={province?.code} onprovince={openProvince} />
       <p class="edition-note">{m.code_edition()}: Kepmendagri 100.1.1-6117/2022 · 37 / 514</p>
       {#if geometry}<p class="edition-note">{geometry.boundaryEdition} · <a href={geometry.source} target="_blank" rel="noreferrer">{m.sources_heading()} ↗</a></p>{/if}
     </div>

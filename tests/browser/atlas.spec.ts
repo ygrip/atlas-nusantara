@@ -35,6 +35,45 @@ test.describe('historical atlas and locations', () => {
     await expect(page.locator('.region-list li')).toHaveCount(37);
   });
 
+  test('opens a province from the schematic tile map and highlights its tile', async ({ page }) => {
+    await useEnglish(page);
+    await openAtlas(page);
+    await expect(page.locator('.tile')).toHaveCount(37);
+    await page.getByRole('button', { name: 'JAWA BARAT (32)' }).click();
+    await expect(page).toHaveURL(/region=32$/);
+    await expect(page.locator('.atlas-breadcrumb')).toContainText('JAWA BARAT');
+    await expect(page.locator('.directory-count')).toContainText('27');
+    await expect(page.getByRole('button', { name: 'JAWA BARAT (32)' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('province table filters by island group and its popup opens the province in the atlas', async ({ page }) => {
+    await useEnglish(page);
+    await openAtlas(page);
+    const table = page.locator('#provinces');
+    await expect(table.locator('tbody tr')).toHaveCount(37);
+    await table.getByRole('button', { name: 'Papua', exact: true }).click();
+    await expect(table.locator('tbody tr')).toHaveCount(5);
+    await table.getByRole('button', { name: 'Details · PAPUA SELATAN' }).click();
+    const dialog = page.getByRole('dialog', { name: 'PAPUA SELATAN' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.dialog-list li')).toHaveCount(4);
+    await dialog.getByRole('button', { name: 'Open in atlas' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/region=93$/);
+    await expect(page.locator('.atlas-breadcrumb')).toContainText('PAPUA SELATAN');
+  });
+
+  test('sticky section navigation jumps to page sections', async ({ page }) => {
+    await useEnglish(page);
+    await openAtlas(page);
+    const navigation = page.getByRole('navigation', { name: 'Page sections' });
+    await expect(navigation.getByRole('link')).toHaveCount(6);
+    await navigation.getByRole('link', { name: 'Sources' }).click();
+    await expect(page).toHaveURL(/#sources$/);
+    await expect(page.locator('.masthead')).toBeInViewport();
+    await expect(page.locator('#sources-heading')).toBeInViewport();
+  });
+
   test('adds, persists and removes a region pin', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
