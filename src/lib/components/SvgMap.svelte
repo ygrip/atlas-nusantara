@@ -122,9 +122,9 @@
             {#if overlay.symbol === 'circle'}
               <circle cx={point.x} cy={point.y} r={radius} fill={tint} />
             {:else if overlay.symbol === 'triangle'}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={overlay.color} />
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={tint} />
             {:else}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={overlay.color} />
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={tint} />
             {/if}
           </g>
         {/each}
