@@ -255,5 +255,8 @@
   "mountain_details": "Detalye ng bundok",
   "mountain_image_missing": "Walang beripikadong larawan",
   "mountain_image_source": "Larawan at pagkilala",
-  "mountain_data_note": "BIG Atlas 1:250,000 · hindi ito live na babala. Hindi nangangahulugang hindi aktibo ang hindi nakauri."
+  "mountain_data_note": "BIG Atlas 1:250,000 · hindi ito live na babala. Hindi nangangahulugang hindi aktibo ang hindi nakauri.",
+  "mountain_search": "Maghanap ng bundok",
+  "mountain_more": "Magpakita pa",
+  "mountain_coverage": "Mga bundok sa atlas ng BIG, hindi lahat ng tuktok sa Indonesia."
 }
