@@ -8,6 +8,7 @@ export type { MapPin, PinSymbol, OverlayLegend, PointOverlay, OverlayDefinition 
 export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   { id: 'warning', label: m.layer_forecast, source: 'BMKG', renderer: 'weather', icon: 'weather' },
   { id: 'earthquake', label: m.layer_earthquakes, source: 'BMKG', renderer: 'points', icon: 'earthquake' },
+  { id: 'mountains', label: m.layer_mountains, source: 'BIG', renderer: 'points', icon: 'mountain', snapshotUrl: '/data/observations/mountains.json' },
   { id: 'incident', label: m.layer_history, source: 'BNPB', renderer: 'unavailable', icon: 'incident' },
   { id: 'hazard', label: m.layer_hazards, source: 'InaRISK', renderer: 'unavailable', icon: 'hazard' }
 ];
