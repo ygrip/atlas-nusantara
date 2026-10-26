@@ -711,7 +711,7 @@ export class AtlasScene {
       this.pointerDown = undefined;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
       const pin = this.pickPin(event.clientX, event.clientY);
-      if (pin) { this.callbacks.onpinclick?.(pin); return; }
+      if (pin) { this.callbacks.onfeature?.(pin, event.clientX, event.clientY); this.callbacks.onpinclick?.(pin); return; }
       const region = this.pick(event.clientX, event.clientY);
       if (region) this.callbacks.onselect(region.code);
     });
