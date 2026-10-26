@@ -49,3 +49,14 @@ The committed capture has **514/514 representative points**. A spatial check pla
 - Other catalog links, including WorldPop, are references rather than activated feeds.
 
 Public availability is not a blanket redistribution license. Scheduled production sources still require dataset-specific approval and deployment configuration. Refer to provider terms, retain attribution, and review changes before refreshing assets.
+
+## Disasters and hazards
+
+Collected by the [hazard pipeline](HAZARD_PIPELINE.md) into one dated snapshot:
+
+- **BNPB DIBI** incident table, `https://gis.bnpb.go.id/databencana/tabel/pencarian.php`: official, preliminary event records with regency codes and impact counts.
+- **PetaBencana.id** `https://data.petabencana.id/reports`, docs <https://docs.petabencana.id/general/jenis-bencana>: unverified citizen reports of six disaster types. CC BY-NC 4.0.
+- **ANTARA News** RSS (`warta-bumi`, `terkini`) and **GDELT DOC 2.0**: headlines and links only, geocoded heuristically against the 2025 directory.
+- **BMKG CAP** nowcast warnings, <https://github.com/infoBMKG/data-cap>: see [BMKG_CAP.md](BMKG_CAP.md).
+
+InaRISK hazard polygons and BNPB historical archives beyond the latest DIBI rows remain unconnected.

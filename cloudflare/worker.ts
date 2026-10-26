@@ -3,6 +3,7 @@ import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { createExportResponse, exportFitsBudget } from './export.ts';
 import { verifyArchiveRequest, type ColdDownloadEnv } from './cold-download.ts';
 import { publishHot, serveHot, cleanPublications } from './publication.ts';
+import { runHazardSchedule } from './hazards.ts';
 import { adaptBmkgEarthquakes } from '../src/lib/data/ingestion/adapters.ts';
 import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetRecord, type DatasetType, type Snapshot } from '../src/lib/data/ingestion/schema.ts';
 
@@ -391,5 +392,11 @@ export default {
   async scheduled(_controller: ScheduledController, env: RuntimeEnv): Promise<void> {
     const result = await runScheduled(env.DB, env);
     console.log(JSON.stringify({ message: 'scheduled-crawl-complete', ...result }));
+    try {
+      const hazards = await runHazardSchedule(env);
+      console.log(JSON.stringify({ message: 'hazard-schedule-complete', ...hazards }));
+    } catch (error) {
+      console.error(JSON.stringify({ message: 'hazard-schedule-failed', error: errorText(error) }));
+    }
   }
 } satisfies ExportedHandler<RuntimeEnv>;

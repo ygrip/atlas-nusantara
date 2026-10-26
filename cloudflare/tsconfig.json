@@ -8,7 +8,9 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "resolveJsonModule": true
   },
-  "include": ["./**/*.ts", "../src/lib/data/ingestion/**/*.ts", "../tests/cloudflare/**/*.ts"]
+  "include": ["./**/*.ts", "../src/lib/data/ingestion/**/*.ts", "../src/lib/atlas/code-upgrades.ts", "../tests/cloudflare/**/*.ts"]
 }

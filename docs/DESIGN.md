@@ -47,6 +47,8 @@ Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-
 |---|---|
 | ![National relief map](screenshots/atlas-3d.png) | ![Province detail](screenshots/province-relief.png) |
 
+The 3D map is a small world in space: a starfield with an atmospheric limb, a Gerstner-wave ocean (turquoise shallows to navy deep, sun glitter, foam; motion derived from BMKG wind, not measured waves), hillshaded ETOPO1 land with hypsometric tint and contour lines, ray-marched clouds with shadows, wind streamlines and rain. Controls are grouped icon buttons (view, zoom, orientation, reset), a bottom dock for layers and the forecast clock, and a collapsible map key.
+
 | City weather | Another overlay |
 |---|---|
 | ![City weather](screenshots/city-weather.png) | ![Earthquake pins and legend](screenshots/earthquake-overlay.png) |
@@ -56,6 +58,12 @@ Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-
 | ![Sortable province table](screenshots/province-table.png) | ![Clickable city details](screenshots/province-popup.png) |
 
 ![Saved weather cards](screenshots/saved-weather.png)
+
+Saved places are claymorphic cards with an animated scene per forecast code (sun, moon and stars at night, drifting clouds, rain, lightning, mist). Animation pauses off-screen and under reduced motion.
+
+| Disaster reports | Weather hazards |
+|---|---|
+| ![Disaster reports](screenshots/disaster-reports.png) | ![Weather hazards](screenshots/weather-hazards.png) |
 
 | Mobile home | Mobile controls |
 |---|---|

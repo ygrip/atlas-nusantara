@@ -6,6 +6,7 @@
 |---|---|---|
 | BMKG forecasts | `0 */2 * * *` | Every 2 hours; about 10 minutes for 514 points at under 60 requests/minute |
 | BMKG M5+ earthquake archive | `*/15 * * * *` | Every 15 minutes; one archive request |
+| Hazards (`hazards.json`): BMKG CAP, PetaBencana, ANTARA, GDELT, BNPB | Worker `*/5` tick, per-source intervals 5 / 10 / 15 / 30 / 180 min; CI `*/15` with `--due` | See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#per-source-schedule) |
 
 GitHub scheduled runs can be delayed; this is not an emergency-delivery SLA. The forecast job is deliberately outside the request path and does not put 514 provider calls in a visitor request or a short Worker invocation.
 
@@ -33,6 +34,7 @@ The publish step uses the pinned project Wrangler version, sets `application/jso
 
 - `data/weather/forecast.json`
 - `data/observations/earthquakes.json`
+- `data/observations/hazards.json`
 
 Configure the public custom domain, CORS for the atlas origin and the appropriate JSON cache rule. Neither bucket provisioning nor secrets nor remote writes were performed during local implementation. Do not use a broad account token or paste credentials into chat.
 

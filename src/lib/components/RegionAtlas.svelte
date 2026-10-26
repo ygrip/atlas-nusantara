@@ -7,12 +7,14 @@
   import type { GeometryPackage } from '$lib/geo/types';
   import ClayMap from './ClayMap.svelte';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
-  import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, type PointOverlay } from '$lib/map/overlays';
+  import { loadHazards, type HazardSnapshot } from '$lib/data/hazards';
+  import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
   export let layer = 'warning';
   let earthquakeArchive: EarthquakeArchive | undefined;
+  let hazardSnapshot: HazardSnapshot | undefined;
   let customOverlay: PointOverlay | undefined;
   let overlayRequest: AbortController | undefined;
-  $: activeOverlay = resolveOverlay(layer, earthquakeArchive, customOverlay);
+  $: activeOverlay = resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
   $: void loadCustomOverlay(layer);
   import { ADMIN_DATA_PATH, CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   export let onselection: ((region: Region | undefined, geometry: GeometryPackage | undefined) => void) | undefined = undefined;
@@ -56,8 +58,10 @@
     void loadNational();
     let active = true;
     const refreshEarthquakes = () => { void loadEarthquakes().then(archive => { if (active && archive) earthquakeArchive = archive; }); };
+    const refreshHazards = () => { void loadHazards().then(snapshot => { if (active && snapshot) hazardSnapshot = snapshot; }); };
     refreshEarthquakes();
-    const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshEarthquakes(); }, 15 * 60_000);
+    refreshHazards();
+    const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) { refreshEarthquakes(); refreshHazards(); } }, 15 * 60_000);
     return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); generation++; };
   });
 
@@ -144,8 +148,10 @@
     else { city = undefined; updateUrl(); }
   }
 
-  function resolveOverlay(id: string, archive: EarthquakeArchive | undefined, custom: PointOverlay | undefined): PointOverlay | undefined {
+  function resolveOverlay(id: string, archive: EarthquakeArchive | undefined, hazards: HazardSnapshot | undefined, custom: PointOverlay | undefined): PointOverlay | undefined {
     if (id === 'earthquake' && archive) return earthquakeOverlay(archive);
+    if (id === 'incident' && hazards) return reportsOverlay(hazards);
+    if (id === 'hazard' && hazards) return warningsOverlay(hazards, Date.now());
     if (custom?.id === id) return custom;
     return undefined;
   }
