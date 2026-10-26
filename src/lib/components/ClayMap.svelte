@@ -327,7 +327,7 @@
           <div class="wind-scale"><span>0</span><span>12</span><span>25</span><span>40+</span></div>
         {/if}
         {#if displayedOverlay}
-          {#each displayedOverlay.legend as item}<p class="legend-title"><span class="overlay-symbol" class:triangle={item.symbol === 'triangle'} class:diamond={item.symbol === 'diamond'} style={`background:${item.color}`} aria-hidden="true"></span>{item.label}</p>{/each}
+          {#each displayedOverlay.legend as item, i}<p class="legend-title"><span class="overlay-symbol" class:triangle={item.symbol === 'triangle'} class:diamond={item.symbol === 'diamond'} style={`background:${item.color}`} aria-hidden="true"></span>{displayedOverlay.id === 'mountains' ? [m.mountain_active(), m.mountain_potential(), m.mountain_other()][i] : item.label}</p>{/each}
         {/if}
         <p class="legend-title">{m.map_relief()}</p>
         <div class="relief-ramp" aria-hidden="true"></div>
