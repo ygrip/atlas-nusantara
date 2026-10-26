@@ -255,5 +255,8 @@
   "mountain_details": "Thông tin núi",
   "mountain_image_missing": "Không có ảnh đã xác minh",
   "mountain_image_source": "Ảnh và ghi nguồn",
-  "mountain_data_note": "Bản đồ BIG 1:250.000 · đây không phải cảnh báo trực tiếp. Chưa phân loại không có nghĩa là ngừng hoạt động."
+  "mountain_data_note": "Bản đồ BIG 1:250.000 · đây không phải cảnh báo trực tiếp. Chưa phân loại không có nghĩa là ngừng hoạt động.",
+  "mountain_search": "Tìm núi",
+  "mountain_more": "Xem thêm",
+  "mountain_coverage": "Các ngọn núi có tên trong bản đồ BIG, không phải mọi đỉnh núi ở Indonesia."
 }
