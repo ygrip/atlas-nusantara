@@ -103,6 +103,7 @@
           hover = { code, x: x - bounds.left, y: y - bounds.top };
         },
         onzoom: level => { zoomLevel = level; },
+        onpinclick: pin => { if (pin.provinceCode) onprovince(pin.provinceCode); },
         onfeature: (pin, x, y) => {
           if (!pin) { feature = undefined; return; }
           const bounds = target.getBoundingClientRect();
@@ -315,7 +316,7 @@
     </div>
   {:else}
     {#if webglFailed}<p class="map-notice" role="status">{m.map_webgl_unavailable()}</p>{/if}
-    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} {overlay} projection={national?.projection} />{/if}
+    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} {overlay} onpinselect={onprovince} projection={national?.projection} />{/if}
   {/if}
 
   {#if mode === '3d' && forecast && times.length > 0 && activeLayer === 'warning'}

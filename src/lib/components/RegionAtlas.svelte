@@ -6,13 +6,18 @@
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import type { GeometryPackage } from '$lib/geo/types';
   import ClayMap from './ClayMap.svelte';
+  import DestinationsPanel from './DestinationsPanel.svelte';
+  import { loadDestinations, destinationOverlay, type DestinationCatalog } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, type PointOverlay } from '$lib/map/overlays';
   export let layer = 'warning';
   let earthquakeArchive: EarthquakeArchive | undefined;
+  let destinationCatalog: DestinationCatalog | undefined;
   let customOverlay: PointOverlay | undefined;
   let overlayRequest: AbortController | undefined;
-  $: activeOverlay = resolveOverlay(layer, earthquakeArchive, customOverlay);
+  $: activeOverlay = layer === 'destinations' && destinationCatalog
+    ? destinationOverlay(national, destinationCatalog, province?.code)
+    : resolveOverlay(layer, earthquakeArchive, customOverlay);
   $: void loadCustomOverlay(layer);
   import { ADMIN_DATA_PATH, CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   export let onselection: ((region: Region | undefined, geometry: GeometryPackage | undefined) => void) | undefined = undefined;
@@ -54,6 +59,8 @@
       })
       .catch(error => { if (error.name !== 'AbortError') { failed = true; loading = false; } });
     void loadNational();
+    void loadDestinations(initial.signal).then(catalog => { if (!initial.signal.aborted) destinationCatalog = catalog; })
+      .catch(error => { if ((error as Error).name !== 'AbortError') console.warn('Destinations unavailable', error); });
     let active = true;
     const refreshEarthquakes = () => { void loadEarthquakes().then(archive => { if (active && archive) earthquakeArchive = archive; }); };
     refreshEarthquakes();
@@ -127,6 +134,7 @@
   }
 
   function mapSelect(code: string) {
+    if (layer === 'destinations' && province) return;
     const region = regions.find(item => item.code === code);
     if (region) void selectRegion(region);
   }
@@ -180,10 +188,13 @@
   <div class="atlas-body">
     <div class="atlas-view">
       <ClayMap label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
+        onselect={mapSelect} onprovince={openProvince} oncity={layer === 'destinations' ? () => {} : selectCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
       <p class="edition-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
     <div class="region-directory">
+      {#if layer === 'destinations'}
+        <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+      {:else}
       <label for="region-search">{m.region_search()}</label>
       <input id="region-search" type="search" bind:value={query} autocomplete="off" />
       <p class="directory-count" aria-live="polite">{filtered.length} · {#if province}{m.level_city()}{:else}{m.level_province()}{/if}</p>
@@ -200,6 +211,7 @@
         </ul>
       {/if}
       {#if city}<div class="selected-region" role="status"><h3>{m.region_detail()}</h3><strong>{city.name}</strong><br />{city.code} · {m.level_city()}<br />{province?.name}</div>{/if}
+      {/if}
     </div>
   </div>
 </section>
