@@ -16,7 +16,8 @@ for (const [name, change] of [
   ['duplicate identities', overlay => { overlay.pins.push({ ...overlay.pins[0] }); }],
   ['unsafe colour', overlay => { overlay.color = 'url(https://example.com)'; }],
   ['missing timestamp', overlay => { overlay.fetchedAt = ''; }],
-  ['unknown symbol', overlay => { overlay.symbol = 'script'; }]
+  ['unknown symbol', overlay => { overlay.symbol = 'script'; }],
+  ['unknown mountain classification', overlay => { overlay.pins[0].category = 'inactive'; }]
 ]) {
   test(`overlay contract rejects ${name}`, () => {
     const overlay = fixture();
