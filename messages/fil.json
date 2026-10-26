@@ -245,5 +245,15 @@
   "atlas_intro": "Tuklasin ang mga isla. Pumili ng lugar. Tingnan ang panahon.",
   "source_details": "Mga pinagmulan at detalye ng mapa",
   "menu_close": "Isara ang menu",
-  "map_legend_label": "Gabay sa mapa"
+  "map_legend_label": "Gabay sa mapa",
+  "layer_mountains": "Mga bundok",
+  "mountain_all": "Lahat",
+  "mountain_active": "Aktibo · Uri A",
+  "mountain_potential": "Bulkaniko · B/C",
+  "mountain_other": "Iba pa / hindi nakauri",
+  "mountain_elevation": "Taas",
+  "mountain_details": "Detalye ng bundok",
+  "mountain_image_missing": "Walang beripikadong larawan",
+  "mountain_image_source": "Larawan at pagkilala",
+  "mountain_data_note": "BIG Atlas 1:250,000 · hindi ito live na babala. Hindi nangangahulugang hindi aktibo ang hindi nakauri."
 }
