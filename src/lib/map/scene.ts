@@ -25,6 +25,7 @@ export interface SceneCallbacks {
   onhover: (code: string | undefined, clientX: number, clientY: number) => void;
   onzoom: (level: number) => void;
   onfeature?: (pin: MapPin | undefined, clientX: number, clientY: number) => void;
+  onpinclick?: (pin: MapPin) => void;
 }
 
 interface RegionEntry { id: number; code: string; name: string; bbox: [number, number, number, number]; rings: Vector2[][]; level: 'province' | 'city' }
@@ -230,20 +231,24 @@ export class AtlasScene {
     if (!overlay || overlay.pins.length === 0) { this.invalidate(); return; }
     const positions: number[] = [];
     const sizes: number[] = [];
+    const pinColors: number[] = [];
     for (const pin of overlay.pins) {
       const point = projectLonLat(projection, pin.lon, pin.lat);
       const height = (this.terrain?.surfaceAt(point.x, point.y) ?? 0) + 4;
       positions.push(point.x - MAP_CENTER.x, height, point.y - MAP_CENTER.y);
       sizes.push(20);
+      const tint = new Color(pin.category === 'active' ? '#ca5a48' : pin.category === 'potential' ? '#c99245' : overlay.color);
+      pinColors.push(tint.r, tint.g, tint.b);
     }
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
     geometry.setAttribute('size', new BufferAttribute(new Float32Array(sizes), 1));
+    geometry.setAttribute('pinTint', new BufferAttribute(new Float32Array(pinColors), 3));
     const material = new ShaderMaterial({
       transparent: true, depthTest: false, depthWrite: false,
-      uniforms: { pinColor: { value: new Color(overlay.color) }, symbol: { value: ['circle', 'triangle', 'diamond'].indexOf(overlay.symbol) } },
-      vertexShader: `attribute float size; void main() { gl_PointSize = size; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform vec3 pinColor; uniform int symbol;
+      uniforms: { symbol: { value: ['circle', 'triangle', 'diamond'].indexOf(overlay.symbol) } },
+      vertexShader: `attribute float size; attribute vec3 pinTint; varying vec3 vPinTint; void main() { vPinTint = pinTint; gl_PointSize = size; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `uniform int symbol; varying vec3 vPinTint;
         void main() {
           vec2 p = gl_PointCoord - vec2(0.5);
           float radius = length(p);
@@ -251,7 +256,7 @@ export class AtlasScene {
           if (symbol == 2) radius = (abs(p.x) + abs(p.y)) * 0.75;
           if (radius > 0.48) discard;
           float ring = smoothstep(0.31, 0.36, radius);
-          gl_FragColor = vec4(mix(pinColor, vec3(1.0, 0.94, 0.8), ring), 0.95);
+          gl_FragColor = vec4(mix(vPinTint, vec3(1.0, 0.94, 0.8), ring), 0.95);
           #include <colorspace_fragment>
         }`
     });
@@ -706,7 +711,7 @@ export class AtlasScene {
       this.pointerDown = undefined;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
       const pin = this.pickPin(event.clientX, event.clientY);
-      if (pin) { this.callbacks.onfeature?.(pin, event.clientX, event.clientY); return; }
+      if (pin) { this.callbacks.onpinclick?.(pin); return; }
       const region = this.pick(event.clientX, event.clientY);
       if (region) this.callbacks.onselect(region.code);
     });
