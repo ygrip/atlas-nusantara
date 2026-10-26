@@ -91,6 +91,7 @@
     </nav>
     <div class="header-actions"><HeaderControls onshare={() => sharePanel?.openPreview()} /></div>
   </header>
+  <SharePanel bind:this={sharePanel} region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />
 
   <main>
     <section id="top" class="hero" aria-labelledby="site-title">
@@ -101,10 +102,10 @@
           <p>{m.atlas_intro()}</p>
           <div class="notice"><span class="notice-dot" aria-hidden="true"></span>{m.disclaimer()}</div>
           <div class="hero-actions">
-            <a class="clay-button primary" href="#atlas">{m.nav_atlas()} ↓</a>
-            <a class="clay-button" href="#provinces">{m.table_heading()}</a>
+            <a class="clay-button primary" href="#atlas">{m.nav_atlas()} <span aria-hidden="true">↓</span></a>
+            <a class="clay-button" href="#provinces">{m.nav_provinces()}</a>
           </div>
-          <SharePanel bind:this={sharePanel} region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />
+
         </div>
         <figure class="hero-art">
           <picture>
