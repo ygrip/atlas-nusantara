@@ -255,5 +255,8 @@
   "mountain_details": "Mountain details",
   "mountain_image_missing": "No verified photo available",
   "mountain_image_source": "Photo and attribution",
-  "mountain_data_note": "BIG Atlas 1:250,000 · classification is not a live safety alert. Unclassified does not mean inactive."
+  "mountain_data_note": "BIG Atlas 1:250,000 · classification is not a live safety alert. Unclassified does not mean inactive.",
+  "mountain_search": "Search mountains",
+  "mountain_more": "Show more",
+  "mountain_coverage": "Named BIG atlas features, not every summit in Indonesia."
 }
