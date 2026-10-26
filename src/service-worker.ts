@@ -2,7 +2,7 @@
 import { build, files, version } from '$service-worker';
 declare const self: ServiceWorkerGlobalScope;
 const cacheName = 'nusantara-' + version;
-const assets = [...build, ...files];
+const assets = [...build, ...files, '/200.html'];
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(cacheName).then(c => c.addAll(assets)).then(() => self.skipWaiting()));
 });
