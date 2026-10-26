@@ -245,5 +245,15 @@
   "atlas_intro": "Explore the islands. Pick a place. See the weather.",
   "source_details": "Sources & map details",
   "menu_close": "Close menu",
-  "map_legend_label": "Map key"
+  "map_legend_label": "Map key",
+  "layer_mountains": "Mountains",
+  "mountain_all": "All",
+  "mountain_active": "Active · Type A",
+  "mountain_potential": "Volcanic · B/C",
+  "mountain_other": "Other / unclassified",
+  "mountain_elevation": "Elevation",
+  "mountain_details": "Mountain details",
+  "mountain_image_missing": "No verified photo available",
+  "mountain_image_source": "Photo and attribution",
+  "mountain_data_note": "BIG Atlas 1:250,000 · classification is not a live safety alert. Unclassified does not mean inactive."
 }
