@@ -10,7 +10,7 @@
     "check": "npm run compile:locales && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:locales": "node scripts/check-locales.mjs",
     "import:regions": "node scripts/import-regions.mjs",
-    "compile:locales": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy localStorage,preferredLanguage,baseLocale --emit-ts-declarations"
+    "compile:locales": "node scripts/compile-locales.mjs"
   },
   "devDependencies": {
     "@inlang/paraglide-js": "^2.29.1",
