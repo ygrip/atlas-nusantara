@@ -245,5 +245,15 @@
   "atlas_intro": "ကျွန်းများကို လေ့လာပါ။ နေရာရွေးပါ။ မိုးလေဝသကြည့်ပါ။",
   "source_details": "ရင်းမြစ်နှင့် မြေပုံအသေးစိတ်",
   "menu_close": "မီနူးပိတ်ရန်",
-  "map_legend_label": "မြေပုံသင်္ကေတ"
+  "map_legend_label": "မြေပုံသင်္ကေတ",
+  "layer_mountains": "တောင်များ",
+  "mountain_all": "အားလုံး",
+  "mountain_active": "လှုပ်ရှားမှုရှိ · A",
+  "mountain_potential": "မီးတောင် · B/C",
+  "mountain_other": "အခြား / မခွဲခြားရသေး",
+  "mountain_elevation": "အမြင့်",
+  "mountain_details": "တောင်အချက်အလက်",
+  "mountain_image_missing": "အတည်ပြုထားသော ဓာတ်ပုံမရှိပါ",
+  "mountain_image_source": "ဓာတ်ပုံနှင့် ရင်းမြစ်",
+  "mountain_data_note": "BIG Atlas 1:250,000 · လက်ရှိဘေးအန္တရာယ်သတိပေးချက် မဟုတ်ပါ။ မခွဲခြားရသေးခြင်းသည် ငြိမ်သက်ခြင်းမဟုတ်ပါ။"
 }
