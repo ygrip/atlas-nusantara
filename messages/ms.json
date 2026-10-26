@@ -245,5 +245,15 @@
   "atlas_intro": "Terokai pulau. Pilih tempat. Lihat cuaca.",
   "source_details": "Sumber & butiran peta",
   "menu_close": "Tutup menu",
-  "map_legend_label": "Petunjuk peta"
+  "map_legend_label": "Petunjuk peta",
+  "layer_mountains": "Gunung",
+  "mountain_all": "Semua",
+  "mountain_active": "Aktif · Jenis A",
+  "mountain_potential": "Vulkanik · B/C",
+  "mountain_other": "Lain / belum dikelaskan",
+  "mountain_elevation": "Ketinggian",
+  "mountain_details": "Butiran gunung",
+  "mountain_image_missing": "Foto yang disahkan tiada",
+  "mountain_image_source": "Foto dan atribusi",
+  "mountain_data_note": "Atlas BIG 1:250,000 · klasifikasi bukan amaran keselamatan langsung. Tidak dikelaskan bukan bermakna tidak aktif."
 }
