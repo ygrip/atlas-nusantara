@@ -245,5 +245,15 @@
   "atlas_intro": "Khám phá các đảo. Chọn một nơi. Xem thời tiết.",
   "source_details": "Nguồn và chi tiết bản đồ",
   "menu_close": "Đóng menu",
-  "map_legend_label": "Chú giải bản đồ"
+  "map_legend_label": "Chú giải bản đồ",
+  "layer_mountains": "Núi",
+  "mountain_all": "Tất cả",
+  "mountain_active": "Đang hoạt động · Loại A",
+  "mountain_potential": "Núi lửa · B/C",
+  "mountain_other": "Khác / chưa phân loại",
+  "mountain_elevation": "Độ cao",
+  "mountain_details": "Thông tin núi",
+  "mountain_image_missing": "Không có ảnh đã xác minh",
+  "mountain_image_source": "Ảnh và ghi nguồn",
+  "mountain_data_note": "Bản đồ BIG 1:250.000 · đây không phải cảnh báo trực tiếp. Chưa phân loại không có nghĩa là ngừng hoạt động."
 }
