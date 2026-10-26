@@ -36,7 +36,7 @@ const [peaks, volcanoes] = await Promise.all([
   allFeatures(VOLCANO_SOURCE, 'NAMA_OBJEK,TIPE,KETINGGIAN')
 ]);
 const snapshot = makeMountainOverlay(peaks, volcanoes, new Date().toISOString());
-if (snapshot.pins.length < 50) throw Error('Mountain extraction is suspiciously small; keep the previous snapshot');
+if (snapshot.pins.length < 50 || new Set(snapshot.pins.map(pin => pin.label)).size < 100) throw Error('Mountain extraction is suspiciously small or generic; keep the previous snapshot');
 const directory = 'static/data/observations';
 await mkdir(directory, { recursive: true });
 await writeFile(directory + '/mountains.json', JSON.stringify(snapshot) + '\n');
