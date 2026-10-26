@@ -3,6 +3,7 @@
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
   import { projectLonLat } from '$lib/map/geometry';
+  import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { PointOverlay, MapPin } from '$lib/map/overlays';
 
   let { geometry, label, selectedCode, onselect, onpin, overlay, projection }: {
@@ -17,6 +18,7 @@
   $effect(() => { if (geometry !== previousGeometry) { previousGeometry = geometry; reset(); } });
 
   const box = $derived(geometry.viewBox.split(' ').map(Number));
+  const visiblePins = $derived(overlay?.id === 'mountains' ? visibleMountainPins(overlay.pins, scale) : overlay?.pins ?? []);
   const centerX = $derived(box[0] + box[2] / 2);
   const centerY = $derived(box[1] + box[3] / 2);
 
@@ -111,7 +113,7 @@
         </path>
       {/each}
       {#if overlay && projection}
-        {#each overlay.pins as pin (pin.id)}
+        {#each visiblePins as pin (pin.id)}
           {@const point = projectLonLat(projection, pin.lon, pin.lat)}
           {@const radius = box[2] * 0.004}
           {@const tint = pin.category === 'active' ? '#ca5a48' : pin.category === 'potential' ? '#c99245' : overlay.color}
