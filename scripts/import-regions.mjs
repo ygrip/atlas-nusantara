@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 
+const atlasOnly = process.argv.includes('--atlas-only');
 const i = process.argv.indexOf('--input');
 if (i < 0 || !process.argv[i + 1]) throw Error('Usage: npm run import:regions -- --input /path/to/wilayah_2023.sql');
 const sql = await readFile(resolve(process.argv[i + 1]), 'utf8');
@@ -13,11 +14,13 @@ for (const m of sql.matchAll(entry)) {
   if (codes.has(code)) throw Error('Duplicate: ' + code);
   codes.add(code);
   const parts = code.split('.');
+  let parentCode = null;
+  if (parts.length > 1) parentCode = parts.slice(0, -1).join('.');
   rows.push({
     code,
     name: m[2].replaceAll("''", "'").replaceAll("\\'", "'"),
     level: ['province','city-regency','district','village'][parts.length - 1],
-    parentCode: parts.length === 1 ? null : parts.slice(0,-1).join('.')
+    parentCode
   });
 }
 const provinces = rows.filter(r=>r.level==='province');
@@ -29,13 +32,17 @@ for (const row of rows) if(row.parentCode && !codes.has(row.parentCode)) throw E
 const dir=resolve('static/data/admin-2022'), edition='Kepmendagri 100.1.1-6117/2022';
 const sourceSha256=createHash('sha256').update(sql).digest('hex');
 const save=(name,data)=>writeFile(resolve(dir,name),JSON.stringify(data));
-await mkdir(resolve(dir,'regions'),{recursive:true});
+if (!atlasOnly) await mkdir(resolve(dir,'regions'),{recursive:true});
+await mkdir(resolve(dir,'cities'),{recursive:true});
 await save('provinces.json',{edition,sourceSha256,count:provinces.length,regions:provinces});
 await save('cities.json',{edition,sourceSha256,count:cities.length,regions:cities});
-await save('districts.json',{edition,sourceSha256,count:districts.length,regions:districts});
+if (!atlasOnly) await save('districts.json',{edition,sourceSha256,count:districts.length,regions:districts});
 for(const p of provinces) {
- const regions=rows.filter(r=>r.code.startsWith(p.code+'.'));
- await save('regions/'+p.code+'.json',{edition,sourceSha256,provinceCode:p.code,count:regions.length,regions});
+ await save('cities/'+p.code+'.json',{edition,sourceSha256,provinceCode:p.code,regions:cities.filter(r=>r.parentCode===p.code)});
+ if (!atlasOnly) {
+  const regions=rows.filter(r=>r.code.startsWith(p.code+'.'));
+  await save('regions/'+p.code+'.json',{edition,sourceSha256,provinceCode:p.code,count:regions.length,regions});
+ }
 }
 await save('manifest.json',{edition,sourceSha256,counts:{provinces:provinces.length,cities:cities.length,districts:districts.length,villages:villages.length},generatedAt:new Date().toISOString()});
 console.log('Imported 2022 hierarchy',provinces.length,cities.length,districts.length,villages.length,sourceSha256);

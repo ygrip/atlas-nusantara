@@ -5,24 +5,49 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run compile:locales && vite build",
+    "build": "npm run compile:locales && vite build && node scripts/prepare-static.mjs",
     "preview": "vite preview",
     "check": "npm run compile:locales && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:locales": "node scripts/check-locales.mjs",
     "import:regions": "node scripts/import-regions.mjs",
-    "compile:locales": "node scripts/compile-locales.mjs"
+    "compile:locales": "node scripts/compile-locales.mjs",
+    "build:geometry": "node scripts/geo/build-geometry.mjs",
+    "seed:hierarchy": "node scripts/geo/seed-hierarchy.mjs",
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "test": "node --experimental-strip-types --test tests/geo/*.test.mjs tests/push/*.test.mjs tests/push/*.test.ts tests/ingestion/*.test.ts tests/cloudflare/*.test.ts tests/cloudflare/*.test.mjs tests/share/*.test.mjs tests/publication/*.test.mjs",
+    "test:browser": "npm run build && playwright test",
+    "test:worker": "npm run build && node tests/integration/worker.mjs",
+    "worker:dev": "wrangler dev --local --test-scheduled --var LOCAL_HOT_DATA_FALLBACK:true",
+    "worker:types": "wrangler types cloudflare/worker-configuration.d.ts --strict-vars false",
+    "worker:check": "npm run worker:types && tsc --noEmit -p cloudflare/tsconfig.json",
+    "worker:dry-run": "wrangler deploy --dry-run --outdir dist/worker",
+    "data:bootstrap": "npm run build && node scripts/bootstrap-data.mjs",
+    "push:dev": "node server/push-server.mjs"
   },
   "devDependencies": {
     "@inlang/paraglide-js": "^2.29.1",
+    "@playwright/test": "^1.64.1",
     "@sveltejs/adapter-static": "^3.0.0",
     "@sveltejs/kit": "^2.40.0",
     "@sveltejs/vite-plugin-svelte": "^6.0.0",
+    "@types/d3-geo": "^3.1.1",
+    "@types/node": "^26.6.5",
+    "d3-geo": "^3.1.1",
+    "mapshaper": "^0.7.98",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "typescript": "^5.9.0",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "wrangler": "^4.152.0"
   },
   "engines": {
     "node": ">=22.12"
+  },
+  "dependencies": {
+    "@fontsource-variable/nunito": "^5.3.0",
+    "chart.js": "^4.6.1",
+    "fast-xml-parser": "^5.11.2",
+    "lucide-svelte": "^1.0.1",
+    "web-push": "^3.6.7"
   }
 }

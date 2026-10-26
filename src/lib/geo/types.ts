@@ -19,6 +19,10 @@ export interface SvgRegion extends AdministrativeRegion {
 
 export interface GeometryPackage {
   schemaVersion: 1;
+  source: string;
+  codeEdition: string;
+  license: string;
+  attribution?: string;
   boundaryEdition: string;
   level: AdminLevel;
   viewBox: string;

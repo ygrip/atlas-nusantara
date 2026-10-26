@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "algorithmic-art": {
+      "source": "JetBrains/skills",
+      "sourceType": "github",
+      "skillPath": "algorithmic-art/SKILL.md",
+      "computedHash": "b6dfc671cd980989ab576bb935233a711f1d698360c40d7e3da2d39057f4d809"
+    },
+    "anatomy": {
+      "source": "wheresryan22/anatomy",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "37fe1f16683eddee1b3723a3fe8e4a5b92bb653a6991128a372d3268730cdc90"
+    },
+    "build-awwwards-quality-sites": {
+      "source": "MengTo/Skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/build-awwwards-quality-sites/SKILL.md",
+      "computedHash": "64017fdb07bf9b015ed25c4f286cde2238ab14b44e9a22ce2330167ee861f547"
+    },
+    "html-demo": {
+      "source": "MengTo/Skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/html-demo/SKILL.md",
+      "computedHash": "7139afc0194b340899ff1ba4abbf40b834a5b10e0cfb4d1a282aef34bd63e8ad"
+    },
+    "imagegen": {
+      "source": "JetBrains/skills",
+      "sourceType": "github",
+      "skillPath": "imagegen/SKILL.md",
+      "computedHash": "efef758567330baba5bc82cd66fa41acc7a1ef88c1b00a9e76ff62234d4f7612"
+    },
+    "scroll-world-storytelling": {
+      "source": "MengTo/Skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/scroll-world-storytelling/SKILL.md",
+      "computedHash": "c2a0a3ee21af016fcf61dabd30735eb9a7ac6be219accbc72649a3591b852b7b"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "d63bd281a96b8dfa52a2656ec6e6af743bfcfde6f6bfb6c9edc203cbff377b16"
+    }
+  }
+}
