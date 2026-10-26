@@ -10,6 +10,7 @@
   import WeatherReadout from './WeatherReadout.svelte';
   import SvgMap from './SvgMap.svelte';
   import MountainDetails from './MountainDetails.svelte';
+  import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { MapPin, PointOverlay } from '$lib/map/overlays';
 
   let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, activeLayer = 'warning', overlay, geometryUnavailable = false }: {
@@ -46,6 +47,11 @@
   const displayedOverlay = $derived(overlay?.id === 'mountains' && mountainFilter !== 'all'
     ? { ...overlay, pins: overlay.pins.filter(pin => pin.category === mountainFilter) }
     : overlay);
+  const renderedOverlay = $derived(displayedOverlay?.id === 'mountains'
+    ? { ...displayedOverlay, pins: visibleMountainPins(displayedOverlay.pins, zoomLevel) }
+    : displayedOverlay);
+
+  export function showMountain(pin: MapPin) { selectedMountain = pin; }
   let forecast = $state<ForecastSnapshot>();
   let times = $state<string[]>([]);
   let timeIndex = $state(0);
@@ -124,7 +130,7 @@
       const mask = rasteriseMask(nationalPackage.regions.map(region => region.path), 2048, 1024);
       created.setNational(nationalPackage, relief, mask, [2048, 1024]);
       created.setLayers(effectiveLayers);
-      if (nationalPackage.projection) created.setOverlay(displayedOverlay, nationalPackage.projection);
+      if (nationalPackage.projection) created.setOverlay(renderedOverlay, nationalPackage.projection);
       pushWeather();
       created.setProvince(openProvince, detail, false);
       created.setSelected(selectedCode);
@@ -222,7 +228,7 @@
   $effect(() => { scene?.setLayers(effectiveLayers); });
   $effect(() => {
     if (!scene || !national?.projection) return;
-    scene.setOverlay(displayedOverlay, national.projection);
+    scene.setOverlay(renderedOverlay, national.projection);
   });
   $effect(() => {
     void timeIndex; void forecast; void scene; void playing;
