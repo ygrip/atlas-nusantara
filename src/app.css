@@ -170,6 +170,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(26px, 3.
 .region-list button span { overflow-wrap: anywhere; }
 .region-list button:hover, .region-list button[aria-pressed='true'] { background: var(--surface); border-color: var(--clay-highlight); box-shadow: 0 3px 0 var(--shadow); }
 .region-list small { font-family: ui-monospace, monospace; color: var(--muted); }
+.mountain-more { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; margin-top: 12px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); font: 800 .8rem inherit; box-shadow: 0 3px 0 var(--border), inset 0 1px 1px var(--clay-highlight); cursor: pointer; }
+.mountain-more:active { transform: translateY(2px); box-shadow: inset 0 2px 4px var(--shadow); }
 .selected-region { margin-top: 12px; padding: 14px; border-radius: 16px; font-size: .8rem; line-height: 1.6; background: var(--mint); box-shadow: inset 2px 2px 4px var(--clay-highlight), 0 4px 0 var(--shadow); }
 .selected-region h3 { margin: 0 0 4px; font-size: .9rem; }
 
