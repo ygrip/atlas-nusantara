@@ -245,5 +245,15 @@
   "atlas_intro": "ស្វែងយល់កោះ។ ជ្រើសទីកន្លែង។ មើលអាកាសធាតុ។",
   "source_details": "ប្រភព និងព័ត៌មានលម្អិតផែនទី",
   "menu_close": "បិទម៉ឺនុយ",
-  "map_legend_label": "សញ្ញាសម្គាល់ផែនទី"
+  "map_legend_label": "សញ្ញាសម្គាល់ផែនទី",
+  "layer_destinations": "គោលដៅទេសចរណ៍",
+  "destination_natural": "ធម្មជាតិ",
+  "destination_built": "មនុស្សបង្កើត",
+  "destination_select_province": "ជ្រើសរើសខេត្ត",
+  "destination_click_province": "ជ្រើសរើសខេត្ត ឬសញ្ញាលើផែនទី ដើម្បីមើលតំបន់ទេសចរណ៍។",
+  "destination_no_image": "មិនមានរូបភាព",
+  "destination_all": "ទាំងអស់",
+  "destination_search": "ស្វែងរកទីកន្លែង",
+  "destination_empty": "រកមិនឃើញទីកន្លែងទេ។",
+  "destination_coverage_note": "បញ្ជីដំបូង មិនមែនជាបញ្ជីពេញលេញទេ។"
 }

@@ -245,5 +245,15 @@
   "atlas_intro": "ကျွန်းများကို လေ့လာပါ။ နေရာရွေးပါ။ မိုးလေဝသကြည့်ပါ။",
   "source_details": "ရင်းမြစ်နှင့် မြေပုံအသေးစိတ်",
   "menu_close": "မီနူးပိတ်ရန်",
-  "map_legend_label": "မြေပုံသင်္ကေတ"
+  "map_legend_label": "မြေပုံသင်္ကေတ",
+  "layer_destinations": "ခရီးသွားနေရာများ",
+  "destination_natural": "သဘာဝ",
+  "destination_built": "လူလုပ်",
+  "destination_select_province": "ပြည်နယ်ရွေးပါ",
+  "destination_click_province": "ခရီးသွားနေရာများကို ကြည့်ရန် ပြည်နယ် သို့မဟုတ် မြေပုံအမှတ်အသားကို ရွေးပါ။",
+  "destination_no_image": "ဓာတ်ပုံမရှိပါ",
+  "destination_all": "အားလုံး",
+  "destination_search": "နေရာရှာရန်",
+  "destination_empty": "ကိုက်ညီသောနေရာ မရှိပါ။",
+  "destination_coverage_note": "ကနဦးရွေးချယ်မှုသာ ဖြစ်ပြီး စာရင်းအပြည့်မဟုတ်ပါ။"
 }

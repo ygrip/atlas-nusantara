@@ -245,5 +245,15 @@
   "atlas_intro": "ສຳຫຼວດເກາະ. ເລືອກສະຖານທີ່. ເບິ່ງອາກາດ.",
   "source_details": "ແຫຼ່ງຂໍ້ມູນ ແລະລາຍລະອຽດແຜນທີ່",
   "menu_close": "ປິດເມນູ",
-  "map_legend_label": "ຄຳອະທິບາຍແຜນທີ່"
+  "map_legend_label": "ຄຳອະທິບາຍແຜນທີ່",
+  "layer_destinations": "ຈຸດໝາຍທ່ອງທ່ຽວ",
+  "destination_natural": "ທຳມະຊາດ",
+  "destination_built": "ມະນຸດສ້າງ",
+  "destination_select_province": "ເລືອກແຂວງ",
+  "destination_click_province": "ເລືອກແຂວງ ຫຼື ໝຸດໃນແຜນທີ່ເພື່ອສຳຫຼວດ.",
+  "destination_no_image": "ບໍ່ມີຮູບພາບ",
+  "destination_all": "ທັງໝົດ",
+  "destination_search": "ຄົ້ນຫາສະຖານທີ່",
+  "destination_empty": "ບໍ່ພົບສະຖານທີ່.",
+  "destination_coverage_note": "ລາຍການເບື້ອງຕົ້ນ ບໍ່ແມ່ນຂໍ້ມູນທັງໝົດ."
 }

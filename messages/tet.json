@@ -245,5 +245,15 @@
   "atlas_intro": "Esplora illa sira. Hili fatin. Haree tempu.",
   "source_details": "Fonte no detallu mapa",
   "menu_close": "Taka menu",
-  "map_legend_label": "Lejenda mapa"
+  "map_legend_label": "Lejenda mapa",
+  "layer_destinations": "Destinasaun",
+  "destination_natural": "Naturál",
+  "destination_built": "Halo husi ema",
+  "destination_select_province": "Hili provínsia",
+  "destination_click_province": "Hili provínsia ka marka iha mapa atu haree fatin turizmu.",
+  "destination_no_image": "Foto la disponivel",
+  "destination_all": "Hotu",
+  "destination_search": "Buka fatin",
+  "destination_empty": "La hetan fatin.",
+  "destination_coverage_note": "Lista inisiál deit, la'ós inventáriu kompletu."
 }
