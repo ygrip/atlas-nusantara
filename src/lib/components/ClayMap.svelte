@@ -393,4 +393,51 @@
     .layer-chips { grid-column: 1 / -1; }
   }
   @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+  /* Unified clay control pane: map actions get a clear well and consistent touch targets. */
+  .map-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 21px;
+    background: linear-gradient(165deg, var(--surface), var(--panel));
+    box-shadow: 0 4px 0 -2px var(--border), inset 0 2px 1px var(--clay-highlight);
+  }
+  .segmented { border: 1px solid var(--border); box-shadow: inset 0 2px 5px var(--shadow); }
+  .segmented button { min-height: 42px; border-radius: 13px; }
+  .segmented button[aria-pressed='true'] {
+    background: linear-gradient(170deg, var(--surface), var(--panel));
+    box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight);
+  }
+  .map-controls { justify-content: flex-end; min-width: 0; gap: 5px; }
+  .map-controls button {
+    min-width: 42px; min-height: 42px; border-radius: 14px;
+    background: linear-gradient(165deg, var(--surface), var(--panel));
+    box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight), inset 0 -2px 4px var(--shadow);
+  }
+  .map-controls output { flex: 0 0 auto; text-align: center; }
+  .weather-bar {
+    border: 1px solid var(--border);
+    background: linear-gradient(165deg, var(--surface), var(--panel));
+    box-shadow: 0 4px 0 -2px var(--border), inset 0 1px 1px var(--clay-highlight);
+  }
+  .layer-chips button { border-radius: 14px; min-height: 42px; background: var(--surface); }
+  .layer-chips button[aria-pressed='true'] { background: var(--panel); border-color: var(--border); box-shadow: inset 0 2px 5px var(--shadow); }
+  .play { box-shadow: 0 3px 0 var(--border), inset 0 1px 1px #ffffff66; }
+
+  @media (max-width: 700px) {
+    .map-toolbar { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px; }
+    .segmented { justify-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .segmented button { padding: 6px 8px; }
+    .map-controls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 5px; width: 100%; }
+    .map-controls button { min-width: 0; width: 100%; padding: 6px 3px; }
+    .map-controls output { min-width: 34px; font-size: .7rem; }
+    .weather-bar { gap: 9px; padding: 11px; border-radius: 19px; }
+    .layer-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .layer-chips button { min-width: 0; padding: 6px 4px; font-size: .73rem; }
+    .atlas-map { border-radius: 20px; }
+  }
 </style>
