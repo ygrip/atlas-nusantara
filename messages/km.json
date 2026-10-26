@@ -245,5 +245,15 @@
   "atlas_intro": "ស្វែងយល់កោះ។ ជ្រើសទីកន្លែង។ មើលអាកាសធាតុ។",
   "source_details": "ប្រភព និងព័ត៌មានលម្អិតផែនទី",
   "menu_close": "បិទម៉ឺនុយ",
-  "map_legend_label": "សញ្ញាសម្គាល់ផែនទី"
+  "map_legend_label": "សញ្ញាសម្គាល់ផែនទី",
+  "layer_mountains": "ភ្នំ",
+  "mountain_all": "ទាំងអស់",
+  "mountain_active": "សកម្ម · ប្រភេទ A",
+  "mountain_potential": "ភ្នំភ្លើង · B/C",
+  "mountain_other": "ផ្សេងៗ / មិនទាន់ចាត់ថ្នាក់",
+  "mountain_elevation": "កម្ពស់",
+  "mountain_details": "ព័ត៌មានភ្នំ",
+  "mountain_image_missing": "មិនមានរូបថតដែលបានផ្ទៀងផ្ទាត់",
+  "mountain_image_source": "រូបថត និងប្រភព",
+  "mountain_data_note": "ផែនទី BIG 1:250,000 · មិនមែនជាការព្រមានបច្ចុប្បន្នទេ។ មិនទាន់ចាត់ថ្នាក់មិនមានន័យថាអសកម្មទេ។"
 }
