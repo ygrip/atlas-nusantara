@@ -245,5 +245,15 @@
   "atlas_intro": "தீவுகளை ஆராயுங்கள். இடத்தைத் தேர்ந்தெடுங்கள். வானிலையைப் பாருங்கள்.",
   "source_details": "மூலங்கள் மற்றும் வரைபட விவரங்கள்",
   "menu_close": "பட்டியலை மூடவும்",
-  "map_legend_label": "வரைபட விளக்கக்குறிப்பு"
+  "map_legend_label": "வரைபட விளக்கக்குறிப்பு",
+  "layer_mountains": "மலைகள்",
+  "mountain_all": "அனைத்தும்",
+  "mountain_active": "செயலில் · வகை A",
+  "mountain_potential": "எரிமலை · B/C",
+  "mountain_other": "பிற / வகைப்படுத்தப்படாதவை",
+  "mountain_elevation": "உயரம்",
+  "mountain_details": "மலை விவரங்கள்",
+  "mountain_image_missing": "சரிபார்க்கப்பட்ட படம் இல்லை",
+  "mountain_image_source": "படமும் மூலமும்",
+  "mountain_data_note": "BIG வரைபடம் 1:250,000 · இது நேரடி பாதுகாப்பு எச்சரிக்கை அல்ல. வகைப்படுத்தப்படாதது செயலற்றது என்று பொருளல்ல."
 }
