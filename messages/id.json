@@ -1,0 +1,17 @@
+{
+  "app_title": "Atlas Nusantara",
+  "app_subtitle": "Memahami Indonesia melalui data terbuka",
+  "explore": "Jelajahi Indonesia",
+  "national": "Nasional",
+  "province": "Provinsi",
+  "city": "Kota / Kabupaten",
+  "warnings": "Peringatan aktif",
+  "earthquakes": "Gempa bumi",
+  "history": "Riwayat bencana",
+  "hazards": "Paparan bahaya",
+  "sources": "Sumber data",
+  "language": "Pilih bahasa",
+  "region": "Pilih wilayah",
+  "demo_notice": "Data bersifat ilustratif hingga sumber data langsung terintegrasi",
+  "safety_notice": "Data publikasi terbaru, bukan layanan darurat waktu nyata"
+}

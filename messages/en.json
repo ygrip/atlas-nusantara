@@ -1,0 +1,17 @@
+{
+  "app_title": "Nusantara Atlas",
+  "app_subtitle": "Understand Indonesia through open data",
+  "explore": "Explore Indonesia",
+  "national": "National",
+  "province": "Province",
+  "city": "City / Regency",
+  "warnings": "Active warnings",
+  "earthquakes": "Earthquakes",
+  "history": "Disaster history",
+  "hazards": "Hazard exposure",
+  "sources": "Data sources",
+  "language": "Select language",
+  "region": "Select a region",
+  "demo_notice": "Data is illustrative until live datasets are integrated",
+  "safety_notice": "Latest published data, not a real-time emergency service"
+}
