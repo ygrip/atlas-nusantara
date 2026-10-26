@@ -10,6 +10,7 @@ The base map does not know about earthquake, mountain, volcano or landmark datas
 | Earthquakes | Coordinate pins + archive panel | Dated BMKG M5+ archive |
 | Disaster history | Unavailable state | No verified provider adapter/data configured |
 | Hazard maps | Unavailable state | No verified provider adapter/data configured |
+| Destinations | Province summary pins + photo gallery | Non-exhaustive 76-place starter selection; see [DESTINATIONS.md](DESTINATIONS.md) |
 
 Unavailable is not zero incidents or low risk. The UI links to the official sources rather than painting invented data.
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { validateDestinationCatalog } from '../../src/lib/data/destinations.ts';
+import { validateDestinationCatalog } from '../../src/lib/data/destination-contract.ts';
 
 const catalog = JSON.parse(readFileSync(new URL('../../static/data/destinations/v1.json', import.meta.url), 'utf8'));
 
