@@ -158,7 +158,7 @@
     const request = new AbortController();
     overlayRequest = request;
     try {
-      const payload = await loadPointOverlay(definition.snapshotUrl, request.signal);
+      const payload = await loadPointOverlay(assetUrl(definition.snapshotUrl), request.signal);
       if (!request.signal.aborted) customOverlay = payload;
     } catch (error) { if (!request.signal.aborted) console.warn('Overlay unavailable', id, error); }
   }
