@@ -245,5 +245,15 @@
   "atlas_intro": "สำรวจเกาะ เลือกสถานที่ ดูสภาพอากาศ",
   "source_details": "แหล่งข้อมูลและรายละเอียดแผนที่",
   "menu_close": "ปิดเมนู",
-  "map_legend_label": "คำอธิบายแผนที่"
+  "map_legend_label": "คำอธิบายแผนที่",
+  "layer_mountains": "ภูเขา",
+  "mountain_all": "ทั้งหมด",
+  "mountain_active": "ยังมีพลัง · ประเภท A",
+  "mountain_potential": "ภูเขาไฟ · B/C",
+  "mountain_other": "อื่น ๆ / ยังไม่จำแนก",
+  "mountain_elevation": "ความสูง",
+  "mountain_details": "รายละเอียดภูเขา",
+  "mountain_image_missing": "ไม่มีภาพถ่ายที่ตรวจสอบแล้ว",
+  "mountain_image_source": "ภาพและแหล่งที่มา",
+  "mountain_data_note": "แผนที่ BIG มาตราส่วน 1:250,000 · ไม่ใช่การแจ้งเตือนภัยสด ภูเขาที่ไม่จัดประเภทไม่ได้หมายความว่าไม่ปะทุ"
 }
