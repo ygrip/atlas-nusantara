@@ -1,4 +1,4 @@
-name: Validate scaffold
+name: Validate atlas
 on:
   pull_request:
   push:
@@ -11,10 +11,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # Initial scaffold has no lockfile because dependency installation
-      # cannot be validated in this connector environment. Commit one once
-      # npm install succeeds; then switch to npm ci.
-      - run: npm install --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
       - run: npm run check:locales
       - run: npm run check
+      - run: npm run worker:check
+      - run: npm test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test
+      - run: node tests/integration/worker.mjs
+      - run: npm run worker:dry-run

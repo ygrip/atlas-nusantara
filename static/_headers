@@ -1,0 +1,21 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(), microphone=()
+  X-Frame-Options: DENY
+/
+  Cache-Control: no-store
+/index.html
+  Cache-Control: no-store
+/200*
+  Cache-Control: no-store
+/manifest.webmanifest
+  Cache-Control: no-cache, max-age=0, must-revalidate
+/service-worker.js
+  Cache-Control: no-cache, max-age=0, must-revalidate
+/_app/version.json
+  Cache-Control: no-store
+/_app/immutable/*
+  Cache-Control: public, max-age=31536000, immutable
+/api/*
+  Cache-Control: no-store

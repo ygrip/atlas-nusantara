@@ -1,0 +1,2 @@
+-- Wrangler D1 migration source: cloudflare/migrations/0001_initial.sql
+-- Run: npx wrangler d1 migrations apply nusantara-atlas --local
