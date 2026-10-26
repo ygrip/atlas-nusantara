@@ -9,7 +9,6 @@
   export let summary: ShareSummary | undefined = undefined;
 
   let dialog: HTMLDialogElement;
-  let trigger: HTMLButtonElement;
   let preview: HTMLImageElement;
   let imageUrl = '';
   let png: Blob | undefined;
@@ -75,7 +74,6 @@
     imageUrl = '';
     png = undefined;
     if (returnFocus?.isConnected && returnFocus.getClientRects().length > 0) returnFocus.focus();
-    else trigger?.focus();
   }
 
   async function copyLink() {
@@ -119,9 +117,6 @@
 </script>
 
 <section class="share-panel" aria-label={m.share_heading()}>
-  <button bind:this={trigger} type="button" class="share-trigger" onclick={openPreview} disabled={busy}>
-    {#if busy}{m.share_generating()}{:else}{m.share_open_preview()}{/if}
-  </button>
   <dialog bind:this={dialog} aria-labelledby="share-dialog-title" onclose={restoreFocus}>
     <div class="share-dialog">
       <div class="share-header">
@@ -142,7 +137,7 @@
 </section>
 
 <style>
-  .share-trigger, .share-actions button, .share-close { min-height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: 9px 14px; }
+  .share-actions button, .share-close { min-height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: 9px 14px; }
   dialog { width: min(680px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow: auto; border: 1px solid var(--border); border-radius: 22px; padding: 0; color: var(--text); background: var(--surface); }
   dialog::backdrop { background: #211f25aa; }
   .share-dialog { padding: clamp(16px, 4vw, 28px); }
