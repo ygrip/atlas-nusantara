@@ -1,0 +1,19 @@
+{
+  "id": "/",
+  "name": "Nusantara Atlas",
+  "short_name": "Nusantara",
+  "description": "Indonesia environmental and disaster atlas",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#e8eee4",
+  "theme_color": "#e8eee4",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
