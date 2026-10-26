@@ -245,5 +245,15 @@
   "atlas_intro": "探索群岛。选择地点。查看天气。",
   "source_details": "来源与地图详情",
   "menu_close": "关闭菜单",
-  "map_legend_label": "地图图例"
+  "map_legend_label": "地图图例",
+  "layer_destinations": "旅游目的地",
+  "destination_natural": "自然景点",
+  "destination_built": "人造景点",
+  "destination_select_province": "选择省份",
+  "destination_click_province": "选择省份或地图标记以浏览景点。",
+  "destination_no_image": "暂无照片",
+  "destination_all": "全部",
+  "destination_search": "搜索景点",
+  "destination_empty": "没有符合条件的景点。",
+  "destination_coverage_note": "仅为初步精选，尚非完整旅游目录。"
 }

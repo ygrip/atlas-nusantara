@@ -245,5 +245,15 @@
   "atlas_intro": "สำรวจเกาะ เลือกสถานที่ ดูสภาพอากาศ",
   "source_details": "แหล่งข้อมูลและรายละเอียดแผนที่",
   "menu_close": "ปิดเมนู",
-  "map_legend_label": "คำอธิบายแผนที่"
+  "map_legend_label": "คำอธิบายแผนที่",
+  "layer_destinations": "สถานที่ท่องเที่ยว",
+  "destination_natural": "ธรรมชาติ",
+  "destination_built": "มนุษย์สร้าง",
+  "destination_select_province": "เลือกจังหวัด",
+  "destination_click_province": "เลือกจังหวัดหรือหมุดบนแผนที่เพื่อดูสถานที่ท่องเที่ยว",
+  "destination_no_image": "ไม่มีรูปภาพ",
+  "destination_all": "ทั้งหมด",
+  "destination_search": "ค้นหาสถานที่",
+  "destination_empty": "ไม่พบสถานที่ที่ตรงกัน",
+  "destination_coverage_note": "เป็นเพียงรายการเริ่มต้น ไม่ใช่ข้อมูลทั้งหมด"
 }

@@ -245,5 +245,15 @@
   "atlas_intro": "Khám phá các đảo. Chọn một nơi. Xem thời tiết.",
   "source_details": "Nguồn và chi tiết bản đồ",
   "menu_close": "Đóng menu",
-  "map_legend_label": "Chú giải bản đồ"
+  "map_legend_label": "Chú giải bản đồ",
+  "layer_destinations": "Điểm đến",
+  "destination_natural": "Tự nhiên",
+  "destination_built": "Nhân tạo",
+  "destination_select_province": "Chọn tỉnh",
+  "destination_click_province": "Chọn tỉnh hoặc điểm đánh dấu để khám phá địa danh.",
+  "destination_no_image": "Chưa có ảnh",
+  "destination_all": "Tất cả",
+  "destination_search": "Tìm địa danh",
+  "destination_empty": "Không tìm thấy địa danh phù hợp.",
+  "destination_coverage_note": "Danh sách khởi đầu, chưa bao gồm tất cả điểm đến."
 }

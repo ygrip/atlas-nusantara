@@ -245,5 +245,15 @@
   "atlas_intro": "Explore as ilhas. Escolha um lugar. Veja o tempo.",
   "source_details": "Fontes e detalhes do mapa",
   "menu_close": "Fechar menu",
-  "map_legend_label": "Legenda do mapa"
+  "map_legend_label": "Legenda do mapa",
+  "layer_destinations": "Destinos",
+  "destination_natural": "Naturais",
+  "destination_built": "Construídos",
+  "destination_select_province": "Escolha uma província",
+  "destination_click_province": "Selecione uma província ou marcador para explorar atrações.",
+  "destination_no_image": "Fotografia indisponível",
+  "destination_all": "Todos",
+  "destination_search": "Pesquisar locais",
+  "destination_empty": "Nenhum local encontrado.",
+  "destination_coverage_note": "Seleção inicial, não um inventário turístico completo."
 }
