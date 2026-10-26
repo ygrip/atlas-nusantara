@@ -1,0 +1,17 @@
+{
+  "app_title": "Atlas Nusantara",
+  "app_subtitle": "Unawain ang Indonesia gamit ang bukas na datos",
+  "explore": "Tuklasin ang Indonesia",
+  "national": "Pambansa",
+  "province": "Lalawigan",
+  "city": "Lungsod / Distrito",
+  "warnings": "Mga aktibong babala",
+  "earthquakes": "Mga lindol",
+  "history": "Kasaysayan ng sakuna",
+  "hazards": "Pagkalantad sa panganib",
+  "sources": "Mga pinagmumulan ng datos",
+  "language": "Pumili ng wika",
+  "region": "Pumili ng lugar",
+  "demo_notice": "Halimbawa lamang ang datos hanggang maikonekta ang mga aktuwal na pinagkukunan",
+  "safety_notice": "Pinakahuling nailathalang datos, hindi serbisyong pang-emergency sa real time"
+}

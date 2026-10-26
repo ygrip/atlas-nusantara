@@ -1,0 +1,17 @@
+{
+  "app_title": "Bản đồ Nusantara",
+  "app_subtitle": "Tìm hiểu Indonesia qua dữ liệu mở",
+  "explore": "Khám phá Indonesia",
+  "national": "Toàn quốc",
+  "province": "Tỉnh",
+  "city": "Thành phố / Huyện",
+  "warnings": "Cảnh báo đang có hiệu lực",
+  "earthquakes": "Động đất",
+  "history": "Lịch sử thiên tai",
+  "hazards": "Mức độ phơi nhiễm hiểm họa",
+  "sources": "Nguồn dữ liệu",
+  "language": "Chọn ngôn ngữ",
+  "region": "Chọn khu vực",
+  "demo_notice": "Dữ liệu chỉ mang tính minh họa cho đến khi tích hợp nguồn thực tế",
+  "safety_notice": "Dữ liệu công bố mới nhất, không phải dịch vụ khẩn cấp theo thời gian thực"
+}

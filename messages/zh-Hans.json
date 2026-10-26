@@ -1,0 +1,17 @@
+{
+  "app_title": "努山塔拉地图集",
+  "app_subtitle": "通过开放数据了解印度尼西亚",
+  "explore": "探索印度尼西亚",
+  "national": "全国",
+  "province": "省",
+  "city": "城市 / 县",
+  "warnings": "当前预警",
+  "earthquakes": "地震",
+  "history": "灾害历史",
+  "hazards": "灾害暴露",
+  "sources": "数据来源",
+  "language": "选择语言",
+  "region": "选择地区",
+  "demo_notice": "在接入实时数据源之前，所示数据仅供演示",
+  "safety_notice": "最新已发布数据，并非实时应急服务"
+}
