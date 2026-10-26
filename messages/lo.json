@@ -245,5 +245,15 @@
   "atlas_intro": "ສຳຫຼວດເກາະ. ເລືອກສະຖານທີ່. ເບິ່ງອາກາດ.",
   "source_details": "ແຫຼ່ງຂໍ້ມູນ ແລະລາຍລະອຽດແຜນທີ່",
   "menu_close": "ປິດເມນູ",
-  "map_legend_label": "ຄຳອະທິບາຍແຜນທີ່"
+  "map_legend_label": "ຄຳອະທິບາຍແຜນທີ່",
+  "layer_mountains": "ພູເຂົາ",
+  "mountain_all": "ທັງໝົດ",
+  "mountain_active": "ຍັງມີພະລັງ · A",
+  "mountain_potential": "ພູໄຟ · B/C",
+  "mountain_other": "ອື່ນໆ / ຍັງບໍ່ຈັດປະເພດ",
+  "mountain_elevation": "ຄວາມສູງ",
+  "mountain_details": "ຂໍ້ມູນພູເຂົາ",
+  "mountain_image_missing": "ບໍ່ມີຮູບທີ່ຢັ້ງຢືນ",
+  "mountain_image_source": "ຮູບພາບ ແລະ ແຫຼ່ງທີ່ມາ",
+  "mountain_data_note": "ແຜນທີ່ BIG 1:250,000 · ບໍ່ແມ່ນການເຕືອນໄພສົດ. ບໍ່ຈັດປະເພດບໍ່ໄດ້ໝາຍວ່າບໍ່ມີພະລັງ."
 }
