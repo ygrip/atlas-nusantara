@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mountainCategory, mountainName, makeMountainOverlay } from '../../scripts/geo/mountains-source.mjs';
 
 const record = (OBJECTID, name, x, y, extra = {}) =>
-  ({ attributes: { OBJECTID, NAMA_OBJEK: name, NAMA_UNSUR: name, ...extra }, geometry: { x, y } });
+  ({ attributes: { OBJECTID, NAMA_OBJEK: name, NAMA_UNSUR: 'Gunung / Puncak', TOPONIM: name, ...extra }, geometry: { x, y } });
 
 test('BIG A/B/C classification never mislabels B/C as extinct', () => {
   assert.equal(mountainCategory('Tipe A'), 'active');
