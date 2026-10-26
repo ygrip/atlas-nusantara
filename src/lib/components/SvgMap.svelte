@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { LocateFixed, Minus, Plus } from 'lucide-svelte';
   import { m } from '$lib/paraglide/messages.js';
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
@@ -83,9 +84,9 @@
 </script>
 
 <div class="map-controls" role="group" aria-label={m.zoom_reset()}>
-  <button type="button" onclick={() => zoom(1.3)} disabled={scale >= 8} aria-label={m.zoom_in()}>+</button>
-  <button type="button" onclick={() => zoom(1 / 1.3)} disabled={scale <= 1} aria-label={m.zoom_out()}>−</button>
-  <button type="button" onclick={reset}>{m.zoom_reset()}</button>
+  <button type="button" class="tool" onclick={() => zoom(1.3)} disabled={scale >= 8} aria-label={m.zoom_in()} title={m.zoom_in()}><Plus size={20} aria-hidden="true" /></button>
+  <button type="button" onclick={() => zoom(1 / 1.3)} disabled={scale <= 1} aria-label={m.zoom_out()} title={m.zoom_out()}><Minus size={20} aria-hidden="true" /></button>
+  <button type="button" class="tool reset" onclick={reset} aria-label={m.zoom_reset()} title={m.zoom_reset()}><LocateFixed size={20} aria-hidden="true" /><span class="tool-label">{m.zoom_reset()}</span></button>
   <output aria-live="polite">{scale.toFixed(1)}×</output>
 </div>
 <div class="atlas-map interactive" use:interaction>
@@ -106,14 +107,16 @@
         {#each overlay.pins as pin (pin.id)}
           {@const point = projectLonLat(projection, pin.lon, pin.lat)}
           {@const radius = box[2] * 0.008}
+          {@const pinColor = pin.color ?? overlay.color}
+          {@const pinSymbol = pin.symbol ?? overlay.symbol}
           <g class="overlay-pin" class:epicentre={overlay.id === 'earthquake'} role="img" aria-label={pin.label}>
             <title>{pin.label} · {pin.description ?? ''}</title>
-            {#if overlay.symbol === 'circle'}
-              <circle cx={point.x} cy={point.y} r={radius} fill={overlay.color} />
-            {:else if overlay.symbol === 'triangle'}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={overlay.color} />
+            {#if pinSymbol === 'circle'}
+              <circle cx={point.x} cy={point.y} r={radius} fill={pinColor} />
+            {:else if pinSymbol === 'triangle'}
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={pinColor} />
             {:else}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={overlay.color} />
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={pinColor} />
             {/if}
           </g>
         {/each}
@@ -124,9 +127,15 @@
 <p class="map-help">{m.map_help()}</p>
 
 <style>
-  .map-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .map-controls button { min-width: 40px; min-height: 36px; border: 1px solid var(--border, #e2d6c6); border-radius: 12px; background: var(--surface, #fffaf2); color: inherit; padding: 6px 12px; font-weight: 800; box-shadow: 0 3px 0 var(--border, #e2d6c6); }
-  .map-controls output { margin-left: auto; font: 800 .75rem ui-monospace, monospace; }
+  .map-controls { display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(165deg, var(--surface), var(--panel)); box-shadow: 0 4px 0 -2px var(--border), inset 0 2px 1px var(--clay-highlight); }
+  .tool { display: inline-grid; grid-auto-flow: column; place-items: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 0 10px; border: 1px solid var(--border); border-radius: 14px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); font-weight: 800; font-size: .8rem; cursor: pointer; box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight); transition: transform 120ms, box-shadow 120ms, color 160ms; }
+  .tool:hover:not(:disabled) { color: var(--accent); }
+  .tool:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--border), inset 0 2px 4px var(--shadow); }
+  .tool:disabled { opacity: .45; cursor: not-allowed; }
+  .tool:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+  .tool.reset { padding: 0 14px; }
+  .map-controls output { min-width: 4ch; text-align: center; font: 800 .75rem ui-monospace, monospace; color: var(--muted); }
+  @media (max-width: 700px) { .tool.reset .tool-label { display: none; } .tool.reset { padding: 0 10px; } }
   .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, #bfe3ea, #8fc7d8); border: 1px solid var(--border, #e2d6c6); border-radius: 24px; overflow: hidden; }
   .interactive { touch-action: none; cursor: grab; }
   .interactive:active { cursor: grabbing; }
@@ -138,5 +147,5 @@
   path.selected { fill: #e07a4f; }
   .overlay-pin circle, .overlay-pin polygon { stroke: #fff8e9; stroke-width: 2; vector-effect: non-scaling-stroke; }
   .map-help { margin: 0; font-size: .74rem; line-height: 1.5; opacity: .8; }
-  @media (prefers-reduced-motion: reduce) { path { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { path, .tool { transition: none; } }
 </style>

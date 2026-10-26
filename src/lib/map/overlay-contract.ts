@@ -6,6 +6,10 @@ export interface MapPin {
   label: string;
   description?: string;
   value?: number;
+  /** Optional per-pin colour (#rrggbb); falls back to the overlay colour. */
+  color?: string;
+  /** Optional per-pin symbol; falls back to the overlay symbol. */
+  symbol?: PinSymbol;
 }
 export interface OverlayLegend { label: string; color: string; symbol: PinSymbol }
 export interface PointOverlay {
@@ -43,6 +47,8 @@ export function validatePointOverlay(value: unknown): value is PointOverlay {
     if (!pin.id || ids.has(pin.id) || typeof pin.label !== 'string' || pin.label.length > 300) return false;
     if (!Number.isFinite(pin.lon) || !Number.isFinite(pin.lat) || Math.abs(pin.lon) > 180 || Math.abs(pin.lat) > 90) return false;
     if (pin.value !== undefined && !Number.isFinite(pin.value)) return false;
+    if (pin.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(pin.color)) return false;
+    if (pin.symbol !== undefined && !['circle', 'triangle', 'diamond'].includes(pin.symbol)) return false;
     ids.add(pin.id);
   }
   return Array.isArray(overlay.legend) && overlay.legend.length <= 20 && overlay.legend.every(item => typeof item.label === 'string' && /^#[0-9a-fA-F]{6}$/.test(item.color) && ['circle', 'triangle', 'diamond'].includes(item.symbol));
