@@ -63,6 +63,46 @@ export class TerrainModel {
   }
 }
 
+/** Extra slope applied only to shading so ridges read clearly even though the mesh is already exaggerated. */
+const SHADING_EXAGGERATION = 2;
+const CAVITY_BLUR_RADIUS = 10;
+const CAVITY_RANGE_METRES = 400;
+
+/**
+ * Bakes shading data from the elevation grid as RGBA bytes: R/G = surface normal x/z (0.5 = flat),
+ * B = valley occlusion (terrain lower than its surroundings), A = ridge highlight (higher than its surroundings).
+ */
+export function buildReliefDetail(elevation: Float32Array, width: number, height: number): Uint8Array {
+  const heights = new Float32Array(elevation.length);
+  for (let index = 0; index < heights.length; index++) heights[index] = Math.max(0, elevation[index]);
+  const surroundings = Float32Array.from(heights);
+  boxBlur(surroundings, width, height, CAVITY_BLUR_RADIUS);
+  boxBlur(surroundings, width, height, CAVITY_BLUR_RADIUS);
+  const cellWidth = PLANE_WIDTH / width;
+  const cellHeight = PLANE_HEIGHT / height;
+  const data = new Uint8Array(width * height * 4);
+  for (let row = 0; row < height; row++) {
+    const above = Math.max(0, row - 1);
+    const below = Math.min(height - 1, row + 1);
+    for (let column = 0; column < width; column++) {
+      const left = Math.max(0, column - 1);
+      const right = Math.min(width - 1, column + 1);
+      const slopeX = ((heights[row * width + right] - heights[row * width + left]) * METRES_TO_UNITS) / (2 * cellWidth);
+      const slopeZ = ((heights[below * width + column] - heights[above * width + column]) * METRES_TO_UNITS) / (2 * cellHeight);
+      const normalX = -slopeX * SHADING_EXAGGERATION;
+      const normalZ = -slopeZ * SHADING_EXAGGERATION;
+      const length = Math.hypot(normalX, 1, normalZ);
+      const index = row * width + column;
+      const surface = heights[index] - surroundings[index];
+      data[index * 4] = Math.round(((normalX / length) * 0.5 + 0.5) * 255);
+      data[index * 4 + 1] = Math.round(((normalZ / length) * 0.5 + 0.5) * 255);
+      data[index * 4 + 2] = Math.round(Math.min(1, Math.max(0, -surface / CAVITY_RANGE_METRES)) * 255);
+      data[index * 4 + 3] = Math.round(Math.min(1, Math.max(0, surface / CAVITY_RANGE_METRES)) * 255);
+    }
+  }
+  return data;
+}
+
 export function smoothstep(edge0: number, edge1: number, value: number): number {
   const t = Math.min(1, Math.max(0, (value - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
@@ -106,7 +146,8 @@ export function rasteriseMask(paths: string[], width: number, height: number): F
   return mask;
 }
 
-function boxBlur(data: Float32Array, width: number, height: number, radius: number): void {
+/** In-place separable box blur (horizontal then vertical). */
+export function boxBlur(data: Float32Array, width: number, height: number, radius: number): void {
   const copy = new Float32Array(data.length);
   for (let row = 0; row < height; row++) {
     for (let column = 0; column < width; column++) {

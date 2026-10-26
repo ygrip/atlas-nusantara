@@ -1,23 +1,30 @@
 import {
-  BufferAttribute, BufferGeometry, Color, DataTexture, DoubleSide, LinearFilter, LineBasicMaterial,
-  LineSegments, Mesh, NearestFilter, NormalBlending, PerspectiveCamera, PlaneGeometry, RedFormat, RGBAFormat, Raycaster,
+  BufferAttribute, BufferGeometry, Color, DataTexture, LinearFilter, LineBasicMaterial,
+  LineSegments, Mesh, NearestFilter, PerspectiveCamera, RGBAFormat, Raycaster,
   Points, Scene, ShaderMaterial, Spherical, Vector2, Vector3, WebGLRenderer
 } from 'three';
 import { visualRandom } from './random';
 import { RegionIndex } from './region-index';
 import { CAMERA_LIMITS, fitMapDistance } from './camera';
-import { WindParticles, RainStreaks } from './particles';
+import { WindParticles, RainStreaks, type ViewRect } from './particles';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
 import type { GeometryPackage } from '$lib/geo/types';
-import type { MapPin, PointOverlay } from './overlays';
+import type { MapPin, PointOverlay } from './overlay-contract';
 import { projectLonLat } from './geometry';
 import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
 import { MAP_CENTER, parseRings } from './geometry';
 import { TerrainModel } from './terrain';
 import { FIELD_HEIGHT, FIELD_WIDTH, packField, PLANE_HEIGHT, PLANE_WIDTH, sampleChannel, type WeatherField } from './weather';
-import { cloudFragment, cloudVertex, cloudVeilFragment, cloudVeilVertex, seaFragment, seaVertex, terrainFragment, terrainVertex } from './shaders';
+import { CLOUD_BASE_HEIGHT, CLOUD_TOP_HEIGHT } from './layout';
+import { THEMES, type ThemeName } from './themes';
+import { applyThemeToShared, createSharedUniforms, type SharedUniforms } from './shared-uniforms';
+import { SpaceBackdrop } from './space';
+import { Sea } from './sea';
+import { TerrainSurface } from './terrain-mesh';
+import { CloudLayers } from './clouds';
+import { createPinPoints, pinHeight } from './pins';
 
-export type ThemeName = 'light' | 'dark';
+export type { ThemeName } from './themes';
 export interface MapLayers { wind: boolean; weather: boolean; sea: boolean }
 
 export interface SceneCallbacks {
@@ -34,18 +41,22 @@ const ID_HEIGHT = 1024;
 const SELECTED_COLOR = new Color('#e07a4f');
 const CITY_ID_OFFSET = 100;
 
-const THEMES = {
-  light: {
-    sky: '#f3ede3', fog: '#efe7da', shallow: '#7fd6cf', mid: '#3c9ec0', deep: '#1c4f7d', foam: '#f7fbfb', skyReflection: '#d8ecf3',
-    skyLight: '#fff7ea', groundLight: '#b9a58f', coast: '#e8d3b0', border: '#fffaf0', cityBorder: '#5b4a3d',
-    cloudLit: '#ffffff', cloudShade: '#b9c3cf', storm: '#6c7280'
-  },
-  dark: {
-    sky: '#1d1c22', fog: '#1d1c22', shallow: '#2f8f8c', mid: '#1d5f7e', deep: '#0d2b45', foam: '#d9e6ea', skyReflection: '#28323f',
-    skyLight: '#d9d3e6', groundLight: '#3d3640', coast: '#8a7660', border: '#f1e9df', cityBorder: '#1b1714',
-    cloudLit: '#d9dde4', cloudShade: '#6d7584', storm: '#3e4350'
-  }
-} as const;
+/** Default camera tilt (radians from straight down): steep enough to show relief and the rolled-over edge of the world. */
+const HOME_TILT = 0.88;
+const MAX_TILT = 1.3;
+const PICK_RADIUS_PIXELS = 16;
+/** Map units per second the cloud pattern travels per km/h of mean wind. */
+const CLOUD_UNITS_PER_KMH = 0.12;
+/** Must match the noise scale in cloudBillows (glsl-common.ts). */
+const CLOUD_NOISE_SCALE = 0.011;
+const CLOUD_MID_HEIGHT = (CLOUD_BASE_HEIGHT + CLOUD_TOP_HEIGHT) / 2;
+const CLOUD_HALF_THICKNESS = (CLOUD_TOP_HEIGHT - CLOUD_BASE_HEIGHT) / 2;
+
+// Region emphasis written to the palette alpha: how strongly the island-group colour tints the terrain.
+const TINT_BASE = 0.3;
+const TINT_DIMMED = 0.15;
+const TINT_HOVER = 0.65;
+const TINT_SELECTED = 1;
 
 function emptyField(): WeatherField {
   const size = FIELD_WIDTH * FIELD_HEIGHT;
@@ -65,9 +76,14 @@ function world(x: number, y: number, height: number): Vector3 {
   return new Vector3(x - MAP_CENTER.x, height, y - MAP_CENTER.y);
 }
 
+function lerp(from: number, to: number, amount: number): number {
+  return from + (to - from) * amount;
+}
+
 /**
- * The 2.5D atlas: relief terrain coloured by region, a wind-driven sea, drifting clouds,
- * rain and wind streaks derived from a dated forecast snapshot. Renders only while visible.
+ * The atlas as a small world floating in space: relief land under a wind-driven ocean that rolls over a rounded
+ * edge, volumetric clouds, rain and wind streamlines from a dated forecast snapshot, and a starfield beyond.
+ * Renders only while visible.
  */
 export class AtlasScene {
   private readonly renderer: WebGLRenderer;
@@ -88,24 +104,23 @@ export class AtlasScene {
   private flight: { from: Vector3; to: Vector3; fromTarget: Vector3; toTarget: Vector3; start: number; duration: number } | undefined;
 
   private terrain: TerrainModel | undefined;
-  private terrainMesh: Mesh | undefined;
-  private terrainMaterial: ShaderMaterial | undefined;
-  private seaMaterial: ShaderMaterial | undefined;
-  private cloudMaterials: ShaderMaterial[] = [];
-  private cloudVeil: ShaderMaterial | undefined;
+  private terrainSurface: TerrainSurface | undefined;
+  private sea: Sea | undefined;
+  private clouds: CloudLayers | undefined;
+  private readonly space: SpaceBackdrop;
   private borderLines: LineSegments | undefined;
   private cityLines: LineSegments | undefined;
   private observationPoints: Points | undefined;
   private pointOverlay: PointOverlay | undefined;
   private pointProjection: GeometryPackage['projection'];
+  private readonly compact: boolean;
   private readonly baseIndex = new RegionIndex(ID_WIDTH, ID_HEIGHT);
   private readonly detailIndex = new RegionIndex(2048, 2048);
   private paletteData = new Uint8Array(256 * 4);
   private paletteTexture: DataTexture;
-  private landMaskTexture: DataTexture | undefined;
-  private bathymetryTexture: DataTexture | undefined;
   private weatherA: DataTexture;
   private weatherB: DataTexture;
+  private readonly shared: SharedUniforms;
   private fieldA: WeatherField = emptyField();
   private fieldB: WeatherField = emptyField();
   private weatherMix = 0;
@@ -119,7 +134,8 @@ export class AtlasScene {
   private layers: MapLayers = { wind: true, weather: true, sea: true };
   private readonly windParticles: WindParticles;
   private readonly rain: RainStreaks;
-  private cloudDrift = new Vector2();
+  /** Accumulated cloud travel in map units, kept in double precision. */
+  private readonly cloudTravel = new Vector2();
   private readonly random = visualRandom(6117);
   private flash = 0;
   private flashPosition = new Vector3();
@@ -128,9 +144,10 @@ export class AtlasScene {
   private pendingHover: { x: number; y: number } | undefined;
 
   constructor(private readonly container: HTMLElement, private readonly callbacks: SceneCallbacks, private readonly reducedMotion: boolean) {
+    this.compact = window.innerWidth < 700;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     let pixelRatioLimit = 2;
-    if (window.innerWidth < 700) pixelRatioLimit = 1.5;
+    if (this.compact) pixelRatioLimit = 1.5;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioLimit));
     this.renderer.domElement.className = 'atlas-canvas';
     this.renderer.domElement.tabIndex = 0;
@@ -143,7 +160,7 @@ export class AtlasScene {
     this.controls.zoomToCursor = true;
     this.controls.minDistance = CAMERA_LIMITS.minDistance;
     this.controls.maxDistance = CAMERA_LIMITS.maxDistance;
-    this.controls.maxPolarAngle = 1.2;
+    this.controls.maxPolarAngle = MAX_TILT;
     this.controls.addEventListener('change', () => { this.invalidate(); this.emitZoom(); });
 
     this.paletteTexture = new DataTexture(this.paletteData, 256, 1, RGBAFormat);
@@ -151,9 +168,13 @@ export class AtlasScene {
     this.paletteTexture.minFilter = NearestFilter;
     this.weatherA = fieldTexture(this.fieldA);
     this.weatherB = fieldTexture(this.fieldB);
+    this.shared = createSharedUniforms(THEMES.light, this.weatherA, this.weatherB);
 
-    this.windParticles = new WindParticles(window.innerWidth < 700);
-    this.rain = new RainStreaks(window.innerWidth < 700);
+    this.space = new SpaceBackdrop(this.shared, THEMES.light);
+    this.scene.add(this.space.dome, this.space.halo);
+
+    this.windParticles = new WindParticles(this.compact);
+    this.rain = new RainStreaks(this.compact);
     this.scene.add(this.windParticles.lines, this.rain.lines);
 
     this.applyTheme('light');
@@ -173,6 +194,7 @@ export class AtlasScene {
 
   /** National provinces, relief and land mask. Call once; later province packages only add detail. */
   setNational(national: GeometryPackage, relief: { elevation: Float32Array; width: number; height: number }, mask: Float32Array, maskSize: [number, number]): void {
+    const colors = THEMES[this.theme];
     this.terrain = new TerrainModel(relief.elevation, relief.width, relief.height, mask, maskSize[0], maskSize[1]);
     this.provinces = national.regions.map((region, index) => ({
       id: index + 1, code: region.sourceCode, name: region.name, bbox: region.bbox as [number, number, number, number],
@@ -180,11 +202,21 @@ export class AtlasScene {
     }));
     this.rebuildIndex();
     this.rasteriseIds();
-    this.buildSea(relief, mask, maskSize);
-    this.buildTerrain();
-    this.buildClouds();
-    this.buildCloudVeil();
-    this.borderLines = this.buildBorders(this.provinces, THEMES[this.theme].border, 0.85, 0.35);
+
+    this.sea = new Sea(this.shared, colors, relief, mask, maskSize);
+    this.sea.update(Number.POSITIVE_INFINITY, this.meanWind(), false);
+    this.scene.add(this.sea.mesh);
+
+    this.terrainSurface = new TerrainSurface(this.terrain, this.shared, colors, {
+      regionIds: this.baseIndex.texture, detailIds: this.detailIndex.texture, detailBounds: this.detailIndex.bounds, palette: this.paletteTexture
+    }, this.compact);
+    this.scene.add(this.terrainSurface.mesh);
+
+    this.clouds = new CloudLayers(this.shared, colors, this.compact);
+    this.clouds.setVisible(this.layers.weather);
+    this.scene.add(this.clouds.volume, this.clouds.cirrus, this.clouds.veil);
+
+    this.borderLines = this.buildBorders(this.provinces, colors.border, 0.85, 0.35);
     this.scene.add(this.borderLines);
     this.windParticles.attach(this.terrain);
     this.rain.attach(this.terrain);
@@ -228,35 +260,7 @@ export class AtlasScene {
       this.observationPoints = undefined;
     }
     if (!overlay || overlay.pins.length === 0) { this.invalidate(); return; }
-    const positions: number[] = [];
-    const sizes: number[] = [];
-    for (const pin of overlay.pins) {
-      const point = projectLonLat(projection, pin.lon, pin.lat);
-      const height = (this.terrain?.surfaceAt(point.x, point.y) ?? 0) + 4;
-      positions.push(point.x - MAP_CENTER.x, height, point.y - MAP_CENTER.y);
-      sizes.push(20);
-    }
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3));
-    geometry.setAttribute('size', new BufferAttribute(new Float32Array(sizes), 1));
-    const material = new ShaderMaterial({
-      transparent: true, depthTest: false, depthWrite: false,
-      uniforms: { pinColor: { value: new Color(overlay.color) }, symbol: { value: ['circle', 'triangle', 'diamond'].indexOf(overlay.symbol) } },
-      vertexShader: `attribute float size; void main() { gl_PointSize = size; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-      fragmentShader: `uniform vec3 pinColor; uniform int symbol;
-        void main() {
-          vec2 p = gl_PointCoord - vec2(0.5);
-          float radius = length(p);
-          if (symbol == 1) radius = max(abs(p.x) * 1.73 + p.y, -p.y * 2.0) * 0.5;
-          if (symbol == 2) radius = (abs(p.x) + abs(p.y)) * 0.75;
-          if (radius > 0.48) discard;
-          float ring = smoothstep(0.31, 0.36, radius);
-          gl_FragColor = vec4(mix(pinColor, vec3(1.0, 0.94, 0.8), ring), 0.95);
-          #include <colorspace_fragment>
-        }`
-    });
-    this.observationPoints = new Points(geometry, material);
-    this.observationPoints.renderOrder = 8;
+    this.observationPoints = createPinPoints(overlay, projection, this.terrain, this.shared.time, this.renderer.getPixelRatio());
     this.scene.add(this.observationPoints);
     this.invalidate();
   }
@@ -279,9 +283,9 @@ export class AtlasScene {
     const following = next ?? current;
     if (following !== this.fieldB) { this.fieldB = following; this.replaceWeatherTexture('B', following); }
     this.weatherMix = mix;
+    this.shared.weatherMix.value = mix;
     this.windParticles.setFields(this.fieldA, this.fieldB, mix);
     this.rain.setFields(this.fieldA, this.fieldB, mix);
-    for (const material of this.allWeatherMaterials()) material.uniforms.weatherMix.value = mix;
     this.invalidate();
   }
 
@@ -289,35 +293,21 @@ export class AtlasScene {
     this.layers = layers;
     this.windParticles.lines.visible = layers.wind;
     this.rain.lines.visible = layers.weather;
-    for (const material of this.cloudMaterials) material.visible = layers.weather;
+    this.clouds?.setVisible(layers.weather);
+    this.shared.cloudStrength.value = 0;
+    if (layers.weather) this.shared.cloudStrength.value = 1;
     this.invalidate();
   }
 
   applyTheme(theme: ThemeName): void {
     this.theme = theme;
     const colors = THEMES[theme];
-    this.scene.background = new Color(colors.sky);
-    this.renderer.setClearColor(colors.sky);
-    if (this.seaMaterial) {
-      const uniforms = this.seaMaterial.uniforms;
-      uniforms.shallowColor.value.set(colors.shallow);
-      uniforms.midColor.value.set(colors.mid);
-      uniforms.deepColor.value.set(colors.deep);
-      uniforms.skyColor.value.set(colors.skyReflection);
-      uniforms.foamColor.value.set(colors.foam);
-    }
-    for (const material of this.allShaderMaterials()) material.uniforms.fogColor.value.set(colors.fog);
-    if (this.terrainMaterial) {
-      this.terrainMaterial.uniforms.skyLight.value.set(colors.skyLight);
-      this.terrainMaterial.uniforms.groundLight.value.set(colors.groundLight);
-      this.terrainMaterial.uniforms.coastColor.value.set(colors.coast);
-    }
-    this.cloudVeil?.uniforms.color.value.set(colors.cloudLit);
-    for (const material of this.cloudMaterials) {
-      material.uniforms.litColor.value.set(colors.cloudLit);
-      material.uniforms.shadeColor.value.set(colors.cloudShade);
-      material.uniforms.stormColor.value.set(colors.storm);
-    }
+    applyThemeToShared(this.shared, colors);
+    this.renderer.setClearColor(colors.space);
+    this.space.setTheme(colors);
+    this.sea?.setTheme(colors);
+    this.terrainSurface?.setTheme(colors);
+    this.clouds?.setTheme(colors);
     if (this.borderLines) (this.borderLines.material as LineBasicMaterial).color.set(colors.border);
     if (this.cityLines) (this.cityLines.material as LineBasicMaterial).color.set(colors.cityBorder);
     this.windParticles.setTheme(theme);
@@ -337,7 +327,7 @@ export class AtlasScene {
     const offset = this.camera.position.clone().sub(this.controls.target);
     const spherical = new Spherical().setFromVector3(offset);
     if (spherical.phi > 0.2) spherical.phi = 0.01;
-    else spherical.phi = 0.78;
+    else spherical.phi = HOME_TILT;
     this.flyTo(this.controls.target.clone().add(new Vector3().setFromSpherical(spherical)), this.controls.target.clone(), 520);
   }
 
@@ -357,10 +347,8 @@ export class AtlasScene {
 
   private updateFogRange(): void {
     // A fitted phone view is farther away. Do not turn it into fog simply because the viewport is narrow.
-    for (const material of this.allShaderMaterials()) {
-      material.uniforms.fogNear.value = Math.max(1400, this.homeDistance * 1.4);
-      material.uniforms.fogFar.value = Math.max(3600, this.homeDistance * 3.2);
-    }
+    this.shared.fogNear.value = Math.max(1400, this.homeDistance * 1.4);
+    this.shared.fogFar.value = Math.max(3600, this.homeDistance * 3.2);
   }
 
   dispose(): void {
@@ -377,7 +365,9 @@ export class AtlasScene {
       if (Array.isArray(material)) material.forEach(item => item.dispose());
       else material?.dispose();
     });
-    for (const texture of [this.paletteTexture, this.weatherA, this.weatherB, this.landMaskTexture, this.bathymetryTexture]) texture?.dispose();
+    this.sea?.dispose();
+    this.terrainSurface?.dispose();
+    for (const texture of [this.paletteTexture, this.weatherA, this.weatherB]) texture.dispose();
     this.baseIndex.dispose();
     this.detailIndex.dispose();
     this.renderer.dispose();
@@ -401,143 +391,6 @@ export class AtlasScene {
     const bottom = Math.max(...this.cities.map(region => region.bbox[3]));
     const pad = Math.max(right - left, bottom - top) * 0.01 + 0.001;
     this.detailIndex.set(this.cities, [left - pad, top - pad, right - left + pad * 2, bottom - top + pad * 2]);
-  }
-
-  private buildSea(relief: { elevation: Float32Array; width: number; height: number }, mask: Float32Array, maskSize: [number, number]): void {
-    const depth = new Uint8Array(relief.width * relief.height);
-    for (let index = 0; index < depth.length; index++) {
-      const metres = Math.max(0, -relief.elevation[index]);
-      depth[index] = Math.round(Math.sqrt(Math.min(1, metres / 9000)) * 255);
-    }
-    this.bathymetryTexture = new DataTexture(depth, relief.width, relief.height, RedFormat);
-    this.bathymetryTexture.magFilter = LinearFilter;
-    this.bathymetryTexture.minFilter = LinearFilter;
-    this.bathymetryTexture.needsUpdate = true;
-    const maskBytes = new Uint8Array(mask.length);
-    for (let index = 0; index < mask.length; index++) maskBytes[index] = Math.round(mask[index] * 255);
-    this.landMaskTexture = new DataTexture(maskBytes, maskSize[0], maskSize[1], RedFormat);
-    this.landMaskTexture.magFilter = LinearFilter;
-    this.landMaskTexture.minFilter = LinearFilter;
-    this.landMaskTexture.needsUpdate = true;
-
-    const colors = THEMES[this.theme];
-    this.seaMaterial = new ShaderMaterial({
-      vertexShader: seaVertex,
-      fragmentShader: seaFragment,
-      uniforms: {
-        time: { value: 0 }, landMask: { value: this.landMaskTexture }, bathymetry: { value: this.bathymetryTexture },
-        weatherA: { value: this.weatherA }, weatherB: { value: this.weatherB }, weatherMix: { value: 0 },
-        sunDirection: { value: new Vector3(-0.45, 0.8, -0.35) },
-        shallowColor: { value: new Color(colors.shallow) }, midColor: { value: new Color(colors.mid) }, deepColor: { value: new Color(colors.deep) },
-        skyColor: { value: new Color(colors.skyReflection) }, foamColor: { value: new Color(colors.foam) }, flash: { value: 0 },
-        fogColor: { value: new Color(colors.fog) }, fogNear: { value: 1400 }, fogFar: { value: 3600 }
-      }
-    });
-    const geometry = new PlaneGeometry(4000, 2600, 1, 1);
-    geometry.rotateX(-Math.PI / 2);
-    const sea = new Mesh(geometry, this.seaMaterial);
-    sea.renderOrder = 0;
-    this.scene.add(sea);
-  }
-
-  /** A height-field mesh over the land, skipping quads that are entirely open sea. */
-  private buildTerrain(): void {
-    const terrain = this.terrain;
-    if (!terrain) return;
-    let columns = 1024;
-    if (window.innerWidth < 700) columns = 640;
-    const rows = columns / 2;
-    const vertexCount = (columns + 1) * (rows + 1);
-    const positions = new Float32Array(vertexCount * 3);
-    const elevations = new Float32Array(vertexCount);
-    const lands = new Float32Array(vertexCount);
-    for (let row = 0; row <= rows; row++) {
-      for (let column = 0; column <= columns; column++) {
-        const index = row * (columns + 1) + column;
-        const x = (column / columns) * PLANE_WIDTH;
-        const y = (row / rows) * PLANE_HEIGHT;
-        positions[index * 3] = x - MAP_CENTER.x;
-        positions[index * 3 + 1] = terrain.heightAt(x, y);
-        positions[index * 3 + 2] = y - MAP_CENTER.y;
-        elevations[index] = terrain.elevationAt(x, y);
-        lands[index] = terrain.landAt(x, y);
-      }
-    }
-    const indices: number[] = [];
-    for (let row = 0; row < rows; row++) {
-      for (let column = 0; column < columns; column++) {
-        const a = row * (columns + 1) + column;
-        const b = a + 1;
-        const c = a + columns + 1;
-        const d = c + 1;
-        if (lands[a] + lands[b] + lands[c] + lands[d] < 0.02) continue;
-        indices.push(a, c, b, b, c, d);
-      }
-    }
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(positions, 3));
-    geometry.setAttribute('elevation', new BufferAttribute(elevations, 1));
-    geometry.setAttribute('land', new BufferAttribute(lands, 1));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    const colors = THEMES[this.theme];
-    this.terrainMaterial = new ShaderMaterial({
-      vertexShader: terrainVertex,
-      fragmentShader: terrainFragment,
-      uniforms: {
-        regionIds: { value: this.baseIndex.texture }, detailIds: { value: this.detailIndex.texture }, detailBounds: { value: this.detailIndex.bounds }, palette: { value: this.paletteTexture },
-        sunDirection: { value: new Vector3(-0.45, 0.8, -0.35) }, skyLight: { value: new Color(colors.skyLight) },
-        groundLight: { value: new Color(colors.groundLight) }, coastColor: { value: new Color(colors.coast) },
-        contourStrength: { value: 1 }, flash: { value: 0 },
-        fogColor: { value: new Color(colors.fog) }, fogNear: { value: 1400 }, fogFar: { value: 3600 }
-      }
-    });
-    this.terrainMesh = new Mesh(geometry, this.terrainMaterial);
-    this.terrainMesh.renderOrder = 1;
-    this.scene.add(this.terrainMesh);
-  }
-
-  private buildClouds(): void {
-    const colors = THEMES[this.theme];
-    // Keep coastlines and relief legible through a translucent forecast overlay.
-    const layers = [{ height: 24, scale: 0.016, opacity: 0.34, seed: 0 }, { height: 31, scale: 0.009, opacity: 0.22, seed: 41.7 }];
-    for (const layer of layers) {
-      const material = new ShaderMaterial({
-        vertexShader: cloudVertex,
-        fragmentShader: cloudFragment,
-        transparent: true,
-        depthWrite: false,
-        side: DoubleSide,
-        blending: NormalBlending,
-        uniforms: {
-          time: { value: 0 }, drift: { value: new Vector2() }, scale: { value: layer.scale }, opacity: { value: layer.opacity }, seed: { value: layer.seed },
-          weatherA: { value: this.weatherA }, weatherB: { value: this.weatherB }, weatherMix: { value: 0 },
-          sunDirection: { value: new Vector3(-0.45, 0.8, -0.35) }, litColor: { value: new Color(colors.cloudLit) },
-          shadeColor: { value: new Color(colors.cloudShade) }, stormColor: { value: new Color(colors.storm) },
-          flashPosition: { value: new Vector3() }, flash: { value: 0 },
-          fogColor: { value: new Color(colors.fog) }, fogNear: { value: 1400 }, fogFar: { value: 3600 }
-        }
-      });
-      const geometry = new PlaneGeometry(PLANE_WIDTH, PLANE_HEIGHT, 1, 1);
-      geometry.rotateX(-Math.PI / 2);
-      const mesh = new Mesh(geometry, material);
-      mesh.position.y = layer.height;
-      mesh.renderOrder = 4;
-      this.scene.add(mesh);
-      this.cloudMaterials.push(material);
-    }
-  }
-
-  private buildCloudVeil(): void {
-    this.cloudVeil = new ShaderMaterial({
-      vertexShader: cloudVeilVertex, fragmentShader: cloudVeilFragment,
-      transparent: true, depthTest: false, depthWrite: false,
-      uniforms: { time: { value: 0 }, density: { value: 0 }, color: { value: new Color(THEMES[this.theme].cloudLit) } }
-    });
-    const veil = new Mesh(new PlaneGeometry(2, 2), this.cloudVeil);
-    veil.frustumCulled = false;
-    veil.renderOrder = 7;
-    this.scene.add(veil);
   }
 
   /** Region outlines draped on the relief; long edges are subdivided so they follow the ground. */
@@ -571,7 +424,10 @@ export class AtlasScene {
     return lines;
   }
 
-  /** Palette per region id: island-group clay tones, dimmed outside the open province, terracotta for the selection. */
+  /**
+   * Palette per region id. RGB is the island-group clay tone (dimmed outside the open province, terracotta when selected);
+   * alpha is how strongly that colour tints the realistic land colour, so the selection stands out but the relief stays natural.
+   */
   private updatePalette(): void {
     const data = this.paletteData;
     data.fill(0);
@@ -584,17 +440,25 @@ export class AtlasScene {
     for (const region of [...this.provinces, ...this.cities]) {
       const tones = ISLAND_GROUP_COLORS[islandGroupOf(region.code)][this.theme];
       let color = variant(new Color(tones[0]), region.id);
+      let tint = TINT_BASE;
       if (this.openProvince && region.level === 'province' && region.code !== this.openProvince) {
         const hsl = { h: 0, s: 0, l: 0 };
         color.getHSL(hsl);
         color = new Color().setHSL(hsl.h, hsl.s * 0.35, hsl.l * 0.92);
+        tint = TINT_DIMMED;
       }
-      if (region.code === this.selectedCode || (region.level === 'province' && region.code === this.openProvince && this.cities.length === 0)) color = SELECTED_COLOR.clone();
-      if (region.id === this.hoverId) color.offsetHSL(0, 0.04, 0.07);
+      if (region.code === this.selectedCode || (region.level === 'province' && region.code === this.openProvince && this.cities.length === 0)) {
+        color = SELECTED_COLOR.clone();
+        tint = TINT_SELECTED;
+      }
+      if (region.id === this.hoverId) {
+        color.offsetHSL(0, 0.04, 0.07);
+        tint = Math.max(tint, TINT_HOVER);
+      }
       data[region.id * 4] = Math.round(color.r * 255);
       data[region.id * 4 + 1] = Math.round(color.g * 255);
       data[region.id * 4 + 2] = Math.round(color.b * 255);
-      data[region.id * 4 + 3] = 255;
+      data[region.id * 4 + 3] = Math.round(tint * 255);
     }
     this.paletteTexture.needsUpdate = true;
     this.invalidate();
@@ -602,24 +466,8 @@ export class AtlasScene {
 
   private replaceWeatherTexture(slot: 'A' | 'B', field: WeatherField): void {
     const texture = fieldTexture(field);
-    if (slot === 'A') { this.weatherA.dispose(); this.weatherA = texture; }
-    else { this.weatherB.dispose(); this.weatherB = texture; }
-    for (const material of this.allWeatherMaterials()) {
-      material.uniforms.weatherA.value = this.weatherA;
-      material.uniforms.weatherB.value = this.weatherB;
-    }
-  }
-
-  private allWeatherMaterials(): ShaderMaterial[] {
-    const materials = [...this.cloudMaterials];
-    if (this.seaMaterial) materials.push(this.seaMaterial);
-    return materials;
-  }
-
-  private allShaderMaterials(): ShaderMaterial[] {
-    const materials = this.allWeatherMaterials();
-    if (this.terrainMaterial) materials.push(this.terrainMaterial);
-    return materials;
+    if (slot === 'A') { this.weatherA.dispose(); this.weatherA = texture; this.shared.weatherA.value = texture; }
+    else { this.weatherB.dispose(); this.weatherB = texture; this.shared.weatherB.value = texture; }
   }
 
   // --- camera -------------------------------------------------------------------------------
@@ -633,9 +481,9 @@ export class AtlasScene {
     if (this.terrain) center.y = Math.max(0, this.terrain.surfaceAt((box[0] + box[2]) / 2, (box[1] + box[3]) / 2) * 0.5);
     const offset = this.camera.position.clone().sub(this.controls.target);
     const spherical = new Spherical().setFromVector3(offset);
-    if (!Number.isFinite(spherical.radius) || spherical.radius < 1) spherical.set(1, 0.74, 0);
+    if (!Number.isFinite(spherical.radius) || spherical.radius < 1) spherical.set(1, HOME_TILT, 0);
     if (spherical.phi < 0.05) spherical.phi = 0.01;
-    else spherical.phi = Math.min(0.9, Math.max(0.5, spherical.phi));
+    else spherical.phi = Math.min(1.0, Math.max(0.5, spherical.phi));
     spherical.radius = this.fitDistance(box, padding);
     const position = center.clone().add(new Vector3().setFromSpherical(spherical));
     if (!animate || this.reducedMotion) {
@@ -724,12 +572,11 @@ export class AtlasScene {
     const bounds = this.renderer.domElement.getBoundingClientRect();
     for (const pin of this.pointOverlay.pins) {
       const point = projectLonLat(this.pointProjection, pin.lon, pin.lat);
-      const height = (this.terrain?.surfaceAt(point.x, point.y) ?? 0) + 4;
-      const screen = world(point.x, point.y, height).project(this.camera);
+      const screen = world(point.x, point.y, pinHeight(this.terrain, point.x, point.y)).project(this.camera);
       if (screen.z < -1 || screen.z > 1) continue;
       const x = bounds.left + (screen.x + 1) * bounds.width / 2;
       const y = bounds.top + (1 - screen.y) * bounds.height / 2;
-      if (Math.hypot(clientX - x, clientY - y) <= 13) return pin;
+      if (Math.hypot(clientX - x, clientY - y) <= PICK_RADIUS_PIXELS) return pin;
     }
     return undefined;
   }
@@ -782,6 +629,75 @@ export class AtlasScene {
     this.frame = requestAnimationFrame(this.tick);
   }
 
+  private meanWind(): { u: number; v: number } {
+    return {
+      u: lerp(this.fieldA.meanU, this.fieldB.meanU, this.weatherMix),
+      v: lerp(this.fieldA.meanV, this.fieldB.meanV, this.weatherMix)
+    };
+  }
+
+  private handlePendingHover(): void {
+    if (!this.pendingHover) return;
+    const region = this.pick(this.pendingHover.x, this.pendingHover.y);
+    const pin = this.pickPin(this.pendingHover.x, this.pendingHover.y);
+    this.callbacks.onfeature?.(pin, this.pendingHover.x, this.pendingHover.y);
+    this.setHover(region?.id ?? 0);
+    this.callbacks.onhover(region?.code, this.pendingHover.x, this.pendingHover.y);
+    this.pendingHover = undefined;
+  }
+
+  /** Advances sea, clouds, wind, rain and lightning. Without animation the sea only turns to face the current wind. */
+  private advanceWeather(delta: number, animating: boolean): void {
+    const wind = this.meanWind();
+    let turnTime = Number.POSITIVE_INFINITY;
+    if (animating) turnTime = delta;
+    this.sea?.update(turnTime, wind, animating && this.layers.sea);
+    this.clouds?.setWind(wind);
+    if (!animating) return;
+    // The cloud pattern drifts with the regional mean wind (km/h scaled to map units per second).
+    this.cloudTravel.x += wind.u * delta * CLOUD_UNITS_PER_KMH;
+    this.cloudTravel.y += wind.v * delta * CLOUD_UNITS_PER_KMH;
+    this.shared.cloudDrift.value.set(this.cloudTravel.x * CLOUD_NOISE_SCALE, this.cloudTravel.y * CLOUD_NOISE_SCALE);
+    this.updateLightning(delta);
+    if (this.layers.wind) this.windParticles.step(delta);
+    if (this.layers.weather) this.rain.step(delta);
+  }
+
+  /** Keeps wind and rain particles inside the visible part of the map so their density is steady at every zoom. */
+  private updateParticleView(): void {
+    const target = this.controls.target;
+    const distance = this.camera.position.distanceTo(target);
+    const halfHeight = distance * Math.tan((CAMERA_LIMITS.fov * Math.PI) / 360) * 1.7;
+    const halfWidth = halfHeight * Math.max(this.camera.aspect, 0.6);
+    const centerX = target.x + MAP_CENTER.x;
+    const centerY = target.z + MAP_CENTER.y;
+    const view: ViewRect = {
+      minX: Math.max(0, centerX - halfWidth), maxX: Math.min(PLANE_WIDTH, centerX + halfWidth),
+      minY: Math.max(0, centerY - halfHeight), maxY: Math.min(PLANE_HEIGHT, centerY + halfHeight)
+    };
+    const coversMap = view.maxX - view.minX >= PLANE_WIDTH && view.maxY - view.minY >= PLANE_HEIGHT;
+    if (view.maxX <= view.minX || view.maxY <= view.minY || coversMap) {
+      this.windParticles.setView(undefined);
+      this.rain.setView(undefined);
+      return;
+    }
+    this.windParticles.setView(view);
+    this.rain.setView(view);
+  }
+
+  /** A whiteout veil while the camera is inside the cloud slab, scaled by the forecast cover below the camera. */
+  private updateCloudVeil(): void {
+    if (!this.clouds) return;
+    const x = this.camera.position.x + MAP_CENTER.x;
+    const y = this.camera.position.z + MAP_CENTER.y;
+    const coverage = sampleChannel(this.fieldA, this.fieldA.cloud, x, y) * (1 - this.weatherMix)
+      + sampleChannel(this.fieldB, this.fieldB.cloud, x, y) * this.weatherMix;
+    let density = 0;
+    const deckDistance = (this.camera.position.y - CLOUD_MID_HEIGHT) / (CLOUD_HALF_THICKNESS * 0.9);
+    if (this.layers.weather && !this.reducedMotion) density = Math.exp(-(deckDistance * deckDistance)) * coverage * 0.9;
+    this.clouds.setVeilDensity(density);
+  }
+
   private readonly tick = (now: number) => {
     this.frame = 0;
     if (this.disposed) return;
@@ -792,50 +708,14 @@ export class AtlasScene {
     if (animating) this.elapsed += delta;
     this.stepFlight(now);
     if (this.controls.update()) this.dirty = true;
-
-    if (this.pendingHover) {
-      const region = this.pick(this.pendingHover.x, this.pendingHover.y);
-      const pin = this.pickPin(this.pendingHover.x, this.pendingHover.y);
-      this.callbacks.onfeature?.(pin, this.pendingHover.x, this.pendingHover.y);
-      this.setHover(region?.id ?? 0);
-      this.callbacks.onhover(region?.code, this.pendingHover.x, this.pendingHover.y);
-      this.pendingHover = undefined;
-    }
-
-    if (animating) {
-      const meanU = this.fieldA.meanU * (1 - this.weatherMix) + this.fieldB.meanU * this.weatherMix;
-      const meanV = this.fieldA.meanV * (1 - this.weatherMix) + this.fieldB.meanV * this.weatherMix;
-      // Cloud texture drifts with the regional mean wind (km/h scaled to map units per second).
-      this.cloudDrift.x += meanU * delta * 0.0045;
-      this.cloudDrift.y += meanV * delta * 0.0045;
-      this.updateLightning(delta);
-      if (this.layers.wind) this.windParticles.step(delta);
-      if (this.layers.weather) this.rain.step(delta);
-    }
-    for (const material of this.cloudMaterials) {
-      material.uniforms.time.value = this.elapsed;
-      material.uniforms.drift.value.copy(this.cloudDrift).multiplyScalar(material.uniforms.scale.value * 60);
-      material.uniforms.flash.value = this.flash;
-      material.uniforms.flashPosition.value.copy(this.flashPosition);
-    }
-    if (this.seaMaterial) {
-      let seaTime = 0;
-      if (this.layers.sea) seaTime = this.elapsed;
-      this.seaMaterial.uniforms.time.value = seaTime;
-      this.seaMaterial.uniforms.flash.value = this.flash;
-    }
-    if (this.terrainMaterial) this.terrainMaterial.uniforms.flash.value = this.flash;
-    if (this.cloudVeil) {
-      const x = this.camera.position.x + MAP_CENTER.x;
-      const y = this.camera.position.z + MAP_CENTER.y;
-      const coverage = sampleChannel(this.fieldA, this.fieldA.cloud, x, y) * (1 - this.weatherMix)
-        + sampleChannel(this.fieldB, this.fieldB.cloud, x, y) * this.weatherMix;
-      let density = 0;
-      const deckDistance = (this.camera.position.y - 27) / 5;
-      if (this.layers.weather && !this.reducedMotion) density = Math.exp(-(deckDistance * deckDistance)) * coverage * 0.9;
-      this.cloudVeil.uniforms.density.value = density;
-      this.cloudVeil.uniforms.time.value = this.elapsed;
-    }
+    this.handlePendingHover();
+    this.updateParticleView();
+    this.advanceWeather(delta, animating);
+    this.shared.time.value = this.elapsed;
+    this.shared.flash.value = this.flash;
+    this.shared.flashPosition.value.copy(this.flashPosition);
+    this.updateCloudVeil();
+    this.space.follow(this.camera);
 
     if (animating || this.dirty) {
       this.renderer.render(this.scene, this.camera);
@@ -853,7 +733,7 @@ export class AtlasScene {
     if (this.layers.weather) storms = this.fieldA.thunder;
     if (storms.length === 0 || this.random() > delta * 0.6) return;
     const storm = storms[Math.floor(this.random() * storms.length)];
-    this.flashPosition.copy(world(storm.x, storm.y, 26));
+    this.flashPosition.copy(world(storm.x, storm.y, CLOUD_BASE_HEIGHT));
     this.flash = 1;
   }
 
