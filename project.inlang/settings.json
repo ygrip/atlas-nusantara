@@ -11,10 +11,10 @@
     "my",
     "km",
     "lo",
-    "zh-Hans",
+    "zh-SG",
     "ta",
     "tet",
-    "pt"
+    "pt-TL"
   ],
   "modules": [
     "https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@4/dist/index.js"

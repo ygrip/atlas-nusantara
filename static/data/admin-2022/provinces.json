@@ -1,0 +1,229 @@
+{
+  "edition": "Kepmendagri 100.1.1-6117/2022",
+  "source": "Annex A, government decision 2022",
+  "count": 37,
+  "regions": [
+    {
+      "code": "11",
+      "name": "Aceh",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "12",
+      "name": "Sumatera Utara",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "13",
+      "name": "Sumatera Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "14",
+      "name": "Riau",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "15",
+      "name": "Jambi",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "16",
+      "name": "Sumatera Selatan",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "17",
+      "name": "Bengkulu",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "18",
+      "name": "Lampung",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "19",
+      "name": "Kepulauan Bangka Belitung",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "21",
+      "name": "Kepulauan Riau",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "31",
+      "name": "DKI Jakarta",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "32",
+      "name": "Jawa Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "33",
+      "name": "Jawa Tengah",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "34",
+      "name": "Daerah Istimewa Yogyakarta",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "35",
+      "name": "Jawa Timur",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "36",
+      "name": "Banten",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "51",
+      "name": "Bali",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "52",
+      "name": "Nusa Tenggara Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "53",
+      "name": "Nusa Tenggara Timur",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "61",
+      "name": "Kalimantan Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "62",
+      "name": "Kalimantan Tengah",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "63",
+      "name": "Kalimantan Selatan",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "64",
+      "name": "Kalimantan Timur",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "65",
+      "name": "Kalimantan Utara",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "71",
+      "name": "Sulawesi Utara",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "72",
+      "name": "Sulawesi Tengah",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "73",
+      "name": "Sulawesi Selatan",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "74",
+      "name": "Sulawesi Tenggara",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "75",
+      "name": "Gorontalo",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "76",
+      "name": "Sulawesi Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "81",
+      "name": "Maluku",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "82",
+      "name": "Maluku Utara",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "91",
+      "name": "Papua",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "92",
+      "name": "Papua Barat",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "93",
+      "name": "Papua Selatan",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "94",
+      "name": "Papua Tengah",
+      "level": "province",
+      "parentCode": null
+    },
+    {
+      "code": "95",
+      "name": "Papua Pegunungan",
+      "level": "province",
+      "parentCode": null
+    }
+  ]
+}

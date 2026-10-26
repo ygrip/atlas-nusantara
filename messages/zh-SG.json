@@ -1,0 +1,19 @@
+{
+  "site_title": "群岛地图",
+  "site_description": "按地区探索印度尼西亚的环境与灾害资讯。",
+  "language_label": "语言",
+  "level_national": "全国",
+  "level_province": "省",
+  "level_city": "市 / 县",
+  "layer_heading": "数据图层",
+  "layer_weather": "天气预警",
+  "layer_earthquakes": "地震",
+  "layer_history": "灾害历史",
+  "layer_hazards": "灾害风险地图",
+  "status_planned": "规划中",
+  "map_placeholder": "行政区划地图将在此显示。",
+  "disclaimer": "本服务不提供紧急警报。请遵循官方通告。",
+  "sources_heading": "数据来源",
+  "roadmap_heading": "实施路线图",
+  "roadmap_summary": "实时数据和经过核实的边界将分阶段加入。"
+}

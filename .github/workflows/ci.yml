@@ -1,20 +1,20 @@
-name: CI
+name: Validate scaffold
 on:
   pull_request:
   push:
     branches: [main]
 jobs:
-  verify:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm check:i18n
-      - run: pnpm check
-      - run: pnpm build
+          node-version: '22'
+      # Initial scaffold has no lockfile because dependency installation
+      # cannot be validated in this connector environment. Commit one once
+      # npm install succeeds; then switch to npm ci.
+      - run: npm install --no-audit --no-fund
+      - run: npm run check:locales
+      - run: npm run check
+      - run: npm run build
