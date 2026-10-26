@@ -255,5 +255,8 @@
   "mountain_details": "山峰详情",
   "mountain_image_missing": "暂无已验证照片",
   "mountain_image_source": "照片与来源",
-  "mountain_data_note": "BIG地图 1:250,000 · 非实时安全警报。未分类不代表不活跃。"
+  "mountain_data_note": "BIG地图 1:250,000 · 非实时安全警报。未分类不代表不活跃。",
+  "mountain_search": "搜索山峰",
+  "mountain_more": "显示更多",
+  "mountain_coverage": "BIG地图中的已命名山峰，并非印度尼西亚的全部山峰。"
 }
