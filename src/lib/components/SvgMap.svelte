@@ -5,9 +5,9 @@
   import { projectLonLat } from '$lib/map/geometry';
   import type { PointOverlay } from '$lib/map/overlays';
 
-  let { geometry, label, selectedCode, onselect, overlay, projection }: {
+  let { geometry, label, selectedCode, onselect, overlay, projection, onpinselect }: {
     geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void;
-    overlay?: PointOverlay; projection?: GeometryPackage['projection'];
+    overlay?: PointOverlay; projection?: GeometryPackage['projection']; onpinselect?: (code: string) => void;
   } = $props();
 
   let scale = $state(1);
@@ -28,12 +28,17 @@
     const pointers = new Map<number, { x: number; y: number }>();
     let moved = 0;
     let touchCode: string | undefined;
+    let touchIsPin = false;
     let suppressClickUntil = 0;
     function coordinates(event: PointerEvent) { return { x: event.clientX, y: event.clientY }; }
     function down(event: PointerEvent) {
       if ((event.target as Element).closest('button')) return;
       pointers.set(event.pointerId, coordinates(event)); moved = 0;
-      if (event.pointerType === 'touch') touchCode = (event.target as Element).getAttribute('data-code') ?? undefined;
+      if (event.pointerType === 'touch') {
+        const target = event.target as Element;
+        touchCode = target.closest('[data-code]')?.getAttribute('data-code') ?? undefined;
+        touchIsPin = Boolean(target.closest('.overlay-pin'));
+      }
     }
     function move(event: PointerEvent) {
       const previous = pointers.get(event.pointerId);
@@ -58,7 +63,10 @@
     function up(event: PointerEvent) {
       if (!pointers.has(event.pointerId)) return;
       if (moved > 5 || event.pointerType === 'touch') suppressClickUntil = performance.now() + 300;
-      if (event.pointerType === 'touch' && moved < 5 && pointers.size === 1 && touchCode) onselect(touchCode);
+      if (event.pointerType === 'touch' && moved < 5 && pointers.size === 1 && touchCode) {
+        if (touchIsPin) onpinselect?.(touchCode);
+        else onselect(touchCode);
+      }
       pointers.delete(event.pointerId);
       if (node.hasPointerCapture(event.pointerId)) node.releasePointerCapture(event.pointerId);
     }
@@ -106,14 +114,17 @@
         {#each overlay.pins as pin (pin.id)}
           {@const point = projectLonLat(projection, pin.lon, pin.lat)}
           {@const radius = box[2] * 0.008}
-          <g class="overlay-pin" class:epicentre={overlay.id === 'earthquake'} role="img" aria-label={pin.label}>
+          <g class="overlay-pin" class:epicentre={overlay.id === 'earthquake'} role={pin.provinceCode ? 'button' : 'img'} tabindex={pin.provinceCode ? 0 : undefined}
+            data-code={pin.provinceCode} aria-label={pin.label}
+            onclick={() => { if (pin.provinceCode) onpinselect?.(pin.provinceCode); }}
+            onkeydown={event => { if (pin.provinceCode && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); onpinselect?.(pin.provinceCode); } }}>
             <title>{pin.label} · {pin.description ?? ''}</title>
-            {#if overlay.symbol === 'circle'}
-              <circle cx={point.x} cy={point.y} r={radius} fill={overlay.color} />
-            {:else if overlay.symbol === 'triangle'}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={overlay.color} />
+            {#if (pin.symbol ?? overlay.symbol) === 'circle'}
+              <circle cx={point.x} cy={point.y} r={radius} fill={pin.color ?? overlay.color} />
+            {:else if (pin.symbol ?? overlay.symbol) === 'triangle'}
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y + radius} ${point.x - radius},${point.y + radius}`} fill={pin.color ?? overlay.color} />
             {:else}
-              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={overlay.color} />
+              <polygon points={`${point.x},${point.y - radius} ${point.x + radius},${point.y} ${point.x},${point.y + radius} ${point.x - radius},${point.y}`} fill={pin.color ?? overlay.color} />
             {/if}
           </g>
         {/each}
@@ -137,6 +148,8 @@
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: #e07a4f; }
   .overlay-pin circle, .overlay-pin polygon { stroke: #fff8e9; stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .overlay-pin[role='button'] { cursor: pointer; }
+  .overlay-pin[role='button']:focus-visible { outline: 3px solid var(--accent); }
   .map-help { margin: 0; font-size: .74rem; line-height: 1.5; opacity: .8; }
   @media (prefers-reduced-motion: reduce) { path { transition: none; } }
 </style>
