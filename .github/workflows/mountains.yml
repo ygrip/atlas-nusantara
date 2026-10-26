@@ -3,11 +3,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '20 3 * * 0'
-  push:
-    paths:
-      - scripts/geo/build-mountains.mjs
-      - scripts/geo/mountains-source.mjs
-      - .github/workflows/mountains.yml
 
 permissions:
   contents: write
