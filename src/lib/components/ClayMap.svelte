@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { m } from '$lib/paraglide/messages.js';
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUPS, ISLAND_GROUP_COLORS, ISLAND_GROUP_NAMES } from '$lib/atlas/islands';
@@ -43,6 +43,7 @@
   let hover = $state<{ code: string; x: number; y: number }>();
   let feature = $state<{ pin: MapPin; x: number; y: number }>();
   let selectedMountain = $state<MapPin>();
+  let mountainDetailHost = $state<HTMLDivElement>();
   let mountainFilter = $state<'all' | 'active' | 'potential' | 'other'>('all');
   const displayedOverlay = $derived(overlay?.id === 'mountains' && mountainFilter !== 'all'
     ? { ...overlay, pins: overlay.pins.filter(pin => pin.category === mountainFilter) }
@@ -51,7 +52,11 @@
     ? { ...displayedOverlay, pins: visibleMountainPins(displayedOverlay.pins, zoomLevel) }
     : displayedOverlay);
 
-  export function showMountain(pin: MapPin) { selectedMountain = pin; }
+  export async function showMountain(pin: MapPin) {
+    selectedMountain = pin;
+    await tick();
+    mountainDetailHost?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
   let forecast = $state<ForecastSnapshot>();
   let times = $state<string[]>([]);
   let timeIndex = $state(0);
@@ -115,7 +120,7 @@
           hover = { code, x: x - bounds.left, y: y - bounds.top };
         },
         onzoom: level => { zoomLevel = level; },
-        onpinclick: pin => { if (activeLayer === 'mountains') selectedMountain = pin; },
+        onpinclick: pin => { if (activeLayer === 'mountains') void showMountain(pin); },
         onfeature: (pin, x, y) => {
           if (!pin) { feature = undefined; return; }
           const bounds = target.getBoundingClientRect();
@@ -340,11 +345,11 @@
     </div>
   {:else}
     {#if webglFailed}<p class="map-notice" role="status">{m.map_webgl_unavailable()}</p>{/if}
-    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} onpin={pin => { if (activeLayer === 'mountains') selectedMountain = pin; }} projection={national?.projection} />{/if}
+    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} onpin={pin => { if (activeLayer === 'mountains') void showMountain(pin); }} projection={national?.projection} />{/if}
   {/if}
 
   {#if activeLayer === 'mountains' && selectedMountain}
-    <MountainDetails pin={selectedMountain} onclose={() => selectedMountain = undefined} />
+    <div bind:this={mountainDetailHost}><MountainDetails pin={selectedMountain} onclose={() => selectedMountain = undefined} /></div>
   {/if}
 
   {#if mode === '3d' && forecast && times.length > 0 && activeLayer === 'warning'}
