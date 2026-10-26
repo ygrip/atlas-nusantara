@@ -245,5 +245,15 @@
   "atlas_intro": "探索群岛。选择地点。查看天气。",
   "source_details": "来源与地图详情",
   "menu_close": "关闭菜单",
-  "map_legend_label": "地图图例"
+  "map_legend_label": "地图图例",
+  "layer_mountains": "山峰",
+  "mountain_all": "全部",
+  "mountain_active": "活跃 · A类",
+  "mountain_potential": "火山 · B/C类",
+  "mountain_other": "其他／未分类",
+  "mountain_elevation": "海拔",
+  "mountain_details": "山峰详情",
+  "mountain_image_missing": "暂无已验证照片",
+  "mountain_image_source": "照片与来源",
+  "mountain_data_note": "BIG地图 1:250,000 · 非实时安全警报。未分类不代表不活跃。"
 }
