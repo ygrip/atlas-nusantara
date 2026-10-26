@@ -245,5 +245,15 @@
   "atlas_intro": "Terokai pulau. Pilih tempat. Lihat cuaca.",
   "source_details": "Sumber & butiran peta",
   "menu_close": "Tutup menu",
-  "map_legend_label": "Petunjuk peta"
+  "map_legend_label": "Petunjuk peta",
+  "layer_destinations": "Destinasi Pelancongan",
+  "destination_natural": "Semula jadi",
+  "destination_built": "Buatan manusia",
+  "destination_select_province": "Pilih wilayah",
+  "destination_click_province": "Pilih wilayah atau penanda peta untuk meneroka tarikan.",
+  "destination_no_image": "Foto tidak tersedia",
+  "destination_all": "Semua",
+  "destination_search": "Cari tarikan",
+  "destination_empty": "Tiada tarikan yang sepadan.",
+  "destination_coverage_note": "Senarai permulaan, bukan inventori pelancongan lengkap."
 }

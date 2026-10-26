@@ -245,5 +245,15 @@
   "atlas_intro": "Explore the islands. Pick a place. See the weather.",
   "source_details": "Sources & map details",
   "menu_close": "Close menu",
-  "map_legend_label": "Map key"
+  "map_legend_label": "Map key",
+  "layer_destinations": "Destinations",
+  "destination_natural": "Natural",
+  "destination_built": "Human-made",
+  "destination_select_province": "Choose a province",
+  "destination_click_province": "Select a province or a marker to explore its attractions.",
+  "destination_no_image": "No photo available",
+  "destination_all": "All",
+  "destination_search": "Search landmarks",
+  "destination_empty": "No matching landmarks.",
+  "destination_coverage_note": "Starter selection only, not a complete tourism inventory."
 }

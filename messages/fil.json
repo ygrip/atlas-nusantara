@@ -245,5 +245,15 @@
   "atlas_intro": "Tuklasin ang mga isla. Pumili ng lugar. Tingnan ang panahon.",
   "source_details": "Mga pinagmulan at detalye ng mapa",
   "menu_close": "Isara ang menu",
-  "map_legend_label": "Gabay sa mapa"
+  "map_legend_label": "Gabay sa mapa",
+  "layer_destinations": "Mga Destinasyon",
+  "destination_natural": "Likas",
+  "destination_built": "Gawa ng tao",
+  "destination_select_province": "Pumili ng lalawigan",
+  "destination_click_province": "Pumili ng lalawigan o marker para makita ang mga pasyalan.",
+  "destination_no_image": "Walang larawan",
+  "destination_all": "Lahat",
+  "destination_search": "Maghanap ng pasyalan",
+  "destination_empty": "Walang nahanap na pasyalan.",
+  "destination_coverage_note": "Panimulang listahan lamang, hindi kumpletong talaan."
 }

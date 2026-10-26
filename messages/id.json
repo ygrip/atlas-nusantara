@@ -245,5 +245,15 @@
   "atlas_intro": "Jelajahi pulau. Pilih tempat. Lihat cuacanya.",
   "source_details": "Sumber & rincian peta",
   "menu_close": "Tutup menu",
-  "map_legend_label": "Legenda peta"
+  "map_legend_label": "Legenda peta",
+  "layer_destinations": "Destinasi Wisata",
+  "destination_natural": "Alam",
+  "destination_built": "Buatan Manusia",
+  "destination_select_province": "Pilih provinsi",
+  "destination_click_province": "Pilih provinsi atau penanda di peta untuk menjelajahi tempat wisata.",
+  "destination_no_image": "Foto belum tersedia",
+  "destination_all": "Semua",
+  "destination_search": "Cari tempat wisata",
+  "destination_empty": "Tidak ada tempat wisata yang cocok.",
+  "destination_coverage_note": "Pilihan awal, belum mencakup semua destinasi wisata."
 }
