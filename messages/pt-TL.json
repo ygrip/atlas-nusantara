@@ -255,5 +255,8 @@
   "mountain_details": "Detalhes da montanha",
   "mountain_image_missing": "Sem fotografia verificada",
   "mountain_image_source": "Fotografia e atribuição",
-  "mountain_data_note": "Atlas BIG 1:250.000 · não é um alerta de segurança em tempo real. Não classificado não significa inativo."
+  "mountain_data_note": "Atlas BIG 1:250.000 · não é um alerta de segurança em tempo real. Não classificado não significa inativo.",
+  "mountain_search": "Pesquisar montanhas",
+  "mountain_more": "Mostrar mais",
+  "mountain_coverage": "Montanhas nomeadas no atlas BIG, não todos os cumes da Indonésia."
 }
