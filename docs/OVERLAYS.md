@@ -8,10 +8,12 @@ The base map does not know about earthquake, mountain, volcano or landmark datas
 |---|---|---|
 | Weather | Gridded wind/cloud/rain plus wind-derived sea | Dated BMKG representative-point snapshot |
 | Earthquakes | Coordinate pins + archive panel | Dated BMKG M5+ archive |
-| Disaster history | Unavailable state | No verified provider adapter/data configured |
-| Hazard maps | Unavailable state | No verified provider adapter/data configured |
+| Disaster reports (`incident`) | Coordinate pins + filterable list | Merged, cleaned events from BNPB DIBI (official), PetaBencana.id (citizen) and ANTARA/GDELT headlines (news). Diamonds official, circles citizen, triangles news; colour = disaster type |
+| Weather hazards (`hazard`) | Coordinate pins + list | Dated BMKG CAP nowcast warnings, pinned at the centre of each warned area, coloured by severity (no region codes inferred) |
 
-Unavailable is not zero incidents or low risk. The UI links to the official sources rather than painting invented data.
+Both layers read `static/data/observations/hazards.json`, written by the [hazard pipeline](HAZARD_PIPELINE.md) (`npm run snapshot:hazards`, CI job `hazard` every 15 minutes). Pins carry their own `color` and `symbol`. Events known only to province level are listed but not pinned. An empty snapshot is not proof of no incidents or low risk. InaRISK hazard polygons are still not connected.
+
+**Licence caution:** PetaBencana data is CC BY-NC 4.0 (a commercial licence needs an agreement). Review before enabling ads or paid features. News items are headlines and links only. See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#licensing-and-limits).
 
 ## Add a point dataset
 

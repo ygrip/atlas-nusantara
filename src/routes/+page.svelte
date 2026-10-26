@@ -15,6 +15,7 @@
   import ProvinceTable from '$lib/components/ProvinceTable.svelte';
   import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
   import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
+  import HazardPanel from '$lib/components/HazardPanel.svelte';
   import IslandChart from '$lib/components/IslandChart.svelte';
   import RegionSplit from '$lib/components/RegionSplit.svelte';
   import { CloudRain, Activity, Flame, Mountain, MapPin } from 'lucide-svelte';
@@ -142,12 +143,10 @@
         <RegionAtlas bind:this={atlas} layer={activeLayer} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {#if activeLayer === 'earthquake'}
           <EarthquakePanel />
-        {:else if activeLayer === 'incident' || activeLayer === 'hazard'}
-          <div class="layer-unavailable" role="status">
-            <strong>{m.source_not_connected()}</strong><p>{m.source_not_connected_details()}</p>
-            {#if activeLayer === 'incident'}<a href="https://data.bnpb.go.id/" target="_blank" rel="noreferrer">BNPB ↗</a>
-            {:else}<a href="https://inarisk.bnpb.go.id/" target="_blank" rel="noreferrer">InaRISK ↗</a>{/if}
-          </div>
+        {:else if activeLayer === 'incident'}
+          <HazardPanel kind="reports" />
+        {:else if activeLayer === 'hazard'}
+          <HazardPanel kind="warnings" />
         {:else if activeLayer === 'warning'}
           <SnapshotPanel kind="warning" regionCode={selectedRegion?.code} />
         {/if}

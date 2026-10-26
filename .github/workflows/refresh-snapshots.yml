@@ -9,7 +9,7 @@ on:
       kind:
         type: choice
         description: Snapshot to refresh
-        options: [all, weather, earthquake]
+        options: [all, weather, earthquake, hazard]
         default: all
 
 permissions:
@@ -87,3 +87,38 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$SNAPSHOT_R2_BUCKET"
           npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/observations/earthquakes.json" --remote --file static/data/observations/earthquakes.json --content-type application/json --cache-control 'public, max-age=300'
+
+  hazard:
+    if: >-
+      (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
+      (github.event.schedule == '*/15 * * * *' || inputs.kind == 'all' || inputs.kind == 'hazard')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    concurrency:
+      group: hazard-snapshot
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies for the CAP parser
+        run: npm ci
+      - name: Capture active BMKG CAP warnings and recent PetaBencana reports
+        run: node --experimental-strip-types scripts/pipeline/run.mjs --due
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hazard-snapshot
+          path: static/data/observations/hazards.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Publish the dated snapshot without committing generated data
+        if: vars.SNAPSHOT_PUBLISH_APPROVED == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SNAPSHOT_R2_BUCKET: ${{ vars.SNAPSHOT_R2_BUCKET }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$SNAPSHOT_R2_BUCKET"
+          npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/observations/hazards.json" --remote --file static/data/observations/hazards.json --content-type application/json --cache-control 'public, max-age=300'

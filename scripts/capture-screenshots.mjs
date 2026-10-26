@@ -59,6 +59,16 @@ try {
   await align(page, '.clay-map');
   await page.waitForTimeout(350);
   await save(page, 'earthquake-overlay', '.clay-map');
+  await page.getByRole('button', { name: /Disaster reports/ }).click();
+  await page.locator('.hazard-list li').first().waitFor();
+  await align(page, '.atlas-stage');
+  await page.waitForTimeout(350);
+  await save(page, 'disaster-reports', '.atlas-stage');
+  await page.getByRole('button', { name: /Weather hazards/ }).click();
+  await page.locator('.hazard-list li').first().waitFor();
+  await align(page, '.atlas-stage');
+  await page.waitForTimeout(350);
+  await save(page, 'weather-hazards', '.atlas-stage');
   await page.close();
 
   page = await open({ dark: true });

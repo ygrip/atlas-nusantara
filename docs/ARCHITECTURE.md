@@ -29,7 +29,7 @@ Scheduled snapshot refreshes are defined separately in [SNAPSHOT_REFRESH.md](SNA
 1. **Checked-in snapshots:** forecast and earthquake archive assets are deliberately fetched with scripts and bundled with a release. They retain dates and attribution; weather cards can display them offline without implying live conditions.
 2. **Reviewed-source publication:** the Worker’s cron scheduler collects only approved sources into D1, applies retention, and publishes 30-day hot summaries/current warnings to versioned R2 objects. Production browsers read these through the configured public R2 CDN. Cold exports alone query D1 after Turnstile, rate limits and a daily budget.
 
-Disaster history and hazard data are unavailable until provider adapters and rights are reviewed. Current CAP warnings are never substituted with stale saved alerts. Inactive CAP items are skipped; malformed or incomplete warning crawls fail closed.
+Disaster reports and weather hazards come from the offline [hazard pipeline](HAZARD_PIPELINE.md) (BNPB, PetaBencana.id, ANTARA, GDELT, BMKG CAP) as one dated snapshot that the browser validates before drawing; InaRISK polygons remain unconnected. Current CAP warnings are never substituted with stale saved alerts. Inactive CAP items are skipped; malformed or incomplete warning crawls fail closed.
 
 ## Device privacy
 

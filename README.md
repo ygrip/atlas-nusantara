@@ -18,7 +18,7 @@ Explore Indonesia from the islands down to a city, with an interactive relief ma
 - **Private weather cards:** saved places and rounded device location stay in localStorage. Language popup with flags, mobile quick settings, light/dark transitions and reduced-motion support.
 - **Mobile installation and recovery:** install invitation only on uninstalled mobile web; consent-based updates, illustrated HTTP 404 and runtime error views, independent 500/503 HTML fallbacks, Terms and Privacy pages.
 
-The map is simplified, not survey-grade or a legal border reference. Cloud altitude and wave motion are visual models, not satellite clouds or measured waves. **Disaster history and hazard datasets are not connected**; the interface explains this and links to official sources. See [source evidence and limitations](docs/DATA_SOURCES.md).
+The map is simplified, not survey-grade or a legal border reference. Cloud altitude and wave motion are visual models, not satellite clouds or measured waves. **Disaster reports** merge BNPB official records, PetaBencana.id citizen reports and ANTARA/GDELT headlines through a cleaning [pipeline](docs/HAZARD_PIPELINE.md); they are unverified or preliminary and never an official warning. InaRISK hazard polygons are not connected. See [source evidence and limitations](docs/DATA_SOURCES.md).
 
 ## Run and verify
 
@@ -65,6 +65,6 @@ Administrative codes follow the pinned 2025 transcription. See [DATA_SOURCES.md]
 
 Add mountain, volcano or landmark points through the typed [overlay contract](docs/OVERLAYS.md), not by editing the base-map renderer.
 
-Design, assets and screenshots: [DESIGN.md](docs/DESIGN.md), [ASSETS.md](docs/ASSETS.md). Other guides: [architecture](docs/ARCHITECTURE.md), [ingestion](docs/INGESTION.md), [PWA](docs/PWA.md), [localization](docs/I18N.md), [sharing](docs/SHARING.md), [BMKG CAP](docs/BMKG_CAP.md), [optional push prototype](docs/PUSH.md).
+Design, assets and screenshots: [DESIGN.md](docs/DESIGN.md), [ASSETS.md](docs/ASSETS.md). Other guides: [architecture](docs/ARCHITECTURE.md), [ingestion](docs/INGESTION.md), [PWA](docs/PWA.md), [localization](docs/I18N.md), [sharing](docs/SHARING.md), [BMKG CAP](docs/BMKG_CAP.md), [hazard pipeline](docs/HAZARD_PIPELINE.md), [optional push prototype](docs/PUSH.md).
 
 Human translation review, authoritative 2025 boundary certification, BNPB/InaRISK adapters and reuse review, live source activation, browser push delivery and native-device testing remain release work.
