@@ -54,7 +54,7 @@ test('previews and downloads a local PNG card with a public URL that excludes de
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (value: string) => { (window as Window & { sharedUrl?: string }).sharedUrl = value; } } });
   });
   await openAtlas(page);
-  await page.getByRole('button', { name: 'Preview share card' }).click();
+  await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Share this atlas' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('img', { name: 'Nusantara public atlas share card' })).toBeVisible();

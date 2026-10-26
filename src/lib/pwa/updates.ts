@@ -12,7 +12,8 @@ export function watchUpdates(callbacks: UpdateCallbacks) {
   let registration: ServiceWorkerRegistration | undefined;
   let waiting: ServiceWorker | undefined;
   let installing: ServiceWorker | undefined;
-  let previouslyControlled = Boolean(container.controller);
+  // WebKit can set `controller` before it dispatches `controllerchange`. Comparing identities ignores that stale event.
+  let knownController = container.controller;
   let disposed = false;
   let lastCheck = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -33,9 +34,11 @@ export function watchUpdates(callbacks: UpdateCallbacks) {
     installing?.addEventListener('statechange', stateChanged);
   }
   function controllerChanged() {
+    if (container.controller === knownController) return;
+    const previouslyControlled = knownController !== null;
+    knownController = container.controller;
     waiting = undefined;
     callbacks.controllerChanged(previouslyControlled);
-    previouslyControlled = true;
   }
   async function check(manual = false) {
     if (disposed) return;
