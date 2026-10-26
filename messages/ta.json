@@ -245,5 +245,15 @@
   "atlas_intro": "தீவுகளை ஆராயுங்கள். இடத்தைத் தேர்ந்தெடுங்கள். வானிலையைப் பாருங்கள்.",
   "source_details": "மூலங்கள் மற்றும் வரைபட விவரங்கள்",
   "menu_close": "பட்டியலை மூடவும்",
-  "map_legend_label": "வரைபட விளக்கக்குறிப்பு"
+  "map_legend_label": "வரைபட விளக்கக்குறிப்பு",
+  "layer_destinations": "சுற்றுலாத் தலங்கள்",
+  "destination_natural": "இயற்கை",
+  "destination_built": "மனிதனால் உருவாக்கப்பட்டது",
+  "destination_select_province": "மாகாணத்தைத் தேர்ந்தெடுக்கவும்",
+  "destination_click_province": "சுற்றுலாத் தலங்களைப் பார்க்க மாகாணம் அல்லது வரைபடக் குறியைத் தேர்ந்தெடுக்கவும்.",
+  "destination_no_image": "படம் இல்லை",
+  "destination_all": "அனைத்தும்",
+  "destination_search": "தலங்களைத் தேடு",
+  "destination_empty": "பொருந்தும் இடங்கள் இல்லை.",
+  "destination_coverage_note": "தொடக்கத் தொகுப்பு மட்டுமே; முழுப் பட்டியல் அல்ல."
 }
