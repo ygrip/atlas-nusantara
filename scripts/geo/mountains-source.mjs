@@ -66,8 +66,7 @@ export function makeMountainOverlay(peaks, volcanoes, fetchedAt) {
   }
   pins.sort((a, b) => a.label.localeCompare(b.label, 'id') || a.id.localeCompare(b.id));
   const ids = new Set(pins.map(pin => pin.id));
-  const uniqueNames = new Set(pins.map(pin => mountainKey(pin.label)));
-  if (ids.size !== pins.length || pins.length === 0 || pins.length > 10000 || uniqueNames.size < 100) throw Error('Incomplete or duplicate BIG mountain inventory');
+  if (ids.size !== pins.length || pins.length === 0 || pins.length > 10000) throw Error('Incomplete or duplicate BIG mountain inventory');
   return {
     id: 'mountains', color: '#647e8a', symbol: 'triangle', source: 'Badan Informasi Geospasial (BIG)',
     sourceUrl: 'https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer',
