@@ -1,0 +1,13 @@
+{
+ "boundaryEdition": "OCHA COD-AB Indonesia v01 (BPS, valid 2020-04-01), regrouped to the 2025 code edition",
+ "codeEdition": "Kepmendagri 300.2.2-2430/2025",
+ "source": "https://data.humdata.org/dataset/cod-ab-idn",
+ "license": "CC-BY-3.0-IGO",
+ "licenseUrl": "https://creativecommons.org/licenses/by/3.0/igo/legalcode",
+ "attribution": "Boundaries: BPS, OCHA ROAP via HDX COD-AB Indonesia (CC BY 3.0 IGO). Simplified and regrouped to Kepmendagri 300.2.2-2430/2025 codes.",
+ "reviewedBy": "Automated source/license inspection and one-to-one crosswalk validation; not a cadastral certification",
+ "reviewedAt": "2026-10-26",
+ "sourceSha256": "15c1c0b449c5be5bd639c3fd39febf188842d026ddf448f7194799835d6f59ca",
+ "provinceSha256": "ea31225aae38ae9511c4f80ce485b5dbca381eefd73bfda13281f81c6b18de2f",
+ "citySha256": "7961aeadbb7ec59f8de94b8d117010153d08c652023755670ea092a6758927a2"
+}

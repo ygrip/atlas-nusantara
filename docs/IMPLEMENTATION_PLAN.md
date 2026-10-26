@@ -6,7 +6,7 @@ Status: implementation machinery and local verification are separate from verifi
 - [x] Static SPA, deep links, install prompts/manual Safari guidance, consent-based PWA updates, release cache busting and PNG icons.
 - [x] Explicit location permission, local pin add/remove/persistence and honest notification-permission states.
 - [x] Paraglide, 13 complete locale catalogs and validation.
-- [x] Historical 2022 code provenance and 37/514 hierarchy import.
+- [x] Explicitly authorized 2025 code migration: pinned 38/514 hierarchy and documented BMKG suffix crosswalk.
 - [x] CI definitions for static/unit/browser checks, local workerd/D1 and Worker dry-run packaging.
 - [ ] Independent human translation review, especially safety terminology.
 
@@ -14,11 +14,11 @@ Status: implementation machinery and local verification are separate from verifi
 - [x] Build-time Mapshaper + d3-geo projection, checksum/license/review guards and exact code-set validation.
 - [x] Sequential province-only SVG/JSON output, with `--province` for one-at-a-time generation and Git storage.
 - [x] National → province → city/regency directory, public region deep links and details.
-- [x] Lazy geographic packages, accessible search, button/wheel zoom, drag and pinch; lightweight 2.5D SVG depth.
+- [x] Lazy geographic packages, accessible search, button/wheel zoom, drag and pinch; 3D ETOPO1 relief with a native SVG fallback.
 - [x] Independent code/boundary/source provenance; no per-polygon Gaussian blur or unnecessary game-engine runtime.
-- [x] Local D1 hierarchy bootstrap and read API; manual updates rather than a scheduled code/border crawler.
-- [ ] Acquire and review actual original 37-province/514-city boundary inputs for the historical edition. No invented map assets are shipped.
-- [ ] Review real generated polygons visually and validate any historical crosswalk against primary sources.
+- [x] Local D1 hierarchy bootstrap and static region assets; manual updates rather than a scheduled code/border crawler.
+- [x] Acquire source-derived COD-AB/BPS geometry, exclude eight non-administrative units, validate a complete 514-unit crosswalk and regroup 38 provinces.
+- [ ] Independently certify boundary-line vintage against authoritative 2025 primary sources; the source geometry remains a 2020 dataset.
 
 ## Phase 2 — collected environmental data
 - [x] Official-schema BMKG earthquake JSON and CAP XML parsers with bounded, fail-closed validation.
@@ -48,7 +48,8 @@ Status: implementation machinery and local verification are separate from verifi
 - [x] Client-only PNG share preview, native share/copy/download fallbacks and public-region URLs; no private pins or device coordinates.
 - [x] Static production canonical/OG/Twitter/JSON-LD metadata, OG PNG, robots and sitemap. Only real locale URLs may be added as hreflang alternates.
 - [x] Source-code and verified support links; disabled-by-default tracking-free sponsor slot.
-- [x] Optional, clearly illustrative wind/cloud/rain assets with open-source license notices; no fabricated measured-weather overlay.
+- [x] Dated BMKG forecast-derived wind/cloud/rain animation, wind-derived sea, cloud-crossing camera, seeded particles and explicit model limitations; no claim of measured waves or satellite cloud heights.
+- [x] Flagged language popup, mobile settings, linked table/city selection, private saved-place weather cards, extensible point overlays and illustrated error/legal pages.
 
 ## Phase 5 — deployment gates
 - [x] Worker configuration, local bootstrap, migrations, tests and packaging target `nusantara.readynaz.com`.
@@ -59,4 +60,4 @@ Status: implementation machinery and local verification are separate from verifi
 
 ## Acceptance boundaries
 
-Code checks establish local behavior, not authoritative source rights or production coverage. Preserve zero-padded 2022 codes, never mix a newer 38-province edition silently, never present missing records as an all-clear, and never claim an inactive integration or notification permission is live alert delivery.
+Code checks establish local behavior, not authoritative source rights or production coverage. Preserve zero-padded 2025 codes and the explicit code/boundary/BMKG crosswalks; the maintainer authorized the move to 38 provinces. Never silently change source vintages, never present missing records as an all-clear, and never claim an inactive integration or notification permission is live alert delivery.

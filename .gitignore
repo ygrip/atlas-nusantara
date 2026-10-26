@@ -20,3 +20,8 @@ static/data/admin-2022/regions/
 static/data/.geometry-stage-*/
 static/data/admin-2022/districts.json
 static/data/admin-2022/manifest.json
+static/data/admin-2025/regions/
+static/data/admin-2025/districts.json
+static/data/admin-2025/manifest.json
+output/imagegen/
+tmp/imagegen/

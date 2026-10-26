@@ -1,7 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
+// Deterministic provider/geometry fixtures must not be bypassed by a controlling service worker.
+test.use({ serviceWorkers: 'block' });
 const localeStorageKey = 'PARAGLIDE_LOCALE';
 const pageErrors = new WeakMap<Page, string[]>();
-const codeEdition = 'Kepmendagri 100.1.1-6117/2022';
+const codeEdition = 'Kepmendagri 300.2.2-2430/2025';
 function syntheticFixture(code: string, name: string) {
   return {
     schemaVersion: 1, boundaryEdition: 'SYNTHETIC TEST FIXTURE', codeEdition,
@@ -83,10 +85,12 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   await dialog.getByRole('button', { name: 'Close share preview' }).click();
 });
 
-test('keeps missing licensed geometry explicitly unavailable', async ({ page }) => {
+test('keeps the directory usable when geometry cannot be fetched', async ({ page }) => {
+  await page.route('**/data/geometry-2025/**', route => route.fulfill({ status: 404 }));
   await openAtlas(page);
-  await expect(page.getByText('Verified boundaries are not available yet.')).toBeVisible();
-  await expect(page.getByText('Browse the historical region directory while boundary vintage and reuse rights are reviewed.')).toBeVisible();
+  await expect(page.locator('.region-list li')).toHaveCount(38);
+  await page.getByRole('searchbox').fill('Papua Barat Daya');
+  await expect(page.locator('.region-list li')).toHaveCount(1);
 });
 
 test('shows source and support links and leaves optional advertising disabled', async ({ page }) => {
@@ -191,13 +195,14 @@ test('expired hot counts disappear when a tab resumes instead of remaining appar
 });
 
 test('zooms, pans, resets, and navigates fixture geometry into the real code hierarchy', async ({ page }) => {
-  await page.route('**/data/geometry-2022/**', route => {
+  await page.route('**/data/geometry-2025/**', route => {
     const pathname = new URL(route.request().url()).pathname;
     let fixture = syntheticFixture('11', 'Synthetic province fixture');
     if (pathname.endsWith('/provinces/11.json')) fixture = syntheticFixture('11.01', 'Synthetic city fixture');
     return route.fulfill({ json: fixture });
   });
   await openAtlas(page);
+  await page.getByRole('button', { name: '2D', exact: true }).click();
   const map = page.locator('.atlas-map');
   const scale = map.locator('..').locator('.map-controls output');
   await expect(map.locator('path[data-code="11"]')).toBeVisible();
@@ -223,12 +228,12 @@ test('zooms, pans, resets, and navigates fixture geometry into the real code hie
   await page.waitForTimeout(350);
   await map.getByRole('button', { name: 'Synthetic province fixture · 11' }).click({ force: true });
   await expect(page).toHaveURL(/region=11$/);
-  await expect(page.locator('.atlas-breadcrumb')).toContainText('ACEH');
-  await expect(page.getByRole('button', { name: /KAB\. ACEH SELATAN/ })).toBeVisible();
-  await page.getByRole('button', { name: /KAB\. ACEH SELATAN/ }).click();
+  await expect(page.locator('.atlas-breadcrumb')).toContainText('Aceh');
+  await expect(page.locator('.region-list').getByRole('button', { name: /Kabupaten Aceh Selatan/ })).toBeVisible();
+  await page.locator('.region-list').getByRole('button', { name: /Kabupaten Aceh Selatan/ }).click();
   await expect(page).toHaveURL(/region=11\.01$/);
   await expect(page.locator('.selected-region')).toContainText('11.01');
-  await expect(page.locator('.selected-region')).toContainText('Code edition: 2022');
+  await expect(page.locator('.selected-region')).not.toContainText('Code edition');
 });
 
 test('supports real two-finger pinch without zooming the document', async ({ browser, browserName, baseURL }) => {
@@ -237,8 +242,9 @@ test('supports real two-finger pinch without zooming the document', async ({ bro
   try {
     const page = await context.newPage();
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.route('**/data/geometry-2022/**', route => route.fulfill({ json: syntheticFixture('11', 'Synthetic pinch fixture') }));
+    await page.route('**/data/geometry-2025/**', route => route.fulfill({ json: syntheticFixture('11', 'Synthetic pinch fixture') }));
     await openAtlas(page);
+    await page.getByRole('button', { name: '2D', exact: true }).click();
     const map = page.locator('.atlas-map');
     await expect(map.locator('path[data-code="11"]')).toBeVisible();
     await map.scrollIntoViewIfNeeded();

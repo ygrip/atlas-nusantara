@@ -5,14 +5,14 @@ import { pathToFileURL } from 'node:url';
 import { geoArea, geoMercator, geoPath } from 'd3-geo';
 import mapshaper from 'mapshaper';
 
-export const CODE_EDITION = 'Kepmendagri 100.1.1-6117/2022';
+export const CODE_EDITION = 'Kepmendagri 300.2.2-2430/2025';
 
 export function validateProvenance(provenance) {
   for (const field of ['boundaryEdition', 'codeEdition', 'source', 'license', 'licenseUrl', 'reviewedBy', 'reviewedAt']) {
     if (typeof provenance[field] !== 'string' || !provenance[field].trim()) throw Error('Missing provenance: ' + field);
   }
   if (provenance.codeEdition !== CODE_EDITION) throw Error('Wrong code edition');
-  if (!['CC-BY-4.0', 'CC0-1.0', 'ODbL-1.0', 'MIT'].includes(provenance.license)) throw Error('Unapproved redistribution license');
+  if (!['CC-BY-4.0', 'CC-BY-3.0-IGO', 'CC0-1.0', 'ODbL-1.0', 'MIT'].includes(provenance.license)) throw Error('Unapproved redistribution license');
   for (const field of ['source', 'licenseUrl']) {
     if (new URL(provenance[field]).protocol !== 'https:') throw Error('HTTPS provenance required');
   }
@@ -42,8 +42,8 @@ function validateCoordinates(coordinates) {
   for (const child of coordinates) validateCoordinates(child);
 }
 
-async function simplify(collection) {
-  const files = await mapshaper.applyCommands('-i input.geojson -simplify weighted 12% keep-shapes -o output.geojson format=geojson', { 'input.geojson': JSON.stringify(collection) });
+async function simplify(collection, percent) {
+  const files = await mapshaper.applyCommands(`-i input.geojson -simplify weighted ${percent}% keep-shapes -o output.geojson format=geojson`, { 'input.geojson': JSON.stringify(collection) });
   const simplified = JSON.parse(files['output.geojson'].toString());
   // d3 spherical polygons use clockwise exteriors (opposite RFC 7946).
   for (const feature of simplified.features) {
@@ -56,11 +56,28 @@ async function simplify(collection) {
   return simplified;
 }
 
-function project(collection, regions, provenance, level) {
-  const projection = geoMercator().fitExtent([[24, 24], [976, 476]], collection);
-  const path = geoPath(projection).digits(2);
+/** One national projection for every package, so province detail lands exactly where it sits on the national map. */
+export function nationalProjection(provinceCollection) {
+  return geoMercator().fitExtent([[24, 24], [976, 476]], provinceCollection);
+}
+
+function paddedViewBox(bounds) {
+  const [[x0, y0], [x1, y1]] = bounds;
+  const pad = Math.max(x1 - x0, y1 - y0) * 0.04;
+  return [x0 - pad, y0 - pad, x1 - x0 + 2 * pad, y1 - y0 + 2 * pad].map(value => Number(value.toFixed(3))).join(' ');
+}
+
+function project(collection, regions, provenance, level, projection) {
+  let digits = 2;
+  if (level === 'city-regency') digits = 3;
+  const path = geoPath(projection).digits(digits);
+  let viewBox = '0 0 1000 500';
+  if (level === 'city-regency') viewBox = paddedViewBox(path.bounds(collection));
+  const [translateX, translateY] = projection.translate();
   return {
-    schemaVersion: 1, ...provenance, level, viewBox: '0 0 1000 500',
+    schemaVersion: 1, ...provenance, level, viewBox,
+    // Lets the browser place dated point data (lon/lat) on the same plane without a GIS library.
+    projection: { type: 'mercator', scale: projection.scale(), translate: [translateX, translateY] },
     regions: collection.features.map(feature => {
       const code = feature.properties.code;
       const region = regions.find(item => item.code === code);
@@ -100,12 +117,13 @@ async function buildGeometryInDirectory({ provinceInput, cityInput, provenanceIn
   if (provinceData.edition !== CODE_EDITION || cityData.edition !== CODE_EDITION) throw Error('Administrative seed edition mismatch');
   const provinces = provinceData.regions;
   const cities = cityData.regions;
-  if (provinces.length !== 37 || cities.length !== 514 || new Set(provinces.map(region => region.code)).size !== 37 || new Set(cities.map(region => region.code)).size !== 514) throw Error('2022 code edition must contain 37/514 unique regions');
+  if (provinces.length !== 38 || cities.length !== 514 || new Set(provinces.map(region => region.code)).size !== 38 || new Set(cities.map(region => region.code)).size !== 514) throw Error('2025 code edition must contain 38/514 unique regions');
   const provinceCollection = JSON.parse(provinceBytes);
   validateCollection(provinceCollection, new Set(provinces.map(item => item.code)), 'provinces');
   if (selectedProvince && !provinces.some(region => region.code === selectedProvince)) throw Error('Unknown province selection');
-  const simplifiedProvinces = await simplify(provinceCollection);
-  await writePackage(outputDirectory, 'national', project(simplifiedProvinces, provinces, provenance, 'province'));
+  const simplifiedProvinces = await simplify(provinceCollection, 12);
+  const projection = nationalProjection(simplifiedProvinces);
+  await writePackage(outputDirectory, 'national', project(simplifiedProvinces, provinces, provenance, 'province', projection));
   let allCities;
   if (!partitionedInput) {
     const cityBytes = await readFile(cityInput);
@@ -125,10 +143,10 @@ async function buildGeometryInDirectory({ provinceInput, cityInput, provenanceIn
       collection = { type: 'FeatureCollection', features: allCities.features.filter(feature => feature.properties.code.startsWith(province.code + '.')) };
     }
     validateCollection(collection, new Set(expectedCities.map(region => region.code)), province.code);
-    const simplified = await simplify(collection);
-    await writePackage(outputDirectory, 'provinces/' + province.code, project(simplified, cities, provenance, 'city-regency'));
+    const simplified = await simplify(collection, 40);
+    await writePackage(outputDirectory, 'provinces/' + province.code, project(simplified, cities, provenance, 'city-regency', projection));
   }
-  await writeFile(resolve(outputDirectory, 'manifest.json'), JSON.stringify({ schemaVersion: 1, ...provenance, counts: { provinces: 37, cities: 514 }, partial: Boolean(selectedProvince), selectedProvince: selectedProvince ?? null }));
+  await writeFile(resolve(outputDirectory, 'manifest.json'), JSON.stringify({ schemaVersion: 1, ...provenance, counts: { provinces: 38, cities: 514 }, partial: Boolean(selectedProvince), selectedProvince: selectedProvince ?? null }));
 }
 
 async function publishDirectory(staged, target) {
@@ -161,5 +179,5 @@ export async function buildGeometry(options) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const args = process.argv.slice(2);
   if (args.length !== 3 && !(args.length === 5 && args[3] === '--province')) throw Error('Usage: node scripts/geo/build-geometry.mjs provinces.geojson cities-directory provenance.json [--province 11]');
-  await buildGeometry({ provinceInput: args[0], cityInput: args[1], provenanceInput: args[2], selectedProvince: args[4], outputDirectory: 'static/data/geometry-2022', adminDirectory: 'static/data/admin-2022' });
+  await buildGeometry({ provinceInput: args[0], cityInput: args[1], provenanceInput: args[2], selectedProvince: args[4], outputDirectory: 'static/data/geometry-2025', adminDirectory: 'static/data/admin-2025' });
 }

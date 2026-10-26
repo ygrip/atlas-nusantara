@@ -1,4 +1,4 @@
-name: Export historical region codes (2022)
+name: Export pinned region codes (2025)
 on:
   workflow_dispatch:
   pull_request:
@@ -15,18 +15,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch archived 2022 decision transcription
+      - name: Fetch pinned 2025 decision transcription
         run: |
           curl --fail --location --retry 3 \
-            'https://raw.githubusercontent.com/cahyadsn/wilayah/master/db/archive/wilayah_2023.sql' \
-            --output /tmp/wilayah_2023.sql
-          sha256sum /tmp/wilayah_2023.sql
+            'https://raw.githubusercontent.com/cahyadsn/wilayah/d68e8d5516/db/wilayah.sql' \
+            --output /tmp/wilayah.sql
+          sha256sum /tmp/wilayah.sql
       - name: Export and verify the administrative hierarchy
-        run: node scripts/import-regions.mjs --input /tmp/wilayah_2023.sql
+        run: node scripts/import-regions.mjs --input /tmp/wilayah.sql
       - name: Publish full region-code archive
         uses: actions/upload-artifact@v4
         with:
-          name: kemendagri-2022-administrative-codes
-          path: static/data/admin-2022/
+          name: kemendagri-2025-administrative-codes
+          path: static/data/admin-2025/
           retention-days: 30
           if-no-files-found: error

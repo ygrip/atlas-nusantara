@@ -1,5 +1,1 @@
-<script lang="ts">
-  import Atlas from '../+page.svelte';
-</script>
-
-<Atlas />
+<!-- Never rendered: +page.ts always throws 404, which is displayed by ../+error.svelte. -->

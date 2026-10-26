@@ -1,169 +1,128 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { MapPin, Navigation, Bell } from 'lucide-svelte';
   import { m } from '$lib/paraglide/messages.js';
-  import { loadRegions } from '$lib/atlas/regions';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { readPins, writePins, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions.js';
+  import { loadRegions, type Region } from '$lib/atlas/regions';
+  import { ADMIN_DATA_PATH } from '$lib/atlas/edition';
+  import { loadForecast, type ForecastSnapshot } from '$lib/map/weather';
+  import { assetUrl } from '$lib/pwa/assets';
+  import { readPins, writePins, readCurrentLocation, writeCurrentLocation, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions';
+  import WeatherPlaceCard from './WeatherPlaceCard.svelte';
 
-  type Region = { code: string; name: string };
-  let regions: Region[] = [];
-  let selected = '32';
-  let pins: Pin[] = [];
-  let status = '';
-  let notificationPermission: NotificationPermission | 'unavailable' = 'unavailable';
-  let locationPermission: PermissionState | 'unavailable' = 'unavailable';
-  let busy = false;
+  let { selectedRegion, onopen }: { selectedRegion?: Region; onopen?: (code: string) => void } = $props();
+  let provinces = $state<Region[]>([]);
+  let cities = $state<Region[]>([]);
+  let selected = $state('32');
+  let pins = $state<Pin[]>([]);
+  let current = $state<Extract<Pin, { type: 'coordinates' }>>();
+  let forecast = $state<ForecastSnapshot>();
+  let status = $state('');
+  let busy = $state(false);
+  let notificationPermission = $state<NotificationPermission | 'unavailable'>('unavailable');
+  const names = $derived(new Map([...provinces, ...cities].map(region => [region.code, region.name])));
+  $effect(() => { if (selectedRegion) selected = selectedRegion.code; });
 
   onMount(() => {
     document.documentElement.lang = getLocale();
-    try {
-      pins = readPins();
-    } catch {
-      status = m.pin_storage_error();
-    }
-    if ('Notification' in window && 'serviceWorker' in navigator) {
-      notificationPermission = Notification.permission;
-    }
-    if (navigator.geolocation) locationPermission = 'prompt';
-    if (!navigator.geolocation) {
-      locationPermission = 'unavailable';
-    } else if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'geolocation' }).then(permission => {
-        locationPermission = permission.state;
-        permission.onchange = () => locationPermission = permission.state;
-      }).catch(() => locationPermission = 'prompt');
-    }
-    loadRegions('/data/admin-2022/provinces.json')
-      .then(payload => { regions = payload.regions; })
-      .catch(() => { status = m.data_unavailable(); });
+    let disposed = false;
+    const controller = new AbortController();
+    readSavedPlaces();
+    if ('Notification' in window && 'serviceWorker' in navigator) notificationPermission = Notification.permission;
+    void Promise.all([
+      loadRegions(ADMIN_DATA_PATH + '/provinces.json', controller.signal),
+      loadRegions(ADMIN_DATA_PATH + '/cities.json', controller.signal)
+    ]).then(([parents, children]) => { if (!disposed) { provinces = parents.regions; cities = children.regions; } })
+      .catch(error => { if (error.name !== 'AbortError') { console.warn('Places directory unavailable', error); status = m.data_unavailable(); } });
+    const refreshForecast = () => {
+      void loadForecast(assetUrl('/data/weather/forecast.json'), controller.signal)
+        .then(snapshot => { if (!disposed && snapshot) forecast = snapshot; })
+        .catch(error => { if (error.name !== 'AbortError') console.warn('Saved-place forecast unavailable', error); });
+    };
+    refreshForecast();
+    const forecastTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshForecast(); }, 2 * 60 * 60_000);
+    const sync = (event: StorageEvent) => { if (event.key?.startsWith('nusantara:')) readSavedPlaces(); };
+    window.addEventListener('storage', sync);
+    return () => { disposed = true; controller.abort(); clearInterval(forecastTimer); window.removeEventListener('storage', sync); };
   });
 
-  function save(pin: Pin) {
-    if (pins.some(item => item.id === pin.id)) return;
-    if (pins.length >= 30) { status = m.pin_storage_error(); return; }
-    const updatedPins = [...pins, pin].slice(0, 30);
-    try {
-      writePins(updatedPins);
-      pins = updatedPins;
-      status = m.location_added();
-    } catch {
-      status = m.pin_storage_error();
-    }
+  function readSavedPlaces() {
+    try { pins = readPins(); current = readCurrentLocation(); }
+    catch (error) { console.warn('Saved places could not be read', error); status = m.pin_storage_error(); }
   }
+
   function pinRegion() {
-    const region = regions.find(item => item.code === selected);
-    if (!region) return;
-    save({ id: 'region:' + region.code, type: 'region', code: region.code,
-      name: region.name, addedAt: new Date().toISOString() });
+    const name = names.get(selected);
+    if (!name || pins.some(pin => pin.type === 'region' && pin.code === selected)) return;
+    if (pins.length >= 30) { status = m.pin_storage_error(); return; }
+    const next: Pin[] = [...pins, { id: 'region:' + selected, type: 'region', code: selected, name, addedAt: new Date().toISOString() }];
+    try { writePins(next); pins = next; status = m.location_added(); }
+    catch (error) { console.warn('Place could not be saved', error); status = m.pin_storage_error(); }
   }
+
   async function useDeviceLocation() {
     busy = true;
     try {
       const coordinates = await requestPosition();
-      // Approximate coordinates (~100 m) limit unnecessary precision in saved pins.
       const lat = Number(coordinates.latitude.toFixed(3));
       const lng = Number(coordinates.longitude.toFixed(3));
-      save({ id: 'geo:' + lat + ',' + lng, type: 'coordinates', lat, lng,
-        name: lat + ', ' + lng, addedAt: new Date().toISOString() });
-    } catch {
-      status = m.position_error();
-    } finally { busy = false; }
-  }
-  function removePin(id: string) {
-    const updatedPins = pins.filter(item => item.id !== id);
-    try {
-      writePins(updatedPins);
-      pins = updatedPins;
+      const location: Extract<Pin, { type: 'coordinates' }> = { id: 'geo:' + lat + ',' + lng, type: 'coordinates', lat, lng, name: m.current_location(), addedAt: new Date().toISOString() };
+      writeCurrentLocation(location);
+      current = location;
       status = '';
-    } catch {
-      status = m.pin_storage_error();
-    }
+    } catch (error) { console.warn('Device location unavailable', error); status = m.position_error(); }
+    finally { busy = false; }
   }
+
+  function removePin(id: string) {
+    const next = pins.filter(pin => pin.id !== id);
+    try { writePins(next); pins = next; status = ''; }
+    catch (error) { console.warn('Place could not be removed', error); status = m.pin_storage_error(); }
+  }
+
   async function notifications() {
     busy = true;
     try {
       notificationPermission = await requestNotifications();
-      if (notificationPermission === 'granted') {
-        status = m.notification_setup();
-      } else {
-        status = m.permission_denied();
-      }
-    } catch {
-      notificationPermission = 'unavailable';
-      status = m.permissions_unsupported();
-    } finally { busy = false; }
+      status = m.notification_setup();
+      if (notificationPermission === 'denied') status = m.permission_denied();
+    } catch (error) { console.warn('Notification permission unavailable', error); notificationPermission = 'unavailable'; status = m.permissions_unsupported(); }
+    finally { busy = false; }
+  }
+
+  function openPlace(code: string) {
+    onopen?.(code);
+    document.getElementById('atlas')?.scrollIntoView({ block: 'start' });
   }
 </script>
 
-<section id="locations" class="preferences">
-  <header class="preferences-header">
-    <div><span class="eyebrow">03 / PERSONAL</span><h2>{m.pins_heading()}</h2></div>
-    <span class="archive-tag">Kepmendagri 2022</span>
+<section id="locations" class="preferences places-section" aria-labelledby="places-heading">
+  <header class="places-header"><div><span class="eyebrow"><MapPin size={15} aria-hidden="true" /> {m.nav_locations()}</span><h2 id="places-heading">{m.pins_heading()}</h2><p>{m.places_description()}</p></div>
+    <button type="button" class="location-button" onclick={useDeviceLocation} disabled={busy}><Navigation size={16} aria-hidden="true" />{m.location_button()}</button>
   </header>
-  <div class="preferences-body">
-    <div class="pin-form">
-      <label for="province-code">{m.pin_region_label()}</label>
-      <div class="pin-row">
-        <select id="province-code" bind:value={selected} disabled={regions.length === 0}>
-          {#each regions as region (region.code)}
-            <option value={region.code}>{region.code} · {region.name}</option>
-          {/each}
-        </select>
-        <button type="button" onclick={pinRegion} disabled={regions.length === 0}>{m.pin_button()}</button>
-      </div>
-      <div class="pin-actions">
-        <button type="button" onclick={useDeviceLocation} disabled={busy || locationPermission === 'denied' || locationPermission === 'unavailable'}>{m.location_button()}</button>
-        <button type="button" onclick={notifications} disabled={busy || notificationPermission === 'unavailable' || notificationPermission === 'denied'}>{m.notify_button()}</button>
-      </div>
-      {#if locationPermission === 'denied'}
-        <p class="state">{m.permission_denied()}</p>
-      {/if}
-      {#if notificationPermission === 'unavailable'}
-        <p class="disclaimer">{m.permissions_unsupported()}</p>
-      {/if}
-      <p class="disclaimer">{m.notification_setup()}</p>
-      {#if notificationPermission !== 'unavailable'}
-        <p class="state">{m.notify_result()} {#if notificationPermission === 'granted'}{m.permission_granted()}{:else if notificationPermission === 'denied'}{m.permission_denied()}{:else}{m.permission_prompt()}{/if}</p>
-      {/if}
-      {#if status}<p role="status" class="state">{status}</p>{/if}
+  <form class="places-form" onsubmit={event => { event.preventDefault(); pinRegion(); }}>
+    <label for="province-code">{m.pin_region_label()}</label>
+    <div><select id="province-code" bind:value={selected} disabled={provinces.length === 0}>
+      <optgroup label={m.level_province()}>{#each provinces as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
+      <optgroup label={m.level_city()}>{#each cities as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
+    </select><button type="submit" disabled={provinces.length === 0}><MapPin size={16} aria-hidden="true" />{m.pin_button()}</button></div>
+  </form>
+  {#if status}<p role="status" class="state">{status}</p>{/if}
+  {#if current || pins.length > 0}
+    <div class="weather-cards">
+      {#if current}<WeatherPlaceCard pin={current} {forecast} {names} current onopen={openPlace} />{/if}
+      {#each pins as pin (pin.id)}<WeatherPlaceCard {pin} {forecast} {names} onremove={() => removePin(pin.id)} onopen={openPlace} />{/each}
     </div>
-    <div class="pins">
-      {#if pins.length === 0}
-        <p class="empty">{m.no_pins()}</p>
-      {:else}
-        {#each pins as pin (pin.id)}
-          <div class="pin">
-            <span><strong>{pin.name}</strong>{#if pin.type === 'region'}<small>{pin.code}</small>{/if}</span>
-            <button type="button" aria-label={m.unpin_button() + ' ' + pin.name} onclick={() => removePin(pin.id)}>{m.unpin_button()}</button>
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </div>
+    <p class="forecast-note">{m.forecast_archive_note()} <a href="https://data.bmkg.go.id/prakiraan-cuaca/" target="_blank" rel="noreferrer">BMKG ↗</a></p>
+  {:else}<p class="empty">{m.no_pins()}</p>{/if}
+  <div class="notification-settings"><button type="button" onclick={notifications} disabled={busy || notificationPermission === 'unavailable' || notificationPermission === 'denied'}><Bell size={15} aria-hidden="true" />{m.notify_button()}</button><small>{m.notification_setup()}</small></div>
 </section>
 
 <style>
-  .preferences { margin-top: 32px; padding: 24px; border: 1px solid #f7fbf2; border-radius: 28px; background: #e4eee3; box-shadow: 9px 11px 26px #c6d5c9, -8px -8px 22px #fafff9; }
-  .preferences-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .preferences h2 { letter-spacing: -.04em; font-size: clamp(1.35rem, 3vw, 2rem); margin: 12px 0 24px; }
-  .archive-tag { font-size: .7rem; white-space: nowrap; color: #5a8370; }
-  .preferences-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
-  .pin-form { display: grid; min-width: 0; align-content: start; gap: 12px; }
-  label { font-weight: 650; font-size: .8rem; }
-  .pin-row, .pin-actions { display: flex; gap: 9px; }
-  .pin-row { min-width: 0; }
-  .pin-row select { flex: 1 1 0; width: 0; min-width: 0; max-width: 100%; }
-  .pin-row button { flex: 0 0 auto; }
-  button { min-height: 44px; min-width: 44px; border: 1px solid #cbdbcc; border-radius: 12px; padding: 10px 12px; background: var(--surface); color: var(--text); font-size: .82rem; }
-  button:hover:not(:disabled) { background: #e0eddf; }
-  button:disabled { opacity: .5; cursor: default; }
-  .pin-actions { flex-wrap: wrap; }
-  .pin-actions button { flex: 1; }
-  .disclaimer, .state, .empty { color: #627c6c; font-size: .78rem; line-height: 1.5; }
-  .pins { display: grid; align-content: start; gap: 10px; }
-  .pin { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 14px; border-radius: 14px; background: var(--mint); min-width: 0; }
-  .pin span { min-width: 0; overflow-wrap: anywhere; }
-  .pin strong { display: block; font-size: .85rem; }
-  .pin small { display: block; color: #71897d; }
-  @media(max-width: 680px) { .preferences-body { grid-template-columns: 1fr; } .preferences { padding: 18px; } .archive-tag { display: none; } }
+  .places-section { padding: clamp(18px, 3vw, 30px); min-width: 0; }
+  .places-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }.places-header .eyebrow { display: flex; align-items: center; gap: 6px; }.places-header h2 { margin: 8px 0; letter-spacing: -.04em; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }.places-header p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.6; }
+  button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; font-weight: 800; box-shadow: 0 3px 0 var(--border); }.location-button { background: var(--mint); } button:disabled { opacity: .55; }
+  .places-form { max-width: 680px; display: grid; gap: 7px; margin-bottom: 22px; }.places-form label { font-weight: 800; font-size: .8rem; }.places-form > div { display: flex; gap: 10px; min-width: 0; }.places-form select { flex: 1; width: 0; min-width: 0; max-width: none; }.places-form button { flex-shrink: 0; background: var(--peach); }
+  .weather-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }.forecast-note,.empty,.state { font-size: .8rem; line-height: 1.6; color: var(--muted); }.forecast-note { margin: 16px 0 0; }.forecast-note a { text-decoration: underline; }
+  .notification-settings { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }.notification-settings small { color: var(--muted); font-size: .72rem; }
 </style>

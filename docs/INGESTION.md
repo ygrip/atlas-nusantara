@@ -13,7 +13,7 @@ Input is JSON with these required top-level properties:
 - `provenance`: `source`, HTTPS `sourceUrl`, `sourcePublishedAt` (ISO timestamp or null), `fetchedAt`, `validUntil`, an allowlisted `license` identifier, HTTPS `licenseUrl`, `reviewedBy`, ISO `reviewedAt`, `coverage` (explicit list), and `edition` (string or null). Warnings require source publication and expiry times; expiry must be later.
 - `generatedAt`: ISO timestamp
 
-The publisher loads trusted region codes from `static/data/admin-2022/{provinces,cities}.json`. Input cannot declare its own trusted code set. Unknown codes remain in `unmatchedRegionCodes` for review. Writes use a unique temporary file and atomic rename.
+The publisher loads trusted region codes from `static/data/admin-2025/{provinces,cities}.json`. Input cannot declare its own trusted code set. Unknown codes remain in `unmatchedRegionCodes` for review. Writes use a unique temporary file and atomic rename.
 
 Run with Node 22.12+ type stripping:
 

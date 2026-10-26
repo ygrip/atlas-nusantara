@@ -1,0 +1,15 @@
+{
+ "source": "ETOPO1 Global Relief Model (NOAA NCEI), via NOAA CoastWatch ERDDAP etopo180",
+ "sourceUrl": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+ "license": "Public domain (U.S. Government work)",
+ "attribution": "Relief: ETOPO1, NOAA National Centers for Environmental Information.",
+ "encoding": "elevation_m = (R * 256 + G) / 3 - 11000",
+ "width": 2048,
+ "height": 1024,
+ "plane": [
+  1000,
+  500
+ ],
+ "minElevation": -9633.40234375,
+ "maxElevation": 4410.1025390625
+}

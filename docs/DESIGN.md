@@ -1,35 +1,73 @@
-# Visual and monetization direction
+# Atlas Nusantara: design and interaction
 
-Reference: https://tools.readynaz.com (trick-it), inspected alongside the maker's local `open-tools` repository. Reused high-level principles: warm cream, brown type, pastel raised surfaces, generous rounded corners, Nunito and quiet interaction. Nusantara retains its own atlas identity, mark, palette accents and data graphics; no reference illustration, avatar or platform logo was copied.
+## Direction
 
-Nunito is self-hosted via `@fontsource-variable/nunito` under the SIL Open Font License included with that package. System fonts cover scripts absent from Nunito. SVG geography is generated only from reviewed source inputs, not drawn by an image model. No image generation credits, WebGL, p5 rendering, scroll hijacking, GSAP or continuous decorative animation is needed for a lightweight working atlas.
+A clay atlas you can take apart: start with Indonesia, choose a province, then a city. The map, breadcrumb, weather panel, table highlight and saved-place action follow one region selection. The interaction is an anatomy of the country, not a series of unrelated dashboard boxes.
 
-## Claymorphic bento layout
+The trick-it reference supplied high-level behaviour: a compact clay header, language selection with flags, mobile settings, source transparency and useful error recovery. Atlas Nusantara uses its own mark, illustrations and geography; reference artwork and identity were not copied.
 
-The page uses a claymorphic system defined as CSS tokens in `src/app.css`: warm cream and pastel surfaces, 24–28 px radii, paired outer drop shadow plus inner highlight/shade (`--clay-shadow`), pressed insets for inputs and selected states (`--clay-pressed`), and a short `cubic-bezier(.34,1.56,.64,1)` press/hover bounce. Light and dark themes share the same tokens. `prefers-reduced-motion: reduce` removes every transition and animation.
+The palette stays warm cream, brown, peach, mint, lilac and sea blue. Light-mode surfaces use a warm edge, shallow bottom extrusion and restrained inset highlight—not a bright white perimeter glow. Dark mode uses the same tokens with its own surface contrast. Nunito is self-hosted.
 
-Layout, top to bottom:
+## Page and shared state
 
-1. **Sticky section navigation** — a clay pill with Atlas · Provinces · Data · My places · Sources · Support. The section in view is highlighted (`IntersectionObserver`, `aria-current="location"`). A skip link jumps to the atlas; a back-to-top button appears after the hero scrolls away. On phones the navigation becomes a second, horizontally scrollable chip row.
-2. **Hero bento** — title card with primary actions and share preview, three edition stat cards (37 provinces, 416 kabupaten, 98 kota, verified by the region import) and the code-edition card.
-3. **Data layers bar** — the four layer toggles in one horizontal clay bar directly above the map.
-4. **Atlas card** — breadcrumb, map and the searchable directory. With verified geometry the SVG map (zoom, pan, pinch) renders; without it, the schematic province tile map renders (see [GEOMETRY.md](GEOMETRY.md)).
-5. **Province table** — 37 rows with island-group filter chips, kabupaten/kota/total columns, and a **Details** popup (native `<dialog>`, focus-trapped, Escape/backdrop to close) listing every city/regency, with **Open in atlas** that selects the province and scrolls back to the map.
-6. Observatory summary, preferred locations, install, sources/roadmap bento and support.
+- **Header:** Atlas Nusantara on desktop, Nusantara on mobile. Desktop language popup lists 13 flagged native-language choices. Mobile quick settings groups language, share and theme. Theme changes reveal from the activated control, with a direct reduced-motion fallback.
+- **Atlas:** full-width source-derived map, a compact layer strip, shared breadcrumb and a searchable region-card directory. Buttons, keyboard, wheel, drag and touch pinch are alternatives. The map key collapses on phones so it does not cover the islands.
+- **Charts and table:** island-group stacked bars and the kabupaten/kota ring expose their values accessibly. The table sorts, filters and highlights the selected province; province and city links open the same map rather than a disconnected view.
+- **Your places:** rounded device location and saved regions live only in localStorage. Each card shows a dated nearby BMKG sample, temperature, weather, wind, humidity and upcoming forecast steps. It does not pretend a single village represents an entire province.
+- **Secondary information:** edition and detailed sources belong in Terms. No roadmap section. Installation appears only on uninstalled mobile web; update consent remains available when needed. Errors provide recovery links and safe references.
 
-Navigation paths stay short: tile or directory → province → city; table → popup → atlas. Every control is a native button or link with a visible focus ring and at least a 36–44 px target. No GSAP, smooth-scroll engine or WebGL was added; skills consulted were `ui-ux-pro-max` (claymorphism style, bento/dashboard guidance, pre-delivery checklist) and `build-awwwards-quality-sites` (static first frame, reduced motion, no ornamental motion). The isometric `anatomy` skill was evaluated and not used, because the atlas must not imply geography that the data cannot support.
+## Motion and skills
+
+All skills under the project’s skill directory were considered. The relevant practices are applied together, not as unrelated features:
+
+| Skill | Application |
+|---|---|
+| ui-ux-pro-max | Clay tokens, typography, chart semantics, contrast, responsive layouts and keyboard/touch controls |
+| build-awwwards-quality-sites | Original hero imagery, restrained GSAP sequencing, one Lenis page-scroll engine and deliberate fallback states |
+| scroll-world-storytelling | A Three.js world with a broad-to-specific camera journey; map wheel/pinch input zooms through a visual cloud deck |
+| anatomy | One model supplies the geometry, relief, readouts and interaction; deliberate depth and legible controls explain the country |
+| algorithmic-art | Reproducible seeded particle placement and flow advection through actual forecast fields |
+| imagegen | Original clay hero, legal, offline and error illustrations, compressed to responsive WebP assets |
+
+The HTML-demo workflow was reviewed but is not used to fake an interactive product recording: this is the actual working app. No p5 canvas, second scroll engine, fabricated weather or simulated geographic tiles are added merely to exercise a skill.
+
+GSAP owns hero/heading choreography; Lenis excludes the map, dialogs, table and directory. MapControls owns the map camera. Weather has one scene clock, bounded pixel ratio, offscreen/hidden pause and complete teardown. Reduced motion freezes ambient effects and skips smooth page scrolling, cloud penetration and camera interpolation.
+
+Cloud opacity follows forecast coverage. The camera-crossing veil is a presentation effect at an illustrative cloud height, not measured atmospheric volume. See [GEOMETRY.md](GEOMETRY.md) for the physical-data limitations.
 
 ## Screenshots
 
-Captured from the production build (`npm run build`, `node scripts/serve-built.mjs`) with Playwright at 1440 × 900 and 390 × 844. No provider data is configured locally, so the observatory shows its honest unavailable state.
+Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-screenshots.mjs`. Images are actual production-build captures at 1440 × 1000 and 390 × 844, with reduced-motion static frames. Saved-place images use public city pins, not a private device location.
 
-| | |
+| Home | Theme |
 |---|---|
-| ![Home, light theme](screenshots/home-light.png) | ![Home, dark theme](screenshots/home-dark.png) |
-| ![Schematic tile map with JAWA BARAT selected](screenshots/atlas-tile-map.png) | ![Province table](screenshots/province-table.png) |
-| ![Province details popup](screenshots/province-popup.png) | ![Mobile home](screenshots/mobile-home.png) |
+| ![Desktop home](screenshots/home-light.png) | ![Dark home](screenshots/home-dark.png) |
 
-![Mobile atlas](screenshots/mobile-atlas.png)
+| Indonesia | Province |
+|---|---|
+| ![National relief map](screenshots/atlas-3d.png) | ![Province detail](screenshots/province-relief.png) |
+
+| City weather | Another overlay |
+|---|---|
+| ![City weather](screenshots/city-weather.png) | ![Earthquake pins and legend](screenshots/earthquake-overlay.png) |
+
+| Directory | Details |
+|---|---|
+| ![Sortable province table](screenshots/province-table.png) | ![Clickable city details](screenshots/province-popup.png) |
+
+![Saved weather cards](screenshots/saved-weather.png)
+
+| Mobile home | Mobile controls |
+|---|---|
+| ![Mobile home](screenshots/mobile-home.png) | ![Mobile quick settings](screenshots/mobile-settings.png) |
+
+| Languages | Mobile atlas |
+|---|---|
+| ![Flagged language popup](screenshots/language-popup.png) | ![Mobile atlas](screenshots/mobile-atlas.png) |
+
+| Recovery | Terms |
+|---|---|
+| ![Illustrated 404](screenshots/error-404.png) | ![Terms and sources](screenshots/terms.png) |
 
 ## Support and source
 

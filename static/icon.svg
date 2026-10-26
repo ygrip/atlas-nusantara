@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="44" fill="#dceadf"/><path d="M34 102 72 48 102 113 135 69 166 121 130 153 76 134Z" fill="#86bfa0" stroke="#fff" stroke-width="7" stroke-linejoin="round"/><circle cx="150" cy="48" r="15" fill="#f5bf7b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="192" height="192">
+  <title>Nusantara Atlas</title>
+  <defs><clipPath id="c"><rect width="32" height="32" rx="9"/></clipPath></defs>
+  <rect width="32" height="32" rx="9" fill="#cfe7d2"/>
+  <g clip-path="url(#c)">
+    <circle cx="23" cy="10.5" r="5" fill="#f2a35c"/>
+    <path d="M3 22c2-8 8-10 12-4 2-3 6-4 9 0 1 1.500 1.500 3 1.500 4H3Z" fill="#e08a5f"/>
+    <path d="M0 22c5-3.500 9-3.500 16 0s11 3.500 16 0V32H0Z" fill="#6cadc6"/>
+    <path d="M0 27c5-3 9-3 16 0s11 3 16 0V32H0Z" fill="#4f93b0"/>
+  </g>
+</svg>

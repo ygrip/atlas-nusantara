@@ -1,8 +1,10 @@
 import { browser } from '$app/environment';
+import { upgradeRegionCode } from '$lib/atlas/code-upgrades';
 export type Pin =
  | { id: string; type: 'region'; code: string; name: string; addedAt: string }
  | { id: string; type: 'coordinates'; lat: number; lng: number; name: string; addedAt: string };
 const storageKey = 'nusantara:pins:v1';
+const currentLocationKey = 'nusantara:current-location:v1';
 const regionCodePattern = /^\d{2}(?:\.\d{2}){0,2}(?:\.\d{4})?$/;
 const coordinateIdPattern = /^geo:(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/;
 
@@ -33,10 +35,31 @@ export function readPins(): Pin[] {
  if (!Array.isArray(items)) return [];
  const uniquePins = new Map<string, Pin>();
  for (const item of items) {
-  if (isValidPin(item) && !uniquePins.has(item.id)) uniquePins.set(item.id, item);
+  if (isValidPin(item)) {
+   let pin = item;
+   if (pin.type === 'region') {
+    const code = upgradeRegionCode(pin.code);
+    pin = { ...pin, code, id: 'region:' + code };
+   }
+   if (!uniquePins.has(pin.id)) uniquePins.set(pin.id, pin);
+  }
   if (uniquePins.size === 30) break;
  }
  return [...uniquePins.values()];
+}
+
+export function readCurrentLocation(): Extract<Pin, { type: 'coordinates' }> | undefined {
+ if (!browser) return undefined;
+ const raw = localStorage.getItem(currentLocationKey);
+ if (!raw) return undefined;
+ const candidate: unknown = JSON.parse(raw);
+ if (isValidPin(candidate) && candidate.type === 'coordinates') return candidate;
+ return undefined;
+}
+
+export function writeCurrentLocation(pin: Extract<Pin, { type: 'coordinates' }>): void {
+ if (!isValidPin(pin)) throw Error('Invalid device location');
+ localStorage.setItem(currentLocationKey, JSON.stringify(pin));
 }
 
 export function writePins(pins: Pin[]): void {

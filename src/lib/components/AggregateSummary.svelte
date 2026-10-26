@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { m } from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { Bell, Activity, Flame, Mountain } from 'lucide-svelte';
   type Kind = 'warning' | 'earthquake' | 'incident' | 'hazard';
   interface Source { id: string; name: string; type?: Kind | null; status: string; intervalMinutes: number; lastSuccessAt?: string; nextDueAt?: string; sourceUrl: string; termsUrl: string }
   interface Summary { generatedAt: string; retentionDays: number; counts: Record<Kind, number>; sources: Source[]; observations: { type: Kind; properties: Record<string, unknown> }[]; derivedFacts: {id: string; value: string | number}[] }
@@ -17,8 +18,8 @@
   let controller: AbortController | undefined;
   let expiryTimer: ReturnType<typeof setInterval> | undefined;
   const kinds = [
-    { id: 'warning' as const, label: m.layer_weather }, { id: 'earthquake' as const, label: m.layer_earthquakes },
-    { id: 'incident' as const, label: m.layer_history }, { id: 'hazard' as const, label: m.layer_hazards }
+    { id: 'warning' as const, label: m.layer_weather, icon: Bell }, { id: 'earthquake' as const, label: m.layer_earthquakes, icon: Activity },
+    { id: 'incident' as const, label: m.layer_history, icon: Flame }, { id: 'hazard' as const, label: m.layer_hazards, icon: Mountain }
   ];
   $: largest = summary?.derivedFacts.find(fact => fact.id === 'max-earthquake-magnitude');
   $: countValues = kinds.map(kind => summary?.counts[kind.id] ?? 0);
@@ -80,7 +81,7 @@
     <p class="summary-window">{m.summary_window()} · {m.ingested_time()}: <time datetime={summary.generatedAt}>{date(summary.generatedAt)}</time></p>
     <div class="summary-counts">
       {#each kinds as kind (kind.id)}
-        <article><span>{kind.label()}</span><strong>{new Intl.NumberFormat(getLocale()).format(summary.counts[kind.id])}</strong><small>{m.retained_records()}</small>
+        <article><span class="count-label"><span class="count-icon"><svelte:component this={kind.icon} size={18} aria-hidden="true" /></span>{kind.label()}</span><strong>{new Intl.NumberFormat(getLocale()).format(summary.counts[kind.id])}</strong><small>{m.retained_records()}</small>
         </article>
       {/each}
     </div>
