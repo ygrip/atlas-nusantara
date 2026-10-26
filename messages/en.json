@@ -15,5 +15,17 @@
   "disclaimer": "Not an emergency alert service. Follow official advisories.",
   "sources_heading": "Data sources",
   "roadmap_heading": "Implementation roadmap",
-  "roadmap_summary": "Live feeds and verified boundaries will be added in staged releases."
+  "roadmap_summary": "Live feeds and verified boundaries will be added in staged releases.",
+  "pins_heading": "Preferred locations",
+  "pin_region_label": "Province (2022 codes)",
+  "pin_button": "Pin region",
+  "location_button": "Use device location",
+  "notify_button": "Enable notifications",
+  "unpin_button": "Remove",
+  "no_pins": "No saved locations yet.",
+  "permission_denied": "Permission not granted.",
+  "position_error": "Unable to read device location.",
+  "location_added": "Location pinned on this device.",
+  "notify_result": "Notification permission status:",
+  "notification_setup": "Remote disaster alerts require a future push backend."
 }

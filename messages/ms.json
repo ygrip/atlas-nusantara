@@ -15,5 +15,17 @@
   "disclaimer": "Bukan perkhidmatan amaran kecemasan. Ikuti makluman rasmi.",
   "sources_heading": "Sumber data",
   "roadmap_heading": "Pelan pelaksanaan",
-  "roadmap_summary": "Suapan langsung dan sempadan yang disahkan akan ditambah secara berperingkat."
+  "roadmap_summary": "Suapan langsung dan sempadan yang disahkan akan ditambah secara berperingkat.",
+  "pins_heading": "Lokasi pilihan",
+  "pin_region_label": "Wilayah (kod 2022)",
+  "pin_button": "Semat kawasan",
+  "location_button": "Gunakan lokasi peranti",
+  "notify_button": "Aktifkan pemberitahuan",
+  "unpin_button": "Buang",
+  "no_pins": "Belum ada lokasi disimpan.",
+  "permission_denied": "Kebenaran tidak diberikan.",
+  "position_error": "Tidak dapat mendapatkan lokasi peranti.",
+  "location_added": "Lokasi disimpan pada peranti ini.",
+  "notify_result": "Status kebenaran pemberitahuan:",
+  "notification_setup": "Amaran bencana jauh memerlukan perkhidmatan push yang belum tersedia."
 }

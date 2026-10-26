@@ -15,5 +15,17 @@
   "disclaimer": "Đây không phải dịch vụ cảnh báo khẩn cấp. Hãy theo dõi thông báo chính thức.",
   "sources_heading": "Nguồn dữ liệu",
   "roadmap_heading": "Lộ trình triển khai",
-  "roadmap_summary": "Dữ liệu trực tiếp và ranh giới đã xác minh sẽ được bổ sung theo từng giai đoạn."
+  "roadmap_summary": "Dữ liệu trực tiếp và ranh giới đã xác minh sẽ được bổ sung theo từng giai đoạn.",
+  "pins_heading": "Địa điểm yêu thích",
+  "pin_region_label": "Tỉnh (mã năm 2022)",
+  "pin_button": "Ghim khu vực",
+  "location_button": "Dùng vị trí thiết bị",
+  "notify_button": "Bật thông báo",
+  "unpin_button": "Xóa",
+  "no_pins": "Chưa lưu địa điểm nào.",
+  "permission_denied": "Chưa được cấp quyền.",
+  "position_error": "Không thể lấy vị trí thiết bị.",
+  "location_added": "Đã ghim vị trí trên thiết bị này.",
+  "notify_result": "Trạng thái quyền thông báo:",
+  "notification_setup": "Cảnh báo thiên tai từ xa cần hệ thống đẩy thông báo sẽ được xây dựng sau."
 }

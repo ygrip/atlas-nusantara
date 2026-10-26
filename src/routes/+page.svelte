@@ -1,5 +1,6 @@
 <script lang="ts">
   import { m } from '$lib/paraglide/messages.js';
+  import Preferences from '$lib/components/Preferences.svelte';
   import { getLocale, locales, setLocale } from '$lib/paraglide/runtime.js';
   import { localeNames } from '$lib/i18n/locales.js';
   import { sources } from '$lib/data/sources.js';
@@ -94,6 +95,8 @@
         </div>
       </div>
     </section>
+
+    <Preferences />
 
     <section id="sources" class="details" aria-labelledby="sources-heading">
       <div>
