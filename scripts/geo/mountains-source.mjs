@@ -51,7 +51,9 @@ export function makeMountainOverlay(peaks, volcanoes, fetchedAt) {
   }
   for (const feature of peaks) {
     const coords = coordinates(feature);
-    const name = mountainName(feature.attributes?.NAMA_UNSUR || feature.attributes?.TOPONIM);
+    // NAMA_UNSUR is a feature type such as 'Gunung / Puncak', TOPONIM holds the actual place name.
+    const name = mountainName(feature.attributes?.TOPONIM);
+    if (/^(?:gunung\s*\/\s*puncak|mountain|peak)$/i.test(name)) continue;
     if (!coords || !name) continue;
     const key = mountainKey(name);
     // Official datasets may contain slightly different coordinates for a single volcano.
@@ -64,7 +66,8 @@ export function makeMountainOverlay(peaks, volcanoes, fetchedAt) {
   }
   pins.sort((a, b) => a.label.localeCompare(b.label, 'id') || a.id.localeCompare(b.id));
   const ids = new Set(pins.map(pin => pin.id));
-  if (ids.size !== pins.length || pins.length === 0 || pins.length > 10000) throw Error('Incomplete or duplicate BIG mountain inventory');
+  const uniqueNames = new Set(pins.map(pin => mountainKey(pin.label)));
+  if (ids.size !== pins.length || pins.length === 0 || pins.length > 10000 || uniqueNames.size < 100) throw Error('Incomplete or duplicate BIG mountain inventory');
   return {
     id: 'mountains', color: '#647e8a', symbol: 'triangle', source: 'Badan Informasi Geospasial (BIG)',
     sourceUrl: 'https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer',
