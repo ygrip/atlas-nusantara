@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import { MOUNTAIN_SOURCE, VOLCANO_SOURCE, makeMountainOverlay } from './mountains-source.mjs';
 
 async function query(service, params) {
@@ -38,6 +38,13 @@ const [peaks, volcanoes] = await Promise.all([
 const snapshot = makeMountainOverlay(peaks, volcanoes, new Date().toISOString());
 if (snapshot.pins.length < 50 || new Set(snapshot.pins.map(pin => pin.label)).size < 100) throw Error('Mountain extraction is suspiciously small or generic; keep the previous snapshot');
 const directory = 'static/data/observations';
-await mkdir(directory, { recursive: true });
-await writeFile(directory + '/mountains.json', JSON.stringify(snapshot) + '\n');
-console.log('Generated ' + snapshot.pins.length + ' named mountain/volcano pins from BIG (' + peaks.length + ' named-feature records, ' + volcanoes.length + ' classified-volcano records).');
+const destination = directory + '/mountains.json';
+let previous;
+try { previous = JSON.parse(await readFile(destination, 'utf8')); } catch { /* Initial import. */ }
+if (previous && JSON.stringify({ ...previous, fetchedAt: null }) === JSON.stringify({ ...snapshot, fetchedAt: null })) {
+  console.log('BIG inventory unchanged (' + snapshot.pins.length + ' pins); preserving previous snapshot.');
+} else {
+  await mkdir(directory, { recursive: true });
+  await writeFile(destination, JSON.stringify(snapshot) + '\n');
+  console.log('Generated ' + snapshot.pins.length + ' named mountain/volcano pins from BIG (' + peaks.length + ' named-feature records, ' + volcanoes.length + ' classified-volcano records).');
+}
