@@ -255,5 +255,8 @@
   "mountain_details": "Butiran gunung",
   "mountain_image_missing": "Foto yang disahkan tiada",
   "mountain_image_source": "Foto dan atribusi",
-  "mountain_data_note": "Atlas BIG 1:250,000 · klasifikasi bukan amaran keselamatan langsung. Tidak dikelaskan bukan bermakna tidak aktif."
+  "mountain_data_note": "Atlas BIG 1:250,000 · klasifikasi bukan amaran keselamatan langsung. Tidak dikelaskan bukan bermakna tidak aktif.",
+  "mountain_search": "Cari gunung",
+  "mountain_more": "Tunjuk lebih banyak",
+  "mountain_coverage": "Gunung bernama dalam atlas BIG, bukan semua puncak di Indonesia."
 }
