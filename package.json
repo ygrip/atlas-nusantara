@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "npm run compile:locales && vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check": "npm run compile:locales && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:locales": "node scripts/check-locales.mjs",
-    "import:regions": "node scripts/import-regions.mjs"
+    "import:regions": "node scripts/import-regions.mjs",
+    "compile:locales": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy localStorage,preferredLanguage,baseLocale --emit-ts-declarations"
   },
   "devDependencies": {
     "@inlang/paraglide-js": "^2.29.1",
