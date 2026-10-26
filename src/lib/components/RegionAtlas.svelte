@@ -11,6 +11,7 @@
   export let layer = 'warning';
   let earthquakeArchive: EarthquakeArchive | undefined;
   let customOverlay: PointOverlay | undefined;
+  let clayMap: ClayMap | undefined;
   let overlayRequest: AbortController | undefined;
   $: activeOverlay = resolveOverlay(layer, earthquakeArchive, customOverlay);
   $: void loadCustomOverlay(layer);
@@ -38,6 +39,9 @@
     if (province) regions = cities;
   }
   $: filtered = regions.filter(region => (region.name + ' ' + region.code).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  let mountainLimit = 80;
+  $: mountainMatches = (customOverlay?.id === 'mountains' ? customOverlay.pins : []).filter(pin =>
+    (pin.label + ' ' + (pin.description ?? '')).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
   onMount(() => {
     const initial = new AbortController();
@@ -179,11 +183,35 @@
   </nav>
   <div class="atlas-body">
     <div class="atlas-view">
-      <ClayMap label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
+      <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
         onselect={mapSelect} onprovince={openProvince} oncity={selectCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
+      {#if layer === 'mountains'}
+        <p class="edition-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
+      {/if}
       <p class="edition-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
     <div class="region-directory">
+      {#if layer === 'mountains'}
+        <label for="mountain-search">{m.mountain_search()}</label>
+        <input id="mountain-search" type="search" bind:value={query} autocomplete="off" />
+        {#if customOverlay?.id === 'mountains'}
+          <p class="directory-count" aria-live="polite">{mountainMatches.length.toLocaleString()} · {m.layer_mountains()}</p>
+          {#if mountainMatches.length === 0}<p role="status">{m.no_results()}</p>
+          {:else}
+            <ul class="region-list mountain-list">
+              {#each mountainMatches.slice(0, mountainLimit) as pin (pin.id)}
+                <li><button type="button" onclick={() => clayMap?.showMountain(pin)}>
+                  <span>{pin.label}</span>
+                  <small>{pin.category === 'active' ? m.mountain_active() : pin.category === 'potential' ? m.mountain_potential() : m.mountain_other()}</small>
+                </button></li>
+              {/each}
+            </ul>
+            {#if mountainLimit < mountainMatches.length}
+              <button class="mountain-more" type="button" onclick={() => mountainLimit += 80}>{m.mountain_more()}</button>
+            {/if}
+          {/if}
+        {:else}<p role="status">{m.loading_data()}</p>{/if}
+      {:else}
       <label for="region-search">{m.region_search()}</label>
       <input id="region-search" type="search" bind:value={query} autocomplete="off" />
       <p class="directory-count" aria-live="polite">{filtered.length} · {#if province}{m.level_city()}{:else}{m.level_province()}{/if}</p>
@@ -200,6 +228,7 @@
         </ul>
       {/if}
       {#if city}<div class="selected-region" role="status"><h3>{m.region_detail()}</h3><strong>{city.name}</strong><br />{city.code} · {m.level_city()}<br />{province?.name}</div>{/if}
+      {/if}
     </div>
   </div>
 </section>
