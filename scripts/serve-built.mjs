@@ -3,10 +3,11 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 
 const directory = resolve('build');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2' };
 createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    let status = 200;
     let file = resolve(directory, '.' + decodeURIComponent(url.pathname));
     if (!file.startsWith(directory + sep) && file !== directory) throw Error('Invalid path');
     try {
@@ -19,9 +20,10 @@ createServer(async (request, response) => {
         response.end(JSON.stringify({ error: 'Unavailable' }));
         return;
       }
-      file = resolve(directory, '200.html');
+      file = resolve(directory, '404.html');
+      status = 404;
     }
-    response.writeHead(200, { 'content-type': types[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-cache' });
+    response.writeHead(status, { 'content-type': types[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-cache' });
     response.end(await readFile(file));
   } catch {
     response.writeHead(400); response.end('Bad request');

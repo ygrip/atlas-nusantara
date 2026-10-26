@@ -1,29 +1,38 @@
-# Nusantara architecture
+# Atlas Nusantara architecture
 
-## Browser
+## One linked atlas
 
-SvelteKit SPA with adapter-static, a catch-all atlas route, versioned offline shell and installable manifest. The build keeps `200.html` for offline fallback and emits `index.html` for Workers Static Assets. Do not restore the legacy `/* /200.html 200` redirect: it also rewrites real JSON assets and can cause redirect loops.
+SvelteKit with adapter-static serves a client-rendered application. `RegionAtlas.openRegion(code)` is the shared entry point for the table, saved places and city links. Region selection flows back to the page so the table highlights the same province and the weather readout follows the city. Camera flights preserve the national projection across province packages. A separate high-resolution identity window keeps city highlights/picking precise when zoomed in; weather readouts use the same nearest-step tolerance as the interpolated field.
 
-Geography is projected and simplified offline using Mapshaper/d3-geo. Browsers load precomputed province-only SVG path packages; one translated search directory is the accessible alternative for small islands. Shallow SVG depth layers supply 2.5D without WebGL, Three.js or Godot overhead. Camera transforms, pointer gestures and keyboard controls do no geographic joins.
+The directory is **Kepmendagri 300.2.2-2430/2025: 38 provinces / 514 cities-regencies** (416 kabupaten, 98 kota). The maintainer explicitly authorized this migration from the previously shipped 2022 directory. Boundary vintage remains independent: the map uses COD-AB/BPS geometry valid 2020-04-01, regrouped through an explicit crosswalk. This is not certification of 2025 boundary lines.
 
-The historical code edition is **Kepmendagri 100.1.1-6117/2022: 37 provinces / 514 cities-regencies**. A boundary edition is independent of that code edition. No current 38-province source is silently joined to it. Actual polygons await licensed, vintage-compatible inputs.
+`src/lib/map/` separates projected geometry, relief sampling, snapshot interpolation, typed overlay input, particles, shaders and scene/camera coordination. Three.js is lazy-loaded as the map approaches the viewport; the renderer caps pixel ratio, pauses offscreen/hidden and disposes resources on mode or route changes. Missing WebGL/context loss falls back to `SvgMap`. Buttons and the directory remain the keyboard alternatives to small polygons.
 
-Paraglide serves 13 locales with a browser-local language preference. Nunito and Lucide assets are self-hosted; Chart.js is loaded on demand. Theme changes use a control-centered View Transition when supported and bypass motion under reduced-motion preferences. Weather illustrations are explicitly decorative, opt-in and paused offscreen; they never represent measured conditions.
+Wind, cloud, rain and sea visuals use a saved BMKG forecast, not a runtime provider call. ETOPO1 supplies terrain elevations and seabed depths. Wind particles follow interpolated vectors; cloud coverage and rain follow forecast fields. The camera passes through a visual cloud deck when zooming down; its altitude is a presentation convention, not measured cloud altitude. Sea motion is wind-derived, not a wave observation. Reduced motion freezes ambient effects and skips camera interpolation.
 
-## Cloudflare
+## Motion and interface
 
-Workers Static Assets hosts the SPA at `nusantara.readynaz.com`. The Worker owns read-only `/api/*` routes and a five-minute Cron Trigger; each enabled source has a separate persisted next-due time. D1 holds normalized observations, source state and the manually seeded hierarchy. Scheduled materialization publishes a 30-day hot summary and current JSON to versioned R2 objects, then promotes a manifest last. The crawler does not refresh administrative codes or boundaries.
+GSAP provides short hero/heading transitions. Lenis is the sole page smooth-scroll engine and excludes the map, dialogs, tables and directory. Both are bypassed for reduced motion. MapControls alone owns wheel/pinch camera gestures; page scrolling outside the map remains ordinary navigation.
 
-Only reviewed, approved providers enter a publication. Production browsers read hot JSON directly through a public R2 custom domain and CDN, not the application Worker or D1. They validate absolute publication expiry and do not keep provider data in service-worker CacheStorage. Ordinary region reads use Git-versioned assets. Cold JSON/CSV downloads alone query D1 after canonical Turnstile verification, native rate limits and a global daily budget. Exports use `no-store` and strict 365-day event/first-seen filters. Visitors have no accounts or login. See [CLOUDFLARE.md](CLOUDFLARE.md) for cache/deletion limits, operational budgets and deployment gates.
+Paraglide supplies 13 locales. The language picker is a native dialog with flags and native-language names; mobile settings group language, share and theme. A control-centred View Transition switches themes where supported. Source/edition details and roadmap prose do not occupy the homepage.
 
-Warnings, earthquake observations, historical incidents and long-term hazards are distinct products, not interchangeable alert states. CAP polygons are not guessed into administrative codes. Failed, incomplete, stale or unsupported warning crawls withhold current-warning publication. Retained historical warnings remain labeled archive data.
+## Static routes and errors
 
-## Device and sharing privacy
+The build retains `200.html` for offline recovery, emits `index.html`, copies shells to `terms/index.html` and `privacy/index.html`, and emits a `404.html` router shell. Workers Static Assets uses `not_found_handling: "404-page"`: known pages return 200, unknown routes return 404 and render the illustrated Svelte error view. **Do not restore `/* /200.html 200`**: it incorrectly rewrites real data assets.
 
-Location permission requires a user gesture. Rounded coordinate pins and region preferences remain in localStorage; the crawler does not receive them. Sharing draws a local PNG from public region/geometry/summary inputs with source/date and safety wording. Preview, native share, PNG download and copy-link fallbacks do not upload private device state.
+Unexpected client errors expose only a safe incident reference. Independent `500.html` and `503.html` pages need no JavaScript, fonts or image requests; a host must serve them with the appropriate status when using them as infrastructure fallbacks.
 
-The optional Node Web Push prototype is isolated in `server/`, not part of the Worker bundle. It needs a separate production identity/consent design, VAPID setup and source-region validation before browser delivery can be enabled. Permission alone never means subscribed.
+## Two distinct data paths
 
-## Verification
+Scheduled snapshot refreshes are defined separately in [SNAPSHOT_REFRESH.md](SNAPSHOT_REFRESH.md): forecasts every two hours and earthquake archives every fifteen minutes. They can publish to an optional R2 snapshot CDN without Git churn; activation/credentials remain operator setup.
 
-CI uses the npm lockfile, locale/Svelte/Worker type checks, Node tests, production browser tests, isolated local workerd/D1 integration and Worker packaging dry run. These checks do not certify human translation quality, data rights, authoritative borders, production delivery or native mobile installation.
+1. **Checked-in snapshots:** forecast and earthquake archive assets are deliberately fetched with scripts and bundled with a release. They retain dates and attribution; weather cards can display them offline without implying live conditions.
+2. **Reviewed-source publication:** the Worker’s cron scheduler collects only approved sources into D1, applies retention, and publishes 30-day hot summaries/current warnings to versioned R2 objects. Production browsers read these through the configured public R2 CDN. Cold exports alone query D1 after Turnstile, rate limits and a daily budget.
+
+Disaster history and hazard data are unavailable until provider adapters and rights are reviewed. Current CAP warnings are never substituted with stale saved alerts. Inactive CAP items are skipped; malformed or incomplete warning crawls fail closed.
+
+## Device privacy
+
+Region pins use `nusantara:pins:v1`; the rounded current location uses `nusantara:current-location:v1`. Coordinates are acquired only after a click, processed locally against the snapshot, and never included in map-data requests, share links or PNG sharing inputs. Cross-tab storage events refresh cards. Explicit aliases upgrade six old Papua Barat Daya city codes.
+
+Notification permission is not a push subscription. The separate Node push prototype still needs deployment identity, VAPID and consent design. Local checks do not prove live delivery, translation quality or native iOS/Android installation.

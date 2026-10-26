@@ -60,8 +60,8 @@
   }
 </script>
 
-<section class="snapshot-panel" aria-label={m.snapshot_heading()} aria-busy={loading}>
-  <div class="snapshot-heading"><h3>{m.snapshot_heading()}</h3>
+<section class="snapshot-panel" aria-label={m.layer_weather()} aria-busy={loading}>
+  <div class="snapshot-heading"><h3>{m.layer_weather()}</h3>
     {#if snapshot}<span class="snapshot-state" class:stale>{#if stale}{m.status_stale()}{:else}{m.status_snapshot()}{/if}</span>{/if}
   </div>
   <p>{m.snapshot_explanation()}</p>

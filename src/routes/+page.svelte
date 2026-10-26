@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { changeTheme } from '$lib/pwa/theme';
   import { onMount } from 'svelte';
   import SupportPanel from '$lib/components/SupportPanel.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
   import AggregateSummary from '$lib/components/AggregateSummary.svelte';
   import SharePanel from '$lib/components/SharePanel.svelte';
+  import HeaderControls from '$lib/components/HeaderControls.svelte';
+  import { startAtlasStory } from '$lib/motion/atlas-story';
   import type { ShareRegion, ShareSummary } from '$lib/share/card';
   import type { GeometryPackage } from '$lib/geo/types';
   import { m } from '$lib/paraglide/messages.js';
@@ -13,15 +14,18 @@
   import RegionAtlas from '$lib/components/RegionAtlas.svelte';
   import ProvinceTable from '$lib/components/ProvinceTable.svelte';
   import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
-  import { getLocale, locales, setLocale } from '$lib/paraglide/runtime.js';
-  import { localeNames } from '$lib/i18n/locales.js';
-  import { sources } from '$lib/data/sources.js';
+  import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
+  import IslandChart from '$lib/components/IslandChart.svelte';
+  import RegionSplit from '$lib/components/RegionSplit.svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin } from 'lucide-svelte';
+  import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
+  import { EDITION_COUNTS } from '$lib/atlas/edition';
 
   let selectedRegion: ShareRegion | undefined;
   let selectedGeometry: GeometryPackage | undefined;
   let publicSummary: ShareSummary | undefined;
-  let dark = false;
-  let themeBusy = false;
+  let sharePanel: SharePanel | undefined;
+  let shell: HTMLDivElement;
   let atlas: RegionAtlas | undefined;
   let activeSection = 'atlas';
   let showTop = false;
@@ -30,20 +34,20 @@
     { id: 'provinces', label: m.nav_provinces },
     { id: 'summary', label: m.nav_data },
     { id: 'locations', label: m.nav_locations },
-    { id: 'sources', label: m.nav_sources },
     { id: 'support', label: m.nav_support }
   ];
-  // Verified by scripts/import-regions.mjs against the pinned 2022 transcription (416 KAB. + 98 KOTA).
+  // Verified by scripts/import-regions.mjs against the pinned 2025 transcription (416 Kabupaten + 98 Kota).
   const editionStats = [
-    { value: 37, label: m.stat_provinces, tone: 'peach' },
-    { value: 416, label: m.stat_regencies, tone: 'mint' },
-    { value: 98, label: m.stat_cities, tone: 'lilac' }
+    { value: EDITION_COUNTS.provinces, label: m.stat_provinces, tone: 'peach' },
+    { value: EDITION_COUNTS.regencies, label: m.stat_regencies, tone: 'mint' },
+    { value: EDITION_COUNTS.municipalities, label: m.stat_cities, tone: 'lilac' }
   ];
 
   onMount(() => {
-    dark = document.documentElement.dataset.theme === 'dark';
     document.title = m.site_title();
-    return observeSections();
+    const stopSections = observeSections();
+    const stopStory = startAtlasStory(shell);
+    return () => { stopSections(); stopStory(); };
   });
 
   function currentFor(id: string): 'location' | undefined {
@@ -67,132 +71,113 @@
     if (hero) heroObserver.observe(hero);
     return () => { sectionObserver.disconnect(); heroObserver.disconnect(); };
   }
-  async function toggleTheme(event: MouseEvent) {
-    if (themeBusy) return;
-    themeBusy = true;
-    try {
-      await changeTheme(event.currentTarget as HTMLElement, () => {
-        dark = !dark;
-        let theme = 'light';
-        if (dark) theme = 'dark';
-        document.documentElement.dataset.theme = theme;
-        let chromeColor = '#f6f0e7';
-        if (dark) chromeColor = '#211f25';
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', chromeColor);
-        try { localStorage.setItem('nusantara:theme', theme); }
-        catch (error) { console.warn('Theme preference could not be saved', error); }
-      });
-    } finally { themeBusy = false; }
-  }
 
-  let activeLayer: 'warning' | 'earthquake' | 'incident' | 'hazard' = 'warning';
-  const layers = [
-    { id: 'warning' as const, label: m.layer_weather, source: 'BMKG' },
-    { id: 'earthquake' as const, label: m.layer_earthquakes, source: 'BMKG' },
-    { id: 'incident' as const, label: m.layer_history, source: 'BNPB' },
-    { id: 'hazard' as const, label: m.layer_hazards, source: 'InaRISK' }
-  ];
+  let activeLayer = 'warning';
+  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin };
+  const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
 </script>
 
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
-<div class="shell">
+<div class="shell" bind:this={shell}>
   <header class="masthead">
     <a href="/" data-sveltekit-reload class="brand" aria-label="Nusantara">
-      <span class="brand-symbol" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 7 6-3 6 3 6-3v13l-6 3-6-3-6 3V7Z"/><path d="M9 4v13m6-10v13"/></svg>
-      </span>
-      <span>Nusantara<span class="brand-muted"> / Atlas</span></span>
+      <img class="brand-logo" src="/brand/logo.svg" alt="" width="44" height="44" />
+      <span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span>
     </a>
     <nav class="section-nav" aria-label={m.nav_label()}>
       {#each sections as section (section.id)}
         <a href={'#' + section.id} class:active={activeSection === section.id} aria-current={currentFor(section.id)}>{section.label()}</a>
       {/each}
     </nav>
-    <div class="header-actions">
-      <button class="theme-button" type="button" onclick={toggleTheme} disabled={themeBusy} aria-label={m.theme_toggle()} aria-pressed={dark}>
-        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg>
-      </button>
-      <label for="locale-picker">{m.language_label()}</label>
-      <select id="locale-picker" value={getLocale()} onchange={(event) => setLocale(event.currentTarget.value as (typeof locales)[number])}>
-        {#each locales as locale (locale)}<option value={locale}>{localeNames[locale]}</option>{/each}
-      </select>
-    </div>
+    <div class="header-actions"><HeaderControls onshare={() => sharePanel?.openPreview()} /></div>
   </header>
 
   <main>
-    <section id="top" class="bento hero-bento" aria-labelledby="site-title">
-      <div class="clay-card hero-card intro">
-        <span class="eyebrow">NUSANTARA / 01</span>
-        <h1 id="site-title">{m.site_title()}</h1>
-        <p>{m.site_description()}</p>
-        <div class="notice"><span class="notice-dot" aria-hidden="true"></span>{m.disclaimer()}</div>
-        <div class="hero-actions">
-          <a class="clay-button primary" href="#atlas">{m.nav_atlas()} ↓</a>
-          <a class="clay-button" href="#provinces">{m.table_heading()}</a>
+    <section id="top" class="hero" aria-labelledby="site-title">
+      <div class="clay-card hero-card">
+        <div class="hero-copy">
+          <span class="eyebrow">INDONESIA</span>
+          <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
+          <p>{m.atlas_intro()}</p>
+          <div class="notice"><span class="notice-dot" aria-hidden="true"></span>{m.disclaimer()}</div>
+          <div class="hero-actions">
+            <a class="clay-button primary" href="#atlas">{m.nav_atlas()} ↓</a>
+            <a class="clay-button" href="#provinces">{m.table_heading()}</a>
+          </div>
+          <SharePanel bind:this={sharePanel} region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />
         </div>
-        <SharePanel region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />
+        <figure class="hero-art">
+          <picture>
+            <source type="image/webp" srcset="/illustrations/hero-archipelago-768.webp 768w, /illustrations/hero-archipelago-1200.webp 1200w" sizes="(max-width: 900px) 100vw, 50vw" />
+            <img src="/illustrations/hero-archipelago-1200.webp" width="1200" height="800" alt={m.hero_art_alt()} fetchpriority="high" decoding="async" />
+          </picture>
+        </figure>
       </div>
-      {#each editionStats as stat (stat.value)}
-        <a class={'clay-card stat-card tone-' + stat.tone} href="#provinces">
-          <strong>{stat.value}</strong><span>{stat.label()}</span>
-        </a>
-      {/each}
-      <div class="clay-card edition-card">
-        <span class="panel-eyebrow">{m.code_edition()}</span>
-        <strong>Kepmendagri 100.1.1-6117/2022</strong>
-        <small>{m.tile_map_note()}</small>
+      <div class="stat-row">
+        {#each editionStats as stat (stat.value)}
+          <a class={'clay-card stat-card tone-' + stat.tone} href="#provinces">
+            <strong>{stat.value}</strong><span>{stat.label()}</span>
+          </a>
+        {/each}
       </div>
     </section>
 
-    <section id="atlas" class="bento workspace" aria-label={m.layer_heading()}>
-      <aside class="clay-card control-panel">
-        <p class="panel-eyebrow">{m.layer_heading()}</p>
-        <div class="control-group" role="group" aria-label={m.layer_heading()}>
+    <section id="atlas" class="atlas-section" aria-labelledby="atlas-heading">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">INDONESIA</span>
+          <h2 id="atlas-heading">{m.nav_atlas()}</h2>
+        </div>
+        <div class="layer-pills" role="group" aria-label={m.layer_heading()}>
           {#each layers as layer (layer.id)}
+            {@const LayerIcon = layer.icon}
             <button type="button" class:chosen={activeLayer === layer.id} aria-pressed={activeLayer === layer.id} onclick={() => activeLayer = layer.id}>
-              <span>{layer.label()}</span><span class="source-tag">{layer.source}</span>
+              <LayerIcon size={18} aria-hidden="true" /><span>{layer.label()}</span><span class="source-tag">{layer.source}</span>
             </button>
           {/each}
         </div>
-        <div class="divider"></div>
-        <a class="utility-link" href="#locations">{m.pins_heading()} ↘</a>
-        <a class="utility-link" href="#sources">{m.sources_heading()} ↘</a>
-        <p class="edition-note">Kepmendagri<br />100.1.1-6117/2022</p>
-      </aside>
-      <div class="clay-card map-panel">
-        <RegionAtlas bind:this={atlas} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
-        <SnapshotPanel kind={activeLayer} regionCode={selectedRegion?.code} />
+      </div>
+      <div class="clay-card atlas-stage">
+        <RegionAtlas bind:this={atlas} layer={activeLayer} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
+        {#if activeLayer === 'earthquake'}
+          <EarthquakePanel />
+        {:else if activeLayer === 'incident' || activeLayer === 'hazard'}
+          <div class="layer-unavailable" role="status">
+            <strong>{m.source_not_connected()}</strong><p>{m.source_not_connected_details()}</p>
+            {#if activeLayer === 'incident'}<a href="https://data.bnpb.go.id/" target="_blank" rel="noreferrer">BNPB ↗</a>
+            {:else}<a href="https://inarisk.bnpb.go.id/" target="_blank" rel="noreferrer">InaRISK ↗</a>{/if}
+          </div>
+        {:else if activeLayer === 'warning'}
+          <SnapshotPanel kind="warning" regionCode={selectedRegion?.code} />
+        {/if}
       </div>
     </section>
 
-    <ProvinceTable onopen={code => atlas?.openProvince(code)} />
+    <section class="insights" aria-label={m.chart_islands_heading()}>
+      <IslandChart />
+      <RegionSplit />
+    </section>
+
+    <ProvinceTable selectedCode={selectedRegion?.code} onopen={code => { void atlas?.openRegion(code); }} />
 
     <AggregateSummary onsummary={summary => publicSummary = summary} />
     <AdSlot />
-    <Preferences />
+    <Preferences {selectedRegion} onopen={code => { activeLayer = 'warning'; void atlas?.openRegion(code); }} />
     <PwaManager />
 
-    <section id="sources" class="details" aria-labelledby="sources-heading">
-      <span class="eyebrow">05 / DATA</span>
-      <h2 id="sources-heading">{m.sources_heading()}</h2>
-      <div class="bento source-grid">
-        {#each sources as source (source.id)}
-          <a class="clay-card source-card" href={source.url} target="_blank" rel="noopener noreferrer">
-            <div><strong>{source.agency}</strong>
-              <span>{#if source.kind === 'forecast'}{m.layer_forecast()}{:else if source.kind === 'alert'}{m.layer_weather()}{:else if source.kind === 'observation'}{m.layer_earthquakes()}{:else if source.kind === 'incident'}{m.layer_history()}{:else if source.kind === 'population'}{m.layer_population()}{:else}{m.layer_hazards()}{/if}</span>
-            </div>
-            <small aria-hidden="true">↗</small>
-          </a>
-        {/each}
-        <div class="clay-card roadmap-card" id="roadmap">
-          <span class="eyebrow">06 / ROADMAP</span>
-          <h3>{m.roadmap_heading()}</h3>
-          <p>{m.roadmap_summary()}</p>
-        </div>
-      </div>
-    </section>
     <SupportPanel />
   </main>
-  <footer><span>© Nusantara · {m.disclaimer()}</span><a href="https://github.com/ygrip/nusantara" target="_blank" rel="noopener noreferrer">{m.source_code()} ↗</a></footer>
+  <footer class="site-footer">
+    <div class="footer-main">
+      <span class="footer-brand"><img src="/brand/logo.svg" alt="" width="32" height="32" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></span>
+      <nav class="footer-links" aria-label={m.legal_label()}>
+        <a href="/terms">{m.legal_terms_link()}</a>
+        <a href="/privacy">{m.legal_privacy_link()}</a>
+        <a href="https://github.com/ygrip/nusantara" target="_blank" rel="noopener noreferrer">{m.source_code()} ↗</a>
+      </nav>
+    </div>
+    <p class="footer-note">© Nusantara · {m.disclaimer()}</p>
+    <a href="/terms#sources">{m.source_details()} ↗</a>
+  </footer>
 </div>
 <a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}>↑</a>

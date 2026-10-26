@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <title>%sveltekit.status% · A short pause on the map · Atlas Nusantara</title>
+  <style>
+    :root { font-family: ui-rounded, 'Avenir Next', system-ui, sans-serif; color: #362c27; background: #f4ece1; --surface:#fffaf3; --line:#e3d4c1; --muted:#65584e; --shadow:rgba(168,141,107,.35); --accent:#ad4d26; --on-accent:#fff; --art:#e2eddb; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; }
+    main { display:grid; grid-template-columns:1fr 1fr; width:min(960px,100%); overflow:hidden; border:1px solid var(--line); border-radius:32px; background:var(--surface); box-shadow:12px 14px 28px var(--shadow),inset 3px 3px 6px rgba(255,255,255,.8); }
+    .copy { padding:clamp(26px,5vw,48px); align-self:center; }
+    .brand { font-weight:850; font-size:20px; letter-spacing:-.04em; margin:0 0 32px; }
+    .code { display:inline-block; padding:7px 14px; border-radius:100px; background:#f0e6d8; font-size:12px; font-weight:800; }
+    h1 { font-size:clamp(30px,5vw,44px); line-height:1.1; letter-spacing:-.04em; margin:20px 0; text-wrap:balance; }
+    p { font-size:15px; line-height:1.75; color:var(--muted); }
+    nav { display:flex; flex-wrap:wrap; gap:14px; margin-top:28px; }
+    a { display:inline-flex; min-height:48px; align-items:center; justify-content:center; padding:10px 20px; color:inherit; border:2px solid var(--line); border-radius:16px; text-decoration:none; font-size:14px; font-weight:800; box-shadow:0 5px 0 var(--shadow); }
+    a.primary { background:var(--accent); color:var(--on-accent); border-color:transparent; }
+    a:focus-visible { outline:3px solid var(--accent); outline-offset:4px; }
+    .art { display:grid; place-items:center; background:var(--art); padding:24px; }
+    svg { width:100%; max-width:400px; height:auto; }
+    .note { font-size:12px; margin-top:24px; }
+    @media (prefers-color-scheme:dark) { :root { color:#f3e9de; background:#1f1c22; --surface:#2b2730; --line:#4a4150; --muted:#c6b8ac; --shadow:rgba(0,0,0,.45); --accent:#f2b58c; --on-accent:#2a1a10; --art:#2f4036; } main { border-color:rgba(255,255,255,.07); } .code { background:#352f39; } }
+    @media (max-width:640px) { main { grid-template-columns:1fr; } .art { padding:15px; } svg { max-width:280px; } .brand { margin-bottom:22px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="copy">
+      <p class="brand">Atlas Nusantara</p>
+      <span class="code">Error %sveltekit.status%</span>
+      <h1>A short pause on the map.</h1>
+      <p>This page could not be prepared right now. Try again, or return to the atlas to keep exploring Indonesia region by region.</p>
+      <nav aria-label="Error recovery"><a class="primary" href="">Try again</a><a href="/">Back to the atlas</a></nav>
+      <p class="note">This fallback works without JavaScript, fonts or image downloads.</p>
+    </section>
+    <div class="art">
+      <svg viewBox="0 0 400 400" role="img" aria-labelledby="art-title">
+        <title id="art-title">A clay compass resting on a folded map with a green island and a small flag.</title>
+        <defs>
+          <linearGradient id="clay" x2=".8" y2="1"><stop stop-color="#ffc497"/><stop offset="1" stop-color="#ee8856"/></linearGradient>
+          <linearGradient id="mint" x2="1" y2="1"><stop stop-color="#d8ecd7"/><stop offset="1" stop-color="#8fbf9f"/></linearGradient>
+        </defs>
+        <ellipse cx="200" cy="334" rx="150" ry="18" fill="#a88d6b" opacity=".25"/>
+        <path d="M52 250 150 218 250 250 348 218V316L250 348 150 316 52 348Z" fill="#c9b79e"/>
+        <path d="M52 232 150 200 250 232 348 200V298L250 330 150 298 52 330Z" fill="#fff4df" stroke="#e3cba6" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M150 200V298M250 232V330" stroke="#e3cba6" stroke-width="3"/>
+        <path d="M82 262 118 252 140 270 120 292 90 288Z" fill="url(#mint)"/>
+        <path d="M270 258 306 246 322 266 296 284 272 278Z" fill="url(#mint)"/>
+        <circle cx="200" cy="162" r="86" fill="#d78050"/>
+        <circle cx="200" cy="154" r="86" fill="url(#clay)"/>
+        <circle cx="200" cy="154" r="62" fill="#fffaf3" stroke="#e3cba6" stroke-width="5"/>
+        <path d="M200 100 216 154 200 208 184 154Z" fill="#ad4d26"/>
+        <path d="M146 154 200 138 254 154 200 170Z" fill="#8fbf9f" opacity=".9"/>
+        <circle cx="200" cy="154" r="9" fill="#362c27"/>
+        <circle cx="200" cy="154" r="3" fill="#fffaf3"/>
+        <path d="M284 96 288 108 300 112 288 116 284 128 280 116 268 112 280 108Z" fill="#f2bf64"/>
+        <circle cx="104" cy="104" r="7" fill="#c9b5e1"/>
+        <path d="M330 292V248" stroke="#ad4d26" stroke-width="5" stroke-linecap="round"/>
+        <path d="M330 248 356 258 330 268Z" fill="#f2bf64"/>
+      </svg>
+    </div>
+  </main>
+</body>
+</html>

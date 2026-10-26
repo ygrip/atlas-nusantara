@@ -43,7 +43,7 @@ try {
   for (let attempt = 0; attempt < 30; attempt++) {
     if (startError) throw startError;
     if (dev.exitCode !== null) throw Error('Local Worker exited before becoming ready.');
-    try { ready = (await fetch(new URL('/data/admin-2022/provinces.json', base), { signal: AbortSignal.timeout(1000) })).ok; }
+    try { ready = (await fetch(new URL('/data/admin-2025/provinces.json', base), { signal: AbortSignal.timeout(1000) })).ok; }
     catch { ready = false; }
     if (ready) break;
     await sleep(1000);

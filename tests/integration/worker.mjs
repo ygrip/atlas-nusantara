@@ -37,7 +37,7 @@ async function withWorker(variables, verify) {
     let ready = false;
     for (let attempt = 0; attempt < 100; attempt++) {
       if (child.exitCode !== null) throw Error('Local Worker exited: ' + logs);
-      try { ready = (await fetch(base + '/data/admin-2022/provinces.json', { signal: AbortSignal.timeout(500) })).ok; } catch { ready = false; }
+      try { ready = (await fetch(base + '/data/admin-2025/provinces.json', { signal: AbortSignal.timeout(500) })).ok; } catch { ready = false; }
       if (ready) break;
       await sleep(100);
     }
@@ -76,10 +76,12 @@ try {
     const snapshot = await (await fetch(base + manifest.snapshots.earthquake)).json();
     assert.equal(snapshot.records.length, 1);
     assert.deepEqual(snapshot.records[0].geometry.coordinates, [106, -6]);
-    const regions = await (await fetch(base + '/data/admin-2022/cities/32.json')).json();
+    const regions = await (await fetch(base + '/data/admin-2025/cities/32.json')).json();
     assert.equal(regions.regions.length, 27);
-    const document = await (await fetch(base + '/province/example', { headers: { accept: 'text/html', 'sec-fetch-mode': 'navigate' } })).text();
-    assert.match(document, /https:\/\/nusantara\.readynaz\.com\//);
+    const missing = await fetch(base + '/province/example', { headers: { accept: 'text/html', 'sec-fetch-mode': 'navigate' } });
+    assert.equal(missing.status, 404);
+    assert.match(await missing.text(), /https:\/\/nusantara\.readynaz\.com\//);
+    for (const path of ['/?region=96', '/terms/', '/privacy/']) assert.equal((await fetch(base + path)).status, 200);
     for (const path of ['/api/summary', '/api/sources', '/api/regions', '/api/snapshots/earthquake.json']) assert.equal((await fetch(base + path)).status, 404);
     assert.equal((await fetch(base + '/api/export?kind=earthquake&format=json')).status, 405);
     // Fail closed until a deployment-specific Turnstile secret is configured.
@@ -105,5 +107,5 @@ try {
   const newer = new Date(Date.now() - 59 * 86400000).toISOString();
   const selected = query(`SELECT id FROM observations WHERE kind = 'earthquake' AND source_id IN ('bmkg-earthquakes') AND COALESCE(observed_at,first_seen_at) >= ${quote(older)} AND COALESCE(observed_at,first_seen_at) < ${quote(newer)} AND (COALESCE(observed_at,first_seen_at),id) > ('','') ORDER BY COALESCE(observed_at,first_seen_at),id LIMIT 500`);
   assert.deepEqual(selected[0].results.map(row => row.id), ['fixture-cold']);
-  console.log('Local workerd/D1/R2 integration passed: static hot publication, source filtering, retention deletion, protected cold export, static hierarchy and SPA routing. No remote resources, provider calls or live Siteverify calls.');
+  console.log('Local workerd/D1/R2 integration passed: static hot publication, source filtering, retention deletion, protected cold export, static hierarchy, known routes and HTTP 404 routing. No remote resources, provider calls or live Siteverify calls.');
 } finally { await rm(state, { recursive: true, force: true }); }

@@ -50,7 +50,11 @@ Cost controls:
 
 Successful exports use `no-store`, enforce current source approval and the strict event/first-seen 365-day cutoff, preserve provenance/geometry/unmatched codes, and neutralize CSV spreadsheet formulas. Warnings in exports are historical records, not current alerts. Native browser downloads stream to a separate tab rather than buffering the archive into browser JavaScript.
 
-`GET /api/export` returns 405. Legacy D1-backed `/api/summary`, `/api/sources`, `/api/regions` and `/api/snapshots/*` are removed (404). Regions come directly from Git-versioned `/data/admin-2022/*` assets.
+`GET /api/export` returns 405. Legacy D1-backed `/api/summary`, `/api/sources`, `/api/regions` and `/api/snapshots/*` are removed (404). Regions come directly from Git-versioned `/data/admin-2025/*` assets.
+
+Static Assets uses `not_found_handling: "404-page"`. The build emits known Terms/Privacy route shells and a 404 router shell; unknown URLs return HTTP 404 rather than rendering the homepage with 200. Local workerd integration verifies this routing. The `/200.html` asset is retained only for offline recovery; no wildcard redirect is restored.
+
+Checked-in weather and earthquake snapshots are a separate, explicitly dated release asset path. They do not activate the scheduled source registry or current-warning publication.
 
 ## Scheduled sources and retention
 
@@ -67,7 +71,7 @@ npm run data:bootstrap
 npm run worker:dev
 ```
 
-Bootstrap builds, applies **local-only** migrations, seeds 551 historical hierarchy rows, invokes the scheduler once, writes a local R2 manifest and prints summary/source status. Empty approvals collect no provider records. The bootstrap stops its local server before returning. Plain `npm run dev` is UI development; the built Worker provides the complete local D1/R2 stack. Do not add `--remote` to bootstrap or integration commands.
+Bootstrap builds, applies **local-only** migrations, seeds 552 current hierarchy rows, invokes the scheduler once, writes a local R2 manifest and prints summary/source status. Empty approvals collect no provider records. The bootstrap stops its local server before returning. Plain `npm run dev` is UI development; the built Worker provides the complete local D1/R2 stack. Do not add `--remote` to bootstrap or integration commands.
 
 ## Production gates — not executed
 

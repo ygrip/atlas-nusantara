@@ -7,7 +7,7 @@ import type { DatasetProvenance, DatasetType, Snapshot } from '../../src/lib/dat
 
 interface CliInput { type: DatasetType; payload: unknown; provenance: DatasetProvenance; generatedAt: string }
 
-export async function publish(inputPath: string, outputPath: string, adminDirectory = 'static/data/admin-2022'): Promise<void> {
+export async function publish(inputPath: string, outputPath: string, adminDirectory = 'static/data/admin-2025'): Promise<void> {
   const input = JSON.parse(await readFile(inputPath, 'utf8')) as CliInput;
   const provinceData = JSON.parse(await readFile(resolve(adminDirectory, 'provinces.json'), 'utf8'));
   const cityData = JSON.parse(await readFile(resolve(adminDirectory, 'cities.json'), 'utf8'));

@@ -1,0 +1,89 @@
+name: Refresh dated BMKG snapshots
+
+on:
+  schedule:
+    - cron: '0 */2 * * *' # Forecasts: every two hours (UTC).
+    - cron: '*/15 * * * *' # Earthquake observations: every fifteen minutes.
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        description: Snapshot to refresh
+        options: [all, weather, earthquake]
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  weather:
+    if: >-
+      (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
+      (github.event.schedule == '0 */2 * * *' || inputs.kind == 'all' || inputs.kind == 'weather')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: bmkg-weather-snapshot
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Capture forecasts within the BMKG request budget
+        run: node scripts/ingestion/forecast-snapshot.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bmkg-weather-snapshot
+          path: static/data/weather/forecast.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Install the pinned publisher
+        if: vars.SNAPSHOT_PUBLISH_APPROVED == 'true'
+        run: npm ci
+      - name: Publish the dated snapshot without committing generated data
+        if: vars.SNAPSHOT_PUBLISH_APPROVED == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SNAPSHOT_R2_BUCKET: ${{ vars.SNAPSHOT_R2_BUCKET }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$SNAPSHOT_R2_BUCKET"
+          npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/weather/forecast.json" --remote --file static/data/weather/forecast.json --content-type application/json --cache-control 'public, max-age=300'
+
+  earthquake:
+    if: >-
+      (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
+      (github.event.schedule == '*/15 * * * *' || inputs.kind == 'all' || inputs.kind == 'earthquake')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: bmkg-earthquake-snapshot
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Capture dated M5+ earthquake observations
+        run: node scripts/ingestion/earthquake-snapshot.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bmkg-earthquake-snapshot
+          path: static/data/observations/earthquakes.json
+          retention-days: 7
+          if-no-files-found: error
+      - name: Install the pinned publisher
+        if: vars.SNAPSHOT_PUBLISH_APPROVED == 'true'
+        run: npm ci
+      - name: Publish the dated snapshot without committing generated data
+        if: vars.SNAPSHOT_PUBLISH_APPROVED == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SNAPSHOT_R2_BUCKET: ${{ vars.SNAPSHOT_R2_BUCKET }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$SNAPSHOT_R2_BUCKET"
+          npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/observations/earthquakes.json" --remote --file static/data/observations/earthquakes.json --content-type application/json --cache-control 'public, max-age=300'

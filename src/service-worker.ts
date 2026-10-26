@@ -6,8 +6,8 @@ declare const self: ServiceWorkerGlobalScope;
 const cacheName = 'nusantara-' + version;
 // Cache the shell, not every province or provider snapshot on installation.
 const assets = [...build, ...files, '/200.html'].filter(path =>
- !path.startsWith('/data/snapshots/') && !path.startsWith('/data/geometry-2022/') &&
- !path.startsWith('/data/admin-2022/cities/') && path !== '/data/admin-2022/cities.json' &&
+ !path.startsWith('/data/snapshots/') && !path.startsWith('/data/geometry-2025/') &&
+ !path.startsWith('/data/admin-2025/cities/') && path !== '/data/admin-2025/cities.json' &&
  path !== '/_app/version.json' && path !== '/service-worker.js' && !path.startsWith('/data/published/'));
 const assetPaths = new Set(assets);
 
@@ -31,7 +31,7 @@ self.addEventListener('fetch', event => {
  event.respondWith((async () => {
   try {
    const response = await fetch(event.request);
-   const isRegionAsset = url.pathname.startsWith('/data/admin-2022/cities/') || url.pathname.startsWith('/data/geometry-2022/');
+   const isRegionAsset = url.pathname.startsWith('/data/admin-2025/cities/') || url.pathname.startsWith('/data/geometry-2025/');
    if (response.ok && (assetPaths.has(url.pathname) || isRegionAsset)) {
     const cache = await caches.open(cacheName);
     await cache.put(event.request, response.clone());

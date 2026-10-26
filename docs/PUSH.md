@@ -19,7 +19,7 @@ Set these environment variables through a secret manager (never commit their val
 - `PUSH_SUBSCRIBER_TOKEN`: random secret, at least 32 characters, scoped to subscription registration and revocation.
 - `PUSH_ADMIN_TOKEN`: a distinct random secret, at least 32 characters, only held by trusted ingestion infrastructure.
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`: VAPID pair and `mailto:` or HTTPS contact.
-- `PUSH_REGION_FILE`: path to the generated `admin-2022/provinces.json`; only codes in this file can be subscribed to or matched.
+- `PUSH_REGION_FILE`: path to the generated `admin-2025/provinces.json`; only codes in this file can be subscribed to or matched.
 - Optional `PUSH_STORE_FILE` (defaults to `./var/subscriptions.json`, mode 0600) and `PORT` (defaults to 8787).
 
 The JSON file store is for a single process on persistent private storage only. It serializes mutations within one store instance and is not safe across multiple processes, multiple store instances writing the same file, horizontally scaled workers or ephemeral serverless disks. Replace it with an encrypted transactional store and shared rate-limit/deduplication storage before scaling. Protect the service with HTTPS, network controls, backups and a documented retention/deletion policy. Tokens are shared bearer credentials, not per-user identity; add user/device authentication before public production exposure.

@@ -17,6 +17,7 @@
   let status = '';
   let error = '';
   let disposed = false;
+  let returnFocus: HTMLElement | undefined;
 
   $: url = makeShareUrl(region);
   $: publicSummary = summaryForShare(summary, region);
@@ -26,7 +27,9 @@
     if (imageUrl) URL.revokeObjectURL(imageUrl);
   });
 
-  async function openPreview() {
+  export async function openPreview() {
+    if (busy) return;
+    returnFocus = document.activeElement as HTMLElement;
     busy = true;
     error = '';
     status = '';
@@ -71,7 +74,8 @@
     if (imageUrl) URL.revokeObjectURL(imageUrl);
     imageUrl = '';
     png = undefined;
-    trigger?.focus();
+    if (returnFocus?.isConnected && returnFocus.getClientRects().length > 0) returnFocus.focus();
+    else trigger?.focus();
   }
 
   async function copyLink() {
@@ -147,7 +151,7 @@
   .share-close { width: 44px; padding: 0; font-size: 1.5rem; }
   img { display: block; width: 100%; height: auto; margin: 18px auto; border-radius: 12px; }
   p { color: var(--muted); font-size: .85rem; line-height: 1.5; }
-  .share-error { color: #a43628; }
+  .share-error { color: var(--danger); }
   .share-status:empty { display: none; }
   .share-actions { justify-content: flex-start; }
   .share-actions button:disabled { opacity: .55; }

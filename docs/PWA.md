@@ -4,7 +4,7 @@ The flow follows the relevant `trick-it` patterns: one SvelteKit-owned registrat
 
 ## Install
 
-Chromium's `beforeinstallprompt` is captured but never opened automatically. **Install app** invokes the native prompt only after a click. Browsers without that event receive menu guidance; Safari uses Share → Add to Home Screen. Standalone mode and `appinstalled` remove the offer. HTTPS, a production build and actual browser support are required; a simulated event test is not proof of native iOS installation.
+The install invitation is visible only on mobile-sized coarse-pointer web browsers that are not already running standalone. It is absent from desktop web and installed PWAs. Chromium's `beforeinstallprompt` is captured but never opened automatically. **Install app** invokes the native prompt only after a click. Browsers without that event receive menu guidance; Safari uses Share → Add to Home Screen. Standalone mode and `appinstalled` remove the offer. HTTPS, a production build and actual browser support are required; a simulated event test is not proof of native iOS installation.
 
 The manifest includes real 192/512 PNG icons, an Apple touch icon and standalone display. Application and browser chrome colors follow the saved light/dark theme.
 
@@ -19,7 +19,7 @@ New workers cache the shell and **wait**, rather than calling `skipWaiting()` du
 - Vite hashes JS/CSS and serves `/_app/immutable/*` with immutable one-year HTTP caching.
 - SvelteKit's release version names shell caches and versions mutable administrative/geometry JSON requests. Offline matching ignores that query only inside the release-scoped static cache.
 - HTML is `no-store`; the worker and manifest revalidate; `/_app/version.json` is `no-store` and is excluded from service-worker caching.
-- Province geometry/city lists are lazy, not a bulk GIS precache. Only requested data packages are added at runtime.
+- Province geometry/city lists and relief are lazy, not a bulk GIS precache. Only requested packages are added at runtime. Release-versioned weather/earthquake assets are saved snapshots with visible dates, not current-warning publications.
 - Provider `/data/published/*`, `/data/snapshots/*` and `/api/*` bypass service-worker CacheStorage. Hot publication HTTP caches obey their own short CDN TTL and absolute manifest validity. Cold archives are `no-store`; offline provider data is not represented as fresh.
 
 Browser tests cover install-event consent/manual guidance, mocked waiting-worker approval and location persistence, release-key requests, real icon assets and the actual offline shell. Real OS install dialogs, installed iOS/Android behavior, production headers and deployed update rollout remain device/deployment checks.

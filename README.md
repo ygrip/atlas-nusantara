@@ -1,34 +1,36 @@
-# Nusantara Atlas
+# Atlas Nusantara
 
-An Indonesian regional atlas and dated environmental-data archive, prepared for **https://nusantara.readynaz.com** on Cloudflare Workers.
+Explore Indonesia from the islands down to a city, with an interactive relief map and saved weather reports. Prepared for **https://nusantara.readynaz.com** on Cloudflare Workers.
 
-**Not an emergency alert service.** Licensed 2022 boundary inputs are not bundled. Provider collection is off until dataset-specific reuse is reviewed and configured; no missing data is presented as an all-clear.
+**Not an emergency alert service.** Forecasts and earthquake records are dated snapshots. Missing data never means an all-clear.
 
-![Nusantara Atlas home, light theme](docs/screenshots/home-light.png)
+![Atlas Nusantara](docs/screenshots/home-light.png)
 
-| Schematic province tile map | Province details popup | Mobile |
+| Explore the archipelago | A closer look | Your places |
 |---|---|---|
-| ![Tile map](docs/screenshots/atlas-tile-map.png) | ![Popup](docs/screenshots/province-popup.png) | ![Mobile](docs/screenshots/mobile-home.png) |
+| ![3D Indonesia map](docs/screenshots/atlas-3d.png) | ![City weather and relief](docs/screenshots/city-weather.png) | ![Saved weather cards](docs/screenshots/saved-weather.png) |
 
-More screenshots and the design system: [DESIGN.md](docs/DESIGN.md).
+## What works
 
-## Included
+- **38 provinces / 514 cities and regencies:** searchable directory, sortable table and city links all drive the same map selection.
+- **Real source-derived geography:** OCHA/BPS coastlines and boundaries, NOAA ETOPO1 terrain and bathymetry, pan/scroll/pinch zoom, tilt and north controls, plus an accessible SVG fallback.
+- **Dated weather and earthquake overlays:** 514 representative BMKG forecasts and 15 M5+ archive events in this capture. Wind, cloud, rain and sea visuals derive from the forecast snapshot. Layers have their own legends and pins.
+- **Private weather cards:** saved places and rounded device location stay in localStorage. Language popup with flags, mobile quick settings, light/dark transitions and reduced-motion support.
+- **Mobile installation and recovery:** install invitation only on uninstalled mobile web; consent-based updates, illustrated HTTP 404 and runtime error views, independent 500/503 HTML fallbacks, Terms and Privacy pages.
 
-- SvelteKit static SPA, install guidance/native prompt, consent-based PWA updates, versioned caches, 13 Paraglide locales, light/dark themes and reduced-motion support.
-- Historical **37-province / 514-city-regency** directory, province-partitioned static data and a manually seeded D1 hierarchy.
-- Claymorphic bento layout with sticky section navigation, a schematic 37-province tile map (not boundaries), a filterable province table with a details popup, and responsive layouts from 375 px.
-- Offline Mapshaper + d3-geo SVG/JSON build, one province at a time. Layered 2.5D SVG, keyboard selection, wheel/button zoom, drag and touch pinch need no game engine or runtime GIS.
-- BMKG earthquake/CAP parsers, reviewed-source scheduling, D1 archive and 365-day retention. Hot views use versioned static R2 JSON; cold downloads use Turnstile, rate limits and a daily query budget. No visitor login.
-- Honest archive summaries, lazy Chart.js charts, source-attributed JSON/CSV exports, private-device pins, and preview-first client PNG sharing.
-- Verified maker support links, source-code link, and a disabled-by-default, tracking-free text sponsor slot.
+The map is simplified, not survey-grade or a legal border reference. Cloud altitude and wave motion are visual models, not satellite clouds or measured waves. **Disaster history and hazard datasets are not connected**; the interface explains this and links to official sources. See [source evidence and limitations](docs/DATA_SOURCES.md).
 
 ## Run and verify
 
-Node 22.12+ and npm:
+Node 22.12+:
 
 ```sh
 npm ci
+npx playwright install chromium webkit
 npm run dev
+```
+
+```sh
 npm run check:locales
 npm run check
 npm run worker:check
@@ -38,32 +40,31 @@ npm run test:worker
 npm run worker:dry-run
 ```
 
-Install browser runtimes once: `npx playwright install chromium webkit` (`--with-deps` on Linux CI). `test:worker` uses an isolated **local** workerd/D1 database and synthetic fixtures; it never activates providers or writes remote resources.
+The Worker integration uses isolated **local** workerd/D1/R2 resources and synthetic fixtures. It does not call providers, activate live push or modify remote resources.
 
-## Initial local D1 fill
+Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the supported fixes require framework/adapter major upgrades. Compatible tooling updates cleared the high/moderate findings. Review the remaining chain before enabling server-rendered routes.
 
-```sh
-npm run data:bootstrap
-```
+## Refresh snapshots
 
-This builds the app, applies local migrations, fills all 551 historical hierarchy rows, invokes the scheduled handler once and stops the local server. With default empty source approvals it imports **no provider observations**. Review [Cloudflare setup](docs/CLOUDFLARE.md) before activating a source. No Cloudflare login is needed locally or by visitors. Production operator setup needs D1/R2, a confirmed public R2 CDN hostname/CORS/JSON caching rule, Turnstile keys, edge protection and source approvals. Set `VITE_PUBLIC_DATA_ORIGIN` before building; the Worker read fallback is local-only; production refuses a missing CDN origin.
-
-## Historical codes and maps
-
-The pinned community transcription is https://github.com/cahyadsn/wilayah/blob/master/db/archive/wilayah_2023.sql; its checked input SHA-256 is recorded in each generated seed. This is the historical Kepmendagri 100.1.1-6117/2022 edition, not current 38-province geography. See [source evidence](docs/DATA_SOURCES.md).
+Browsers do not call BMKG for the map or saved-place cards. These scripts fetch dated assets deliberately:
 
 ```sh
-npm run import:regions -- --atlas-only --input /path/to/wilayah_2023.sql
-npm run seed:hierarchy
-npm run build:geometry -- provinces.geojson cities-directory provenance.json --province 11
+node scripts/ingestion/forecast-snapshot.mjs
+node scripts/ingestion/earthquake-snapshot.mjs
 ```
 
-The last command requires reviewed, licensed original boundary files; it does not invent polygons. SVG/JSON output can be versioned in Git. See [geometry contract](docs/GEOMETRY.md). Update code/boundary editions deliberately and rerun the seed; no region-code crawler is scheduled.
+Scheduled refreshes are defined for **weather every 2 hours** and **earthquakes every 15 minutes**. Collection/publishing requires repository flags and the intended CDN credentials; it has not been activated remotely. See [SNAPSHOT_REFRESH.md](docs/SNAPSHOT_REFRESH.md).
 
-## Safety, privacy and remaining release work
+Forecast capture takes about 10 minutes at under 60 requests/minute. It verifies provider code/name pairs, reports missing points and retains the previous file if fewer than 90% succeed. Captured data remains dated when offline; it is never labeled live.
 
-Pins and rounded device coordinates stay on the device. PNG sharing accepts only public region codes and approved public summary data, never private device pins. Notification permission is not a push subscription. The optional [Node push prototype](docs/PUSH.md) is separate from the Cloudflare deployment and is not a production alert-delivery service.
+Administrative codes follow the pinned 2025 transcription. See [DATA_SOURCES.md](docs/DATA_SOURCES.md) for its checksum, upstream header discrepancy and explicit BMKG crosswalk. Rebuilding geometry and relief is documented in [GEOMETRY.md](docs/GEOMETRY.md).
 
-Human translation review, licensed boundary acquisition, BNPB/InaRISK provider mappings/rights, production source activation, authenticated browser push delivery and actual iOS/Android device testing remain open in [IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md).
+## Cloudflare and extensions
 
-Installation/update details: [PWA.md](docs/PWA.md). Further documentation: [ingestion](docs/INGESTION.md), [BMKG CAP](docs/BMKG_CAP.md), [localization](docs/I18N.md), [design/support/ads](docs/DESIGN.md), [sharing](docs/SHARING.md), and [architecture](docs/ARCHITECTURE.md).
+`npm run data:bootstrap` builds and seeds the local 552-row hierarchy. Source approval gates for the scheduled D1/R2 publication pipeline remain separate from the checked-in snapshots. Review [CLOUDFLARE.md](docs/CLOUDFLARE.md) before deployment; remote resources and source approvals are not configured by a commit.
+
+Add mountain, volcano or landmark points through the typed [overlay contract](docs/OVERLAYS.md), not by editing the base-map renderer.
+
+Design, assets and screenshots: [DESIGN.md](docs/DESIGN.md), [ASSETS.md](docs/ASSETS.md). Other guides: [architecture](docs/ARCHITECTURE.md), [ingestion](docs/INGESTION.md), [PWA](docs/PWA.md), [localization](docs/I18N.md), [sharing](docs/SHARING.md), [BMKG CAP](docs/BMKG_CAP.md), [optional push prototype](docs/PUSH.md).
+
+Human translation review, authoritative 2025 boundary certification, BNPB/InaRISK adapters and reuse review, live source activation, browser push delivery and native-device testing remain release work.

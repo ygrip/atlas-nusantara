@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img">
+  <title>Nusantara Atlas</title>
+  <defs>
+    <linearGradient id="nusa-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1f8e8"/>
+      <stop offset="1" stop-color="#bddcc4"/>
+    </linearGradient>
+    <linearGradient id="nusa-sun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffe0ad"/>
+      <stop offset="1" stop-color="#f2a35c"/>
+    </linearGradient>
+    <linearGradient id="nusa-land" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6bb94"/>
+      <stop offset="1" stop-color="#d9825a"/>
+    </linearGradient>
+    <linearGradient id="nusa-wave-back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a6d3e2"/>
+      <stop offset="1" stop-color="#7db6cc"/>
+    </linearGradient>
+    <linearGradient id="nusa-wave-front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#86bdd3"/>
+      <stop offset="1" stop-color="#5f9fba"/>
+    </linearGradient>
+    <clipPath id="nusa-clip"><rect x="4" y="3" width="56" height="56" rx="18"/></clipPath>
+  </defs>
+  <rect x="4" y="7" width="56" height="56" rx="18" fill="#8db69b"/>
+  <rect x="4" y="3" width="56" height="56" rx="18" fill="url(#nusa-bg)"/>
+  <g clip-path="url(#nusa-clip)">
+    <circle cx="44" cy="21" r="8.5" fill="url(#nusa-sun)"/>
+    <ellipse cx="41.5" cy="18.5" rx="3" ry="2" fill="#fff" opacity=".45"/>
+    <path d="M9 41c3-10 11-14 17-6 2-5 8-8 13-1 2 3 3 5 3 7H9Z" fill="url(#nusa-land)"/>
+    <path d="M14 38c2-4 6-6 9-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".45"/>
+    <path d="M0 41c8-5 14-5 22 0s14 5 21 0 14-4 21 0v25H0Z" fill="url(#nusa-wave-back)"/>
+    <path d="M0 48c8-5 15-5 22 0s14 5 21 0 14-4 21 0v18H0Z" fill="url(#nusa-wave-front)"/>
+    <path d="M6 46c6-3 11-3 16 0" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity=".5"/>
+  </g>
+  <rect x="5" y="4" width="54" height="54" rx="17" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>
+</svg>

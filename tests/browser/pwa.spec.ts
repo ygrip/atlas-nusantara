@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
+test.use({ hasTouch: true });
 
 test('installation is user-triggered and unsupported prompts use manual guidance', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
     localStorage.setItem('PARAGLIDE_LOCALE', 'en');
     window.addEventListener('beforeinstallprompt', event => { if (event.isTrusted) { event.preventDefault(); event.stopImmediatePropagation(); } });
@@ -20,11 +22,13 @@ test('installation is user-triggered and unsupported prompts use manual guidance
   expect(await page.evaluate(() => (window as Window & { installCalls?: number }).installCalls)).toBe(1);
   await expect(page.getByText('Installation requested. Finish the browser’s installation steps.')).toBeVisible();
   await page.evaluate(() => window.dispatchEvent(new Event('appinstalled')));
-  await expect(page.getByRole('button', { name: 'App installed', exact: true })).toBeDisabled();
+  await expect(page.locator('.pwa-panel')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Install app', exact: true })).toHaveCount(0);
 });
 
 test('waiting updates need consent and preserve saved locations after reload', async ({ page }) => {
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'standalone', { value: true, configurable: true });
     localStorage.setItem('PARAGLIDE_LOCALE', 'en');
     const container = new EventTarget();
     const registration = new EventTarget();
@@ -56,11 +60,16 @@ test('waiting updates need consent and preserve saved locations after reload', a
   await page.evaluate(() => (window as Window & { stagePwaUpdate: () => void }).stagePwaUpdate());
   await Promise.all([page.waitForEvent('load'), update.getByRole('button', { name: 'Update and reload' }).click()]);
   expect(await page.evaluate(() => sessionStorage.getItem('pwa-activation-message'))).toBe('SKIP_WAITING');
-  await expect(page.locator('.pin')).toContainText('JAWA BARAT');
+  await expect(page.locator('.pin')).toContainText('Jawa Barat');
+});
+
+test('desktop web does not show an install invitation', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.pwa-panel')).toHaveCount(0);
 });
 
 test('static data requests carry a release key and manifest has real install icons', async ({ page, request }) => {
-  const provinces = page.waitForRequest(url => url.url().includes('/data/admin-2022/provinces.json'));
+  const provinces = page.waitForRequest(url => url.url().includes('/data/admin-2025/provinces.json'));
   await page.goto('/');
   expect(new URL((await provinces).url()).searchParams.get('v')).toBeTruthy();
   const manifest = await (await request.get('/manifest.webmanifest')).json();

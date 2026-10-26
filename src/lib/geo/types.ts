@@ -26,6 +26,8 @@ export interface GeometryPackage {
   boundaryEdition: string;
   level: AdminLevel;
   viewBox: string;
+  /** d3 geoMercator parameters shared by every package of one build (x = tx + k·λ, y = ty − k·ln tan(π/4 + φ/2)). */
+  projection?: { type: 'mercator'; scale: number; translate: [number, number] };
   regions: SvgRegion[];
 }
 
