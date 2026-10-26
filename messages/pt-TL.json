@@ -245,5 +245,15 @@
   "atlas_intro": "Explore as ilhas. Escolha um lugar. Veja o tempo.",
   "source_details": "Fontes e detalhes do mapa",
   "menu_close": "Fechar menu",
-  "map_legend_label": "Legenda do mapa"
+  "map_legend_label": "Legenda do mapa",
+  "layer_mountains": "Montanhas",
+  "mountain_all": "Todas",
+  "mountain_active": "Ativo · Tipo A",
+  "mountain_potential": "Vulcânico · B/C",
+  "mountain_other": "Outras / não classificadas",
+  "mountain_elevation": "Altitude",
+  "mountain_details": "Detalhes da montanha",
+  "mountain_image_missing": "Sem fotografia verificada",
+  "mountain_image_source": "Fotografia e atribuição",
+  "mountain_data_note": "Atlas BIG 1:250.000 · não é um alerta de segurança em tempo real. Não classificado não significa inativo."
 }
