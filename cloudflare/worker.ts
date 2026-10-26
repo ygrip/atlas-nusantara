@@ -1,4 +1,4 @@
-import { adaptBmkgCap } from '../src/lib/data/ingestion/cap.ts';
+import { adaptBmkgCap, InactiveCapWarningError } from '../src/lib/data/ingestion/cap.ts';
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { createExportResponse, exportFitsBudget } from './export.ts';
 import { verifyArchiveRequest, type ColdDownloadEnv } from './cold-download.ts';
@@ -180,7 +180,8 @@ export async function fetchSource(source: SourceDefinition, approval: NonNullabl
       const capXml = await boundedText(alertResponse);
       collectedBytes += new TextEncoder().encode(capXml).byteLength;
       if (collectedBytes > MAX_CAP_BYTES) throw Error('BMKG warning collection exceeds its total memory budget');
-      const cap = adaptBmkgCap(capXml, { provenance: capProvenance, generatedAt: fetchedAt });
+      const cap = parseActiveCap(capXml, capProvenance, fetchedAt);
+      if (!cap) continue;
       for (const record of cap.records) {
         const expiry = record.properties.expires;
         const sent = record.observedAt;
@@ -196,6 +197,16 @@ export async function fetchSource(source: SourceDefinition, approval: NonNullabl
     return makeSnapshot(snapshotProvenance, records, fetchedAt, 'warning');
   }
   throw Error('Provider adapter is intentionally unavailable');
+}
+
+/** Expired or not-yet-effective items are normal feed lag, not a broken crawl; malformed items still fail closed. */
+function parseActiveCap(xml: string, provenance: DatasetProvenance, fetchedAt: string): Snapshot | undefined {
+  try {
+    return adaptBmkgCap(xml, { provenance, generatedAt: fetchedAt });
+  } catch (error) {
+    if (error instanceof InactiveCapWarningError) return undefined;
+    throw error;
+  }
 }
 
 async function cleanupExpired(db: D1Database, now: number): Promise<number> {

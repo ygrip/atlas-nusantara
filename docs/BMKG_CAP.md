@@ -15,7 +15,8 @@ The inspected warning contains area descriptions and polygon coordinates, but no
 - Requires the exact CAP namespace, URL pattern and BMKG sender domain; rejects DTD/entity declarations, malformed/oversized XML and unsafe source URLs.
 - Accepts original public actual alerts only; rejects test, exercise, cancel, update and other message types so they cannot masquerade as active alerts.
 - Requires a currently active validity window and valid closed polygon rings. Unsupported circle-only areas fail closed.
-- Preserves CAP timestamps, severity, urgency, certainty, descriptions and source link. Expired warnings are rejected; `validUntil` is set from CAP `expires`.
+- Preserves CAP timestamps, severity, urgency, certainty, descriptions and source link. Expired and not-yet-effective warnings throw `InactiveCapWarningError`; `validUntil` is set from CAP `expires`.
+- The scheduled Worker crawl skips `InactiveCapWarningError` items (normal RSS lag: an item expired between listing and fetch) and keeps collecting the rest. Every other parse error still fails the whole crawl closed, so current warnings are withheld rather than published from a partial feed.
 - Produces no guessed region mapping, provider fetch, default active alert or automatic snapshot.
 
 Source `copyright public domain` was visible on the BMKG RSS index, not a complete legal/reuse determination for every CAP detail. `DatasetProvenance.license` must reflect independently reviewed rights before any publication. Keep BMKG attribution visible.

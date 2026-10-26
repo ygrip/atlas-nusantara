@@ -37,3 +37,19 @@ test('malformed source envelopes and partial warning crawls fail closed', async 
   };
   await assert.rejects(fetchSource(source, approval, now, fetcher), /detail fetch failed/);
 });
+
+test('skips expired or not-yet-effective CAP items instead of failing the whole warning crawl', async () => {
+  const lagging = (index: number, effective: number, expires: number) => cap(index)
+    .replace(/<effective>[^<]+<\/effective>/, `<effective>${new Date(effective).toISOString()}</effective>`)
+    .replace(/<expires>[^<]+<\/expires>/, `<expires>${new Date(expires).toISOString()}</expires>`)
+    .replace(/<sent>[^<]+<\/sent>/, `<sent>${new Date(Math.min(effective, now) - 120000).toISOString()}</sent>`);
+  const documents = [cap(0), lagging(1, now - 7200000, now - 60000), lagging(2, now + 600000, now + 3600000)];
+  const items = documents.map((_, index) => `<item><link>https://www.bmkg.go.id/alerts/nowcast/id/FIXTURE${index}_alert.xml</link></item>`).join('');
+  const fetcher: typeof fetch = async input => {
+    const url = new URL(String(input));
+    if (url.pathname === '/alerts/nowcast/id') return new Response(`<rss><channel><title>Fixture feed</title><link>https://www.bmkg.go.id/alerts/nowcast/id</link>${items}</channel></rss>`);
+    return new Response(documents[Number(url.pathname.match(/FIXTURE(\d+)/)?.[1])]);
+  };
+  const snapshot = await fetchSource(source, approval, now, fetcher);
+  assert.deepEqual(snapshot.records.map(record => record.id), ['bmkg-cap:fixture-0']);
+});
