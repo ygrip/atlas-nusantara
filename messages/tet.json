@@ -245,5 +245,15 @@
   "atlas_intro": "Esplora illa sira. Hili fatin. Haree tempu.",
   "source_details": "Fonte no detallu mapa",
   "menu_close": "Taka menu",
-  "map_legend_label": "Lejenda mapa"
+  "map_legend_label": "Lejenda mapa",
+  "layer_mountains": "Foho sira",
+  "mountain_all": "Hotu",
+  "mountain_active": "Ativu · Tipu A",
+  "mountain_potential": "Vulkániku · B/C",
+  "mountain_other": "Seluk / la klasifikadu",
+  "mountain_elevation": "Altitude",
+  "mountain_details": "Detallu foho",
+  "mountain_image_missing": "Foto verifikadu la disponivel",
+  "mountain_image_source": "Foto no fonte",
+  "mountain_data_note": "Atlas BIG 1:250.000 · la'ós avizu seguransa tempu-real. La klasifikadu la signifika inativu."
 }
