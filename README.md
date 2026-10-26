@@ -4,10 +4,19 @@ An Indonesian regional atlas and dated environmental-data archive, prepared for 
 
 **Not an emergency alert service.** Licensed 2022 boundary inputs are not bundled. Provider collection is off until dataset-specific reuse is reviewed and configured; no missing data is presented as an all-clear.
 
+![Nusantara Atlas home, light theme](docs/screenshots/home-light.png)
+
+| Schematic province tile map | Province details popup | Mobile |
+|---|---|---|
+| ![Tile map](docs/screenshots/atlas-tile-map.png) | ![Popup](docs/screenshots/province-popup.png) | ![Mobile](docs/screenshots/mobile-home.png) |
+
+More screenshots and the design system: [DESIGN.md](docs/DESIGN.md).
+
 ## Included
 
 - SvelteKit static SPA, install guidance/native prompt, consent-based PWA updates, versioned caches, 13 Paraglide locales, light/dark themes and reduced-motion support.
 - Historical **37-province / 514-city-regency** directory, province-partitioned static data and a manually seeded D1 hierarchy.
+- Claymorphic bento layout with sticky section navigation, a schematic 37-province tile map (not boundaries), a filterable province table with a details popup, and responsive layouts from 375 px.
 - Offline Mapshaper + d3-geo SVG/JSON build, one province at a time. Layered 2.5D SVG, keyboard selection, wheel/button zoom, drag and touch pinch need no game engine or runtime GIS.
 - BMKG earthquake/CAP parsers, reviewed-source scheduling, D1 archive and 365-day retention. Hot views use versioned static R2 JSON; cold downloads use Turnstile, rate limits and a daily query budget. No visitor login.
 - Honest archive summaries, lazy Chart.js charts, source-attributed JSON/CSV exports, private-device pins, and preview-first client PNG sharing.

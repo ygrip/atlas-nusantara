@@ -4,6 +4,10 @@ No fabricated geography is shipped. The region browser contains the exact histor
 
 The discovered repositories `AlfianAliM/Indonesia-GeoJSON` and `chmdznr/indonesia-geojson` describe **38** provinces. A repository's code license alone does not establish ownership of its original geographic data. Neither was silently joined to this historical edition.
 
+## Schematic tile map (fallback)
+
+Until a reviewed geometry package exists, the atlas shows a **schematic tile map**: one equal-sized clay tile per province on a 15 × 8 grid (`src/lib/atlas/tiles.ts`), colored by island group and labeled with code and common abbreviation (JABAR, KALTIM, NTT…). Tiles are placed by approximate west–east and north–south order only. They carry no boundaries, areas, coastlines or adjacency claims, and the map states this next to the "Verified boundaries are not available yet" notice. `tests/geo/tiles.test.mjs` pins the layout to exactly the 37 codes in `static/data/admin-2022/provinces.json`, one non-overlapping cell each. When `static/data/geometry-2022/national.json` is published, the SVG map replaces the tiles automatically.
+
 ## Build contract
 
 1. Obtain original ADM1 and ADM2 GeoJSON with explicit redistribution rights. Review the geographic vintage against the 2022 decision, including Papua. Preserve originals outside the public directory.
