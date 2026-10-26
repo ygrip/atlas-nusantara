@@ -18,6 +18,11 @@ export interface CapOptions {
 
 type XmlObject = Record<string, unknown>;
 
+/** A well-formed CAP warning that is outside its active window (expired or not yet effective). */
+export class InactiveCapWarningError extends Error {
+  constructor(message: string) { super(message); this.name = 'InactiveCapWarningError'; }
+}
+
 function requiredText(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.trim().length === 0) throw new Error('CAP ' + field + ' is required');
   return value.trim();
@@ -127,8 +132,8 @@ export function adaptBmkgCap(xml: string, options: CapOptions): Snapshot {
   const nowTime = Date.parse(now);
   if ([sentTime, effectiveTime, expiryTime, nowTime].some((value) => !Number.isFinite(value))) throw new Error('CAP dates must be valid ISO-8601 instants');
   if (sentTime > nowTime || effectiveTime > expiryTime) throw new Error('CAP warning dates are inconsistent');
-  if (effectiveTime > nowTime) throw new Error('Future CAP warnings are not active and cannot be published');
-  if (expiryTime <= nowTime) throw new Error('Expired CAP warnings cannot be published');
+  if (effectiveTime > nowTime) throw new InactiveCapWarningError('Future CAP warnings are not active and cannot be published');
+  if (expiryTime <= nowTime) throw new InactiveCapWarningError('Expired CAP warnings cannot be published');
 
   const sourceLink = provenance.sourceUrl;
   const { coordinates, descriptions } = infoAreas(info);
