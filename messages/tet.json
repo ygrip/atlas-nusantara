@@ -15,5 +15,17 @@
   "disclaimer": "Ne'e la'ós servisu alerta emerjénsia. Tuir avizu ofisiál.",
   "sources_heading": "Fonte dadus",
   "roadmap_heading": "Planu implementasaun",
-  "roadmap_summary": "Dadus atual no fronteira ne'ebé verifikadu sei aumenta tuir etapa."
+  "roadmap_summary": "Dadus atual no fronteira ne'ebé verifikadu sei aumenta tuir etapa.",
+  "pins_heading": "Fatin favoritu",
+  "pin_region_label": "Provinsia (kódigu 2022)",
+  "pin_button": "Marka rejiaun",
+  "location_button": "Uza lokalizasaun dispositivu",
+  "notify_button": "Ativa notifikasaun",
+  "unpin_button": "Hasai",
+  "no_pins": "Seidauk iha fatin ne'ebé rai.",
+  "permission_denied": "La fó lisensa.",
+  "position_error": "Labele hetan lokalizasaun dispositivu.",
+  "location_added": "Lokalizasaun marka ona iha dispositivu ne'e.",
+  "notify_result": "Estadu lisensa notifikasaun:",
+  "notification_setup": "Alerta dezastre remota presiza servisu push ne'ebé sei dezenvolve."
 }

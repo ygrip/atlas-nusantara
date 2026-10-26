@@ -15,5 +15,17 @@
   "disclaimer": "Bukan layanan peringatan darurat. Ikuti informasi resmi.",
   "sources_heading": "Sumber data",
   "roadmap_heading": "Rencana implementasi",
-  "roadmap_summary": "Data terkini dan batas wilayah terverifikasi akan ditambahkan secara bertahap."
+  "roadmap_summary": "Data terkini dan batas wilayah terverifikasi akan ditambahkan secara bertahap.",
+  "pins_heading": "Lokasi favorit",
+  "pin_region_label": "Provinsi (kode 2022)",
+  "pin_button": "Sematkan wilayah",
+  "location_button": "Gunakan lokasi perangkat",
+  "notify_button": "Aktifkan notifikasi",
+  "unpin_button": "Hapus",
+  "no_pins": "Belum ada lokasi tersimpan.",
+  "permission_denied": "Izin tidak diberikan.",
+  "position_error": "Tidak dapat membaca lokasi perangkat.",
+  "location_added": "Lokasi tersimpan di perangkat ini.",
+  "notify_result": "Status izin notifikasi:",
+  "notification_setup": "Peringatan bencana jarak jauh memerlukan layanan push yang belum tersedia."
 }

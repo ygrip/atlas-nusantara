@@ -15,5 +15,17 @@
   "disclaimer": "Não é um serviço de alertas de emergência. Siga os avisos oficiais.",
   "sources_heading": "Fontes de dados",
   "roadmap_heading": "Plano de implementação",
-  "roadmap_summary": "Os dados atualizados e os limites verificados serão adicionados por etapas."
+  "roadmap_summary": "Os dados atualizados e os limites verificados serão adicionados por etapas.",
+  "pins_heading": "Locais favoritos",
+  "pin_region_label": "Província (códigos de 2022)",
+  "pin_button": "Guardar região",
+  "location_button": "Usar localização do dispositivo",
+  "notify_button": "Ativar notificações",
+  "unpin_button": "Remover",
+  "no_pins": "Ainda não há locais guardados.",
+  "permission_denied": "Permissão não concedida.",
+  "position_error": "Não foi possível obter a localização.",
+  "location_added": "Local guardado neste dispositivo.",
+  "notify_result": "Estado da permissão de notificações:",
+  "notification_setup": "Os alertas remotos de desastre precisam de um serviço push futuro."
 }
