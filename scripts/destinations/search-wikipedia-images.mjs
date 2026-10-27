@@ -104,88 +104,150 @@ async function saveReview(filename, records) {
  */
 export async function discoverWikipediaPhotos({
   catalogDirectory = CATALOG_DIRECTORY, cacheDirectory, province, after, limit = Infinity,
-  publish = false, output, delayMs = 1000, fetcher = fetch, pause = sleep
+  publish = false, output, language = 'both', delayMs = 1000,
+  fetcher = fetch, pause = sleep, logger = console
 }) {
+  const log = (...values) => logger.log?.(...values);
+  const started = Date.now();
   if (!cacheDirectory) throw Error('cacheDirectory is required');
   if (after && typeof after !== 'string') throw Error('Invalid after destination ID');
   if (province && !/^\d{2}$/.test(province)) throw Error('Invalid province code');
+  if (!['id', 'en', 'both'].includes(language)) throw Error('Invalid Wikipedia language: ' + language);
   if (!(limit === Infinity || Number.isSafeInteger(limit) && limit > 0))
     throw Error('limit must be a positive integer');
   const reviewFile = output ?? path.join(cacheDirectory, 'wikipedia-review.jsonl');
+  log('[wikipedia] Starting destination-first search',
+    { province: province ?? 'all', after: after ?? 'start',
+      limit: limit === Infinity ? 'all' : limit, language, publish, reviewFile });
   const catalog = await loadDestinationCatalog(catalogDirectory);
   if (province && !catalog.index.provinces.some(item => item.provinceCode === province))
     throw Error('Unknown province code: ' + province);
-  if (after && !catalog.places.some(place => place.id === after))
-    throw Error('Unknown --after destination ID: ' + after);
+  const cursor = after ? catalog.places.findIndex(place => place.id === after) : -1;
+  if (after && cursor < 0) throw Error('Unknown --after destination ID: ' + after);
   const manifest = await readImageRegistry(path.join(catalogDirectory, 'image-metadata.json'));
   if (!manifest || manifest.policy !== IMAGE_REVIEW_POLICY)
     throw Error('Existing image registry required for licensed publishing');
   const existing = new Map(manifest.entries.map(entry => [entry.destinationId, entry]));
-  const clients = Object.fromEntries(['id', 'en'].map(language => [language, new CrawlClient({
-    origin: 'https://' + language + '.wikipedia.org',
-    cacheDirectory: path.join(cacheDirectory, 'wikipedia-' + language + '-http'),
+  const pending = catalog.places.slice(cursor + 1).filter(place =>
+    (!province || place.provinceCode === province)
+    && !existing.has(place.id) && !place.image && !place.images?.length
+  ).slice(0, limit);
+  const hasCoords = place => Number.isFinite(place.lat) && Number.isFinite(place.lon);
+  const noCoordinates = pending.filter(place => !hasCoords(place)).length;
+  const languages = language === 'both' ? ['id', 'en'] : [language];
+  log('[wikipedia] Loaded', catalog.places.length, 'destinations;', pending.length,
+    'selected;', noCoordinates, 'lack coordinates and will not trigger API searches.');
+  const clients = Object.fromEntries(languages.map(lang => [lang, new CrawlClient({
+    origin: 'https://' + lang + '.wikipedia.org',
+    cacheDirectory: path.join(cacheDirectory, 'wikipedia-' + lang + '-http'),
     delayMs, fetcher, pause
   })]));
   const queue = [];
   const reviews = [];
-  let afterReached = !after;
-  for (const place of catalog.places) {
-    if (!afterReached) {
-      if (place.id === after) afterReached = true;
-      continue;
-    }
-    if (province && place.provinceCode !== province) continue;
-    if (existing.has(place.id) || place.image || place.images?.length) continue;
-    if (reviews.length >= limit) break;
+  let apiQueries = 0;
+  const startedDestination = Date.now();
+  for (const [index, place] of pending.entries()) {
+    const prefix = '[wikipedia][' + (index + 1) + '/' + pending.length + ']';
+    log(prefix, place.name, '|', place.sourceDistrict ?? '?', '|', place.sourceProvince ?? '?',
+      '|', place.id);
     const item = {
       destinationId: place.id, name: place.name, provinceCode: place.provinceCode,
       district: place.sourceDistrict ?? null, province: place.sourceProvince ?? null,
-      lat: Number.isFinite(place.lat) ? place.lat : null,
-      lon: Number.isFinite(place.lon) ? place.lon : null,
-      searches: [], candidateArticles: [], status: 'no-verified-article'
+      lat: hasCoords(place) ? place.lat : null, lon: hasCoords(place) ? place.lon : null,
+      searches: [], searchResults: [], candidateArticles: [], status: 'no-verified-article'
     };
     let selected;
-    for (const language of ['id', 'en']) {
-      const url = wikipediaSearchUrl(place.name, language);
-      item.searches.push(url);
-      const pages = await wikipediaPages(clients[language], place.name, language);
-      item.candidateArticles.push(...pages.slice(0, 5).map(page => ({
-        language, title: page.title, pageId: page.pageid,
-        wikipediaUrl: typeof page.title === 'string'
-          ? 'https://' + language + '.wikipedia.org/wiki/' + encodeURIComponent(page.title.replace(/ /g, '_'))
-          : null
-      })));
-      const found = selectWikipediaArticle(place, pages, language);
-      if (found) {
-        selected = { ...found, language };
-        break;
+    if (!hasCoords(place)) {
+      item.status = 'skipped-no-verified-destination-coordinates';
+      log(prefix, 'SKIP: no verified coordinates; cannot satisfy article location check.');
+    } else {
+      for (const lang of languages) {
+        const url = wikipediaSearchUrl(place.name, lang);
+        item.searches.push(url);
+        const requestStart = Date.now();
+        log(prefix, 'GET', lang + '.wikipedia.org', 'search="' + place.name + '" (API/cache)');
+        const pages = await wikipediaPages(clients[lang], place.name, lang);
+        apiQueries++;
+        const elapsedMs = Date.now() - requestStart;
+        const validCount = pages.filter(page =>
+          matchWikipediaArticleToDestination(place, page, lang)).length;
+        const exactTitles = pages.filter(page =>
+          normalizeName(page.title?.replace(/\s+\([^()]+\)$/, '') ?? '') === normalizeName(place.name)).length;
+        item.searchResults.push({ language: lang, returned: pages.length,
+          exactTitleCandidates: exactTitles, matchingArticles: validCount,
+          elapsedMs });
+        item.candidateArticles.push(...pages.slice(0, 5).map(page => ({
+          language: lang, title: page.title, pageId: page.pageid,
+          hasCoordinates: Array.isArray(page.coordinates) && page.coordinates.length > 0,
+          wikipediaUrl: typeof page.title === 'string'
+            ? 'https://' + lang + '.wikipedia.org/wiki/' + encodeURIComponent(page.title.replace(/ /g, '_'))
+            : null
+        })));
+        log(prefix, lang + ':', pages.length, 'results,', exactTitles, 'exact titles,',
+          validCount, 'geographically verified;', elapsedMs + 'ms');
+        const found = selectWikipediaArticle(place, pages, lang);
+        if (found) {
+          selected = { ...found, language: lang };
+          log(prefix, 'MATCH:', found.evidence.sourceUrl,
+            '|', Math.round(found.evidence.distanceMeters), 'm away');
+          break;
+        }
       }
     }
     if (selected) {
       item.status = 'article-matched-license-pending';
       item.matchedArticle = selected.evidence.sourceUrl;
       queue.push({ place, selected, review: item });
+    } else if (hasCoords(place)) {
+      log(prefix, 'NO MATCH: Wikipedia title and coordinates did not identify the same destination.');
     }
     reviews.push(item);
     if (reviews.length % 25 === 0) await saveReview(reviewFile, reviews);
-    if (reviews.length % 100 === 0)
-      console.log('Wikipedia destinations examined:', reviews.length,
-        'verified articles:', queue.length);
+    if (reviews.length % 25 === 0) log('[wikipedia] Progress:',
+      reviews.length + '/' + pending.length, 'destinations,', queue.length,
+      'verified articles,', apiQueries, 'API/cache lookups,',
+      Math.round((Date.now() - startedDestination) / 1000) + 's elapsed.');
   }
-
-  const titles = queue.flatMap(({ selected }) => wikipediaArticleFiles(selected.page));
+  await saveReview(reviewFile, reviews);
+  const titles = [...new Set(queue.flatMap(({ place, selected }) =>
+    wikipediaArticleFiles(selected.page).filter(title =>
+      relevantWikipediaArticleFile(place, selected.page, title))))];
+  log('[wikipedia] Article search complete:', queue.length, 'verified articles;',
+    titles.length, 'relevant distinct Commons file titles to check.');
   const metadata = await loadCommonsPages(titles, cacheDirectory, { fetcher, delayMs, pause });
+  log('[wikipedia] Commons returned metadata for', metadata.size, 'of', titles.length, 'file titles.');
   let newPhotos = 0;
   let newDestinations = 0;
   for (const { place, selected, review } of queue) {
     const photos = [];
     const seen = new Set();
+    const checks = [];
     for (const title of wikipediaArticleFiles(selected.page)) {
-      if (!relevantWikipediaArticleFile(place, selected.page, title)) continue;
+      if (!relevantWikipediaArticleFile(place, selected.page, title)) {
+        checks.push({ title, result: 'unrelated-article-illustration' });
+        continue;
+      }
       const loaded = metadata.get(title);
-      const licensed = loaded && verifyCommonsPhoto(loaded.page, loaded.retrievedAt);
-      if (!licensed || title !== licensed.evidence.fileTitle || seen.has(title)) continue;
+      if (!loaded) {
+        checks.push({ title, result: 'no-commons-file-metadata' });
+        continue;
+      }
+      const licensed = verifyCommonsPhoto(loaded.page, loaded.retrievedAt);
+      if (!licensed) {
+        checks.push({ title, result: 'unsupported-license-credit-or-image-format' });
+        continue;
+      }
+      if (title !== licensed.evidence.fileTitle) {
+        checks.push({ title, result: 'commons-file-title-redirected',
+          canonicalTitle: licensed.evidence.fileTitle });
+        continue;
+      }
+      if (seen.has(title)) {
+        checks.push({ title, result: 'duplicate' });
+        continue;
+      }
       seen.add(title);
+      checks.push({ title, result: 'verified' });
       photos.push({
         locationEvidence: { ...selected.evidence, articleFileTitle: title },
         image: licensed.image,
@@ -193,11 +255,18 @@ export async function discoverWikipediaPhotos({
       });
       if (photos.length >= MAX_PHOTOS) break;
     }
+    review.imageChecks = checks;
     review.status = photos.length ? 'verified-images' : 'article-matched-no-licensed-commons-photos';
     review.verifiedPhotos = photos.map(photo => ({
       url: photo.image.url, source: photo.image.descriptionUrl,
       credit: photo.image.credit, license: photo.image.license
     }));
+    log('[wikipedia][photos]', place.name + ':', photos.length, 'verified of',
+      checks.length, 'article images;',
+      checks.filter(check => check.result !== 'verified')
+        .reduce((counts, check) => {
+          counts[check.result] = (counts[check.result] ?? 0) + 1; return counts;
+        }, {}));
     if (!photos.length) continue;
     const lead = photos[0];
     existing.set(place.id, {
@@ -209,9 +278,8 @@ export async function discoverWikipediaPhotos({
   }
   await saveReview(reviewFile, reviews);
   const entries = [...existing.values()].sort((a, b) => a.destinationId.localeCompare(b.destinationId));
-  const now = new Date().toISOString();
   const registry = {
-    ...manifest, discoveredAt: now,
+    ...manifest, discoveredAt: new Date().toISOString(),
     sources: { ...manifest.sources,
       wikipedia: 'https://id.wikipedia.org/w/api.php and https://en.wikipedia.org/w/api.php' },
     verification: 'Wikipedia article exact name + subject coordinates within 2 km; article-listed files individually checked against Wikimedia Commons licensing metadata.',
@@ -225,19 +293,23 @@ export async function discoverWikipediaPhotos({
     }, entries
   };
   if (newPhotos) {
-    // Validate the whole manifest before allowing any overwrite of real data.
     const simulated = applyImageRegistry(
       structuredClone(catalog.index), structuredClone(catalog.shards), registry);
     if (simulated.rejected || simulated.missingDestinations)
       throw Error('Image registry failed verification; nothing has been published');
-    if (publish) await publishImageRegistry(catalogDirectory, catalog, registry);
+    if (publish) {
+      log('[wikipedia] Publishing', newPhotos, 'verified photos for', newDestinations, 'destinations...');
+      await publishImageRegistry(catalogDirectory, catalog, registry);
+    }
   }
   const result = {
-    scanned: reviews.length, matchedArticles: queue.length,
-    newDestinations, newPhotos, remainingWithoutPhoto: catalog.places.length - entries.length,
+    scanned: reviews.length, noCoordinates, apiQueries,
+    matchedArticles: queue.length, newDestinations, newPhotos,
+    remainingWithoutPhoto: catalog.places.length - entries.length,
+    elapsedSeconds: Math.round((Date.now() - started) / 1000),
     reviewFile, published: publish && newPhotos > 0
   };
-  console.log(JSON.stringify(result));
+  log('[wikipedia] DONE:', JSON.stringify(result));
   return result;
 }
 
@@ -245,17 +317,18 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const args = process.argv.slice(2);
   const cacheDirectory = args[0];
   if (!cacheDirectory || cacheDirectory.startsWith('--'))
-    throw Error('Usage: node scripts/destinations/search-wikipedia-images.mjs <cache-directory> [--province=34] [--limit=100] [--after=sisparnas-123] [--output=/tmp/review.jsonl] [--publish]');
+    throw Error('Usage: node scripts/destinations/search-wikipedia-images.mjs <cache-directory> [--province=34] [--limit=100] [--after=sisparnas-123] [--language=id|en|both] [--output=/tmp/review.jsonl] [--publish]');
   for (const flag of args.slice(1)) {
-    if (flag !== '--publish' && !/^--(province=\d{2}|limit=\d+|after=sisparnas-\d+|output=.+)$/.test(flag))
+    if (flag !== '--publish' && !/^--(province=\d{2}|limit=\d+|after=sisparnas-\d+|language=(?:id|en|both)|output=.+)$/.test(flag))
       throw Error('Unknown option: ' + flag);
   }
   const province = args.find(arg => arg.startsWith('--province='))?.slice('--province='.length);
   const limitText = args.find(arg => arg.startsWith('--limit='))?.slice('--limit='.length);
   const output = args.find(arg => arg.startsWith('--output='))?.slice('--output='.length);
   const after = args.find(arg => arg.startsWith('--after='))?.slice('--after='.length);
+  const language = args.find(arg => arg.startsWith('--language='))?.slice('--language='.length) ?? 'both';
   discoverWikipediaPhotos({
-    cacheDirectory, province, after, output,
+    cacheDirectory, province, after, output, language,
     limit: limitText ? Number(limitText) : Infinity, publish: args.includes('--publish')
   }).catch(error => { console.error(error); process.exitCode = 1; });
 }
