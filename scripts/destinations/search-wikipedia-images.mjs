@@ -15,7 +15,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { CrawlClient } from './crawl-http.mjs';
 import { loadDestinationCatalog, publishImageRegistry } from './enrich-images.mjs';
 import { loadCommonsPages } from './image-discovery.mjs';
-import { matchWikipediaArticleToDestination } from './image-matching.mjs';
+import { matchWikipediaArticleToDestination, normalizeName } from './image-matching.mjs';
 import { verifyCommonsPhoto } from './image-license.mjs';
 import { applyImageRegistry, destinationFingerprint, IMAGE_REVIEW_POLICY, readImageRegistry } from './image-publication.mjs';
 
@@ -44,6 +44,23 @@ export function wikipediaArticleFiles(page) {
   return [...new Set(list)]
     .filter(title => /^File:.+\.(?:jpe?g|png|webp)$/i.test(title))
     .slice(0, 40);
+}
+
+/** The lead image is curated by Wikipedia. Other article illustrations can be
+ * region maps/logos, so require distinctive destination tokens in their name. */
+export function relevantWikipediaArticleFile(place, page, fileTitle) {
+  const lead = typeof page.pageimage === 'string'
+    ? (page.pageimage.startsWith('File:') ? page.pageimage : 'File:' + page.pageimage)
+    : undefined;
+  if (fileTitle === lead) return true;
+  const filename = normalizeName(fileTitle.slice('File:'.length).replace(/\.[^.]+$/, ''));
+  if (/\b(?:map|peta|logo|icon|flag|bendera|locator)\b/.test(filename)) return false;
+  const ignored = new Set(['air', 'terjun', 'pantai', 'gunung', 'danau', 'taman',
+    'wisata', 'candi', 'goa', 'gua', 'pulau', 'museum', 'alam', 'nasional', 'desa',
+    'sungai', 'waduk', 'masjid', 'kampung', 'objek', 'obyek']);
+  const distinctive = normalizeName(place.name).split(' ').filter(word => word.length >= 4 && !ignored.has(word));
+  const fileTokens = new Set(filename.split(' '));
+  return distinctive.length > 0 && distinctive.every(token => fileTokens.has(token));
 }
 
 export function selectWikipediaArticle(place, pages, language) {
@@ -164,6 +181,7 @@ export async function discoverWikipediaPhotos({
     const photos = [];
     const seen = new Set();
     for (const title of wikipediaArticleFiles(selected.page)) {
+      if (!relevantWikipediaArticleFile(place, selected.page, title)) continue;
       const loaded = metadata.get(title);
       const licensed = loaded && verifyCommonsPhoto(loaded.page, loaded.retrievedAt);
       if (!licensed || title !== licensed.evidence.fileTitle || seen.has(title)) continue;
