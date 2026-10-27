@@ -82,7 +82,7 @@ test('article images prioritize lead photo, dedupe and exclude non-bitmaps', () 
   }), ['File:Alternative.png']);
 });
 
-async function fixture(run) {
+async function fixture(run, destination = place) {
   const root = await mkdtemp(path.join(os.tmpdir(), 'atlas-wikipedia-'));
   const catalogDirectory = path.join(root, 'destinations');
   const cacheDirectory = path.join(root, 'cache');
@@ -115,7 +115,7 @@ async function fixture(run) {
           ...base, schemaVersion: 1, codeEdition: '2025',
           provinceCode: province.provinceCode,
           retrievedAt: base.fetchedAt,
-          landmarks: province.provinceCode === '34' ? [place] : []
+          landmarks: province.provinceCode === '34' ? [destination] : []
         }));
     }
     await writeFile(path.join(catalogDirectory, 'image-metadata.json'), JSON.stringify({
@@ -178,4 +178,51 @@ test('Wikipedia discovery leaves coordinate-free matches for manual review', asy
     assert.equal(review.status, 'no-verified-article');
     assert.ok(review.candidateArticles.length > 0);
   });
+});
+
+
+test('progress logs surface each search, match and photo-check result', async () => {
+  await fixture(async ({ catalogDirectory, cacheDirectory }) => {
+    const logs = [];
+    const fetcher = async url => {
+      const host = new URL(url).hostname;
+      if (host === 'id.wikipedia.org') return Response.json({ query: { pages: [article] } });
+      if (host === 'commons.wikimedia.org') return Response.json({ query: { pages: { 1: photo } } });
+      throw Error('Unexpected host: ' + host);
+    };
+    const result = await discoverWikipediaPhotos({
+      catalogDirectory, cacheDirectory, province: '34', limit: 1, language: 'id',
+      delayMs: 0, pause: async () => {}, fetcher,
+      logger: { log: (...parts) => logs.push(parts.map(String).join(' ')) }
+    });
+    assert.equal(result.apiQueries, 1);
+    assert.equal(result.newPhotos, 1);
+    assert.equal(result.published, false);
+    assert.ok(logs.some(line => line.includes('[1/1]') && line.includes('Sri Gethuk')));
+    assert.ok(logs.some(line => line.includes('geographically verified')));
+    assert.ok(logs.some(line => line.includes('[wikipedia][photos]') && line.includes('1 verified')));
+    assert.ok(logs.some(line => line.includes('DONE:')));
+    const review = JSON.parse((await readFile(result.reviewFile, 'utf8')).trim());
+    assert.equal(review.searchResults[0].language, 'id');
+    assert.equal(review.searchResults[0].matchingArticles, 1);
+    assert.equal(review.imageChecks[0].result, 'verified');
+  });
+});
+
+test('skips Wikipedia network requests for destinations without verified coordinates', async () => {
+  await fixture(async ({ catalogDirectory, cacheDirectory }) => {
+    const fetcher = async () => { throw Error('Wikipedia search must be skipped'); };
+    const result = await discoverWikipediaPhotos({
+      catalogDirectory, cacheDirectory, province: '34', limit: 1,
+      delayMs: 0, pause: async () => {}, fetcher,
+      logger: { log() {} }
+    });
+    assert.equal(result.scanned, 1);
+    assert.equal(result.noCoordinates, 1);
+    assert.equal(result.apiQueries, 0);
+    assert.equal(result.matchedArticles, 0);
+    const review = JSON.parse((await readFile(result.reviewFile, 'utf8')).trim());
+    assert.equal(review.status, 'skipped-no-verified-destination-coordinates');
+    assert.deepEqual(review.searches, []);
+  }, { ...place, lat: undefined, lon: undefined });
 });
