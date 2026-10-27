@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { loadSubjectRegistry, loadCommonsPages, saveJson } from './image-discovery.mjs';
+import { loadSubjectRegistry, loadCommonsPages, loadCommonsCategoryMembers, saveJson } from './image-discovery.mjs';
 import { buildSubjectIndex, matchDestination, normalizeName } from './image-matching.mjs';
 import { verifyCommonsPhoto } from './image-license.mjs';
 import { applyImageRegistry, destinationFingerprint, IMAGE_REVIEW_POLICY } from './image-publication.mjs';
@@ -48,10 +48,12 @@ export function selectLocationMatches(places, subjects) {
   return { matches, outcomes, nameCandidates };
 }
 
-function verifiedEntry(match, subject, pages) {
+function verifiedEntry(match, subject, pages, categories = new Map()) {
   const photos = [];
   const seen = new Set();
-  for (const title of subject.imageTitles ?? [subject.imageTitle]) {
+  const sourceTitles = (subject.imageTitles ?? []).filter(Boolean);
+  const categoryTitles = (subject.commonsCategories ?? []).flatMap(category => categories.get(category) ?? []);
+  for (const title of [...sourceTitles, ...categoryTitles]) {
     if (seen.has(title)) continue;
     const metadata = pages.get(title);
     if (!metadata) continue;
@@ -73,13 +75,13 @@ function verifiedEntry(match, subject, pages) {
   };
 }
 
-export function reviewMatchedPhotos(matches, subjects, pages) {
+export function reviewMatchedPhotos(matches, subjects, pages, categories = new Map()) {
   const byId = new Map(subjects.map(subject => [subject.id, subject]));
   const entries = [];
   const outcomes = [];
   for (const match of matches) {
     const subject = byId.get(match.subject.id);
-    const entry = verifiedEntry(match, subject, pages);
+    const entry = verifiedEntry(match, subject, pages, categories);
     if (entry) {
       entries.push(entry);
       outcomes.push({ id: match.place.id, status: 'verified-image', subjectId: subject.id,
@@ -105,9 +107,15 @@ export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, 
   console.log('Full catalog evaluated:', catalog.places.length, 'name candidates:', locations.nameCandidates,
     'verified subject locations:', locations.matches.length);
   const byId = new Map(subjects.subjects.map(subject => [subject.id, subject]));
-  const titles = locations.matches.flatMap(match => byId.get(match.subject.id).imageTitles);
+  const categoryNames = locations.matches.flatMap(match => byId.get(match.subject.id).commonsCategories ?? []);
+  const categories = await loadCommonsCategoryMembers(categoryNames, cacheDirectory);
+  const titles = locations.matches.flatMap(match => {
+    const subject = byId.get(match.subject.id);
+    return [...(subject.imageTitles ?? []),
+      ...(subject.commonsCategories ?? []).flatMap(category => categories.get(category) ?? [])];
+  });
   const pages = await loadCommonsPages(titles, cacheDirectory);
-  const reviewed = reviewMatchedPhotos(locations.matches, subjects.subjects, pages);
+  const reviewed = reviewMatchedPhotos(locations.matches, subjects.subjects, pages, categories);
   const outcomes = [...locations.outcomes, ...reviewed.outcomes].sort((left, right) => left.id.localeCompare(right.id));
   const timestamps = [subjects.fetchedAt, ...[...pages.values()].map(page => page.retrievedAt)].sort();
   const registry = { schemaVersion: 1, policy: IMAGE_REVIEW_POLICY,
@@ -115,7 +123,8 @@ export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, 
     catalogFingerprint: createHash('sha256').update(catalog.places.map(destinationFingerprint).sort().join('\n')).digest('hex'),
     sources: { subjectRegistry: subjects.source, subjectRegistryFetchedAt: subjects.fetchedAt,
       subjectCount: subjects.subjects.length, ambiguousSubjectCoordinates: subjects.ambiguousCoordinates,
-      scope: subjects.scope, commons: 'https://commons.wikimedia.org/' },
+      scope: subjects.scope, commons: 'https://commons.wikimedia.org/',
+      categoryCount: categories.size },
     coverage: { evaluatedDestinations: catalog.places.length, exactNameCandidates: locations.nameCandidates,
       verifiedLocationMatches: locations.matches.length, licensedImages: reviewed.entries.length,
       licensedPhotos: reviewed.entries.reduce((count, entry) => count + (entry.photos?.length ?? 1), 0),
