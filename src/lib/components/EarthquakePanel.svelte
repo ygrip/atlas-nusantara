@@ -26,7 +26,8 @@
   {#if loading}<p role="status">{m.loading_data()}</p>
   {:else if archive}
     <div class="quake-summary"><strong>{archive.events.length}</strong><span>{m.retained_records()}</span><small>{m.ingested_time()}: {date(archive.fetchedAt)} · <a href={archive.termsUrl} target="_blank" rel="noreferrer">BMKG ↗</a></small></div>
-    <ol class="quake-events">
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable list must be focusable so keyboard users can scroll it) -->
+    <ol class="quake-events scroll-area" tabindex="0" aria-label={m.layer_earthquakes()}>
       {#each archive.events as event (event.id)}
         <li><span class="magnitude">M{event.magnitude.toFixed(1)}</span><div><strong>{event.place}</strong><time datetime={event.observedAt}>{date(event.observedAt)} · {event.depthKm} km</time></div></li>
       {/each}

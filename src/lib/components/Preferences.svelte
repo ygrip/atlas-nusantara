@@ -9,6 +9,8 @@
   import { assetUrl } from '$lib/pwa/assets';
   import { readPins, writePins, readCurrentLocation, writeCurrentLocation, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions';
   import WeatherPlaceCard from './WeatherPlaceCard.svelte';
+  import PlacePicker from './PlacePicker.svelte';
+  import type { PlaceOption } from '$lib/atlas/place-search';
 
   let { selectedRegion, onopen }: { selectedRegion?: Region; onopen?: (code: string) => void } = $props();
   let provinces = $state<Region[]>([]);
@@ -21,6 +23,12 @@
   let status = $state('');
   let busy = $state(false);
   let notificationPermission = $state<NotificationPermission | 'unavailable'>('unavailable');
+  const placeOptions = $derived.by((): PlaceOption[] => {
+    const provinceNames = new Map(provinces.map(region => [region.code, region.name]));
+    const provinceOptions: PlaceOption[] = provinces.map(region => ({ code: region.code, name: region.name, level: 'province' }));
+    const cityOptions: PlaceOption[] = cities.map(region => ({ code: region.code, name: region.name, level: 'city', parentName: provinceNames.get(region.parentCode ?? region.code.slice(0, 2)) }));
+    return [...provinceOptions, ...cityOptions];
+  });
   const names = $derived(new Map([...provinces, ...cities].map(region => [region.code, region.name])));
   $effect(() => { if (selectedRegion && !manuallySelected) selected = selectedRegion.code; });
 
@@ -102,11 +110,8 @@
     <button type="button" class="location-button" onclick={useDeviceLocation} disabled={busy}><Navigation size={16} aria-hidden="true" />{m.location_button()}</button>
   </header>
   <form class="places-form" onsubmit={event => { event.preventDefault(); pinRegion(); }}>
-    <label for="province-code">{m.pin_region_label()}</label>
-    <div><select id="province-code" bind:value={selected} onchange={() => { manuallySelected = true; }} disabled={provinces.length === 0}>
-      <optgroup label={m.level_province()}>{#each provinces as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
-      <optgroup label={m.level_city()}>{#each cities as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
-    </select><button type="submit" disabled={provinces.length === 0}><MapPin size={16} aria-hidden="true" />{m.pin_button()}</button></div>
+    <span class="field-label" id="place-label">{m.pin_region_label()}</span>
+    <div><PlacePicker options={placeOptions} value={selected} disabled={provinces.length === 0} onchange={code => { selected = code; manuallySelected = true; }} /><button type="submit" disabled={provinces.length === 0}><MapPin size={16} aria-hidden="true" />{m.pin_button()}</button></div>
   </form>
   {#if status}<p role="status" class="state">{status}</p>{/if}
   {#if current || pins.length > 0}
@@ -123,7 +128,7 @@
   .places-section { padding: clamp(18px, 3vw, 30px); min-width: 0; }
   .places-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }.places-header .eyebrow { display: flex; align-items: center; gap: 6px; }.places-header h2 { margin: 8px 0; letter-spacing: -.04em; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }.places-header p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.6; }
   button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; font-weight: 800; box-shadow: 0 3px 0 var(--border); }.location-button { background: var(--mint); } button:disabled { opacity: .55; }
-  .places-form { max-width: 680px; display: grid; gap: 7px; margin-bottom: 22px; }.places-form label { font-weight: 800; font-size: .8rem; }.places-form > div { display: flex; gap: 10px; min-width: 0; }.places-form select { flex: 1; width: 0; min-width: 0; max-width: none; }.places-form button { flex-shrink: 0; background: var(--peach); }
+  .places-form { max-width: 680px; display: grid; gap: 7px; margin-bottom: 22px; }.places-form .field-label { font-weight: 800; font-size: .8rem; }.places-form > div { display: flex; gap: 10px; min-width: 0; }.places-form button { flex-shrink: 0; background: var(--peach); }
   .weather-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }.forecast-note,.empty,.state { font-size: .8rem; line-height: 1.6; color: var(--muted); }.forecast-note { margin: 16px 0 0; }.forecast-note a { text-decoration: underline; }
   .notification-settings { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }.notification-settings small { color: var(--muted); font-size: .72rem; }
 </style>

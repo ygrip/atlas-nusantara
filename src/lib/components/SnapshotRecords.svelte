@@ -11,7 +11,8 @@
 
 {#if records.length > 0}
   <p class="record-count">{m.records_shown()}: {displayed.length} / {records.length}</p>
-  <ul class="snapshot-records">
+  <!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable list must be focusable so keyboard users can scroll it) -->
+  <ul class="snapshot-records scroll-area" tabindex="0" aria-label={m.snapshot_heading()}>
     {#each displayed as record (record.id)}
       {@const link = officialWarningUrl(record.properties.sourceLink, source)}
       <li>

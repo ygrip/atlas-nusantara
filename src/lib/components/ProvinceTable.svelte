@@ -140,12 +140,8 @@
   }
 </script>
 
-<section id="provinces" class="province-table-card clay-card" aria-labelledby="province-table-heading">
+<div class="province-table">
   <div class="card-heading">
-    <div>
-      <span class="eyebrow">{m.level_province()}</span>
-      <h2 id="province-table-heading">{m.table_heading()}</h2>
-    </div>
     <div class="group-filter" role="group" aria-label={m.table_island()}>
       <button type="button" class="chip all" aria-pressed={groupFilter === undefined} onclick={() => toggleGroup(undefined)}>{m.filter_all()}</button>
       {#each ISLAND_GROUPS as group (group)}
@@ -163,7 +159,7 @@
     </ul>
     <!-- Scrollable regions must be keyboard reachable (WCAG 2.1.1). -->
     <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-    <div class="table-scroll" tabindex="0" role="region" aria-labelledby="province-table-heading">
+    <div class="table-scroll scroll-area" tabindex="0" role="region" aria-label={m.table_caption()}>
       <table>
         <caption>{m.table_caption()}</caption>
         <thead>
@@ -202,7 +198,7 @@
       </table>
     </div>
   {/if}
-</section>
+</div>
 
 <dialog class="province-dialog" bind:this={dialog} onclick={closeOnBackdrop} onclose={() => (selected = undefined)} aria-labelledby="province-dialog-title">
   {#if selected}
@@ -258,7 +254,6 @@
   .city-link { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; border: 0; padding: 6px; border-radius: 10px; background: transparent; color: inherit; text-align: left; }
   .city-link:hover { background: var(--mint); }
   .card-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-  .card-heading h2 { margin: 8px 0 0; }
   .group-filter { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { min-height: 38px; padding: 6px 14px; border: 2px solid var(--clay-highlight); border-radius: 999px; font-size: .75rem; font-weight: 800; color: #2e2a26; background: var(--surface); box-shadow: inset 2px 2px 3px #ffffff80, inset -2px -3px 5px #0000001a, 0 3px 0 var(--shadow); transition: transform 160ms var(--ease-bounce), box-shadow 160ms ease-out; }
   .chip.all { color: var(--text); }

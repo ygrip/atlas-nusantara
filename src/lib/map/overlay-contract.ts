@@ -14,6 +14,8 @@ export interface MapPin {
   category?: 'active' | 'potential' | 'other';
   /** Province summary identity, not an attraction coordinate. */
   provinceCode?: string;
+  /** Optional https link to this specific record; falls back to the overlay source link. */
+  sourceUrl?: string;
 }
 /** Shared category colours keep SVG and WebGL mountain pins consistent. */
 export function mountainColor(pin: MapPin): string | undefined {
@@ -41,9 +43,19 @@ export interface OverlayDefinition {
   id: string;
   label: () => string;
   source: string;
-  renderer: 'weather' | 'points' | 'unavailable';
-  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark';
+  renderer: 'weather' | 'points' | 'statistics' | 'unavailable';
+  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark' | 'population';
   snapshotUrl?: string;
+}
+
+function isHttpsUrl(value: unknown): boolean {
+  if (typeof value !== 'string' || value.length > 2000) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password;
+  } catch {
+    return false;
+  }
 }
 
 /** Strict, bounded input contract for future mountains, volcanoes or landmark layers. No executable provider plugins. */
@@ -61,6 +73,7 @@ export function validatePointOverlay(value: unknown): value is PointOverlay {
     if (pin.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(pin.color)) return false;
     if (pin.symbol !== undefined && !['circle', 'triangle', 'diamond'].includes(pin.symbol)) return false;
     if (pin.category !== undefined && !['active', 'potential', 'other'].includes(pin.category)) return false;
+    if (pin.sourceUrl !== undefined && !isHttpsUrl(pin.sourceUrl)) return false;
     if (pin.provinceCode !== undefined && !/^\d{2}$/.test(pin.provinceCode)) return false;
     ids.add(pin.id);
   }

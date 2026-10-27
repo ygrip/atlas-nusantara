@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openProvinceDetails } from './layers';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => { if (!localStorage.getItem('PARAGLIDE_LOCALE')) localStorage.setItem('PARAGLIDE_LOCALE', 'en'); });
@@ -47,7 +48,8 @@ test('mobile settings groups language, share and theme, with reversible theme tr
 
 test('a city picked from the table updates the map, breadcrumb and highlighted province', async ({ page }) => {
   await page.goto('/');
-  await page.locator('#provinces').getByRole('button', { name: 'Details · Jawa Barat' }).click();
+  await openProvinceDetails(page);
+  await page.locator('#provinces .province-table').getByRole('button', { name: 'Details · Jawa Barat' }).click();
   const dialog = page.getByRole('dialog', { name: 'Jawa Barat' });
   await dialog.getByRole('button', { name: 'Kota Bandung 32.73', exact: true }).click();
   await expect(page).toHaveURL(/region=32\.73/);
@@ -80,6 +82,9 @@ for (const theme of ['light', 'dark']) {
     await page.goto('/');
     const cards = page.locator('.stat-card');
     await expect(cards).toHaveCount(3);
+    // The numbers count up when they scroll into view; compare them once every count has settled.
+    await cards.first().scrollIntoViewIfNeeded();
+    await expect(page.locator('.animated-number[data-settled="true"]')).toHaveCount(3, { timeout: 8000 });
     const appearance = () => cards.evaluateAll(elements => elements.map(element => {
       const style = getComputedStyle(element);
       return { background: style.backgroundImage, color: style.color, decoration: getComputedStyle(element, '::after').display, value: element.querySelector('strong')?.textContent };

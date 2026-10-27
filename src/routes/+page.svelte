@@ -12,16 +12,18 @@
   import { m } from '$lib/paraglide/messages.js';
   import Preferences from '$lib/components/Preferences.svelte';
   import PwaManager from '$lib/components/PwaManager.svelte';
+  import PopulationPanel from '$lib/components/PopulationPanel.svelte';
+  import LayerPicker from '$lib/components/LayerPicker.svelte';
   import RegionAtlas from '$lib/components/RegionAtlas.svelte';
-  import ProvinceTable from '$lib/components/ProvinceTable.svelte';
+  import ProvinceExplorer from '$lib/components/ProvinceExplorer.svelte';
   import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
   import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
   import HazardPanel from '$lib/components/HazardPanel.svelte';
-  import IslandChart from '$lib/components/IslandChart.svelte';
-  import RegionSplit from '$lib/components/RegionSplit.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin } from 'lucide-svelte';
+  import { observatoryKind } from '$lib/data/observatory';
+  import { tick } from 'svelte';
+  import NationalStats from '$lib/components/NationalStats.svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users } from 'lucide-svelte';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
-  import { EDITION_COUNTS } from '$lib/atlas/edition';
 
   let selectedRegion: ShareRegion | undefined;
   let selectedGeometry: GeometryPackage | undefined;
@@ -31,25 +33,29 @@
   let atlas: RegionAtlas | undefined;
   let activeSection = 'atlas';
   let showTop = false;
-  const sections = [
+  const allSections = [
     { id: 'atlas', label: m.nav_atlas },
     { id: 'provinces', label: m.nav_provinces },
     { id: 'summary', label: m.nav_data },
     { id: 'locations', label: m.nav_locations },
     { id: 'support', label: m.nav_support }
   ];
-  // Verified by scripts/import-regions.mjs against the pinned 2025 transcription (416 Kabupaten + 98 Kota).
-  const editionStats = [
-    { value: EDITION_COUNTS.provinces, label: m.stat_provinces, tone: 'peach' },
-    { value: EDITION_COUNTS.regencies, label: m.stat_regencies, tone: 'mint' },
-    { value: EDITION_COUNTS.municipalities, label: m.stat_cities, tone: 'lilac' }
-  ];
-
+  /** The observatory section only exists for layers that have collected observations. */
+  $: sections = allSections.filter(section => section.id !== 'summary' || observatoryKind(activeLayer));
+  let mounted = false;
+  let stopSections: (() => void) | undefined;
+  /** Sections can appear or disappear with the layer, so the observer is rebuilt after each layer change. */
+  $: if (mounted) { void activeLayer; void tick().then(restartSectionObserver); }
+  function restartSectionObserver() {
+    stopSections?.();
+    stopSections = observeSections();
+  }
   onMount(() => {
     document.title = m.site_title();
-    const stopSections = observeSections();
+    activeLayer = layerFromUrl();
+    mounted = true;
     const stopStory = startAtlasStory(shell);
-    return () => { stopSections(); stopStory(); };
+    return () => { stopSections?.(); stopSections = undefined; stopStory(); };
   });
 
   function currentFor(id: string): 'location' | undefined {
@@ -74,9 +80,27 @@
     return () => { sectionObserver.disconnect(); heroObserver.disconnect(); };
   }
 
-  let activeLayer = 'destinations';
-  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin };
+  const DEFAULT_LAYER = 'warning';
+  let activeLayer = DEFAULT_LAYER;
+  /** Shared by the population panel and the map heat colours so both always show the same year. */
+  let populationYear: number | undefined;
+  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users };
   const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
+
+  /** A shared link may carry ?layer=<id>; unknown ids fall back to the weather layer. */
+  function layerFromUrl(): string {
+    const requested = new URL(location.href).searchParams.get('layer');
+    if (requested && layers.some(layer => layer.id === requested)) return requested;
+    return DEFAULT_LAYER;
+  }
+
+  function chooseLayer(id: string) {
+    activeLayer = id;
+    const url = new URL(location.href);
+    if (id === DEFAULT_LAYER) url.searchParams.delete('layer');
+    else url.searchParams.set('layer', id);
+    history.replaceState(history.state, '', url);
+  }
 </script>
 
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
@@ -116,13 +140,7 @@
           </picture>
         </figure>
       </div>
-      <div class="stat-row">
-        {#each editionStats as stat (stat.value)}
-          <a class={'clay-card stat-card tone-' + stat.tone} href="#provinces">
-            <strong>{stat.value}</strong><span>{stat.label()}</span>
-          </a>
-        {/each}
-      </div>
+      <NationalStats />
     </section>
 
     <section id="atlas" class="atlas-section" aria-labelledby="atlas-heading">
@@ -131,39 +149,29 @@
           <span class="eyebrow">INDONESIA</span>
           <h2 id="atlas-heading">{m.nav_atlas()}</h2>
         </div>
-        <div class="layer-pills" role="group" aria-label={m.layer_heading()}>
-          {#each layers as layer (layer.id)}
-            {@const LayerIcon = layer.icon}
-            <button type="button" class:chosen={activeLayer === layer.id} aria-pressed={activeLayer === layer.id} onclick={() => activeLayer = layer.id}>
-              <LayerIcon size={18} aria-hidden="true" /><span>{layer.label()}</span><span class="source-tag">{layer.source}</span>
-            </button>
-          {/each}
-        </div>
+        <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
       </div>
       <div class="clay-card atlas-stage">
-        <RegionAtlas bind:this={atlas} layer={activeLayer} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
+        <RegionAtlas bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {#if activeLayer === 'earthquake'}
           <EarthquakePanel />
         {:else if activeLayer === 'incident'}
           <HazardPanel kind="reports" />
         {:else if activeLayer === 'hazard'}
           <HazardPanel kind="warnings" />
+        {:else if activeLayer === 'population'}
+          <PopulationPanel provinceCode={selectedRegion?.code.split('.')[0]} bind:year={populationYear} />
         {:else if activeLayer === 'warning'}
           <SnapshotPanel kind="warning" regionCode={selectedRegion?.code} />
         {/if}
       </div>
     </section>
 
-    <section class="insights" aria-label={m.chart_islands_heading()}>
-      <IslandChart />
-      <RegionSplit />
-    </section>
+    <ProvinceExplorer selectedCode={selectedRegion?.code} onopen={code => { void atlas?.openRegion(code); }} />
 
-    <ProvinceTable selectedCode={selectedRegion?.code} onopen={code => { void atlas?.openRegion(code); }} />
-
-    <AggregateSummary onsummary={summary => publicSummary = summary} />
+    <AggregateSummary layer={activeLayer} onsummary={summary => publicSummary = summary} />
     <AdSlot />
-    <Preferences {selectedRegion} onopen={code => { activeLayer = 'warning'; void atlas?.openRegion(code); }} />
+    <Preferences {selectedRegion} onopen={code => { chooseLayer('warning'); void atlas?.openRegion(code); }} />
     <PwaManager />
 
     <SupportPanel />

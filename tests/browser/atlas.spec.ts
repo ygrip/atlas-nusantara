@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { choosePlace, openProvinceDetails } from './layers';
 
 const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
 const localeStorageKey = 'PARAGLIDE_LOCALE';
@@ -9,13 +10,29 @@ async function useEnglish(page: Page) {
 
 async function openAtlas(page: Page) {
   await page.goto('/');
-  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
   await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
 }
 
 test.describe('2025 atlas and locations', () => {
+  test('weather table and details show forecast, latitude and longitude', async ({ page }) => {
+    await useEnglish(page);
+    await openAtlas(page);
+    const headers = page.locator('.region-table thead th');
+    await expect(headers).toContainText(['Code', 'Province', 'Weather', 'Lat', 'Lon']);
+    const jakarta = page.locator('.region-table tbody tr', { hasText: 'Daerah Khusus Ibukota Jakarta' });
+    await expect(jakarta.locator('td.numeric').first()).toHaveText(/^-6\.\d{2}$/);
+    await expect(jakarta.locator('td.numeric').nth(1)).toHaveText(/^106\.\d{2}$/);
+    await expect(jakarta.locator('td.region-cell').first()).toContainText('°C');
+    await jakarta.getByRole('button').click();
+    const details = page.locator('.selected-region');
+    await expect(details).toContainText('Daerah Khusus Ibukota Jakarta');
+    await expect(details).toContainText('Lat');
+    await expect(details).toContainText('Temperature');
+    await expect(details).toContainText('Cloud cover');
+  });
+
   test('renders exploration copy, all locales and the 38-province directory', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
@@ -61,7 +78,8 @@ test.describe('2025 atlas and locations', () => {
   test('province table filters by island group and its popup opens the province in the atlas', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
-    const table = page.locator('#provinces');
+    const table = page.locator('#provinces .province-table');
+    await openProvinceDetails(page);
     await expect(table.locator('tbody tr')).toHaveCount(38);
     await table.getByRole('button', { name: 'Papua', exact: true }).click();
     await expect(table.locator('tbody tr')).toHaveCount(6);
@@ -78,15 +96,16 @@ test.describe('2025 atlas and locations', () => {
   test('sorts the province table, shows the island charts and splits the popup into kabupaten and kota', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
-    const table = page.locator('#provinces');
+    const table = page.locator('#provinces .province-table');
+    await expect(page.locator('.island-chart tbody tr')).toHaveCount(7);
+    await expect(page.locator('.region-split')).toContainText('514');
+    await openProvinceDetails(page);
     const total = table.getByRole('columnheader', { name: /Total/ });
     await total.getByRole('button').click();
     await expect(total).toHaveAttribute('aria-sort', 'descending');
     await expect(table.locator('tbody tr').first()).toContainText('Jawa Timur');
     await total.getByRole('button').click();
     await expect(total).toHaveAttribute('aria-sort', 'ascending');
-    await expect(page.locator('.island-chart tbody tr')).toHaveCount(7);
-    await expect(page.locator('.region-split')).toContainText('514');
     await table.getByRole('button', { name: 'Details \u00b7 Jawa Barat' }).click();
     const dialog = page.getByRole('dialog', { name: 'Jawa Barat' });
     await expect(dialog.locator('.dialog-columns section').nth(0).locator('li')).toHaveCount(18);
@@ -107,7 +126,7 @@ test.describe('2025 atlas and locations', () => {
   test('adds, persists and removes a region pin', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
-    await page.locator('#province-code').selectOption('32');
+    await choosePlace(page, 'Jawa Barat');
     await page.getByRole('button', { name: 'Save place' }).click();
     await expect(page.locator('.pin')).toContainText('Jawa Barat');
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('nusantara:pins:v1') ?? '[]'))).toContainEqual(expect.objectContaining({ code: '32', type: 'region' }));
@@ -200,6 +219,6 @@ test.describe('2025 atlas and locations', () => {
     const offlineResponse = await page.goto('/?region=32');
     expect(offlineResponse?.ok()).toBeTruthy();
     await expect(page.locator('.masthead .brand')).toBeVisible();
-    await expect(page.locator('.destination-explorer')).toBeVisible();
+    await expect(page.locator('.region-directory')).toBeVisible();
   });
 });

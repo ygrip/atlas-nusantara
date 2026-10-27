@@ -84,3 +84,13 @@ Official references: [R2 public custom domains](https://developers.cloudflare.co
 ## Hazard schedule
 
 `cloudflare/hazards.ts` runs inside the same `*/5` cron after the approved-source crawl. Each hazard source has its own interval, stores events in D1 table `hazard_events` (migration `0004_hazard_events.sql`) and the Worker publishes the re-aggregated `data/observations/hazards.json` to R2. It does nothing until the `HAZARD_SOURCE_IDS` variable lists sources, so deploying is safe. A tick where every source is due can exceed 50 subrequests (up to 60 BMKG CAP detail pages plus the feeds and D1/R2 calls), so use the Workers Paid plan or enable fewer sources. See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md).
+
+## Why the Observatory can be empty, and how to fill it
+
+The Observatory reads `/data/published/manifest.json`. Only the scheduled Worker writes it (sources → D1 → R2 → manifest), so a plain static host (`vite dev`, `serve-built.mjs`, a bare Pages deploy) has no manifest and the section shows its unavailable state. When that happens the page falls back to the checked-in snapshots (earthquakes, hazards, forecast) and labels them with their saved date; these are not live collection counts.
+
+To fill it for real:
+
+1. Local: `npm run data:bootstrap` applies migrations, seeds regions, runs one scheduled collection and prints the published summary. Then `npm run worker:dev` serves the site with `/data/published/*` on loopback.
+2. Production: deploy the Worker with its cron trigger and R2 `HOT_DATA` bucket, enable the sources you have approved, and set `VITE_PUBLIC_DATA_ORIGIN` to the public R2 custom domain at build time.
+3. Counts grow only after collection runs: each run stores new observations, and the summary covers the last 30 days. Right after the first run most counts are small.

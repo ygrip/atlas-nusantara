@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { chooseLayer } from './layers';
 // Deterministic provider/geometry fixtures must not be bypassed by a controlling service worker.
 test.use({ serviceWorkers: 'block' });
 const localeStorageKey = 'PARAGLIDE_LOCALE';
@@ -20,7 +21,6 @@ async function useEnglish(page: Page) {
 async function openAtlas(page: Page) {
   await useEnglish(page);
   await page.goto('/');
-  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
 }
@@ -141,17 +141,19 @@ test('renders hot summary counts and cold archive-download controls from a local
   await page.route('**/api/**', route => route.fulfill({ status: 500, body: 'Browser must not read worker APIs' }));
   await openAtlas(page);
   const summary = page.locator('#summary');
-  await expect(summary.locator('.summary-counts article')).toHaveCount(4);
-  await expect(summary.locator('.summary-counts article').filter({ hasText: 'Weather warnings' })).toContainText('3');
-  await expect(summary.locator('.summary-counts article').filter({ hasText: 'Earthquakes' })).toContainText('2');
-  await expect(summary.locator('.summary-counts article').filter({ hasText: 'Disaster history' })).toContainText('0');
-  await expect(summary.locator('.summary-counts article').filter({ hasText: 'Hazard maps' })).toContainText('1');
-  await expect(summary.locator('figure.count-chart canvas')).toBeAttached();
-  const labels: Record<string, string> = { warning: 'Weather warnings', earthquake: 'Earthquakes', hazard: 'Hazard maps' };
-  for (const kind of ['warning', 'earthquake', 'hazard']) {
-    const card = summary.locator('.archive-entry').filter({ hasText: labels[kind] });
-    await expect(card.locator('button').first()).toBeVisible();
-  }
+  // Only the selected layer's collector is shown: the default weather layer shows weather warnings alone.
+  await expect(summary.locator('.summary-counts article')).toHaveCount(1);
+  await expect(summary.locator('.summary-counts article')).toContainText('Weather warnings');
+  await expect(summary.locator('.summary-counts article')).toContainText('3');
+  await expect(summary.locator('.archive-entry')).toHaveCount(1);
+  await expect(summary.locator('.archive-entry button').first()).toBeVisible();
+  await chooseLayer(page, 'Earthquakes');
+  await expect(summary.locator('.summary-counts article')).toHaveCount(1);
+  await expect(summary.locator('.summary-counts article')).toContainText('Earthquakes');
+  await expect(summary.locator('.summary-counts article')).toContainText('2');
+  await chooseLayer(page, 'Mountains');
+  await expect(page.locator('#summary')).toHaveCount(0);
+  await expect(page.locator('.section-nav a[href="#summary"]')).toHaveCount(0);
 });
 
 test('unmapped warnings remain visible with an explicit coverage caveat and official links', async ({ page }) => {
@@ -169,7 +171,6 @@ test('unmapped warnings remain visible with an explicit coverage caveat and offi
   } }));
   await useEnglish(page);
   await page.goto('/?region=11');
-  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   const panel = page.locator('.snapshot-panel');
   await expect(panel).toContainText('These records have no verified region assignment.');
   await expect(panel.locator('.snapshot-records li')).toHaveCount(30);
@@ -190,10 +191,10 @@ test('expired hot counts disappear when a tab resumes instead of remaining appar
     generatedAt: new Date(now).toISOString(), retentionDays: 365, counts: { warning: 1, earthquake: 0, incident: 0, hazard: 0 }, sources: [], observations: [], derivedFacts: []
   } }));
   await openAtlas(page);
-  await expect(page.locator('#summary .summary-counts article')).toHaveCount(4);
+  await expect(page.locator('#summary > .summary-counts article')).toHaveCount(1);
   await page.clock.setFixedTime(new Date(now + 61000));
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-  await expect(page.locator('#summary .summary-counts article')).toHaveCount(0);
+  await expect(page.locator('#summary > .summary-counts article')).toHaveCount(0);
   await expect(page.locator('#summary .summary-empty')).toBeVisible();
 });
 
@@ -207,16 +208,18 @@ test('zooms, pans, resets, and navigates fixture geometry into the real code hie
   await openAtlas(page);
   await page.getByRole('button', { name: '2D', exact: true }).click();
   const map = page.locator('.atlas-map');
-  const scale = map.locator('..').locator('.map-controls output');
+  const scale = page.locator('.map-controls output');
   await expect(map.locator('path[data-code="11"]')).toBeVisible();
   const originalTransform = await map.locator('svg g').first().getAttribute('transform');
   await map.dispatchEvent('wheel', { deltaY: -120, bubbles: true });
   await expect(scale).not.toHaveText('1.0×');
+  await expect(page.locator('.map-controls')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Tilt view' })).toHaveCount(0);
   const transformed = await map.locator('svg g').first().getAttribute('transform');
   expect(transformed).not.toBe(originalTransform);
-  await map.locator('..').getByRole('button', { name: 'Zoom out' }).click();
+  await page.getByRole('button', { name: 'Zoom out' }).click();
   await expect(scale).not.toHaveText('1.0×');
-  await map.locator('..').getByRole('button', { name: 'Reset map view' }).click();
+  await page.getByRole('button', { name: 'Reset map view' }).click();
   await expect(scale).toHaveText('1.0×');
   const resetTransform = await map.locator('svg g').first().getAttribute('transform');
   await map.scrollIntoViewIfNeeded();

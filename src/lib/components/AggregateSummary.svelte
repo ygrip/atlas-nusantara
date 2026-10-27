@@ -1,5 +1,5 @@
 <script lang="ts">
-  import CountChart from './CountChart.svelte';
+  import SavedObservatory from './SavedObservatory.svelte';
   import ColdDownload from '$lib/components/ColdDownload.svelte';
   import { loadPublished, publicationExpired } from '$lib/data/publication';
   import type { ShareSummary } from '$lib/share/card';
@@ -7,9 +7,12 @@
   import { m } from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { Bell, Activity, Flame, Mountain } from 'lucide-svelte';
-  type Kind = 'warning' | 'earthquake' | 'incident' | 'hazard';
+  import { observatoryKind, type ObservatoryKind } from '$lib/data/observatory';
+  type Kind = ObservatoryKind;
   interface Source { id: string; name: string; type?: Kind | null; status: string; intervalMinutes: number; lastSuccessAt?: string; nextDueAt?: string; sourceUrl: string; termsUrl: string }
   interface Summary { generatedAt: string; retentionDays: number; counts: Record<Kind, number>; sources: Source[]; observations: { type: Kind; properties: Record<string, unknown> }[]; derivedFacts: {id: string; value: string | number}[] }
+  /** The selected map layer decides which collector's figures are shown. */
+  export let layer = 'warning';
   export let onsummary: ((value: ShareSummary | undefined) => void) | undefined = undefined;
   let summary: Summary | undefined;
   let loading = true;
@@ -21,8 +24,10 @@
     { id: 'warning' as const, label: m.layer_weather, icon: Bell }, { id: 'earthquake' as const, label: m.layer_earthquakes, icon: Activity },
     { id: 'incident' as const, label: m.layer_history, icon: Flame }, { id: 'hazard' as const, label: m.layer_hazards, icon: Mountain }
   ];
+  $: activeKind = observatoryKind(layer);
+  $: shownKinds = kinds.filter(kind => kind.id === activeKind);
+  $: shownSources = (summary?.sources ?? []).filter(source => source.type === activeKind);
   $: largest = summary?.derivedFacts.find(fact => fact.id === 'max-earthquake-magnitude');
-  $: countValues = kinds.map(kind => summary?.counts[kind.id] ?? 0);
 
   onMount(() => {
     void load();
@@ -71,35 +76,37 @@
   }
 </script>
 
+<!-- The component stays mounted so the share card keeps its totals; the section itself only renders for layers with an observatory. -->
+{#if activeKind}
 <section id="summary" class="aggregate-summary details" aria-labelledby="summary-heading" aria-busy={loading}>
-  <span class="eyebrow">04 / OBSERVATORY</span>
+  <span class="eyebrow">OBSERVATORY</span>
   <h2 id="summary-heading">{m.summary_heading()}</h2>
   <p class="summary-intro">{m.summary_scope()}</p>
   {#if loading}<p class="summary-empty" role="status">{m.loading_data()}</p>
   {:else if !summary}<div class="summary-empty" role="status"><strong>{m.data_unavailable()}</strong><p>{m.no_observations()}</p></div>
+    <SavedObservatory {layer} />
   {:else}
     <p class="summary-window">{m.summary_window()} · {m.ingested_time()}: <time datetime={summary.generatedAt}>{date(summary.generatedAt)}</time></p>
     <div class="summary-counts">
-      {#each kinds as kind (kind.id)}
+      {#each shownKinds as kind (kind.id)}
         <article><span class="count-label"><span class="count-icon"><svelte:component this={kind.icon} size={18} aria-hidden="true" /></span>{kind.label()}</span><strong>{new Intl.NumberFormat(getLocale()).format(summary.counts[kind.id])}</strong><small>{m.retained_records()}</small>
         </article>
       {/each}
     </div>
     <section class="archive-downloads" aria-label={m.download_data()}>
-      {#each kinds as kind (kind.id)}
+      {#each shownKinds as kind (kind.id)}
         {#if canDownload(kind.id)}<div class="archive-entry" data-kind={kind.id}><strong>{kind.label()}</strong><ColdDownload kind={kind.id} /></div>{/if}
       {/each}
     </section>
-    {#if Object.values(summary.counts).some(count => count > 0)}<CountChart labels={kinds.map(kind => kind.label())} values={countValues} />{/if}
     <div class="derived-panel">
       <h3>{m.derived_observations()}</h3>
-      {#if largest && typeof largest.value === 'number'}<p>{m.largest_observed()}: <strong>M {largest.value.toFixed(1)}</strong></p>
-      {:else}<p>{m.no_observations()}</p>{/if}
+      {#if activeKind === 'earthquake' && largest && typeof largest.value === 'number'}<p>{m.largest_observed()}: <strong>M {largest.value.toFixed(1)}</strong></p>
+      {:else if activeKind === 'earthquake'}<p>{m.no_observations()}</p>{/if}
       <p>{m.retention_note()}</p>
     </div>
-    <h3>{m.data_coverage()}</h3>
+    {#if shownSources.length > 0}<h3>{m.data_coverage()}</h3>{/if}
     <div class="source-schedules">
-      {#each summary.sources as source (source.id)}
+      {#each shownSources as source (source.id)}
         <article>
           <div><a href={safeUrl(source.sourceUrl)} target="_blank" rel="noreferrer">{source.name} ↗</a>
             <small>{#if !['disabled', 'not-configured'].includes(source.status)}{m.source_enabled()}{:else}{m.source_disabled()}{/if} · <a href={safeUrl(source.termsUrl)} target="_blank" rel="noreferrer">{m.source_terms()} ↗</a></small></div>
@@ -110,6 +117,7 @@
     </div>
   {/if}
 </section>
+{/if}
 
 <style>
   .aggregate-summary { display: grid; gap: 14px; min-width: 0; padding: clamp(18px, 3vw, 30px); }

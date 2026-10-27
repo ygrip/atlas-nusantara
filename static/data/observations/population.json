@@ -1,0 +1,1761 @@
+{
+ "schemaVersion": 2,
+ "kind": "population-pyramid",
+ "source": "BPS-Statistics Indonesia",
+ "sourceUrl": "https://www.bps.go.id/id/statistics-table/3/WVc0MGEyMXBkVFUxY25KeE9HdDZkbTQzWkVkb1p6MDkjMw%3D%3D/jumlah-penduduk-menurut-kelompok-umur-dan-jenis-kelamin.html",
+ "totalSourceUrl": "https://www.bps.go.id/id/statistics-table/2/MTk3NSMy/jumlah-penduduk-pertengahan-tahun--ribu-jiwa-.html",
+ "attribution": "Badan Pusat Statistik (BPS), Jumlah Penduduk Menurut Kelompok Umur dan Jenis Kelamin (ribu jiwa), mid-year population projection.",
+ "fetchedAt": "2026-10-27T00:00:00Z",
+ "unit": "thousand persons",
+ "ageGroups": [
+  "0-4",
+  "5-9",
+  "10-14",
+  "15-19",
+  "20-24",
+  "25-29",
+  "30-34",
+  "35-39",
+  "40-44",
+  "45-49",
+  "50-54",
+  "55-59",
+  "60-64",
+  "65-69",
+  "70-74",
+  "75+"
+ ],
+ "years": [
+  {
+   "year": 2022,
+   "male": [
+    11303.5,
+    11242.2,
+    11356.2,
+    11432.9,
+    11553.1,
+    11485.8,
+    11215.4,
+    10743.3,
+    10207.1,
+    9378.5,
+    8240.7,
+    6945.0,
+    5486.0,
+    4035.9,
+    2530.4,
+    2232.9
+   ],
+   "female": [
+    10790.9,
+    10771.5,
+    10732.4,
+    10730.6,
+    10937.3,
+    10977.9,
+    10851.4,
+    10504.7,
+    10088.1,
+    9348.8,
+    8259.6,
+    7016.2,
+    5575.6,
+    4163.4,
+    2739.3,
+    2897.1
+   ],
+   "published": {
+    "male": 139388.9,
+    "female": 136384.8,
+    "total": 275773.8
+   }
+  },
+  {
+   "year": 2023,
+   "male": [
+    11499.3,
+    11237.6,
+    11316.5,
+    11419.7,
+    11489.7,
+    11509.1,
+    11243.9,
+    10834.1,
+    10274.3,
+    9544.2,
+    8415.0,
+    7133.3,
+    5676.6,
+    4183.9,
+    2695.1,
+    2314.2
+   ],
+   "female": [
+    11012.6,
+    10762.4,
+    10746.7,
+    10714.6,
+    10871.1,
+    10986.4,
+    10845.1,
+    10570.3,
+    10130.8,
+    9514.7,
+    8450.9,
+    7231.3,
+    5813.7,
+    4344.5,
+    2920.6,
+    2993.5
+   ],
+   "published": {
+    "male": 140786.8,
+    "female": 137909.4,
+    "total": 278696.2
+   }
+  },
+  {
+   "year": 2024,
+   "male": [
+    11554.4,
+    11236.4,
+    11279.1,
+    11408.7,
+    11440.1,
+    11531.3,
+    11283.3,
+    10930.7,
+    10351.4,
+    9702.9,
+    8595.5,
+    7327.2,
+    5877.3,
+    4348.0,
+    2870.8,
+    2451.7
+   ],
+   "female": [
+    11083.7,
+    10748.2,
+    10757.9,
+    10707.7,
+    10810.0,
+    10994.3,
+    10855.8,
+    10645.8,
+    10184.9,
+    9667.2,
+    8639.6,
+    7443.6,
+    6053.4,
+    4541.1,
+    3117.1,
+    3164.9
+   ],
+   "published": {
+    "male": 142188.6,
+    "female": 139415.2,
+    "total": 281603.8
+   }
+  },
+  {
+   "year": 2025,
+   "male": [
+    11606.4,
+    11225.3,
+    11250.0,
+    11389.4,
+    11400.7,
+    11532.3,
+    11323.8,
+    11013.4,
+    10435.8,
+    9840.1,
+    8775.0,
+    7517.9,
+    6074.4,
+    4518.6,
+    3035.7,
+    2609.2
+   ],
+   "female": [
+    11146.1,
+    10730.2,
+    10766.1,
+    10706.3,
+    10760.0,
+    10981.9,
+    10870.5,
+    10704.9,
+    10246.7,
+    9794.5,
+    8825.3,
+    7651.8,
+    6286.9,
+    4748.8,
+    3308.0,
+    3363.1
+   ],
+   "published": {
+    "male": 143548.0,
+    "female": 140890.8,
+    "total": 284438.8
+   }
+  },
+  {
+   "year": 2026,
+   "male": [
+    11544.0,
+    11315.8,
+    11231.0,
+    11360.0,
+    11375.2,
+    11510.2,
+    11367.5,
+    11079.7,
+    10530.8,
+    9952.7,
+    8955.1,
+    7704.0,
+    6267.5,
+    4696.1,
+    3188.3,
+    2786.1
+   ],
+   "female": [
+    11086.8,
+    10824.2,
+    10768.8,
+    10710.3,
+    10723.6,
+    10946.8,
+    10892.0,
+    10744.7,
+    10320.8,
+    9892.6,
+    9009.5,
+    7854.5,
+    6512.8,
+    4968.1,
+    3490.7,
+    3588.0
+   ],
+   "published": {
+    "male": 144864.0,
+    "female": 142334.3,
+    "total": 287198.4
+   }
+  }
+ ],
+ "provinceSourceUrl": "https://www.bps.go.id/id/statistics-table/3/V1ZSbFRUY3lTbFpEYTNsVWNGcDZjek53YkhsNFFUMDkjMyMwMDAw/jumlah-penduduk--laju-pertumbuhan-penduduk--distribusi-persentase-penduduk--kepadatan-penduduk--rasio-jenis-kelamin-penduduk-menurut-provinsi.html",
+ "provinces": [
+  {
+   "code": "11",
+   "name": "Aceh",
+   "years": [
+    {
+     "year": 2022,
+     "population": 5407.9,
+     "growthPercent": 1.43,
+     "densityPerKm2": 95.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2023,
+     "population": 5482.5,
+     "growthPercent": 1.41,
+     "densityPerKm2": 96.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2024,
+     "population": 5554.8,
+     "growthPercent": 1.39,
+     "densityPerKm2": 98.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2025,
+     "population": 5626.0,
+     "growthPercent": 1.37,
+     "densityPerKm2": 99.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2026,
+     "population": 5695.9,
+     "growthPercent": 1.34,
+     "densityPerKm2": 100.0,
+     "sexRatio": 100.9
+    }
+   ]
+  },
+  {
+   "code": "12",
+   "name": "Sumatera Utara",
+   "years": [
+    {
+     "year": 2022,
+     "population": 15115.2,
+     "growthPercent": 1.21,
+     "densityPerKm2": 209.0,
+     "sexRatio": 100.7
+    },
+    {
+     "year": 2023,
+     "population": 15386.6,
+     "growthPercent": 1.43,
+     "densityPerKm2": 212.0,
+     "sexRatio": 100.7
+    },
+    {
+     "year": 2024,
+     "population": 15588.5,
+     "growthPercent": 1.4,
+     "densityPerKm2": 215.0,
+     "sexRatio": 100.8
+    },
+    {
+     "year": 2025,
+     "population": 15785.8,
+     "growthPercent": 1.37,
+     "densityPerKm2": 218.0,
+     "sexRatio": 100.8
+    },
+    {
+     "year": 2026,
+     "population": 15978.6,
+     "growthPercent": 1.34,
+     "densityPerKm2": 221.0,
+     "sexRatio": 100.8
+    }
+   ]
+  },
+  {
+   "code": "13",
+   "name": "Sumatera Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 5640.6,
+     "growthPercent": 1.09,
+     "densityPerKm2": 134.0,
+     "sexRatio": 101.5
+    },
+    {
+     "year": 2023,
+     "population": 5757.2,
+     "growthPercent": 1.45,
+     "densityPerKm2": 137.0,
+     "sexRatio": 101.5
+    },
+    {
+     "year": 2024,
+     "population": 5836.2,
+     "growthPercent": 1.43,
+     "densityPerKm2": 139.0,
+     "sexRatio": 101.5
+    },
+    {
+     "year": 2025,
+     "population": 5914.3,
+     "growthPercent": 1.41,
+     "densityPerKm2": 140.0,
+     "sexRatio": 101.5
+    },
+    {
+     "year": 2026,
+     "population": 5991.6,
+     "growthPercent": 1.39,
+     "densityPerKm2": 142.0,
+     "sexRatio": 101.5
+    }
+   ]
+  },
+  {
+   "code": "14",
+   "name": "Riau",
+   "years": [
+    {
+     "year": 2022,
+     "population": 6614.4,
+     "growthPercent": 1.95,
+     "densityPerKm2": 74.0,
+     "sexRatio": 104.7
+    },
+    {
+     "year": 2023,
+     "population": 6642.9,
+     "growthPercent": 1.4,
+     "densityPerKm2": 74.0,
+     "sexRatio": 104.6
+    },
+    {
+     "year": 2024,
+     "population": 6728.1,
+     "growthPercent": 1.37,
+     "densityPerKm2": 75.0,
+     "sexRatio": 104.4
+    },
+    {
+     "year": 2025,
+     "population": 6811.2,
+     "growthPercent": 1.34,
+     "densityPerKm2": 76.0,
+     "sexRatio": 104.3
+    },
+    {
+     "year": 2026,
+     "population": 6892.4,
+     "growthPercent": 1.31,
+     "densityPerKm2": 77.0,
+     "sexRatio": 104.1
+    }
+   ]
+  },
+  {
+   "code": "15",
+   "name": "Jambi",
+   "years": [
+    {
+     "year": 2022,
+     "population": 3631.1,
+     "growthPercent": 1.33,
+     "densityPerKm2": 74.0,
+     "sexRatio": 103.8
+    },
+    {
+     "year": 2023,
+     "population": 3679.2,
+     "growthPercent": 1.33,
+     "densityPerKm2": 75.0,
+     "sexRatio": 103.6
+    },
+    {
+     "year": 2024,
+     "population": 3724.3,
+     "growthPercent": 1.3,
+     "densityPerKm2": 76.0,
+     "sexRatio": 103.4
+    },
+    {
+     "year": 2025,
+     "population": 3768.5,
+     "growthPercent": 1.28,
+     "densityPerKm2": 77.0,
+     "sexRatio": 103.2
+    },
+    {
+     "year": 2026,
+     "population": 3811.7,
+     "growthPercent": 1.25,
+     "densityPerKm2": 78.0,
+     "sexRatio": 103.0
+    }
+   ]
+  },
+  {
+   "code": "16",
+   "name": "Sumatera Selatan",
+   "years": [
+    {
+     "year": 2022,
+     "population": 8657.0,
+     "growthPercent": 1.27,
+     "densityPerKm2": 100.0,
+     "sexRatio": 103.9
+    },
+    {
+     "year": 2023,
+     "population": 8743.5,
+     "growthPercent": 1.17,
+     "densityPerKm2": 101.0,
+     "sexRatio": 103.8
+    },
+    {
+     "year": 2024,
+     "population": 8837.3,
+     "growthPercent": 1.15,
+     "densityPerKm2": 102.0,
+     "sexRatio": 103.7
+    },
+    {
+     "year": 2025,
+     "population": 8928.5,
+     "growthPercent": 1.12,
+     "densityPerKm2": 103.0,
+     "sexRatio": 103.6
+    },
+    {
+     "year": 2026,
+     "population": 9017.1,
+     "growthPercent": 1.1,
+     "densityPerKm2": 104.0,
+     "sexRatio": 103.4
+    }
+   ]
+  },
+  {
+   "code": "17",
+   "name": "Bengkulu",
+   "years": [
+    {
+     "year": 2022,
+     "population": 2060.1,
+     "growthPercent": 1.4,
+     "densityPerKm2": 102.0,
+     "sexRatio": 104.6
+    },
+    {
+     "year": 2023,
+     "population": 2086.0,
+     "growthPercent": 1.35,
+     "densityPerKm2": 104.0,
+     "sexRatio": 104.5
+    },
+    {
+     "year": 2024,
+     "population": 2112.2,
+     "growthPercent": 1.32,
+     "densityPerKm2": 105.0,
+     "sexRatio": 104.4
+    },
+    {
+     "year": 2025,
+     "population": 2138.0,
+     "growthPercent": 1.3,
+     "densityPerKm2": 106.0,
+     "sexRatio": 104.2
+    },
+    {
+     "year": 2026,
+     "population": 2163.3,
+     "growthPercent": 1.28,
+     "densityPerKm2": 108.0,
+     "sexRatio": 104.1
+    }
+   ]
+  },
+  {
+   "code": "18",
+   "name": "Lampung",
+   "years": [
+    {
+     "year": 2022,
+     "population": 9176.6,
+     "growthPercent": 1.07,
+     "densityPerKm2": 273.0,
+     "sexRatio": 104.9
+    },
+    {
+     "year": 2023,
+     "population": 9314.0,
+     "growthPercent": 1.22,
+     "densityPerKm2": 277.0,
+     "sexRatio": 104.5
+    },
+    {
+     "year": 2024,
+     "population": 9419.6,
+     "growthPercent": 1.2,
+     "densityPerKm2": 281.0,
+     "sexRatio": 104.3
+    },
+    {
+     "year": 2025,
+     "population": 9522.9,
+     "growthPercent": 1.18,
+     "densityPerKm2": 284.0,
+     "sexRatio": 104.1
+    },
+    {
+     "year": 2026,
+     "population": 9623.8,
+     "growthPercent": 1.16,
+     "densityPerKm2": 287.0,
+     "sexRatio": 103.9
+    }
+   ]
+  },
+  {
+   "code": "19",
+   "name": "Kepulauan Bangka Belitung",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1494.6,
+     "growthPercent": 1.52,
+     "densityPerKm2": 90.0,
+     "sexRatio": 105.6
+    },
+    {
+     "year": 2023,
+     "population": 1511.9,
+     "growthPercent": 1.39,
+     "densityPerKm2": 91.0,
+     "sexRatio": 105.6
+    },
+    {
+     "year": 2024,
+     "population": 1531.5,
+     "growthPercent": 1.36,
+     "densityPerKm2": 92.0,
+     "sexRatio": 105.4
+    },
+    {
+     "year": 2025,
+     "population": 1550.8,
+     "growthPercent": 1.34,
+     "densityPerKm2": 93.0,
+     "sexRatio": 105.2
+    },
+    {
+     "year": 2026,
+     "population": 1569.7,
+     "growthPercent": 1.32,
+     "densityPerKm2": 94.0,
+     "sexRatio": 105.0
+    }
+   ]
+  },
+  {
+   "code": "21",
+   "name": "Kepulauan Riau",
+   "years": [
+    {
+     "year": 2022,
+     "population": 2179.8,
+     "growthPercent": 3.15,
+     "densityPerKm2": 264.0,
+     "sexRatio": 104.2
+    },
+    {
+     "year": 2023,
+     "population": 2152.6,
+     "growthPercent": 1.53,
+     "densityPerKm2": 260.0,
+     "sexRatio": 103.6
+    },
+    {
+     "year": 2024,
+     "population": 2183.3,
+     "growthPercent": 1.5,
+     "densityPerKm2": 264.0,
+     "sexRatio": 103.3
+    },
+    {
+     "year": 2025,
+     "population": 2213.5,
+     "growthPercent": 1.48,
+     "densityPerKm2": 268.0,
+     "sexRatio": 103.1
+    },
+    {
+     "year": 2026,
+     "population": 2243.1,
+     "growthPercent": 1.45,
+     "densityPerKm2": 275.0,
+     "sexRatio": 102.9
+    }
+   ]
+  },
+  {
+   "code": "31",
+   "name": "Daerah Khusus Ibukota Jakarta",
+   "years": [
+    {
+     "year": 2022,
+     "population": 10680.0,
+     "growthPercent": 0.64,
+     "densityPerKm2": 16158.0,
+     "sexRatio": 101.4
+    },
+    {
+     "year": 2023,
+     "population": 10672.1,
+     "growthPercent": 0.38,
+     "densityPerKm2": 16146.0,
+     "sexRatio": 101.3
+    },
+    {
+     "year": 2024,
+     "population": 10684.9,
+     "growthPercent": 0.31,
+     "densityPerKm2": 16165.0,
+     "sexRatio": 101.1
+    },
+    {
+     "year": 2025,
+     "population": 10678.0,
+     "growthPercent": 0.23,
+     "densityPerKm2": 16155.0,
+     "sexRatio": 100.8
+    },
+    {
+     "year": 2026,
+     "population": 10669.7,
+     "growthPercent": 0.18,
+     "densityPerKm2": 16129.0,
+     "sexRatio": 100.5
+    }
+   ]
+  },
+  {
+   "code": "32",
+   "name": "Jawa Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 49405.8,
+     "growthPercent": 1.33,
+     "densityPerKm2": 1334.0,
+     "sexRatio": 103.0
+    },
+    {
+     "year": 2023,
+     "population": 49860.3,
+     "growthPercent": 1.18,
+     "densityPerKm2": 1346.0,
+     "sexRatio": 102.7
+    },
+    {
+     "year": 2024,
+     "population": 50345.2,
+     "growthPercent": 1.13,
+     "densityPerKm2": 1359.0,
+     "sexRatio": 102.6
+    },
+    {
+     "year": 2025,
+     "population": 50759.0,
+     "growthPercent": 1.06,
+     "densityPerKm2": 1370.0,
+     "sexRatio": 102.4
+    },
+    {
+     "year": 2026,
+     "population": 51163.9,
+     "growthPercent": 1.02,
+     "densityPerKm2": 1381.0,
+     "sexRatio": 102.3
+    }
+   ]
+  },
+  {
+   "code": "33",
+   "name": "Jawa Tengah",
+   "years": [
+    {
+     "year": 2022,
+     "population": 37032.4,
+     "growthPercent": 0.81,
+     "densityPerKm2": 1078.0,
+     "sexRatio": 101.1
+    },
+    {
+     "year": 2023,
+     "population": 37541.0,
+     "growthPercent": 1.01,
+     "densityPerKm2": 1093.0,
+     "sexRatio": 101.0
+    },
+    {
+     "year": 2024,
+     "population": 37892.3,
+     "growthPercent": 0.99,
+     "densityPerKm2": 1104.0,
+     "sexRatio": 101.0
+    },
+    {
+     "year": 2025,
+     "population": 38233.9,
+     "growthPercent": 0.97,
+     "densityPerKm2": 1113.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2026,
+     "population": 38565.0,
+     "growthPercent": 0.95,
+     "densityPerKm2": 1123.0,
+     "sexRatio": 100.8
+    }
+   ]
+  },
+  {
+   "code": "34",
+   "name": "Daerah Istimewa Yogyakarta",
+   "years": [
+    {
+     "year": 2022,
+     "population": 3761.9,
+     "growthPercent": 1.44,
+     "densityPerKm2": 1186.0,
+     "sexRatio": 98.0
+    },
+    {
+     "year": 2023,
+     "population": 3736.5,
+     "growthPercent": 0.67,
+     "densityPerKm2": 1178.0,
+     "sexRatio": 98.0
+    },
+    {
+     "year": 2024,
+     "population": 3759.5,
+     "growthPercent": 0.65,
+     "densityPerKm2": 1186.0,
+     "sexRatio": 97.9
+    },
+    {
+     "year": 2025,
+     "population": 3781.5,
+     "growthPercent": 0.64,
+     "densityPerKm2": 1193.0,
+     "sexRatio": 97.8
+    },
+    {
+     "year": 2026,
+     "population": 3802.7,
+     "growthPercent": 0.63,
+     "densityPerKm2": 1199.0,
+     "sexRatio": 97.7
+    }
+   ]
+  },
+  {
+   "code": "35",
+   "name": "Jawa Timur",
+   "years": [
+    {
+     "year": 2022,
+     "population": 41150.0,
+     "growthPercent": 0.68,
+     "densityPerKm2": 857.0,
+     "sexRatio": 99.5
+    },
+    {
+     "year": 2023,
+     "population": 41527.9,
+     "growthPercent": 0.77,
+     "densityPerKm2": 865.0,
+     "sexRatio": 99.5
+    },
+    {
+     "year": 2024,
+     "population": 41814.5,
+     "growthPercent": 0.75,
+     "densityPerKm2": 870.0,
+     "sexRatio": 99.4
+    },
+    {
+     "year": 2025,
+     "population": 42089.3,
+     "growthPercent": 0.73,
+     "densityPerKm2": 876.0,
+     "sexRatio": 99.4
+    },
+    {
+     "year": 2026,
+     "population": 42352.0,
+     "growthPercent": 0.71,
+     "densityPerKm2": 881.0,
+     "sexRatio": 99.3
+    }
+   ]
+  },
+  {
+   "code": "36",
+   "name": "Banten",
+   "years": [
+    {
+     "year": 2022,
+     "population": 12252.0,
+     "growthPercent": 1.66,
+     "densityPerKm2": 1310.0,
+     "sexRatio": 103.8
+    },
+    {
+     "year": 2023,
+     "population": 12307.7,
+     "growthPercent": 1.22,
+     "densityPerKm2": 1316.0,
+     "sexRatio": 103.6
+    },
+    {
+     "year": 2024,
+     "population": 12431.4,
+     "growthPercent": 1.16,
+     "densityPerKm2": 1329.0,
+     "sexRatio": 103.4
+    },
+    {
+     "year": 2025,
+     "population": 12537.4,
+     "growthPercent": 1.1,
+     "densityPerKm2": 1341.0,
+     "sexRatio": 103.3
+    },
+    {
+     "year": 2026,
+     "population": 12641.3,
+     "growthPercent": 1.05,
+     "densityPerKm2": 1351.0,
+     "sexRatio": 103.1
+    }
+   ]
+  },
+  {
+   "code": "51",
+   "name": "Bali",
+   "years": [
+    {
+     "year": 2022,
+     "population": 4415.1,
+     "growthPercent": 1.29,
+     "densityPerKm2": 790.0,
+     "sexRatio": 101.1
+    },
+    {
+     "year": 2023,
+     "population": 4404.3,
+     "growthPercent": 0.73,
+     "densityPerKm2": 788.0,
+     "sexRatio": 100.7
+    },
+    {
+     "year": 2024,
+     "population": 4433.3,
+     "growthPercent": 0.71,
+     "densityPerKm2": 793.0,
+     "sexRatio": 100.5
+    },
+    {
+     "year": 2025,
+     "population": 4461.3,
+     "growthPercent": 0.69,
+     "densityPerKm2": 798.0,
+     "sexRatio": 100.4
+    },
+    {
+     "year": 2026,
+     "population": 4488.2,
+     "growthPercent": 0.68,
+     "densityPerKm2": 804.0,
+     "sexRatio": 100.2
+    }
+   ]
+  },
+  {
+   "code": "52",
+   "name": "Nusa Tenggara Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 5473.7,
+     "growthPercent": 1.64,
+     "densityPerKm2": 278.0,
+     "sexRatio": 100.4
+    },
+    {
+     "year": 2023,
+     "population": 5560.3,
+     "growthPercent": 1.62,
+     "densityPerKm2": 283.0,
+     "sexRatio": 100.5
+    },
+    {
+     "year": 2024,
+     "population": 5646.0,
+     "growthPercent": 1.6,
+     "densityPerKm2": 287.0,
+     "sexRatio": 100.7
+    },
+    {
+     "year": 2025,
+     "population": 5731.1,
+     "growthPercent": 1.58,
+     "densityPerKm2": 291.0,
+     "sexRatio": 100.9
+    },
+    {
+     "year": 2026,
+     "population": 5815.3,
+     "growthPercent": 1.56,
+     "densityPerKm2": 296.0,
+     "sexRatio": 101.2
+    }
+   ]
+  },
+  {
+   "code": "53",
+   "name": "Nusa Tenggara Timur",
+   "years": [
+    {
+     "year": 2022,
+     "population": 5466.3,
+     "growthPercent": 1.5,
+     "densityPerKm2": 118.0,
+     "sexRatio": 100.0
+    },
+    {
+     "year": 2023,
+     "population": 5569.1,
+     "growthPercent": 1.64,
+     "densityPerKm2": 120.0,
+     "sexRatio": 100.0
+    },
+    {
+     "year": 2024,
+     "population": 5656.0,
+     "growthPercent": 1.62,
+     "densityPerKm2": 122.0,
+     "sexRatio": 100.0
+    },
+    {
+     "year": 2025,
+     "population": 5742.6,
+     "growthPercent": 1.6,
+     "densityPerKm2": 124.0,
+     "sexRatio": 100.0
+    },
+    {
+     "year": 2026,
+     "population": 5828.6,
+     "growthPercent": 1.58,
+     "densityPerKm2": 126.0,
+     "sexRatio": 100.0
+    }
+   ]
+  },
+  {
+   "code": "61",
+   "name": "Kalimantan Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 5541.4,
+     "growthPercent": 1.33,
+     "densityPerKm2": 38.0,
+     "sexRatio": 105.5
+    },
+    {
+     "year": 2023,
+     "population": 5623.3,
+     "growthPercent": 1.39,
+     "densityPerKm2": 38.0,
+     "sexRatio": 105.5
+    },
+    {
+     "year": 2024,
+     "population": 5695.5,
+     "growthPercent": 1.36,
+     "densityPerKm2": 39.0,
+     "sexRatio": 105.4
+    },
+    {
+     "year": 2025,
+     "population": 5766.0,
+     "growthPercent": 1.33,
+     "densityPerKm2": 39.0,
+     "sexRatio": 105.3
+    },
+    {
+     "year": 2026,
+     "population": 5835.0,
+     "growthPercent": 1.31,
+     "densityPerKm2": 40.0,
+     "sexRatio": 105.1
+    }
+   ]
+  },
+  {
+   "code": "62",
+   "name": "Kalimantan Tengah",
+   "years": [
+    {
+     "year": 2022,
+     "population": 2741.1,
+     "growthPercent": 1.51,
+     "densityPerKm2": 18.0,
+     "sexRatio": 107.6
+    },
+    {
+     "year": 2023,
+     "population": 2773.7,
+     "growthPercent": 1.4,
+     "densityPerKm2": 18.0,
+     "sexRatio": 107.1
+    },
+    {
+     "year": 2024,
+     "population": 2809.7,
+     "growthPercent": 1.37,
+     "densityPerKm2": 18.0,
+     "sexRatio": 106.8
+    },
+    {
+     "year": 2025,
+     "population": 2845.0,
+     "growthPercent": 1.35,
+     "densityPerKm2": 19.0,
+     "sexRatio": 106.5
+    },
+    {
+     "year": 2026,
+     "population": 2879.5,
+     "growthPercent": 1.32,
+     "densityPerKm2": 19.0,
+     "sexRatio": 106.2
+    }
+   ]
+  },
+  {
+   "code": "63",
+   "name": "Kalimantan Selatan",
+   "years": [
+    {
+     "year": 2022,
+     "population": 4182.1,
+     "growthPercent": 1.51,
+     "densityPerKm2": 113.0,
+     "sexRatio": 102.4
+    },
+    {
+     "year": 2023,
+     "population": 4222.3,
+     "growthPercent": 1.31,
+     "densityPerKm2": 114.0,
+     "sexRatio": 102.4
+    },
+    {
+     "year": 2024,
+     "population": 4273.4,
+     "growthPercent": 1.29,
+     "densityPerKm2": 115.0,
+     "sexRatio": 102.3
+    },
+    {
+     "year": 2025,
+     "population": 4323.3,
+     "growthPercent": 1.26,
+     "densityPerKm2": 116.0,
+     "sexRatio": 102.2
+    },
+    {
+     "year": 2026,
+     "population": 4372.1,
+     "growthPercent": 1.24,
+     "densityPerKm2": 118.0,
+     "sexRatio": 102.1
+    }
+   ]
+  },
+  {
+   "code": "64",
+   "name": "Kalimantan Timur",
+   "years": [
+    {
+     "year": 2022,
+     "population": 3859.8,
+     "growthPercent": 1.41,
+     "densityPerKm2": 30.0,
+     "sexRatio": 108.1
+    },
+    {
+     "year": 2023,
+     "population": 3909.7,
+     "growthPercent": 1.37,
+     "densityPerKm2": 31.0,
+     "sexRatio": 107.7
+    },
+    {
+     "year": 2024,
+     "population": 4045.9,
+     "growthPercent": 1.93,
+     "densityPerKm2": 32.0,
+     "sexRatio": 107.3
+    },
+    {
+     "year": 2025,
+     "population": 4267.6,
+     "growthPercent": 2.67,
+     "densityPerKm2": 34.0,
+     "sexRatio": 106.8
+    },
+    {
+     "year": 2026,
+     "population": 4478.4,
+     "growthPercent": 3.06,
+     "densityPerKm2": 35.0,
+     "sexRatio": 106.5
+    }
+   ]
+  },
+  {
+   "code": "65",
+   "name": "Kalimantan Utara",
+   "years": [
+    {
+     "year": 2022,
+     "population": 727.8,
+     "growthPercent": 2.1,
+     "densityPerKm2": 10.0,
+     "sexRatio": 111.3
+    },
+    {
+     "year": 2023,
+     "population": 730.0,
+     "growthPercent": 1.44,
+     "densityPerKm2": 10.0,
+     "sexRatio": 111.0
+    },
+    {
+     "year": 2024,
+     "population": 739.8,
+     "growthPercent": 1.41,
+     "densityPerKm2": 11.0,
+     "sexRatio": 110.7
+    },
+    {
+     "year": 2025,
+     "population": 749.4,
+     "growthPercent": 1.39,
+     "densityPerKm2": 11.0,
+     "sexRatio": 110.4
+    },
+    {
+     "year": 2026,
+     "population": 758.8,
+     "growthPercent": 1.37,
+     "densityPerKm2": 11.0,
+     "sexRatio": 110.0
+    }
+   ]
+  },
+  {
+   "code": "71",
+   "name": "Sulawesi Utara",
+   "years": [
+    {
+     "year": 2022,
+     "population": 2659.5,
+     "growthPercent": 0.82,
+     "densityPerKm2": 183.0,
+     "sexRatio": 104.6
+    },
+    {
+     "year": 2023,
+     "population": 2681.5,
+     "growthPercent": 0.82,
+     "densityPerKm2": 185.0,
+     "sexRatio": 104.4
+    },
+    {
+     "year": 2024,
+     "population": 2701.8,
+     "growthPercent": 0.8,
+     "densityPerKm2": 186.0,
+     "sexRatio": 104.3
+    },
+    {
+     "year": 2025,
+     "population": 2721.4,
+     "growthPercent": 0.79,
+     "densityPerKm2": 188.0,
+     "sexRatio": 104.1
+    },
+    {
+     "year": 2026,
+     "population": 2740.5,
+     "growthPercent": 0.77,
+     "densityPerKm2": 189.0,
+     "sexRatio": 104.0
+    }
+   ]
+  },
+  {
+   "code": "72",
+   "name": "Sulawesi Tengah",
+   "years": [
+    {
+     "year": 2022,
+     "population": 3066.1,
+     "growthPercent": 1.53,
+     "densityPerKm2": 50.0,
+     "sexRatio": 105.2
+    },
+    {
+     "year": 2023,
+     "population": 3086.8,
+     "growthPercent": 1.22,
+     "densityPerKm2": 50.0,
+     "sexRatio": 105.4
+    },
+    {
+     "year": 2024,
+     "population": 3121.8,
+     "growthPercent": 1.2,
+     "densityPerKm2": 51.0,
+     "sexRatio": 105.2
+    },
+    {
+     "year": 2025,
+     "population": 3156.1,
+     "growthPercent": 1.18,
+     "densityPerKm2": 51.0,
+     "sexRatio": 105.1
+    },
+    {
+     "year": 2026,
+     "population": 3189.8,
+     "growthPercent": 1.16,
+     "densityPerKm2": 52.0,
+     "sexRatio": 105.0
+    }
+   ]
+  },
+  {
+   "code": "73",
+   "name": "Sulawesi Selatan",
+   "years": [
+    {
+     "year": 2022,
+     "population": 9225.8,
+     "growthPercent": 0.96,
+     "densityPerKm2": 204.0,
+     "sexRatio": 98.7
+    },
+    {
+     "year": 2023,
+     "population": 9362.3,
+     "growthPercent": 1.15,
+     "densityPerKm2": 207.0,
+     "sexRatio": 98.7
+    },
+    {
+     "year": 2024,
+     "population": 9463.4,
+     "growthPercent": 1.13,
+     "densityPerKm2": 209.0,
+     "sexRatio": 98.8
+    },
+    {
+     "year": 2025,
+     "population": 9563.1,
+     "growthPercent": 1.11,
+     "densityPerKm2": 211.0,
+     "sexRatio": 98.8
+    },
+    {
+     "year": 2026,
+     "population": 9661.3,
+     "growthPercent": 1.1,
+     "densityPerKm2": 213.0,
+     "sexRatio": 98.8
+    }
+   ]
+  },
+  {
+   "code": "74",
+   "name": "Sulawesi Tenggara",
+   "years": [
+    {
+     "year": 2022,
+     "population": 2701.7,
+     "growthPercent": 1.66,
+     "densityPerKm2": 75.0,
+     "sexRatio": 102.4
+    },
+    {
+     "year": 2023,
+     "population": 2749.0,
+     "growthPercent": 1.69,
+     "densityPerKm2": 76.0,
+     "sexRatio": 102.7
+    },
+    {
+     "year": 2024,
+     "population": 2793.1,
+     "growthPercent": 1.67,
+     "densityPerKm2": 77.0,
+     "sexRatio": 102.6
+    },
+    {
+     "year": 2025,
+     "population": 2836.7,
+     "growthPercent": 1.65,
+     "densityPerKm2": 78.0,
+     "sexRatio": 102.6
+    },
+    {
+     "year": 2026,
+     "population": 2880.0,
+     "growthPercent": 1.63,
+     "densityPerKm2": 80.0,
+     "sexRatio": 102.5
+    }
+   ]
+  },
+  {
+   "code": "75",
+   "name": "Gorontalo",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1192.7,
+     "growthPercent": 1.02,
+     "densityPerKm2": 99.0,
+     "sexRatio": 101.8
+    },
+    {
+     "year": 2023,
+     "population": 1213.2,
+     "growthPercent": 1.27,
+     "densityPerKm2": 101.0,
+     "sexRatio": 101.7
+    },
+    {
+     "year": 2024,
+     "population": 1227.8,
+     "growthPercent": 1.26,
+     "densityPerKm2": 102.0,
+     "sexRatio": 101.7
+    },
+    {
+     "year": 2025,
+     "population": 1242.2,
+     "growthPercent": 1.24,
+     "densityPerKm2": 103.0,
+     "sexRatio": 101.6
+    },
+    {
+     "year": 2026,
+     "population": 1256.4,
+     "growthPercent": 1.22,
+     "densityPerKm2": 104.0,
+     "sexRatio": 101.5
+    }
+   ]
+  },
+  {
+   "code": "76",
+   "name": "Sulawesi Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1458.6,
+     "growthPercent": 1.58,
+     "densityPerKm2": 88.0,
+     "sexRatio": 102.9
+    },
+    {
+     "year": 2023,
+     "population": 1481.1,
+     "growthPercent": 1.56,
+     "densityPerKm2": 89.0,
+     "sexRatio": 102.8
+    },
+    {
+     "year": 2024,
+     "population": 1503.2,
+     "growthPercent": 1.55,
+     "densityPerKm2": 91.0,
+     "sexRatio": 102.7
+    },
+    {
+     "year": 2025,
+     "population": 1525.3,
+     "growthPercent": 1.53,
+     "densityPerKm2": 92.0,
+     "sexRatio": 102.7
+    },
+    {
+     "year": 2026,
+     "population": 1547.4,
+     "growthPercent": 1.51,
+     "densityPerKm2": 93.0,
+     "sexRatio": 102.6
+    }
+   ]
+  },
+  {
+   "code": "81",
+   "name": "Maluku",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1881.7,
+     "growthPercent": 1.01,
+     "densityPerKm2": 41.0,
+     "sexRatio": 102.5
+    },
+    {
+     "year": 2023,
+     "population": 1920.5,
+     "growthPercent": 1.39,
+     "densityPerKm2": 42.0,
+     "sexRatio": 102.4
+    },
+    {
+     "year": 2024,
+     "population": 1945.6,
+     "growthPercent": 1.37,
+     "densityPerKm2": 42.0,
+     "sexRatio": 102.3
+    },
+    {
+     "year": 2025,
+     "population": 1970.6,
+     "growthPercent": 1.35,
+     "densityPerKm2": 43.0,
+     "sexRatio": 102.2
+    },
+    {
+     "year": 2026,
+     "population": 1995.2,
+     "growthPercent": 1.33,
+     "densityPerKm2": 43.0,
+     "sexRatio": 102.2
+    }
+   ]
+  },
+  {
+   "code": "82",
+   "name": "Maluku Utara",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1319.3,
+     "growthPercent": 1.61,
+     "densityPerKm2": 40.0,
+     "sexRatio": 104.8
+    },
+    {
+     "year": 2023,
+     "population": 1337.1,
+     "growthPercent": 1.52,
+     "densityPerKm2": 41.0,
+     "sexRatio": 105.1
+    },
+    {
+     "year": 2024,
+     "population": 1355.6,
+     "growthPercent": 1.48,
+     "densityPerKm2": 41.0,
+     "sexRatio": 105.1
+    },
+    {
+     "year": 2025,
+     "population": 1373.8,
+     "growthPercent": 1.45,
+     "densityPerKm2": 42.0,
+     "sexRatio": 105.1
+    },
+    {
+     "year": 2026,
+     "population": 1391.7,
+     "growthPercent": 1.43,
+     "densityPerKm2": 44.0,
+     "sexRatio": 105.1
+    }
+   ]
+  },
+  {
+   "code": "91",
+   "name": "Papua",
+   "years": [
+    {
+     "year": 2022,
+     "population": 4418.6,
+     "growthPercent": 1.52,
+     "densityPerKm2": 14.0,
+     "sexRatio": 113.5
+    },
+    {
+     "year": 2023,
+     "population": 4482.7,
+     "growthPercent": 1.49,
+     "densityPerKm2": 14.0,
+     "sexRatio": 112.9
+    },
+    {
+     "year": 2024,
+     "population": 1060.6,
+     "growthPercent": 1.36,
+     "densityPerKm2": 13.0,
+     "sexRatio": 109.7
+    },
+    {
+     "year": 2025,
+     "population": 1073.6,
+     "growthPercent": 1.34,
+     "densityPerKm2": 13.0,
+     "sexRatio": 109.4
+    },
+    {
+     "year": 2026,
+     "population": 1086.5,
+     "growthPercent": 1.31,
+     "densityPerKm2": 13.0,
+     "sexRatio": 109.1
+    }
+   ],
+   "comparableFrom": 2024
+  },
+  {
+   "code": "92",
+   "name": "Papua Barat",
+   "years": [
+    {
+     "year": 2022,
+     "population": 1183.3,
+     "growthPercent": 2.46,
+     "densityPerKm2": 12.0,
+     "sexRatio": 111.1
+    },
+    {
+     "year": 2023,
+     "population": 1187.3,
+     "growthPercent": 1.68,
+     "densityPerKm2": 12.0,
+     "sexRatio": 110.1
+    },
+    {
+     "year": 2024,
+     "population": 578.7,
+     "growthPercent": 1.71,
+     "densityPerKm2": 10.0,
+     "sexRatio": 110.8
+    },
+    {
+     "year": 2025,
+     "population": 587.6,
+     "growthPercent": 1.68,
+     "densityPerKm2": 10.0,
+     "sexRatio": 110.5
+    },
+    {
+     "year": 2026,
+     "population": 596.5,
+     "growthPercent": 1.65,
+     "densityPerKm2": 10.0,
+     "sexRatio": 110.2
+    }
+   ],
+   "comparableFrom": 2024
+  },
+  {
+   "code": "93",
+   "name": "Papua Selatan",
+   "years": [
+    {
+     "year": 2024,
+     "population": 542.1,
+     "growthPercent": 1.45,
+     "densityPerKm2": 5.0,
+     "sexRatio": 108.0
+    },
+    {
+     "year": 2025,
+     "population": 549.7,
+     "growthPercent": 1.44,
+     "densityPerKm2": 5.0,
+     "sexRatio": 107.7
+    },
+    {
+     "year": 2026,
+     "population": 557.2,
+     "growthPercent": 1.43,
+     "densityPerKm2": 5.0,
+     "sexRatio": 107.5
+    }
+   ],
+   "comparableFrom": 2024
+  },
+  {
+   "code": "94",
+   "name": "Papua Tengah",
+   "years": [
+    {
+     "year": 2024,
+     "population": 1472.9,
+     "growthPercent": 1.54,
+     "densityPerKm2": 24.0,
+     "sexRatio": 114.0
+    },
+    {
+     "year": 2025,
+     "population": 1492.3,
+     "growthPercent": 1.49,
+     "densityPerKm2": 24.0,
+     "sexRatio": 113.5
+    },
+    {
+     "year": 2026,
+     "population": 1510.8,
+     "growthPercent": 1.45,
+     "densityPerKm2": 25.0,
+     "sexRatio": 113.1
+    }
+   ],
+   "comparableFrom": 2024
+  },
+  {
+   "code": "95",
+   "name": "Papua Pegunungan",
+   "years": [
+    {
+     "year": 2024,
+     "population": 1467.0,
+     "growthPercent": 1.43,
+     "densityPerKm2": 29.0,
+     "sexRatio": 114.5
+    },
+    {
+     "year": 2025,
+     "population": 1484.9,
+     "growthPercent": 1.39,
+     "densityPerKm2": 29.0,
+     "sexRatio": 114.0
+    },
+    {
+     "year": 2026,
+     "population": 1501.9,
+     "growthPercent": 1.34,
+     "densityPerKm2": 29.0,
+     "sexRatio": 113.5
+    }
+   ],
+   "comparableFrom": 2024
+  },
+  {
+   "code": "96",
+   "name": "Papua Barat Daya",
+   "years": [
+    {
+     "year": 2024,
+     "population": 627.1,
+     "growthPercent": 1.59,
+     "densityPerKm2": 16.0,
+     "sexRatio": 108.9
+    },
+    {
+     "year": 2025,
+     "population": 636.4,
+     "growthPercent": 1.57,
+     "densityPerKm2": 16.0,
+     "sexRatio": 108.5
+    },
+    {
+     "year": 2026,
+     "population": 645.5,
+     "growthPercent": 1.55,
+     "densityPerKm2": 17.0,
+     "sexRatio": 108.1
+    }
+   ],
+   "comparableFrom": 2024
+  }
+ ]
+}

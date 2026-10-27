@@ -2,8 +2,8 @@ name: Refresh dated BMKG snapshots
 
 on:
   schedule:
-    - cron: '0 */2 * * *' # Forecasts: every two hours (UTC).
-    - cron: '*/15 * * * *' # Earthquake observations: every fifteen minutes.
+    - cron: '0 */3 * * *' # Forecasts: every three hours (UTC).
+    - cron: '*/25 * * * *' # Earthquake and hazard observations: every 25 minutes (:00, :25, :50).
   workflow_dispatch:
     inputs:
       kind:
@@ -19,7 +19,7 @@ jobs:
   weather:
     if: >-
       (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
-      (github.event.schedule == '0 */2 * * *' || inputs.kind == 'all' || inputs.kind == 'weather')
+      (github.event.schedule == '0 */3 * * *' || inputs.kind == 'all' || inputs.kind == 'weather')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:
@@ -55,7 +55,7 @@ jobs:
   earthquake:
     if: >-
       (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
-      (github.event.schedule == '*/15 * * * *' || inputs.kind == 'all' || inputs.kind == 'earthquake')
+      (github.event.schedule == '*/25 * * * *' || inputs.kind == 'all' || inputs.kind == 'earthquake')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
@@ -91,7 +91,7 @@ jobs:
   hazard:
     if: >-
       (github.event_name == 'workflow_dispatch' || vars.SNAPSHOT_REFRESH_ENABLED == 'true') &&
-      (github.event.schedule == '*/15 * * * *' || inputs.kind == 'all' || inputs.kind == 'hazard')
+      (github.event.schedule == '*/25 * * * *' || inputs.kind == 'all' || inputs.kind == 'hazard')
     runs-on: ubuntu-latest
     timeout-minutes: 8
     concurrency:

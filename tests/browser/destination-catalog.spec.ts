@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a real published catalog entry renders its stored Commons creator and license', async ({ page }) => {
-  await page.goto('/?region=35');
+  await page.goto('/?layer=destinations&region=35');
   await page.locator('.destination-search input').fill(illustratedPlace.name);
   const credit = page.locator('.destination-table tbody tr').first().locator('.photo-credit');
   await expect(credit).toContainText(illustratedPlace.image.credit);
@@ -30,7 +30,7 @@ test('selected province has client-side pagination, search, filters, and sorting
     if (pathname.startsWith('/data/destinations/provinces/')) shards.push(pathname);
     if (pathname === '/data/destinations/national.json') aggregates.push(pathname);
   });
-  await page.goto('/?region=35');
+  await page.goto('/?layer=destinations&region=35');
   await expect(page.locator('.destination-total')).toHaveText(String(province.count));
   const rows = page.locator('.destination-table tbody tr');
   await expect(rows).toHaveCount(25);
