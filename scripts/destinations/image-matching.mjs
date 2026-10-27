@@ -123,3 +123,37 @@ export function matchDestination(place, index) {
     }
   };
 }
+
+
+const CAMERA_RADIUS_METERS = 350;
+
+/**
+ * An exact distinctive place-name phrase inside the Commons FILE name, and the
+ * file page's geotagged point of view near the destination. The image's geotag
+ * is not automatically assumed to be its subject: both checks are required.
+ */
+export function matchCommonsFileToDestination(place, fileTitle, camera) {
+  if (!place || typeof place.name !== 'string'
+    || !hasValidCoordinates(place.lat, place.lon)
+    || !hasValidCoordinates(camera?.lat, camera?.lon)
+    || !isSafeFileTitle(fileTitle)) return undefined;
+  const placeName = normalizeName(place.name);
+  const filename = normalizeName(fileTitle.slice('File:'.length).replace(/\.[^.]+$/, ''));
+  const distinctive = placeName.split(' ').some(word =>
+    word.length >= 3 && /\p{L}/u.test(word) && !GENERIC_WORDS.has(word));
+  if (!distinctive || placeName.length < 8 || GENERIC_NAMES.has(placeName)) return undefined;
+  // Preserve token boundaries: "Sari" must not match "Sarimukti".
+  if (!(' ' + filename + ' ').includes(' ' + placeName + ' ')) return undefined;
+  const distance = distanceMeters(place.lat, place.lon, camera.lat, camera.lon);
+  if (distance > CAMERA_RADIUS_METERS) return undefined;
+  return {
+    method: 'commons-file-title-and-nearby-geotag',
+    verification: 'automated',
+    fileTitle,
+    matchedLabel: place.name,
+    photoLat: camera.lat,
+    photoLon: camera.lon,
+    distanceMeters: distance,
+    sourceUrl: 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(fileTitle.replace(/ /g, '_'))
+  };
+}
