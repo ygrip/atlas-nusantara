@@ -155,15 +155,15 @@
   .tool.reset { padding: 0 14px; }
   .map-controls output { min-width: 4ch; text-align: center; font: 800 .75rem ui-monospace, monospace; color: var(--muted); }
   @media (max-width: 700px) { .tool.reset .tool-label { display: none; } .tool.reset { padding: 0 10px; } }
-  .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, #bfe3ea, #8fc7d8); border: 1px solid var(--border, #e2d6c6); border-radius: 24px; overflow: hidden; }
+  .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, var(--green-wash), var(--map-bg)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
   .interactive { touch-action: none; cursor: grab; }
   .interactive:active { cursor: grabbing; }
   svg { width: 100%; height: auto; }
-  path { fill: var(--fill, #91b89b); stroke: #fffaf0; stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
+  path { fill: var(--fill, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
   .region-depth { pointer-events: none; }
   .region-depth path { fill: #00000030; stroke: none; cursor: default; }
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
-  path.selected { fill: #e07a4f; }
+  path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
   .overlay-pin { cursor:pointer; }
   .overlay-pin:focus { outline:none; filter:drop-shadow(0 0 7px #fff); }
   .overlay-pin circle, .overlay-pin polygon { stroke: #fff8e9; stroke-width: 2; vector-effect: non-scaling-stroke; }
