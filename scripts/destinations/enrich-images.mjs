@@ -49,16 +49,28 @@ export function selectLocationMatches(places, subjects) {
 }
 
 function verifiedEntry(match, subject, pages) {
+  const photos = [];
+  const seen = new Set();
   for (const title of subject.imageTitles ?? [subject.imageTitle]) {
+    if (seen.has(title)) continue;
     const metadata = pages.get(title);
     if (!metadata) continue;
     const photo = verifyCommonsPhoto(metadata.page, metadata.retrievedAt);
-    if (!photo) continue;
-    return { destinationId: match.place.id, destinationFingerprint: destinationFingerprint(match.place),
+    if (!photo || seen.has(photo.evidence.fileTitle)) continue;
+    seen.add(photo.evidence.fileTitle);
+    photos.push({
       subject: { ...match.subject, imageTitle: title }, locationEvidence: match.evidence,
-      image: photo.image, licenseEvidence: { ...photo.evidence, requestedTitle: title } };
+      image: photo.image, licenseEvidence: { ...photo.evidence, requestedTitle: title }
+    });
+    if (photos.length === 8) break;
   }
-  return undefined;
+  if (!photos.length) return undefined;
+  return {
+    destinationId: match.place.id,
+    destinationFingerprint: destinationFingerprint(match.place),
+    ...photos[0],
+    ...(photos.length > 1 ? { photos } : {})
+  };
 }
 
 export function reviewMatchedPhotos(matches, subjects, pages) {
@@ -106,7 +118,9 @@ export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, 
       scope: subjects.scope, commons: 'https://commons.wikimedia.org/' },
     coverage: { evaluatedDestinations: catalog.places.length, exactNameCandidates: locations.nameCandidates,
       verifiedLocationMatches: locations.matches.length, licensedImages: reviewed.entries.length,
-      distinctImageFiles: new Set(reviewed.entries.map(entry => entry.licenseEvidence.fileTitle)).size,
+      licensedPhotos: reviewed.entries.reduce((count, entry) => count + (entry.photos?.length ?? 1), 0),
+      distinctImageFiles: new Set(reviewed.entries.flatMap(entry =>
+        (entry.photos ?? [entry]).map(photo => photo.licenseEvidence.fileTitle))).size,
       withoutPublishedImage: catalog.places.length - reviewed.entries.length },
     verification: 'Automated name, subject-coordinate, and file-license metadata verification; not human visual review.',
     entries: reviewed.entries };
