@@ -108,3 +108,54 @@ test('rejects malformed cached response instead of silently replacing it', async
     assert.equal(requests, 0);
   });
 });
+
+
+test('retries undici TimeoutError and caches successful response', async () => {
+  await withCache(async cacheDirectory => {
+    let attempts = 0;
+    const pauses = [];
+    const client = new CrawlClient({
+      origin: 'https://query.wikidata.org', cacheDirectory, delayMs: 0, timeoutMs: 75,
+      fetcher: async () => {
+        attempts++;
+        if (attempts <= 2) {
+          const error = new Error('The operation was aborted due to timeout');
+          error.name = 'TimeoutError';
+          throw error;
+        }
+        return successfulResponse('Wikidata success');
+      },
+      pause: async delay => { pauses.push(delay); }
+    });
+    const first = await client.get('/sparql?query=test');
+    assert.equal(first.body, 'Wikidata success');
+    assert.equal(attempts, 3);
+    assert.deepEqual(pauses.filter(delay => delay >= 5000), [5000, 10000]);
+    assert.equal((await client.get('/sparql?query=test')).body, 'Wikidata success');
+    assert.equal(attempts, 3);
+  });
+});
+
+test('exhausted timeouts provide a resumable error without caching failed pages', async () => {
+  await withCache(async cacheDirectory => {
+    let attempts = 0;
+    const url = '/sparql?query=slow';
+    const client = new CrawlClient({
+      origin: 'https://query.wikidata.org', cacheDirectory, delayMs: 0, timeoutMs: 75,
+      fetcher: async () => {
+        attempts++;
+        const error = new Error('timeout'); error.name = 'TimeoutError'; throw error;
+      },
+      pause: async () => {}
+    });
+    await assert.rejects(client.get(url), /exhausted 4 attempts/);
+    assert.equal(attempts, 4);
+    const resumed = new CrawlClient({
+      origin: 'https://query.wikidata.org', cacheDirectory, delayMs: 0,
+      fetcher: async () => { attempts++; return successfulResponse('recovered'); },
+      pause: async () => {}
+    });
+    assert.equal((await resumed.get(url)).body, 'recovered');
+    assert.equal(attempts, 5);
+  });
+});
