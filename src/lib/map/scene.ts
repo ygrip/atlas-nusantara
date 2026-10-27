@@ -39,7 +39,7 @@ interface RegionEntry { id: number; code: string; name: string; bbox: [number, n
 
 const ID_WIDTH = 2048;
 const ID_HEIGHT = 1024;
-const SELECTED_COLOR = new Color('#e07a4f');
+const SELECTED_COLOR = new Color('#ca374d');
 const CITY_ID_OFFSET = 100;
 
 /** Default camera tilt (radians from straight down): steep enough to show relief and the rolled-over edge of the world. */
