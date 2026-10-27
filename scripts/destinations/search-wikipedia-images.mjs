@@ -6,6 +6,7 @@
  * Usage:
  *   npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 --publish
  *   npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=100
+ *   npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --after=sisparnas-123 --limit=100
  *   npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --output=/tmp/wiki-review.jsonl
  */
 import path from 'node:path';
@@ -85,10 +86,11 @@ async function saveReview(filename, records) {
  * in the JSONL review file and can be searched manually.
  */
 export async function discoverWikipediaPhotos({
-  catalogDirectory = CATALOG_DIRECTORY, cacheDirectory, province, limit = Infinity,
+  catalogDirectory = CATALOG_DIRECTORY, cacheDirectory, province, after, limit = Infinity,
   publish = false, output, delayMs = 1000, fetcher = fetch, pause = sleep
 }) {
   if (!cacheDirectory) throw Error('cacheDirectory is required');
+  if (after && typeof after !== 'string') throw Error('Invalid after destination ID');
   if (province && !/^\d{2}$/.test(province)) throw Error('Invalid province code');
   if (!(limit === Infinity || Number.isSafeInteger(limit) && limit > 0))
     throw Error('limit must be a positive integer');
@@ -96,6 +98,8 @@ export async function discoverWikipediaPhotos({
   const catalog = await loadDestinationCatalog(catalogDirectory);
   if (province && !catalog.index.provinces.some(item => item.provinceCode === province))
     throw Error('Unknown province code: ' + province);
+  if (after && !catalog.places.some(place => place.id === after))
+    throw Error('Unknown --after destination ID: ' + after);
   const manifest = await readImageRegistry(path.join(catalogDirectory, 'image-metadata.json'));
   if (!manifest || manifest.policy !== IMAGE_REVIEW_POLICY)
     throw Error('Existing image registry required for licensed publishing');
@@ -107,7 +111,12 @@ export async function discoverWikipediaPhotos({
   })]));
   const queue = [];
   const reviews = [];
+  let afterReached = !after;
   for (const place of catalog.places) {
+    if (!afterReached) {
+      if (place.id === after) afterReached = true;
+      continue;
+    }
     if (province && place.provinceCode !== province) continue;
     if (existing.has(place.id) || place.image || place.images?.length) continue;
     if (reviews.length >= limit) break;
@@ -218,16 +227,17 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const args = process.argv.slice(2);
   const cacheDirectory = args[0];
   if (!cacheDirectory || cacheDirectory.startsWith('--'))
-    throw Error('Usage: node scripts/destinations/search-wikipedia-images.mjs <cache-directory> [--province=34] [--limit=100] [--output=/tmp/review.jsonl] [--publish]');
+    throw Error('Usage: node scripts/destinations/search-wikipedia-images.mjs <cache-directory> [--province=34] [--limit=100] [--after=sisparnas-123] [--output=/tmp/review.jsonl] [--publish]');
   for (const flag of args.slice(1)) {
-    if (flag !== '--publish' && !/^--(province=\d{2}|limit=\d+|output=.+)$/.test(flag))
+    if (flag !== '--publish' && !/^--(province=\d{2}|limit=\d+|after=sisparnas-\d+|output=.+)$/.test(flag))
       throw Error('Unknown option: ' + flag);
   }
   const province = args.find(arg => arg.startsWith('--province='))?.slice('--province='.length);
   const limitText = args.find(arg => arg.startsWith('--limit='))?.slice('--limit='.length);
   const output = args.find(arg => arg.startsWith('--output='))?.slice('--output='.length);
+  const after = args.find(arg => arg.startsWith('--after='))?.slice('--after='.length);
   discoverWikipediaPhotos({
-    cacheDirectory, province, output,
+    cacheDirectory, province, after, output,
     limit: limitText ? Number(limitText) : Infinity, publish: args.includes('--publish')
   }).catch(error => { console.error(error); process.exitCode = 1; });
 }
