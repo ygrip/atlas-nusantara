@@ -50,6 +50,13 @@
     modalFailed = false;
   }
 
+  // Move the modal outside the scrollable table so desktop and mobile clips do
+  // not cut it off. Destroy removes only this modal instance.
+  function portalToBody(node: HTMLDivElement) {
+    document.body.appendChild(node);
+    return { destroy() { node.remove(); } };
+  }
+
   function handleKey(event: KeyboardEvent) {
     if (!open) return;
     if (event.key === 'Escape') { event.preventDefault(); void closeGallery(); }
@@ -90,7 +97,7 @@
 {/if}
 
 {#if open && current}
-  <div class="gallery-overlay" role="presentation">
+  <div class="gallery-overlay" use:portalToBody role="presentation">
     <button class="gallery-scrim" type="button" onclick={closeGallery} aria-label="Close image gallery"></button>
     <div class="gallery-dialog" bind:this={modal} role="dialog" aria-modal="true" aria-label={name + ' · gallery'} tabindex="-1">
       <header class="gallery-header">
