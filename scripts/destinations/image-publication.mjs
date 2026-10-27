@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { isReusablePhotoMetadata } from '../../src/lib/data/photo-license.js';
-import { buildSubjectIndex, matchDestination } from './image-matching.mjs';
+import { buildSubjectIndex, matchDestination, matchCommonsFileToDestination } from './image-matching.mjs';
 import { canonicalLicenseUrl, creatorCredit } from './image-license.mjs';
 
 export const IMAGE_REVIEW_POLICY = 'commons-wikidata-exact-name-250m-v1';
@@ -32,6 +32,15 @@ function verifiedEntry(place, entry) {
   try { descriptionTitle = decodeURIComponent(new URL(entry.image.descriptionUrl).pathname.slice('/wiki/'.length)).replace(/_/g, ' '); }
   catch { return false; }
   if (descriptionTitle !== license.fileTitle) return false;
+  if (evidence.method === 'commons-file-title-and-nearby-geotag') {
+    if (license.requestedTitle !== license.fileTitle || evidence.fileTitle !== license.fileTitle) return false;
+    const match = matchCommonsFileToDestination(place, evidence.fileTitle, {
+      lat: evidence.photoLat, lon: evidence.photoLon
+    });
+    if (!match || Math.abs(match.distanceMeters - evidence.distanceMeters) >= 0.01) return false;
+    const fields = ['method', 'verification', 'fileTitle', 'matchedLabel', 'photoLat', 'photoLon', 'sourceUrl'];
+    return fields.every(field => evidence[field] === match[field]);
+  }
   if (!entry.subject || entry.subject.imageTitle !== license.requestedTitle
     || entry.subject.id !== evidence.subjectId || evidence.method !== 'exact-name-and-subject-coordinate') return false;
   const match = matchDestination(place, buildSubjectIndex([entry.subject]));
