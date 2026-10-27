@@ -5,7 +5,8 @@ import { CrawlClient } from './crawl-http.mjs';
 const SPARQL = 'https://query.wikidata.org/sparql';
 const LABELS = `?item (rdfs:label|skos:altLabel) ?label.
   FILTER(LANG(?label) = "id" || LANG(?label) = "en")`;
-const SUBJECTS = '?item wdt:P17 wd:Q252; wdt:P18 ?image; wdt:P625 ?coordinates.';
+// A place with a Commons category but no featured P18 image is also a candidate.
+const SUBJECTS = '?item wdt:P17 wd:Q252; wdt:P625 ?coordinates. OPTIONAL { ?item wdt:P18 ?image. } OPTIONAL { ?item wdt:P373 ?category. }';
 
 export async function saveJson(filename, value) {
   await mkdir(path.dirname(filename), { recursive: true });
@@ -32,14 +33,17 @@ export function registrySubjects(bindings) {
     const point = row.coordinates?.value?.match(/^Point\((-?[\d.]+)\s+(-?[\d.]+)\)$/);
     const title = commonsFileTitle(row.image?.value);
     const label = row.label?.value;
-    if (!id || !point || !title || typeof label !== 'string' || !label.trim()) continue;
+    const category = row.category?.value;
+    const safeCategory = typeof category === 'string' && /^[^\u0000-\u001f<>\[\]{}|"'\u0060]{1,180}$/.test(category) ? category.trim() : undefined;
+    if (!id || !point || !(title || safeCategory) || typeof label !== 'string' || !label.trim()) continue;
     const lon = Number(point[1]);
     const lat = Number(point[2]);
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) continue;
-    const group = groups.get(id) ?? { id, labels: new Set(), points: new Map(), imageTitles: new Set() };
+    const group = groups.get(id) ?? { id, labels: new Set(), points: new Map(), imageTitles: new Set(), commonsCategories: new Set() };
     group.labels.add(label.trim());
     group.points.set(lon + ',' + lat, { lon, lat });
-    group.imageTitles.add(title);
+    if (title) group.imageTitles.add(title);
+    if (safeCategory) group.commonsCategories.add(safeCategory);
     groups.set(id, group);
   }
   const subjects = [];
@@ -49,7 +53,8 @@ export function registrySubjects(bindings) {
     const point = [...group.points.values()][0];
     const imageTitles = [...group.imageTitles].sort();
     subjects.push({ id: group.id, labels: [...group.labels].sort(), lat: point.lat, lon: point.lon,
-      imageTitle: imageTitles[0], imageTitles });
+      imageTitle: imageTitles[0], imageTitles,
+      commonsCategories: [...group.commonsCategories].sort() });
   }
   subjects.sort((left, right) => Number(left.id.slice(1)) - Number(right.id.slice(1)));
   return { subjects, ambiguousCoordinates, labeledItems: groups.size };
@@ -68,8 +73,8 @@ export async function loadSubjectRegistry(directory, { fetcher = fetch, pageSize
   const requests = [];
   let fetchedAt;
   for (let page = 0; page < 100; page++) {
-    const query = `SELECT ?item ?label ?image ?coordinates WHERE { ${SUBJECTS} ${LABELS} }
-ORDER BY ?item ?label ?image ?coordinates LIMIT ${pageSize} OFFSET ${page * pageSize}`;
+    const query = `SELECT ?item ?label ?image ?coordinates ?category WHERE { ${SUBJECTS} ${LABELS} }
+ORDER BY ?item ?label ?image ?coordinates ?category LIMIT ${pageSize} OFFSET ${page * pageSize}`;
     const url = SPARQL + '?' + new URLSearchParams({ query, format: 'json' });
     const response = await client.get(url);
     const payload = JSON.parse(response.body);
@@ -82,7 +87,7 @@ ORDER BY ?item ?label ?image ?coordinates LIMIT ${pageSize} OFFSET ${page * page
     if (rows.length === pageSize) continue;
     const normalized = registrySubjects(bindings);
     const result = { schemaVersion: 1, complete: true, fetchedAt,
-      source: 'Wikidata CC0; P17 Indonesia, P18 Commons image, P625 subject coordinate, id/en labels and aliases',
+      source: 'Wikidata CC0; P17 Indonesia, P18 featured photo, P373 Commons category, P625 subject coordinate, id/en labels and aliases',
       scope: 'Candidate registry, not proof that every Indonesian destination is represented',
       requests, ...normalized };
     await saveJson(resultPath, result);
@@ -135,4 +140,28 @@ export async function loadCommonsPages(titles, directory, { fetcher = fetch, del
     }
   }
   return pages;
+}
+
+/**
+ * A Commons category is considered only after its Wikidata subject has passed
+ * the exact destination name + subject coordinate check.
+ * Direct File: members only; unrelated subcategory trees are NOT traversed.
+ */
+export async function loadCommonsCategoryMembers(categories, directory, {
+  fetcher = fetch, delayMs = 1000, pause, maxFiles = 80
+} = {}) {
+  const client = new CrawlClient({ origin: 'https://commons.wikimedia.org',
+    cacheDirectory: path.join(directory, 'commons-category-http'), delayMs, fetcher, pause });
+  const results = new Map();
+  for (const category of [...new Set(categories)].sort()) {
+    if (typeof category !== 'string' || !/^[^\u0000-\u001f<>\[\]{}|"'`]{1,180}$/.test(category)) continue;
+    const params = new URLSearchParams({ action: 'query', format: 'json', list: 'categorymembers',
+      cmtitle: 'Category:' + category, cmnamespace: '6', cmlimit: String(maxFiles), maxlag: '5' });
+    const { payload } = await commonsResponse(client, 'https://commons.wikimedia.org/w/api.php?' + params);
+    const files = payload.query?.categorymembers;
+    if (!Array.isArray(files)) throw Error('Invalid Commons category response: ' + category);
+    results.set(category, files.map(item => item.title)
+      .filter(title => /^File:[^\u0000-\u001f<>\[\]{}|"'`]{1,220}$/.test(title)));
+  }
+  return results;
 }
