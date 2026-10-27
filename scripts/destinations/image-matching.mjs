@@ -53,7 +53,9 @@ function validSubject(subject) {
   return subject && typeof subject === 'object'
     && typeof subject.id === 'string' && ENTITY_ID_PATTERN.test(subject.id)
     && Array.isArray(subject.labels) && hasValidCoordinates(subject.lat, subject.lon)
-    && isSafeFileTitle(subject.imageTitle);
+    && (isSafeFileTitle(subject.imageTitle)
+      || Array.isArray(subject.commonsCategories)
+        && subject.commonsCategories.some(category => typeof category === 'string' && category.trim()));
 }
 
 /** Build an exact normalized-name index over geolocated Wikidata image subjects. */
@@ -71,7 +73,8 @@ export function buildSubjectIndex(subjects) {
       labels: [...new Set(subject.labels.filter(label => typeof label === 'string' && label.trim()))],
       lat: subject.lat,
       lon: subject.lon,
-      imageTitle: subject.imageTitle
+      imageTitle: subject.imageTitle,
+      commonsCategories: subject.commonsCategories ?? []
     };
     byId.set(indexedSubject.id, indexedSubject);
 
