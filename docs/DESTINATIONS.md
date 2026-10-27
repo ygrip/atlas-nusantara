@@ -118,3 +118,20 @@ The full run evaluated **18,596** records: **684** had exact-name candidates, **
 `image-metadata.json` is the public audit/refresh registry. Images remain hosted by Wikimedia; only URLs, proof and credits are stored. Creator credits and file/license links are visible below each image without truncation. Thumbnails are resized without CSS cropping, loaded lazily, and sent no referrer. The national overview does not fetch province destination data or photographs; startup location selection fetches only the selected province's destination data. Reuse conditions such as CC BY-SA continue to apply to downstream adaptations.
 
 Successful HTTP responses are cached and transient Commons maxlag/rate-limit responses are backed off and retried. Interrupted runs resume from cache. Cached metadata retains its actual retrieval time rather than pretending to be newly reviewed; use a new cache directory for a fresh upstream review. Rerunning with the same catalog and cache is deterministic. Government photo-license approval is not required for these separately licensed Commons images.
+
+## Multiple verified images and full-catalog review
+
+The `image` field remains the backwards-compatible featured photograph. Destinations with multiple verified photographs also have an `images` array, with the same featured photo at index zero. Each entry has its **own** Commons file URL, attribution, copyright license, license link and review time. Gallery size is bounded to eight photos and duplicate Commons files are rejected. The image preview opens a keyboard-accessible gallery, adapted from Raksara's gallery lightbox, with left/right arrow keys, Escape, buttons and per-photo attribution.
+
+The offline Wikidata/Commons discovery command now collects **up to eight** separately licensed P18 images for each location-verified subject rather than silently choosing only the first. Existing single-image registries remain valid. To rerun (a live internet connection is required):
+
+```sh
+node scripts/destinations/discover-images.mjs /path/to/research-cache --publish
+npm run build:destinations
+npm test
+npm run check
+```
+
+**All-record image research queue**: use `node scripts/destinations/image-review-queue.mjs /tmp/atlas-image-review.jsonl` to generate one review item for each of the 18,596 records (or `--missing-only` to focus on gaps). Supports `--province=34` and `--limit=100` for bounded batches. Each item retains the stable destination ID, official name, province/district, verified coordinates if present, number of published photos, and human-facing Google Images and Wikimedia Commons discovery links. Research links are deliberately **not image data** and never become published photographs automatically.
+
+Google's Custom Search JSON API stopped accepting new customers in January 2026 and existing access is scheduled to end January 2027. The review queue links to Google Images for human research, without screen scraping, bypassing bot protections, or embedding unlicensed image results. Do not replace missing photos with visually similar beaches or temples: require a verifiable destination identity, appropriate location evidence, creator credit, and reusable file license before adding a registry entry. Zero-verified-image records must continue to display the placeholder.
