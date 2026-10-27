@@ -14,6 +14,7 @@
     "build:geometry": "node scripts/geo/build-geometry.mjs",
     "build:destinations": "node scripts/destinations/catalog-output.mjs static/data/destinations",
     "destinations:images:wikidata": "node scripts/destinations/discover-images.mjs",
+    "destinations:images:wikipedia": "node scripts/destinations/search-wikipedia-images.mjs",
     "destinations:images:commons": "node scripts/destinations/fill-commons-photos.mjs",
     "destinations:images:queue": "node scripts/destinations/image-review-queue.mjs",
     "seed:hierarchy": "node scripts/geo/seed-hierarchy.mjs",
