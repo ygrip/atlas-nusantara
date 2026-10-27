@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { loadSubjectRegistry, loadCommonsPages, loadCommonsCategoryMembers, saveJson } from './image-discovery.mjs';
 import { buildSubjectIndex, matchDestination, normalizeName } from './image-matching.mjs';
 import { verifyCommonsPhoto } from './image-license.mjs';
-import { applyImageRegistry, destinationFingerprint, IMAGE_REVIEW_POLICY } from './image-publication.mjs';
+import { applyImageRegistry, destinationFingerprint, IMAGE_REVIEW_POLICY, readImageRegistry } from './image-publication.mjs';
 import { writeDestinationCatalog } from './catalog-output.mjs';
 
 export async function loadDestinationCatalog(directory) {
@@ -92,6 +92,58 @@ export function reviewMatchedPhotos(matches, subjects, pages, categories = new M
   return { entries, outcomes };
 }
 
+/**
+ * Do not regress existing licensed photos when the source's subject registry is
+ * incomplete or image/category membership changes. Both old and newly discovered
+ * photos must still pass the full downstream publication proof verification.
+ */
+export function mergeVerifiedRegistries(existing, discovered) {
+  if (!existing) return discovered;
+  if (existing.policy !== IMAGE_REVIEW_POLICY) throw Error('Unexpected existing photo review policy');
+  const byId = new Map(existing.entries.map(entry => [entry.destinationId, entry]));
+  for (const entry of discovered.entries) {
+    const old = byId.get(entry.destinationId);
+    if (!old) { byId.set(entry.destinationId, entry); continue; }
+    if (old.destinationFingerprint !== entry.destinationFingerprint) {
+      // The publisher will reject stale old evidence if a source landmark moved.
+      byId.set(entry.destinationId, entry);
+      continue;
+    }
+    const oldPhotos = old.photos ?? [old];
+    const newPhotos = entry.photos ?? [entry];
+    const photos = [];
+    const seen = new Set();
+    for (const photo of [...oldPhotos, ...newPhotos]) {
+      const file = photo.licenseEvidence?.fileTitle;
+      if (!file || seen.has(file)) continue;
+      seen.add(file);
+      photos.push({ subject: photo.subject, locationEvidence: photo.locationEvidence,
+        image: photo.image, licenseEvidence: photo.licenseEvidence });
+      if (photos.length === 8) break;
+    }
+    byId.set(entry.destinationId, {
+      destinationId: entry.destinationId,
+      destinationFingerprint: entry.destinationFingerprint,
+      ...photos[0],
+      ...(photos.length > 1 ? { photos } : {})
+    });
+  }
+  const entries = [...byId.values()].sort((a, b) => a.destinationId.localeCompare(b.destinationId));
+  const licensedPhotos = entries.reduce((sum, entry) => sum + (entry.photos?.length ?? 1), 0);
+  return {
+    ...discovered,
+    coverage: {
+      ...discovered.coverage,
+      licensedImages: entries.length,
+      licensedPhotos,
+      distinctImageFiles: new Set(entries.flatMap(entry =>
+        (entry.photos ?? [entry]).map(photo => photo.licenseEvidence.fileTitle))).size,
+      withoutPublishedImage: discovered.coverage.evaluatedDestinations - entries.length
+    },
+    entries
+  };
+}
+
 export async function publishImageRegistry(directory, catalog, registry) {
   const result = applyImageRegistry(catalog.index, catalog.shards, registry);
   if (result.rejected || result.missingDestinations) throw Error('Image registry no longer matches the current destination catalog');
@@ -118,7 +170,7 @@ export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, 
   const reviewed = reviewMatchedPhotos(locations.matches, subjects.subjects, pages, categories);
   const outcomes = [...locations.outcomes, ...reviewed.outcomes].sort((left, right) => left.id.localeCompare(right.id));
   const timestamps = [subjects.fetchedAt, ...[...pages.values()].map(page => page.retrievedAt)].sort();
-  const registry = { schemaVersion: 1, policy: IMAGE_REVIEW_POLICY,
+  const discovered = { schemaVersion: 1, policy: IMAGE_REVIEW_POLICY,
     discoveredAt: timestamps[timestamps.length - 1],
     catalogFingerprint: createHash('sha256').update(catalog.places.map(destinationFingerprint).sort().join('\n')).digest('hex'),
     sources: { subjectRegistry: subjects.source, subjectRegistryFetchedAt: subjects.fetchedAt,
@@ -133,6 +185,8 @@ export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, 
       withoutPublishedImage: catalog.places.length - reviewed.entries.length },
     verification: 'Automated name, subject-coordinate, and file-license metadata verification; not human visual review.',
     entries: reviewed.entries };
+  const existing = await readImageRegistry(path.join(catalogDirectory, 'image-metadata.json'));
+  const registry = mergeVerifiedRegistries(existing, discovered);
   await saveJson(path.join(cacheDirectory, 'image-metadata.json'), registry);
   await saveJson(path.join(cacheDirectory, 'discovery-results.json'), { policy: registry.policy,
     discoveredAt: registry.discoveredAt, coverage: registry.coverage, outcomes });
