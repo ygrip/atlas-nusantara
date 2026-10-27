@@ -31,7 +31,10 @@
 
   function reset() { scale = 1; panX = 0; panY = 0; }
   function zoom(factor: number) { scale = Math.min(8, Math.max(1, scale * factor)); if (scale === 1) { panX = 0; panY = 0; } }
-  function fill(code: string): string { return ISLAND_GROUP_COLORS[islandGroupOf(code)].light[0]; }
+  function fill(code: string): string {
+    const tones = ISLAND_GROUP_COLORS[islandGroupOf(code)];
+    return `--fill-light: ${tones.light[0]}; --fill-dark: ${tones.dark[0]}`;
+  }
 
   function interaction(node: HTMLDivElement) {
     const pointers = new Map<number, { x: number; y: number }>();
@@ -112,7 +115,7 @@
         {#each geometry.regions as region (region.id)}<path d={region.path} />{/each}
       </g>
       {#each geometry.regions as region (region.id)}
-        <path d={region.path} data-code={region.sourceCode} class:selected={selectedCode === region.sourceCode} style={`--fill: ${fill(region.sourceCode)}`}
+        <path d={region.path} data-code={region.sourceCode} class:selected={selectedCode === region.sourceCode} style={fill(region.sourceCode)}
           role="button" tabindex="0" aria-label={region.name + ' · ' + region.sourceCode}
           onclick={() => onselect(region.sourceCode)}
           onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onselect(region.sourceCode); } }}>
@@ -159,9 +162,10 @@
   .interactive { touch-action: none; cursor: grab; }
   .interactive:active { cursor: grabbing; }
   svg { width: 100%; height: auto; }
-  path { fill: var(--fill, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
+  path { fill: var(--fill-light, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
   .region-depth { pointer-events: none; }
   .region-depth path { fill: #00000030; stroke: none; cursor: default; }
+  :global(:root[data-theme='dark']) path:not(.selected) { fill: var(--fill-dark, #91b89b); }
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
   .overlay-pin { cursor:pointer; }
