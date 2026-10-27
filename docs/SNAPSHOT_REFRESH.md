@@ -4,15 +4,15 @@
 
 | Snapshot | Cron | Capture |
 |---|---|---|
-| BMKG forecasts | `0 */2 * * *` | Every 2 hours; about 10 minutes for 514 points at under 60 requests/minute |
-| BMKG M5+ earthquake archive | `*/15 * * * *` | Every 15 minutes; one archive request |
-| Hazards (`hazards.json`): BMKG CAP, PetaBencana, ANTARA, GDELT, BNPB | Worker `*/5` tick, per-source intervals 5 / 10 / 15 / 30 / 180 min; CI `*/15` with `--due` | See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#per-source-schedule) |
+| BMKG forecasts | `0 */3 * * *` | Every 3 hours; about 10 minutes for 514 points at under 60 requests/minute |
+| BMKG M5+ earthquake archive | `*/25 * * * *` | Every 25 minutes (:00, :25, :50); one archive request |
+| Hazards (`hazards.json`): BMKG CAP, PetaBencana, ANTARA, GDELT, BNPB | Worker `*/5` tick, per-source intervals 5 / 10 / 15 / 30 / 180 min; CI `*/25` with `--due` | See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#per-source-schedule) |
 
 GitHub scheduled runs can be delayed; this is not an emergency-delivery SLA. The forecast job is deliberately outside the request path and does not put 514 provider calls in a visitor request or a short Worker invocation.
 
 ## Enable collection
 
-1. Review BMKG access/attribution terms and the intended GitHub Actions budget. Forecast collection alone uses roughly 120 runner-minutes/day. The 96 daily earthquake job starts and publishing add runner time; measure Actions usage and review private-repository quotas before enabling it.
+1. Review BMKG access/attribution terms and the intended GitHub Actions budget. Forecast collection alone uses roughly 80 runner-minutes/day. The 72 daily earthquake job starts and publishing add runner time; measure Actions usage and review private-repository quotas before enabling it.
 2. Set repository variable **`SNAPSHOT_REFRESH_ENABLED=true`** to allow scheduled collection. Manual workflow dispatch can capture `weather`, `earthquake` or `all` independently.
 3. Successful jobs upload a dated JSON artifact, retained for 7 days. They do not commit generated files, push to Git or redeploy the app on every refresh.
 

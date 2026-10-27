@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { choosePlace } from './layers';
 
 test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en')); });
 
@@ -6,8 +7,8 @@ test('saved city cards show dated weather and survive reload without provider re
   const providers: string[] = [];
   page.on('request', request => { if (/bmkg\.go\.id/.test(request.url())) providers.push(request.url()); });
   await page.goto('/');
-  await page.locator('#province-code').selectOption('32.73');
-  await page.locator('.places-form button').click();
+  await choosePlace(page, 'Kota Bandung');
+  await page.locator('.places-form button[type="submit"]').click();
   const card = page.locator('.weather-place').filter({ hasText: 'Kota Bandung' });
   await expect(card.locator('.current-weather')).toBeVisible();
   await expect(card.locator('.hourly-weather > div')).toHaveCount(4);

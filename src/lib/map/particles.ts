@@ -15,7 +15,7 @@ const FULL_VIEW: ViewRect = { minX: 0, minY: 0, maxX: PLANE_WIDTH, maxY: PLANE_H
 /** Map units per second a particle travels per km/h of wind. */
 const WIND_UNITS_PER_KMH = 0.5;
 /** Seconds between recorded trail samples. Trails are drawn as a smooth sliding window over the samples. */
-const SAMPLE_INTERVAL = 0.1;
+const SAMPLE_INTERVAL = 0.14;
 
 function lerp(from: number, to: number, amount: number): number {
   return from + (to - from) * amount;
@@ -30,7 +30,7 @@ export class WindParticles {
   private readonly random = visualRandom(1980);
   readonly lines: LineSegments;
   private readonly count: number;
-  private readonly trail = 12;
+  private readonly trail = 8;
   /** Recorded samples per particle (x, y) and the ground height under each. */
   private readonly samples: Float32Array;
   private readonly sampleHeights: Float32Array;
@@ -50,8 +50,8 @@ export class WindParticles {
   private sampleClock = 0;
 
   constructor(compact: boolean) {
-    this.count = 3200;
-    if (compact) this.count = 1600;
+    this.count = 900;
+    if (compact) this.count = 450;
     this.samples = new Float32Array(this.count * this.trail * 2);
     this.sampleHeights = new Float32Array(this.count * this.trail);
     this.head = new Float32Array(this.count * 2);
@@ -94,7 +94,7 @@ export class WindParticles {
     this.fieldB = b;
     this.mix = mix;
     // Pre-roll so reduced-motion and first frames already show trails.
-    if (first) for (let step = 0; step < 40; step++) this.step(1 / 30);
+    if (first) for (let step = 0; step < 24; step++) this.step(1 / 30);
   }
 
   private wind(x: number, y: number): [number, number] {
@@ -259,8 +259,8 @@ export class RainStreaks {
   private view: ViewRect = FULL_VIEW;
 
   constructor(compact: boolean) {
-    this.count = 5000;
-    if (compact) this.count = 2200;
+    this.count = 2200;
+    if (compact) this.count = 1000;
     this.drops = new Float32Array(this.count * 3);
     this.strength = new Float32Array(this.count);
     this.positions = new Float32Array(this.count * 6);

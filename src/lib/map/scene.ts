@@ -22,7 +22,7 @@ import { SpaceBackdrop } from './space';
 import { Sea } from './sea';
 import { TerrainSurface } from './terrain-mesh';
 import { CloudLayers } from './clouds';
-import { createPinPoints, pinHeight } from './pins';
+import { createPinPoints, disposePinPoints, pinHeight, PIN_CONTACT_OFFSET, PIN_SPRITE_SIZE } from './pins';
 
 export type { ThemeName } from './themes';
 export interface MapLayers { wind: boolean; weather: boolean; sea: boolean }
@@ -53,8 +53,29 @@ const CLOUD_NOISE_SCALE = 0.011;
 const CLOUD_MID_HEIGHT = (CLOUD_BASE_HEIGHT + CLOUD_TOP_HEIGHT) / 2;
 const CLOUD_HALF_THICKNESS = (CLOUD_TOP_HEIGHT - CLOUD_BASE_HEIGHT) / 2;
 
+/**
+ * The 2D <-> 3D transition runs on one timeline (0 = flat plan view, 1 = the 2.5D world). Going to 3D plays it forward:
+ * the camera tilts first, then the land rises, then the sea spreads in from the coasts. Going to 2D plays it backward:
+ * the sea drains away, the land flattens, then the camera levels out to a top-down view.
+ */
+const MORPH_PLAN_TILT = 0.01;
+const MORPH_TILT_WINDOW: [number, number] = [0, 0.55];
+const MORPH_RELIEF_WINDOW: [number, number] = [0.3, 0.8];
+const MORPH_WATER_WINDOW: [number, number] = [0.5, 1];
+
+/** Eased 0..1 progress of `value` through the [start, end] part of the timeline. */
+export function morphWindow(value: number, window: [number, number]): number {
+  const progress = Math.min(1, Math.max(0, (value - window[0]) / (window[1] - window[0])));
+  return progress * progress * (3 - 2 * progress);
+}
+
+/** Wind and rain particles are advanced at most this often. */
+const PARTICLE_STEP_SECONDS = 1 / 24;
+/** Average lightning flashes per second while a thunderstorm is in the forecast. */
+const LIGHTNING_PER_SECOND = 0.2;
 // Region emphasis written to the palette alpha: how strongly the island-group colour tints the terrain.
 const TINT_BASE = 0.3;
+const TINT_HEAT = 0.82;
 const TINT_DIMMED = 0.15;
 const TINT_HOVER = 0.65;
 const TINT_SELECTED = 1;
@@ -130,6 +151,7 @@ export class AtlasScene {
   private byId = new Map<number, RegionEntry>();
   private openProvince: string | undefined;
   private selectedCode: string | undefined;
+  private heatColors: Record<string, string> | undefined;
   private hoverId = 0;
   private theme: ThemeName = 'light';
   private layers: MapLayers = { wind: true, weather: true, sea: true };
@@ -138,6 +160,14 @@ export class AtlasScene {
   /** Accumulated cloud travel in map units, kept in double precision. */
   private readonly cloudTravel = new Vector2();
   private readonly random = visualRandom(6117);
+  /** Drawing-buffer height in pixels, shared with the pin shader. */
+  private readonly viewportHeight = { value: 1 };
+  private particleClock = 0;
+  /** 0 = flat plan view, 1 = full 2.5D world; see the morph windows above. */
+  private morphValue = 1;
+  private morphAnimation: { from: number; to: number; start: number; duration: number } | undefined;
+  /** Camera tilt to return to when the morph reaches 1. */
+  private morphHomeTilt = HOME_TILT;
   private flash = 0;
   private flashPosition = new Vector3();
   private pointerDown: { x: number; y: number } | undefined;
@@ -212,13 +242,16 @@ export class AtlasScene {
       regionIds: this.baseIndex.texture, detailIds: this.detailIndex.texture, detailBounds: this.detailIndex.bounds, palette: this.paletteTexture
     }, this.compact);
     this.scene.add(this.terrainSurface.mesh);
+    this.applyReliefScale();
+    this.sea.setReveal(morphWindow(this.morphValue, MORPH_WATER_WINDOW));
 
     this.clouds = new CloudLayers(this.shared, colors, this.compact);
-    this.clouds.setVisible(this.layers.weather);
+    this.refreshEffectVisibility();
     this.scene.add(this.clouds.volume, this.clouds.cirrus, this.clouds.veil);
 
     this.borderLines = this.buildBorders(this.provinces, colors.border, 0.85, 0.35);
     this.scene.add(this.borderLines);
+    this.applyReliefScale();
     this.windParticles.attach(this.terrain);
     this.rain.attach(this.terrain);
     this.updatePalette();
@@ -242,6 +275,7 @@ export class AtlasScene {
     if (this.cities.length > 0) {
       this.cityLines = this.buildBorders(this.cities, THEMES[this.theme].cityBorder, 0.55, 0.3);
       this.scene.add(this.cityLines);
+      this.applyReliefScale();
     }
     this.updatePalette();
     const province = this.provinces.find(item => item.code === code);
@@ -256,14 +290,20 @@ export class AtlasScene {
     this.pointProjection = projection;
     if (this.observationPoints) {
       this.scene.remove(this.observationPoints);
-      this.observationPoints.geometry.dispose();
-      (this.observationPoints.material as ShaderMaterial).dispose();
+      disposePinPoints(this.observationPoints);
       this.observationPoints = undefined;
     }
     if (!overlay || overlay.pins.length === 0) { this.invalidate(); return; }
-    this.observationPoints = createPinPoints(overlay, projection, this.terrain, this.shared.time, this.renderer.getPixelRatio());
+    this.observationPoints = createPinPoints(overlay, projection, this.terrain, this.shared.time, this.renderer.getPixelRatio(), this.viewportHeight, () => this.invalidate());
     this.scene.add(this.observationPoints);
+    this.applyReliefScale();
     this.invalidate();
+  }
+
+  /** Province fill colours for a statistics layer; undefined returns to the island-group palette. */
+  setHeatmap(colors: Record<string, string> | undefined): void {
+    this.heatColors = colors;
+    this.updatePalette();
   }
 
   setSelected(code: string | undefined): void {
@@ -292,9 +332,7 @@ export class AtlasScene {
 
   setLayers(layers: MapLayers): void {
     this.layers = layers;
-    this.windParticles.lines.visible = layers.wind;
-    this.rain.lines.visible = layers.weather;
-    this.clouds?.setVisible(layers.weather);
+    this.refreshEffectVisibility();
     this.shared.cloudStrength.value = 0;
     if (layers.weather) this.shared.cloudStrength.value = 1;
     this.invalidate();
@@ -330,6 +368,76 @@ export class AtlasScene {
     if (spherical.phi > 0.2) spherical.phi = 0.01;
     else spherical.phi = HOME_TILT;
     this.flyTo(this.controls.target.clone().add(new Vector3().setFromSpherical(spherical)), this.controls.target.clone(), 520);
+  }
+
+  /**
+   * Plays the 2D <-> 3D transition towards `target` (0 = flat plan view, 1 = 2.5D world) over `duration` ms.
+   * A zero duration, or reduced motion, jumps there at once.
+   */
+  setMorph(target: number, duration: number): void {
+    this.flight = undefined;
+    if (this.morphValue >= 1 && target < 1) this.rememberHomeTilt();
+    if (duration <= 0 || this.reducedMotion) {
+      this.morphAnimation = undefined;
+      this.applyMorph(target);
+      return;
+    }
+    this.morphAnimation = { from: this.morphValue, to: target, start: performance.now(), duration };
+    this.controls.enabled = false;
+    this.start();
+  }
+
+  private rememberHomeTilt(): void {
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const tilt = new Spherical().setFromVector3(offset).phi;
+    if (tilt > 0.2) this.morphHomeTilt = tilt;
+    else this.morphHomeTilt = HOME_TILT;
+  }
+
+  private stepMorph(now: number): void {
+    const animation = this.morphAnimation;
+    if (!animation) return;
+    const progress = Math.min(1, (now - animation.start) / animation.duration);
+    this.applyMorph(animation.from + (animation.to - animation.from) * progress);
+    if (progress < 1) return;
+    this.morphAnimation = undefined;
+    this.controls.enabled = true;
+  }
+
+  /** Poses the camera, relief and sea for one point of the transition timeline. */
+  private applyMorph(value: number): void {
+    this.morphValue = value;
+    const tilt = morphWindow(value, MORPH_TILT_WINDOW);
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const spherical = new Spherical().setFromVector3(offset);
+    spherical.phi = MORPH_PLAN_TILT + (this.morphHomeTilt - MORPH_PLAN_TILT) * tilt;
+    this.camera.position.copy(this.controls.target).add(new Vector3().setFromSpherical(spherical));
+    this.camera.lookAt(this.controls.target);
+    this.applyReliefScale();
+    const water = morphWindow(value, MORPH_WATER_WINDOW);
+    this.sea?.setReveal(water);
+    this.space.setReveal(water);
+    this.refreshEffectVisibility();
+    this.dirty = true;
+    this.start();
+    this.emitZoom();
+  }
+
+  /** Everything that sits on the ground is squashed with it while the land is flat. */
+  private applyReliefScale(): void {
+    const scale = Math.max(0.001, morphWindow(this.morphValue, MORPH_RELIEF_WINDOW));
+    if (this.terrainSurface) this.terrainSurface.mesh.scale.y = scale;
+    if (this.borderLines) this.borderLines.scale.y = scale;
+    if (this.cityLines) this.cityLines.scale.y = scale;
+    if (this.observationPoints) this.observationPoints.scale.y = scale;
+  }
+
+  /** Wind, rain and clouds float at fixed heights, so they only show once the world has fully risen. */
+  private refreshEffectVisibility(): void {
+    const settled = this.morphValue >= 1;
+    this.windParticles.lines.visible = this.layers.wind && settled;
+    this.rain.lines.visible = this.layers.weather && settled;
+    this.clouds?.setVisible(this.layers.weather && settled);
   }
 
   resetNorth(): void {
@@ -442,6 +550,11 @@ export class AtlasScene {
       const tones = ISLAND_GROUP_COLORS[islandGroupOf(region.code)][this.theme];
       let color = variant(new Color(tones[0]), region.id);
       let tint = TINT_BASE;
+      const heat = region.level === 'province' ? this.heatColors?.[region.code] : undefined;
+      if (heat) {
+        color = new Color(heat);
+        tint = TINT_HEAT;
+      }
       if (this.openProvince && region.level === 'province' && region.code !== this.openProvince) {
         const hsl = { h: 0, s: 0, l: 0 };
         color.getHSL(hsl);
@@ -555,7 +668,7 @@ export class AtlasScene {
       this.pointerDown = undefined;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
       const pin = this.pickPin(event.clientX, event.clientY);
-      if (pin) { this.callbacks.onfeature?.(pin, event.clientX, event.clientY); this.callbacks.onpinclick?.(pin); return; }
+      if (pin) { this.callbacks.onpinclick?.(pin); return; }
       const region = this.pick(event.clientX, event.clientY);
       if (region) this.callbacks.onselect(region.code);
     });
@@ -576,7 +689,8 @@ export class AtlasScene {
       const screen = world(point.x, point.y, pinHeight(this.terrain, point.x, point.y)).project(this.camera);
       if (screen.z < -1 || screen.z > 1) continue;
       const x = bounds.left + (screen.x + 1) * bounds.width / 2;
-      const y = bounds.top + (1 - screen.y) * bounds.height / 2;
+      // The marker is drawn above its ground point, so pick where it appears.
+      const y = bounds.top + (1 - screen.y) * bounds.height / 2 - PIN_CONTACT_OFFSET * PIN_SPRITE_SIZE;
       if (Math.hypot(clientX - x, clientY - y) <= PICK_RADIUS_PIXELS) return pin;
     }
     return undefined;
@@ -660,8 +774,17 @@ export class AtlasScene {
     this.cloudTravel.y += wind.v * delta * CLOUD_UNITS_PER_KMH;
     this.shared.cloudDrift.value.set(this.cloudTravel.x * CLOUD_NOISE_SCALE, this.cloudTravel.y * CLOUD_NOISE_SCALE);
     this.updateLightning(delta);
-    if (this.layers.wind) this.windParticles.step(delta);
-    if (this.layers.weather) this.rain.step(delta);
+    this.stepParticles(delta);
+  }
+
+  /** Wind and rain move at a steady 24 steps per second at most; on faster displays they reuse the last step. */
+  private stepParticles(delta: number): void {
+    this.particleClock += delta;
+    if (this.particleClock < PARTICLE_STEP_SECONDS) return;
+    const elapsed = this.particleClock;
+    this.particleClock = 0;
+    if (this.windParticles.lines.visible) this.windParticles.step(elapsed);
+    if (this.rain.lines.visible) this.rain.step(elapsed);
   }
 
   /** Keeps wind and rain particles inside the visible part of the map so their density is steady at every zoom. */
@@ -695,7 +818,7 @@ export class AtlasScene {
       + sampleChannel(this.fieldB, this.fieldB.cloud, x, y) * this.weatherMix;
     let density = 0;
     const deckDistance = (this.camera.position.y - CLOUD_MID_HEIGHT) / (CLOUD_HALF_THICKNESS * 0.9);
-    if (this.layers.weather && !this.reducedMotion) density = Math.exp(-(deckDistance * deckDistance)) * coverage * 0.9;
+    if (this.layers.weather && this.morphValue >= 1 && !this.reducedMotion) density = Math.exp(-(deckDistance * deckDistance)) * coverage * 0.9;
     this.clouds.setVeilDensity(density);
   }
 
@@ -708,6 +831,7 @@ export class AtlasScene {
     const animating = !this.reducedMotion;
     if (animating) this.elapsed += delta;
     this.stepFlight(now);
+    this.stepMorph(now);
     if (this.controls.update()) this.dirty = true;
     this.handlePendingHover();
     this.updateParticleView();
@@ -731,8 +855,8 @@ export class AtlasScene {
   private updateLightning(delta: number): void {
     this.flash *= Math.exp(-delta * 9);
     let storms: { x: number; y: number }[] = [];
-    if (this.layers.weather) storms = this.fieldA.thunder;
-    if (storms.length === 0 || this.random() > delta * 0.6) return;
+    if (this.layers.weather && this.morphValue >= 1) storms = this.fieldA.thunder;
+    if (storms.length === 0 || this.random() > delta * LIGHTNING_PER_SECOND) return;
     const storm = storms[Math.floor(this.random() * storms.length)];
     this.flashPosition.copy(world(storm.x, storm.y, CLOUD_BASE_HEIGHT));
     this.flash = 1;
@@ -742,6 +866,7 @@ export class AtlasScene {
     const width = Math.max(1, this.container.clientWidth);
     const height = Math.max(1, this.container.clientHeight);
     this.renderer.setSize(width, height, false);
+    this.viewportHeight.value = Math.max(1, this.renderer.domElement.height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.dirty = true;

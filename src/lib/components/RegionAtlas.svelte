@@ -5,18 +5,30 @@
   import { upgradeRegionCode } from '$lib/atlas/code-upgrades';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import type { GeometryPackage } from '$lib/geo/types';
-  import { provinceAtPosition, DEFAULT_DESTINATION_PROVINCE } from '$lib/geo/province-location';
-  import { requestStartupLocation, type StartupPosition } from '$lib/pwa/startup-location';
   import { isProvinceCode } from '$lib/data/destination-index';
   import ClayMap from './ClayMap.svelte';
   import DestinationsPanel from './DestinationsPanel.svelte';
+  import DirectoryTable, { type DirectoryColumn, type DirectoryRow } from './DirectoryTable.svelte';
+  import RegionDetails from './RegionDetails.svelte';
+  import DataExport from './DataExport.svelte';
+  import { pinDataset, regionDataset, type ExportRegion } from '$lib/export/build-dataset';
+  import type { ExportDataset } from '$lib/export/map-export';
+  import { formatDegrees, regionCoordinatesByCode } from '$lib/atlas/region-coordinates';
+  import type { ForecastSnapshot } from '$lib/map/weather';
+  import { forecastCoordinates, summariseWeather } from '$lib/map/weather-summary';
   import { loadDestinationIndex, loadDestinations, destinationOverlay, type DestinationCatalog, type DestinationIndex } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
   import { loadHazards, type HazardSnapshot } from '$lib/data/hazards';
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
-  export let layer = 'destinations';
+  import { latestYear, loadPopulation, type PopulationData } from '$lib/data/population';
+  import { populationHeatmap } from '$lib/data/population-heatmap';
+  export let layer = 'warning';
+  /** Year shown by the population heat map; the newest year when not set. */
+  export let populationYear: number | undefined = undefined;
+  let populationData: PopulationData | undefined;
+  $: if (layer === 'population' && !populationData) void ensurePopulation();
+  $: heatmap = layer === 'population' && populationData ? populationHeatmap(populationData, populationYear ?? latestYear(populationData)) : undefined;
   let initializingSelection = true;
-  let startupLocationStatus: 'explicit' | 'matched' | 'fallback' | undefined;
   let selectionVersion = 0;
   let earthquakeArchive: EarthquakeArchive | undefined;
   let hazardSnapshot: HazardSnapshot | undefined;
@@ -65,6 +77,100 @@
     if (province) regions = cities;
   }
   $: filtered = regions.filter(region => (region.name + ' ' + region.code).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  /** The forecast and chosen time reported by the map, shown in the weather layer's table and details. */
+  let forecast: ForecastSnapshot | undefined;
+  let forecastTime: string | undefined;
+  function handleWeather(next: ForecastSnapshot | undefined, time: string | undefined) { forecast = next; forecastTime = time; }
+  $: showWeather = layer === 'warning' && Boolean(forecast);
+  $: coordinatesByCode = regionCoordinatesByCode(geometry?.regions ?? [], national?.projection);
+  function coordinatesOf(code: string) {
+    return coordinatesByCode.get(code) ?? (forecast ? forecastCoordinates(forecast, code) : undefined);
+  }
+  $: directoryColumns = buildColumns(showWeather);
+  $: directoryRows = buildRows(filtered, showWeather, forecast, forecastTime, coordinatesByCode, city?.code);
+  $: selectedRegion = city ?? province;
+  $: selectedWeather = showWeather && forecast && selectedRegion ? summariseWeather(forecast, selectedRegion.code, forecastTime) : undefined;
+  $: selectedParent = city ? province?.name : undefined;
+
+  function buildColumns(withWeather: boolean): DirectoryColumn[] {
+    if (!withWeather) return [];
+    return [
+      { id: 'weather', label: m.table_weather() },
+      { id: 'lat', label: m.table_latitude(), numeric: true },
+      { id: 'lon', label: m.table_longitude(), numeric: true }
+    ];
+  }
+
+  function buildRows(items: Region[], withWeather: boolean, snapshot: ForecastSnapshot | undefined, time: string | undefined, _coordinates: unknown, selectedCode: string | undefined): DirectoryRow[] {
+    return items.map(region => {
+      const row: DirectoryRow = { id: region.code, code: region.code, name: region.name, ariaLabel: region.name + ' ' + region.code, selected: selectedCode === region.code, cells: {} };
+      if (!withWeather || !snapshot) return row;
+      const summary = summariseWeather(snapshot, region.code, time);
+      if (summary) row.cells.weather = summary.description + ' · ' + summary.temperature + '°C';
+      const coordinates = coordinatesOf(region.code);
+      if (coordinates) {
+        row.cells.lat = formatDegrees(coordinates.lat);
+        row.cells.lon = formatDegrees(coordinates.lon);
+      }
+      return row;
+    });
+  }
+
+  /** The data behind the current layer and map level, for the export dialog. */
+  function buildExportDataset(): ExportDataset | undefined {
+    const definition = OVERLAY_DEFINITIONS.find(item => item.id === layer);
+    let title: string = layer;
+    if (definition) title = definition.label();
+    const generatedAt = new Date().toISOString();
+    if (layer === 'warning') return buildRegionExport(title, generatedAt);
+    if (activeOverlay) return pinDataset(activeOverlay, title, province?.name ?? m.level_national(), generatedAt);
+    return undefined;
+  }
+
+  function buildRegionExport(title: string, generatedAt: string): ExportDataset {
+    const level: ExportRegion['level'] = province ? 'city-regency' : 'province';
+    const items: ExportRegion[] = regions.map(region => ({
+      code: region.code, name: region.name, level, parentCode: province?.code, parentName: province?.name
+    }));
+    return regionDataset({
+      layer, title, scope: province?.name ?? m.level_national(), generatedAt, regions: items,
+      coordinates: coordinatesOf, forecast, forecastTime
+    });
+  }
+
+  function openRegionRow(code: string) {
+    const region = regions.find(item => item.code === code);
+    if (region) void selectRegion(region);
+  }
+
+  function pinCoordinates(pin: { lat: number; lon: number }) {
+    return { lat: formatDegrees(pin.lat), lon: formatDegrees(pin.lon) };
+  }
+
+  const mountainColumns = (): DirectoryColumn[] => [
+    { id: 'status', label: m.table_status() },
+    { id: 'lat', label: m.table_latitude(), numeric: true },
+    { id: 'lon', label: m.table_longitude(), numeric: true }
+  ];
+
+  function mountainStatus(category: string | undefined): string {
+    if (category === 'active') return m.mountain_active();
+    if (category === 'potential') return m.mountain_potential();
+    return m.mountain_other();
+  }
+
+  function buildMountainRows(pins: typeof mountainMatches): DirectoryRow[] {
+    return pins.map(pin => ({
+      id: pin.id, name: pin.label, ariaLabel: pin.label,
+      cells: { status: mountainStatus(pin.category), ...pinCoordinates(pin) }
+    }));
+  }
+
+  function openMountain(id: string) {
+    const pin = mountainMatches.find(item => item.id === id);
+    if (pin) clayMap?.showMountain(pin);
+  }
+
   let mountainLimit = 80;
   $: mountainMatches = (customOverlay?.id === 'mountains' ? customOverlay.pins : []).filter(pin =>
     (pin.label + ' ' + (pin.description ?? '')).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
@@ -112,32 +218,25 @@
     return code;
   }
 
+  /** The atlas opens on the national view. Only an explicit ?region= link opens a province or city. */
   async function initializeSelection(signal: AbortSignal) {
     const initialVersion = selectionVersion;
     const requested = requestedRegionCode();
     const geometryPromise = loadNational(signal);
-    let positionPromise: Promise<StartupPosition | undefined> = Promise.resolve(undefined);
-    if (!requested) positionPromise = requestStartupLocation(navigator.geolocation, signal);
     try {
       const payload = await loadRegions(ADMIN_DATA_PATH + '/provinces.json', signal);
       if (signal.aborted) return;
       provinces = payload.regions;
       loading = false;
-      const [geometry, position] = await Promise.all([geometryPromise, positionPromise]);
-      if (signal.aborted || selectionVersion !== initialVersion) return;
-      let code = DEFAULT_DESTINATION_PROVINCE;
-      let reason: 'explicit' | 'matched' | 'fallback' = 'fallback';
-      if (requested) { code = requested.split('.')[0]; reason = 'explicit'; }
-      else if (position) {
-        const located = provinceAtPosition(geometry, position.latitude, position.longitude);
-        if (located) { code = located; reason = 'matched'; }
-      }
+      await geometryPromise;
+      if (signal.aborted || selectionVersion !== initialVersion || !requested) return;
+      const code = requested.split('.')[0];
       const target = provinces.find(item => item.code === code);
-      if (!target) throw Error('Initial destination province is unavailable');
+      if (!target) throw Error('Requested province is unavailable');
       const expectedVersion = selectionVersion + 1;
-      await selectRegion(target, reason);
+      await selectRegion(target);
       if (signal.aborted || selectionVersion !== expectedVersion) return;
-      if (requested?.includes('.')) {
+      if (requested.includes('.')) {
         await loadCityDirectory(code);
         if (signal.aborted || selectionVersion !== expectedVersion) return;
         city = cities.find(item => item.code === requested);
@@ -179,9 +278,8 @@
     if (request === generation) detail = payload;
   }
 
-  async function selectRegion(region: Region, reason?: 'explicit' | 'matched' | 'fallback') {
+  async function selectRegion(region: Region) {
     selectionVersion++;
-    startupLocationStatus = reason;
     initializingSelection = false;
     if (province) { city = region; updateUrl(); return; }
     controller?.abort();
@@ -233,7 +331,6 @@
 
   function returnToNational() {
     selectionVersion++;
-    startupLocationStatus = undefined;
     initializingSelection = false;
     controller?.abort(); province = undefined; city = undefined; query = ''; failed = false; loading = false;
     updateUrl();
@@ -279,7 +376,6 @@
     } else {
       expectedVersion = ++selectionVersion;
       initializingSelection = false;
-      startupLocationStatus = undefined;
     }
     if (code.includes('.')) {
       await loadCityDirectory(provinceCode);
@@ -291,7 +387,6 @@
   function showProvinceOnly() {
     selectionVersion++;
     initializingSelection = false;
-    startupLocationStatus = undefined;
     city = undefined;
     updateUrl();
   }
@@ -330,13 +425,20 @@
     }
   }
 
+  async function ensurePopulation() {
+    try {
+      populationData = await loadPopulation();
+    } catch (error) {
+      console.warn('Population data unavailable', error);
+    }
+  }
+
   function selectMapCity(code: string) {
     if (layer !== 'destinations') selectCity(code);
   }
 
   function selectCity(code: string) {
     selectionVersion++;
-    startupLocationStatus = undefined;
     const region = cities.find(item => item.code === code);
     if (!region) return;
     city = region;
@@ -352,11 +454,9 @@
   </nav>
   <div class="atlas-body">
     <div class="atlas-view">
-      {#if initializingSelection}<p class="edition-note" role="status">{m.destination_locating()}</p>
-      {:else if startupLocationStatus === 'fallback'}<p class="edition-note" role="status">{m.destination_location_fallback()}</p>
-      {:else if startupLocationStatus === 'matched'}<p class="edition-note" role="status">{m.destination_location_matched()}</p>{/if}
       <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
+        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} geometryUnavailable={geometryLoaded && !national} />
+      <div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>
       {#if layer === 'mountains'}
         <p class="edition-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
       {/if}
@@ -372,14 +472,10 @@
           <p class="directory-count" aria-live="polite">{mountainMatches.length.toLocaleString()} · {m.layer_mountains()}</p>
           {#if mountainMatches.length === 0}<p role="status">{m.no_results()}</p>
           {:else}
-            <ul class="region-list mountain-list">
-              {#each mountainMatches.slice(0, mountainLimit) as pin (pin.id)}
-                <li><button type="button" onclick={() => clayMap?.showMountain(pin)}>
-                  <span>{pin.label}</span>
-                  <small>{pin.category === 'active' ? m.mountain_active() : pin.category === 'potential' ? m.mountain_potential() : m.mountain_other()}</small>
-                </button></li>
-              {/each}
-            </ul>
+            <div class="mountain-list">
+              <DirectoryTable label={m.layer_mountains()} nameHeader={m.table_name()} detailLabel={m.region_detail()} columns={mountainColumns()}
+                rows={buildMountainRows(mountainMatches.slice(0, mountainLimit))} onopen={openMountain} />
+            </div>
             {#if mountainLimit < mountainMatches.length}
               <button class="mountain-more" type="button" onclick={() => mountainLimit += 80}>{m.mountain_more()}</button>
             {/if}
@@ -395,82 +491,14 @@
       {:else if failed}<p role="alert">{m.data_unavailable()}</p>
       {:else if filtered.length === 0}<p role="status">{m.no_results()}</p>
       {:else}
-        <!-- Scrollable table stays keyboard reachable and keeps region codes aligned. -->
-        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-        <div class="region-table-scroll" tabindex="0" role="region" aria-label={province ? m.level_city() : m.level_province()}>
-          <table class="region-table">
-            <thead>
-              <tr><th scope="col">{m.table_code()}</th><th scope="col">{province ? m.level_city() : m.level_province()}</th><th scope="col"><span class="visually-hidden">{m.region_detail()}</span></th></tr>
-            </thead>
-            <tbody>
-              {#each filtered as region (region.code)}
-                <tr class:selected={city?.code === region.code}>
-                  <td class="region-code">{region.code}</td>
-                  <th scope="row"><button type="button" class="region-row-action" aria-label={region.name + ' ' + region.code} onclick={() => selectRegion(region)} aria-pressed={city?.code === region.code}>
-                    <span>{region.name}</span>
-                  </button></th>
-                  <td class="region-row-state">{#if city?.code === region.code}<span aria-hidden="true">✓</span><span class="visually-hidden">{m.region_detail()}</span>{:else}<span aria-hidden="true">›</span>{/if}</td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
+        <DirectoryTable label={province ? m.level_city() : m.level_province()} codeHeader={m.table_code()} nameHeader={province ? m.level_city() : m.level_province()}
+          detailLabel={m.region_detail()} columns={directoryColumns} rows={directoryRows} onopen={openRegionRow} />
       {/if}
-      {#if city}<div class="selected-region" role="status"><h3>{m.region_detail()}</h3><strong>{city.name}</strong><br />{city.code} · {m.level_city()}<br />{province?.name}</div>{/if}
+      {#if selectedRegion}
+        <RegionDetails name={selectedRegion.name} code={selectedRegion.code} levelLabel={city ? m.level_city() : m.level_province()} parentName={selectedParent}
+          coordinates={showWeather ? coordinatesOf(selectedRegion.code) : undefined} weather={selectedWeather} />
+      {/if}
       {/if}
     </div>
   </div>
 </section>
-
-<style>
-  .region-table-scroll {
-    max-height: min(460px, 58vh);
-    overflow: auto;
-    margin-top: 12px;
-    padding: 0 8px 8px;
-    border-radius: 18px;
-    background: var(--panel);
-    box-shadow: var(--clay-pressed);
-    overscroll-behavior: contain;
-  }
-  .region-table { width: 100%; min-width: 340px; border-collapse: separate; border-spacing: 0 5px; font-size: .82rem; }
-  .region-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    padding: 10px 12px;
-    background: var(--panel);
-    color: var(--muted);
-    text-align: left;
-    font-size: .68rem;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-  }
-  .region-table tbody td, .region-table tbody th {
-    padding: 9px 12px;
-    background: var(--surface);
-    text-align: left;
-    font-weight: 500;
-  }
-  .region-table tbody tr:nth-child(even) td, .region-table tbody tr:nth-child(even) th {
-    background: color-mix(in srgb, var(--surface) 76%, var(--page));
-  }
-  .region-table tbody tr > :first-child { border-radius: 12px 0 0 12px; }
-  .region-table tbody tr > :last-child { border-radius: 0 12px 12px 0; }
-  .region-table tbody tr.selected td, .region-table tbody tr.selected th {
-    background: color-mix(in srgb, var(--mint) 74%, var(--surface));
-  }
-  .region-table tbody tr.selected > :first-child { box-shadow: inset 3px 0 var(--accent); }
-  .region-code { width: 72px; color: var(--muted); font: 700 .75rem ui-monospace, SFMono-Regular, monospace; font-variant-numeric: tabular-nums; }
-  .region-row-action { display: flex; width: 100%; min-height: 38px; align-items: center; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; font: inherit; font-weight: 750; cursor: pointer; }
-  .region-row-action:hover { color: var(--accent); }
-  .region-row-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-  .region-row-state { width: 38px; color: var(--accent); text-align: center !important; font-size: 1.1rem; font-weight: 900 !important; }
-  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
-  @media (max-width: 560px) {
-    .region-table-scroll { max-height: min(400px, 52vh); margin-inline: -3px; }
-    .region-table { min-width: 300px; }
-    .region-table tbody td, .region-table tbody th { padding-inline: 9px; }
-    .region-code { width: 62px; }
-  }
-</style>

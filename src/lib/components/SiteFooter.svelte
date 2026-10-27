@@ -1,13 +1,14 @@
 <script lang="ts">
   import { m } from '$lib/paraglide/messages.js';
+  import ClayCompass from './ClayCompass.svelte';
   import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database } from 'lucide-svelte';
 </script>
 
 <footer class="site-footer clay-card">
-  <div class="footer-blobs" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="footer-compass" aria-hidden="true"><ClayCompass /></div>
   <div class="footer-top">
     <div class="footer-about">
-      <a class="footer-brand" href="#top"><img src="/brand/indonesia-clay.webp" alt="" width="40" height="40" /><strong>Nusantara</strong></a>
+      <a class="footer-brand" href="#top"><img src="/brand/indonesia-clay.webp" alt="" width="40" height="40" /><strong>Atlas Nusantara</strong></a>
       <p>{m.atlas_intro()}</p>
       <a class="footer-maker" href="https://readynaz.com" target="_blank" rel="noopener noreferrer">{m.footer_maker()} <ExternalLink size={14} aria-hidden="true" /></a>
     </div>

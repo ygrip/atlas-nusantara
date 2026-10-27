@@ -17,7 +17,9 @@ for (const [name, change] of [
   ['unsafe colour', overlay => { overlay.color = 'url(https://example.com)'; }],
   ['missing timestamp', overlay => { overlay.fetchedAt = ''; }],
   ['unknown symbol', overlay => { overlay.symbol = 'script'; }],
-  ['unknown mountain classification', overlay => { overlay.pins[0].category = 'inactive'; }]
+  ['unknown mountain classification', overlay => { overlay.pins[0].category = 'inactive'; }],
+  ['insecure pin source link', overlay => { overlay.pins[0].sourceUrl = 'http://example.com/record'; }],
+  ['script pin source link', overlay => { overlay.pins[0].sourceUrl = 'javascript:alert(1)'; }]
 ]) {
   test(`overlay contract rejects ${name}`, () => {
     const overlay = fixture();
@@ -25,3 +27,9 @@ for (const [name, change] of [
     assert.equal(validatePointOverlay(overlay), false);
   });
 }
+
+test('overlay contract accepts an https pin source link', () => {
+  const overlay = fixture();
+  overlay.pins[0].sourceUrl = 'https://example.com/record';
+  assert.equal(validatePointOverlay(overlay), true);
+});

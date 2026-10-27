@@ -1,9 +1,12 @@
 import { PLANE_HEIGHT, PLANE_WIDTH } from './weather';
 
-/** Vertical exaggeration: Puncak Jaya (~4,400 m in the 1′ grid) rises ~15 map units on a 1,000-unit-wide map. */
-export const METRES_TO_UNITS = 15 / 4400;
-/** Land sits on a low clay plinth above the sea plane so coasts read clearly. */
-export const LAND_BASE = 1.2;
+/** The 1,000-unit-wide map spans about 5,370 km at the equator, so one metre is this many map units at true scale. */
+const TRUE_UNITS_PER_METRE = 1 / 5370;
+/** Light vertical exaggeration so relief reads on a tilted map without looking like a cartoon: Puncak Jaya (~4,400 m) rises ~3.3 units. */
+export const RELIEF_EXAGGERATION = 4;
+export const METRES_TO_UNITS = TRUE_UNITS_PER_METRE * RELIEF_EXAGGERATION;
+/** Land sits on a thin clay plinth above the sea plane so coasts read clearly. */
+export const LAND_BASE = 0.6;
 export const SEA_FLOOR = -2.5;
 
 /**
@@ -63,8 +66,8 @@ export class TerrainModel {
   }
 }
 
-/** Extra slope applied only to shading so ridges read clearly even though the mesh is already exaggerated. */
-const SHADING_EXAGGERATION = 2;
+/** Extra slope applied only to shading, so ridges still read clearly on the gently exaggerated mesh. */
+const SHADING_EXAGGERATION = 8;
 const CAVITY_BLUR_RADIUS = 10;
 const CAVITY_RANGE_METRES = 400;
 

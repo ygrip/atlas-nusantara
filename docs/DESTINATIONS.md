@@ -13,7 +13,7 @@ Destination browsing has **no destination API, scheduled crawler, server-side qu
 - `static/data/destinations/national.json`: the full Indonesia aggregate, with all 18,596 records and the same 241 credited images. It is available for explicit download and is not fetched on startup.
 - `static/data/destinations/image-metadata.json`: image-verification evidence for offline maintenance and audit.
 
-The map starts on the Destinations layer. With browser permission, a device location is matched locally against the pinned province polygons; only that province's destination shard is fetched. Overseas, denied, unavailable, unanswered (five seconds), or unmappable locations fall back to Jakarta (`31`). A valid province/city URL takes priority. A late location response cannot override a province the user already selected. Coordinates are neither sent to our servers nor saved by startup selection.
+The map opens on the Weather layer and the national view. Choose Destinations from the layer popup (or open `/?layer=destinations`) to see the national destination summary; pick a province to fetch only that province's static shard. A valid `?region=` province/city URL opens that region. No device location is requested at startup.
 
 Each province has a browser-only table: search by name, district or ID; filter category, district or photo availability; sort columns; and paginate through 10, 25 or 50 rows. These controls do not make new data requests. Switching province fetches its static JSON; no national aggregate or live provider request is needed.
 

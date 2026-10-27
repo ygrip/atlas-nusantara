@@ -6,6 +6,8 @@
   import type { Landmark, DestinationIndex } from '$lib/data/destinations';
   import { filterDestinations, paginateDestinations, sortDestinations, type DestinationImageFilter, type DestinationSortDirection, type DestinationSortKey } from '$lib/data/destination-table';
   import DestinationImage from './DestinationImage.svelte';
+  import PlacePicker from './PlacePicker.svelte';
+  import type { PlaceOption } from '$lib/atlas/place-search';
 
   let { landmarks, index, loading = false, failed = false, provinces, provinceCode, onprovince }: {
     landmarks: Landmark[]; index?: DestinationIndex; loading?: boolean; failed?: boolean;
@@ -59,9 +61,11 @@
     return sortDirection;
   }
 
-  function chooseProvince(event: Event) {
-    const code = (event.currentTarget as HTMLSelectElement).value;
-    if (code) onprovince(code);
+  const provinceOptions = $derived<PlaceOption[]>(provinces.map(item => ({ code: item.code, name: item.name, level: 'province' })));
+
+  /** Under each province name in the popup: how many places the catalogue holds for it. */
+  function placeCount(option: PlaceOption): string {
+    return m.layer_destinations() + ' · ' + (totals.get(option.code) ?? '—');
   }
 
   function changePageSize(event: Event) {
@@ -74,20 +78,14 @@
     <div><span class="destination-eyebrow"><MapPin size={13} /> {m.layer_destinations()}</span><h3>{region?.name ?? m.destination_select_province()}</h3></div>
     <span class="destination-total">{total ?? '—'}</span>
   </header>
-  <label class="province-select-label" for="destination-province">{m.destination_select_province()}</label>
-  <select id="destination-province" class="destination-select" value={provinceCode ?? ''} onchange={chooseProvince}>
-    <option value="" disabled>{m.destination_select_province()}</option>
-    {#each provinces as province (province.code)}<option value={province.code}>{province.name} · {totals.get(province.code) ?? '—'}</option>{/each}
-  </select>
+  <div class="province-field">
+    <span class="province-select-label">{m.destination_select_province()}</span>
+    <PlacePicker options={provinceOptions} value={provinceCode ?? ''} onchange={onprovince} title={m.destination_select_province()} detail={placeCount} />
+  </div>
   {#if loading}<p role="status">{m.loading_data()}</p>
   {:else if failed}<p role="alert">{m.data_unavailable()}</p>
   {:else if !provinceCode}
     <p class="destination-hint">{m.destination_click_province()}</p>
-    <div class="province-picker">
-      {#each provinces as province (province.code)}
-        <button type="button" onclick={() => onprovince(province.code)}>{province.name}<small>{totals.get(province.code) ?? '—'}</small></button>
-      {/each}
-    </div>
   {:else}
     <div class="destination-filters">
       <label class="destination-search"><Search size={15} aria-hidden="true" /><input type="search" bind:value={query} placeholder={m.destination_search_fields()} aria-label={m.destination_search_fields()} /></label>
@@ -121,7 +119,7 @@
         <label>{m.destination_page_size()} <select value={pageSize} onchange={changePageSize}><option value="10">10</option><option value="25">25</option><option value="50">50</option></select></label>
       </div>
       <!-- svelte-ignore a11y_no_noninteractive_tabindex (keyboard users must be able to focus and horizontally scroll this table region) -->
-      <div class="destination-table-scroll" tabindex="0" role="region" aria-label={m.layer_destinations()}>
+      <div class="destination-table-scroll scroll-area" tabindex="0" role="region" aria-label={m.layer_destinations()}>
         <table class="destination-table" aria-label={m.layer_destinations() + ' · ' + (region?.name ?? m.destination_select_province())}>
           <thead><tr>
             <th scope="col">{m.destination_filter_image()}</th>
@@ -170,15 +168,18 @@
   .destination-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; font-weight: 800; color: var(--muted); }
   .destination-total { padding: 6px 10px; border-radius: 14px; background: var(--surface); font-weight: 850; box-shadow: inset 0 1px 0 var(--clay-highlight); }
   .destination-hint, .destination-note { color: var(--muted); font-size: .78rem; line-height: 1.5; margin: 0; }
+  .province-field { display: grid; gap: 5px; min-width: 0; }
   .province-select-label, .filter-row label, .table-toolbar label { display: grid; gap: 5px; color: var(--muted); font-size: .74rem; font-weight: 750; }
-  .destination-select, .filter-row select, .table-toolbar select { min-width: 0; max-width: 100%; min-height: 44px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); font: inherit; }
-  .province-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 7px; max-height: 400px; overflow-y: auto; }
-  .province-picker button { min-height: 44px; text-align: left; display: flex; justify-content: space-between; gap: 6px; align-items: center; padding: 9px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: inherit; font-weight: 750; font-size: .77rem; }
-  .province-picker small { color: var(--muted); }
+  .filter-row select, .table-toolbar select { min-width: 0; max-width: 100%; min-height: 44px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); font: inherit; }
   .destination-filters { display: grid; gap: 8px; }
-  .destination-search { display: flex; align-items: center; gap: 7px; padding: 0 10px; border: 1px solid var(--border); border-radius: 13px; background: var(--surface); }
-  .destination-search input { width: 100%; min-width: 0; padding: 9px 0; border: 0; background: transparent; color: var(--text); }
+  /* The input is the whole control: the shell draws the border, so the global input box and its 480px cap must not apply inside it. */
+  .destination-search { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 48px; margin: 0; padding: 0 14px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--clay-pressed); color: var(--muted); }
+  .destination-search:focus-within { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+  .destination-search input { flex: 1 1 auto; width: auto; max-width: none; min-width: 0; min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; }
+  .destination-search input:focus, .destination-search input:focus-visible { outline: none; }
   .filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .filter-row select, .table-toolbar select { width: 100%; min-width: 0; max-width: 100%; }
+  .table-toolbar select { width: auto; min-width: 88px; }
   .table-toolbar, .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .destination-table-scroll { min-width: 0; max-width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
   .destination-table-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -198,5 +199,5 @@
   .pagination button:disabled { opacity: .48; cursor: not-allowed; }
   .pagination span { color: var(--muted); font-size: .78rem; }
   .destination-note { border-top: 1px solid var(--border); padding-top: 10px; }
-  @media (max-width: 560px) { .province-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-row { grid-template-columns: 1fr; } .table-toolbar { align-items: end; } }
+  @media (max-width: 560px) { .filter-row { grid-template-columns: 1fr; } .table-toolbar { align-items: end; } }
 </style>

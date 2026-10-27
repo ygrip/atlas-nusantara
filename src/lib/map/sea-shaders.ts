@@ -39,6 +39,7 @@ export function seaFragment(): string {
   uniform vec3 foamColor;
   uniform vec3 haloColor;
   uniform float flash;
+  uniform float reveal;
   varying vec3 vWorld;
   varying vec3 vBaseNormal;
   varying float vDepth;
@@ -165,7 +166,10 @@ export function seaFragment(): string {
     color = mix(color, haloColor * 1.2, smoothstep(0.93, 1.0, vEdge));
     color = applyFog(color, vDepth);
     color += vec3(0.85, 0.9, 1.0) * flash * 0.05;
-    gl_FragColor = vec4(color, 1.0);
+    // Transition: water first appears along the coasts and spreads out to open sea as reveal grows.
+    float farFromCoast = 1.0 - clamp(coastNear * 3.0, 0.0, 1.0);
+    float tide = clamp(reveal * 2.2 - farFromCoast * 1.2, 0.0, 1.0) * smoothstep(0.0, 0.15, reveal);
+    gl_FragColor = vec4(color, tide);
     #include <colorspace_fragment>
   }
 `;

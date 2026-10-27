@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openProvinceDetails } from './layers';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -45,6 +46,7 @@ for (const theme of ['light', 'dark']) {
       expect(parseFloat(await summary.evaluate(el => getComputedStyle(el).paddingLeft))).toBeGreaterThanOrEqual(18);
       await expect(page.locator('.hero-copy')).not.toContainText('Not an emergency alert service');
       expect(await page.locator('.hero-art img').evaluate(el => el.getAnimations().length)).toBe(0);
+      await openProvinceDetails(page);
       const active = page.locator('#provinces tr.active-region');
       await expect(active).toHaveCount(1);
       await expect(active.locator('.selected-marker')).toBeVisible();
@@ -60,7 +62,6 @@ for (const theme of ['light', 'dark']) {
 
 test('region directory uses table rows and keeps selection while filtering', async ({ page }) => {
   await page.goto('/?region=35');
-  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   const table = page.locator('.region-table');
   await expect(table.locator('tbody tr')).toHaveCount(38);
   await page.locator('#region-search').fill('Ponorogo');

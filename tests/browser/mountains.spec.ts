@@ -1,22 +1,43 @@
 import { expect, test } from '@playwright/test';
+import { chooseLayer } from './layers';
 
-test('mountain directory and keyboard pins open details without replacing disaster layers', async ({ page }) => {
+test('mountain directory and keyboard pins open a detail popup without replacing disaster layers', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
   await page.route('**/w/api.php?**', route => route.fulfill({
     status: 200, contentType: 'application/json', body: '{"query":{"pages":{}}}'
   }));
   await page.goto('/');
-  await page.locator('.layer-pills button').filter({ hasText: 'Mountains' }).click();
+  await chooseLayer(page, 'Mountains');
+  await expect(page).toHaveURL(/layer=mountains/);
   await expect(page.locator('.mountain-list button').first()).toBeVisible();
   await page.locator('.mountain-list button').first().click();
-  await expect(page.locator('.mountain-detail')).toBeVisible();
-  await expect(page.locator('.mountain-detail')).toContainText('not a live safety alert');
+  const popup = page.locator('dialog.map-dialog[open]');
+  await expect(popup.locator('.mountain-detail')).toContainText('not a live safety alert');
+  await expect(popup.getByRole('link', { name: 'Open source' })).toHaveAttribute('href', /geoservices\.big\.go\.id/);
+  await expect(popup.getByRole('button', { name: 'Share' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(popup).toHaveCount(0);
   await page.getByRole('button', { name: '2D', exact: true }).click();
   const pin = page.locator('.overlay-pin').first();
   await pin.focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('.mountain-detail')).toBeVisible();
-  await page.locator('.layer-pills button').filter({ hasText: 'Disaster reports' }).click();
+  await expect(popup.locator('.mountain-detail')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await chooseLayer(page, 'Disaster reports');
   await expect(page.locator('.mountain-detail')).toHaveCount(0);
-  await expect(page.locator('.layer-pills button').filter({ hasText: 'Weather hazards' })).toBeVisible();
+  await page.locator('.layer-picker-trigger').click();
+  await expect(page.locator('.layer-option').filter({ hasText: 'Weather hazards' })).toBeVisible();
+});
+
+test('layer picker filters by name or source and defaults to weather', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
+  await page.goto('/');
+  await expect(page.locator('.layer-picker-trigger')).toContainText('Weather');
+  await page.locator('.layer-picker-trigger').click();
+  const dialog = page.locator('dialog.map-dialog[open]');
+  await dialog.getByRole('searchbox').fill('bnpb');
+  await expect(dialog.locator('.layer-option')).toHaveCount(1);
+  await expect(dialog.locator('.layer-option')).toContainText('Disaster reports');
+  await dialog.getByRole('searchbox').fill('zzz');
+  await expect(dialog.getByText('No matching layers.')).toBeVisible();
 });

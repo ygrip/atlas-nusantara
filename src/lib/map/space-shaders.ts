@@ -15,6 +15,8 @@ export const spaceFragment = /* glsl */ `
   uniform vec3 spaceColor;
   uniform vec3 nebulaColor;
   uniform float starBrightness;
+  uniform vec3 paperColor;
+  uniform float reveal;
   uniform vec3 sunDirection;
   uniform vec3 sunColor;
   varying vec3 vDirection;
@@ -50,7 +52,7 @@ export const spaceFragment = /* glsl */ `
     color += stars * (1.0 + band * 1.2) * starBrightness;
     float towardSun = max(dot(direction, normalize(sunDirection)), 0.0);
     color += sunColor * (pow(towardSun, 5.0) * 0.06 + pow(towardSun, 60.0) * 0.3 + smoothstep(0.9993, 0.9998, towardSun) * 1.6);
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(mix(paperColor, color, reveal), 1.0);
     #include <colorspace_fragment>
   }
 `;

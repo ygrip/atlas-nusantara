@@ -2,11 +2,13 @@
   import { onMount } from 'svelte';
   import { m } from '$lib/paraglide/messages.js';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import WarningList from './WarningList.svelte';
   import { activeWarnings, eventColor, eventLabel, EVENT_KINDS, kindLabel, loadHazards, severityColor, type DisasterEvent, type EventKind, type HazardSnapshot, type HazardWarning } from '$lib/data/hazards';
 
   let { kind }: { kind: 'reports' | 'warnings' } = $props();
   let snapshot = $state<HazardSnapshot | undefined>();
   let loading = $state(true);
+  let now = $state(Date.now());
 
   const MAX_VISIBLE = 50;
   let kindFilter = $state<EventKind | 'all'>('all');
@@ -31,7 +33,7 @@
   }
   const warnings = $derived.by((): HazardWarning[] => {
     if (!snapshot) return [];
-    return activeWarnings(snapshot, Date.now());
+    return activeWarnings(snapshot, now);
   });
   const heading = $derived.by(() => {
     if (kind === 'reports') return m.layer_disaster_reports();
@@ -49,7 +51,8 @@
     };
     refresh();
     const timer = setInterval(() => { if (!document.hidden && navigator.onLine) refresh(); }, 15 * 60_000);
-    return () => { active = false; clearInterval(timer); };
+    const clock = setInterval(() => { now = Date.now(); }, 60_000);
+    return () => { active = false; clearInterval(timer); clearInterval(clock); };
   });
 
   function date(value: string) { return new Intl.DateTimeFormat(getLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)); }
@@ -78,7 +81,8 @@
         {/each}
       </div>
       {#if events.length === 0}<p role="status">{m.hazard_none_reports()}</p>{/if}
-      <ol class="hazard-list">
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable list must be focusable so keyboard users can scroll it) -->
+      <ol class="hazard-list scroll-area" tabindex="0" aria-label={heading}>
         {#each events as event (event.id)}
           <li><span class="type-chip" style={`--chip: ${eventColor(event.type)}`}>{eventLabel(event.type)}</span>
             <div>
@@ -90,15 +94,8 @@
         {/each}
       </ol>
     {:else}
-      {#if warnings.length === 0}<p role="status">{m.hazard_none_warnings()}</p>{/if}
-      <ol class="hazard-list">
-        {#each warnings as warning (warning.id)}
-          <li><span class="type-chip" style={`--chip: ${severityColor(warning.severity)}`}>{warning.severity ?? warning.event}</span>
-            <div><strong>{warning.headline}</strong>
-              <p>{warning.areaDescriptions}</p>
-              <time datetime={warning.expires}>{m.hazard_valid_until()} {date(warning.expires)} · <a href={warning.sourceLink} target="_blank" rel="noreferrer">CAP ↗</a></time></div></li>
-        {/each}
-      </ol>
+      {#if warnings.length === 0}<p role="status" class="hazard-none">{m.hazard_none_warnings()}</p>
+      {:else}<WarningList {warnings} {now} />{/if}
     {/if}
     {#if kind === 'reports' && snapshot}
       {#each snapshot.events.sources as eventSource (eventSource.id)}<p class="hazard-attribution">{eventSource.attribution} <a href={eventSource.termsUrl} target="_blank" rel="noopener noreferrer">{eventSource.name} ↗</a></p>{/each}
@@ -112,6 +109,7 @@
   .source-badge { padding: 6px 10px; border-radius: 12px; background: var(--peach); font-size: .75rem; font-weight: 900; white-space: nowrap; }
   .hazard-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; padding: 16px 0; }.hazard-summary strong { font-size: 2rem; }.hazard-summary small { margin-left: auto; color: var(--muted); }
   .hazard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-height: 360px; overflow: auto; list-style: none; margin: 0; padding: 4px; }
+  .hazard-none { padding: 14px 16px; border-radius: 16px; background: var(--panel); }
   li { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 16px; background: var(--panel); min-width: 0; } li strong { font-size: .8rem; display: block; overflow-wrap: anywhere; } li p { font-size: .75rem; margin-top: 4px; overflow-wrap: anywhere; }
   time { display: block; font-size: .72rem; color: var(--muted); margin-top: 4px; }
   .type-chip { flex: none; padding: 4px 9px; border-radius: 10px; background: var(--chip); color: #fff; font-size: .68rem; font-weight: 900; text-shadow: 0 1px 1px #0003; }

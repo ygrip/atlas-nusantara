@@ -5,8 +5,8 @@ import type { SharedUniforms } from './shared-uniforms';
 import type { MapTheme } from './themes';
 import { PLANE_HEIGHT, PLANE_WIDTH } from './weather';
 
-const VOLUME_STEPS = 10;
-const COMPACT_VOLUME_STEPS = 6;
+const VOLUME_STEPS = 8;
+const COMPACT_VOLUME_STEPS = 4;
 const CIRRUS_WIDTH = PLANE_WIDTH * 1.7;
 const CIRRUS_DEPTH = PLANE_HEIGHT * 1.7;
 

@@ -46,7 +46,7 @@ Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the
 
 ## Refresh snapshots
 
-**Destinations are static and manually maintained:** 38 province JSON files plus a complete `national.json` download. The map uses an on-device location match at startup, with Jakarta for overseas/unavailable location and explicit region links taking priority. Each province has a searchable, filterable, sortable table with client-side pagination. No destination API or scheduled worker is needed. After editing source JSON, run `npm run build:destinations` offline; see [destination maintenance](docs/DESTINATIONS.md).
+**Destinations are static and manually maintained:** 38 province JSON files plus a complete `national.json` download. The atlas opens on the Weather layer in the national view; the Destinations layer starts national too, and `?region=` links open a province. Each province has a searchable, filterable, sortable table with client-side pagination. No destination API or scheduled worker is needed. After editing source JSON, run `npm run build:destinations` offline; see [destination maintenance](docs/DESTINATIONS.md).
 
 Browsers do not call BMKG for the map or saved-place cards. These scripts fetch dated assets deliberately:
 
@@ -55,7 +55,7 @@ node scripts/ingestion/forecast-snapshot.mjs
 node scripts/ingestion/earthquake-snapshot.mjs
 ```
 
-Scheduled refreshes are defined for **weather every 2 hours** and **earthquakes every 15 minutes**. Collection/publishing requires repository flags and the intended CDN credentials; it has not been activated remotely. See [SNAPSHOT_REFRESH.md](docs/SNAPSHOT_REFRESH.md).
+Scheduled refreshes are defined for **weather every 3 hours** and **earthquakes every 25 minutes**. Collection/publishing requires repository flags and the intended CDN credentials; it has not been activated remotely. See [SNAPSHOT_REFRESH.md](docs/SNAPSHOT_REFRESH.md).
 
 Forecast capture takes about 10 minutes at under 60 requests/minute. It verifies provider code/name pairs, reports missing points and retains the previous file if fewer than 90% succeed. Captured data remains dated when offline; it is never labeled live.
 

@@ -94,3 +94,10 @@ export function projectLonLat(projection: { scale: number; translate: [number, n
   const y = projection.translate[1] - projection.scale * Math.log(Math.tan(Math.PI / 4 + phi / 2));
   return new Vector2(x, y);
 }
+
+/** Inverse of projectLonLat: the longitude and latitude (degrees) of a point on the national SVG plane. */
+export function unprojectToLonLat(projection: { scale: number; translate: [number, number] }, x: number, y: number): { lon: number; lat: number } {
+  const lambda = (x - projection.translate[0]) / projection.scale;
+  const phi = 2 * Math.atan(Math.exp(-(y - projection.translate[1]) / projection.scale)) - Math.PI / 2;
+  return { lon: (lambda * 180) / Math.PI, lat: (phi * 180) / Math.PI };
+}

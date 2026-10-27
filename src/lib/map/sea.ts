@@ -109,12 +109,23 @@ export class Sea {
         deepColor: { value: new Color(theme.deep) },
         scatterColor: { value: new Color(theme.scatter) },
         foamColor: { value: new Color(theme.foam) },
-        haloColor: { value: new Color(theme.halo) }
+        haloColor: { value: new Color(theme.halo) },
+        reveal: { value: 1 }
       }
     });
     this.mesh = new Mesh(buildSeaGeometry(), this.material);
     this.mesh.renderOrder = 0;
     this.mesh.frustumCulled = false;
+  }
+
+  /**
+   * 0 hides the water, 1 shows it fully. In between the sea spreads outward from the coasts like a rising tide,
+   * so it is drawn translucent only while a transition is running.
+   */
+  setReveal(reveal: number): void {
+    this.material.uniforms.reveal.value = reveal;
+    this.material.transparent = reveal < 1;
+    this.mesh.visible = reveal > 0.001;
   }
 
   setTheme(theme: MapTheme): void {

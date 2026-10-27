@@ -44,8 +44,8 @@ test('both shipped snapshot schemas pass validation', async () => {
 
 test('refresh schedules keep weather and earthquake collection independent', async () => {
   const workflow = await readFile('.github/workflows/refresh-snapshots.yml', 'utf8');
-  assert.match(workflow, /cron: '0 \*\/2 \* \* \*'/);
-  assert.match(workflow, /cron: '\*\/15 \* \* \* \*'/);
+  assert.match(workflow, /cron: '0 \*\/3 \* \* \*'/);
+  assert.match(workflow, /cron: '\*\/25 \* \* \* \*'/);
   assert.match(workflow, /SNAPSHOT_REFRESH_ENABLED/);
   assert.match(workflow, /SNAPSHOT_PUBLISH_APPROVED/);
   assert.doesNotMatch(workflow, /git push|git commit/);

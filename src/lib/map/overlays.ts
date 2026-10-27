@@ -12,12 +12,14 @@ export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   { id: 'mountains', label: m.layer_mountains, source: 'BIG', renderer: 'points', icon: 'mountain', snapshotUrl: '/data/observations/mountains.json' },
   { id: 'incident', label: m.layer_disaster_reports, source: 'BNPB · PetaBencana', renderer: 'points', icon: 'incident' },
   { id: 'hazard', label: m.layer_weather_hazards, source: 'BMKG', renderer: 'points', icon: 'hazard' },
-  { id: 'destinations', label: m.layer_destinations, source: 'Tourism', renderer: 'points', icon: 'landmark' }
+  { id: 'destinations', label: m.layer_destinations, source: 'Tourism', renderer: 'points', icon: 'landmark' },
+  // Yearly national statistics shown in a panel (pyramid and history); no map pins, no worker. See docs/OVERLAYS.md.
+  { id: 'population', label: m.layer_population, source: 'BPS', renderer: 'statistics', icon: 'population' }
 ];
 
 export function earthquakeOverlay(archive: EarthquakeArchive): PointOverlay {
   return {
-    id: 'earthquake', color: '#cf482b', symbol: 'circle', source: 'BMKG', fetchedAt: archive.fetchedAt,
+    id: 'earthquake', color: '#cf482b', symbol: 'circle', source: 'BMKG', sourceUrl: 'https://www.bmkg.go.id/gempabumi/gempabumi-terkini', fetchedAt: archive.fetchedAt,
     legend: [{ label: m.layer_earthquakes() + ' · M5+', color: '#cf482b', symbol: 'circle' }],
     pins: archive.events.map(event => ({
       id: event.id, lon: event.lon, lat: event.lat, label: 'M' + event.magnitude.toFixed(1) + ' · ' + event.place,
@@ -41,7 +43,7 @@ export function reportsOverlay(snapshot: HazardSnapshot): PointOverlay {
       const label = eventLabel(event.type) + (event.place ? ' · ' + event.place : '');
       return {
         id: event.id, lon: event.lon as number, lat: event.lat as number, color: eventColor(event.type), symbol: kindSymbol(event.kind),
-        label, description: event.occurredAt + ' · ' + kindLabel(event.kind) + ' · ' + event.title
+        sourceUrl: event.url, label, description: event.occurredAt + ' · ' + kindLabel(event.kind) + ' · ' + event.title
       };
     })
   };

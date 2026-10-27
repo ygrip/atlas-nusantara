@@ -4,7 +4,7 @@
   import type { DestinationPhoto } from '$lib/data/destination-contract';
   import { loadCommonsPhoto } from '$lib/data/commons-photo';
 
-  let { pin, onclose }: { pin: MapPin; onclose: () => void } = $props();
+  let { pin, onclose }: { pin: MapPin; onclose?: () => void } = $props();
   let image = $state<DestinationPhoto>();
   let imageFailed = $state(false);
 
@@ -49,7 +49,7 @@
   <div class="information">
     <div class="detail-head">
       <span class="eyebrow">{m.layer_mountains()}</span>
-      <button type="button" class="close" onclick={onclose} aria-label={m.dialog_close()}>×</button>
+      {#if onclose}<button type="button" class="close" onclick={onclose} aria-label={m.dialog_close()}>×</button>{/if}
     </div>
     <h3>{pin.label}</h3>
     <p class="kind" data-category={pin.category ?? 'other'}>{categoryName}</p>
@@ -65,9 +65,9 @@
 </section>
 
 <style>
-  .mountain-detail { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.1fr); gap:14px; padding:12px; border:1px solid var(--border); border-radius:22px; background:linear-gradient(160deg,var(--surface),var(--panel)); box-shadow:0 4px 0 -2px var(--border),inset 0 2px 1px var(--clay-highlight); }
-  .photo { overflow:hidden; border-radius:15px; background:var(--panel); min-height:170px; }
-  .photo img { width:100%; height:100%; max-height:290px; object-fit:cover; display:block; }
+  .mountain-detail { display:grid; grid-template-columns:minmax(0, 1fr); gap:14px; }
+  .photo { overflow:hidden; border-radius:18px; background:var(--panel); min-height:170px; box-shadow:inset 0 2px 5px var(--shadow); }
+  .photo img { width:100%; height:100%; max-height:240px; object-fit:cover; display:block; }
   .information { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding:4px 5px; }
   .detail-head { align-self:stretch; display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .eyebrow { font-size:.72rem; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
@@ -80,5 +80,4 @@
   small { font-size:.72rem; line-height:1.4; color:var(--muted); }
   a { font-size:.78rem; font-weight:800; }
   .close { min-width:38px; min-height:38px; border:1px solid var(--border); border-radius:12px; color:inherit; background:var(--surface); font-size:1.35rem; cursor:pointer; box-shadow:0 2px 0 var(--border); }
-  @media(max-width:600px) { .mountain-detail { grid-template-columns:minmax(0,1fr); } .photo { min-height:185px; max-height:225px; } }
 </style>

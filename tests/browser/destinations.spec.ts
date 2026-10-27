@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import type { Landmark } from '../../src/lib/data/destination-contract';
 
@@ -23,9 +23,17 @@ function provinceFixture(code: string) {
   });
 }
 
-test.beforeEach(async ({ page, context }) => {
-  await context.grantPermissions(['geolocation']);
-  await context.setGeolocation({ latitude: 51.5072, longitude: -0.1276 });
+/** Opens the searchable province popup, narrows it by typing and picks the first match. */
+async function pickProvince(page: Page, name: string) {
+  const trigger = page.locator('.destination-explorer .place-trigger');
+  await trigger.click();
+  const dialog = page.getByRole('dialog', { name: 'Choose a province' });
+  await dialog.getByRole('combobox').fill(name);
+  await dialog.getByRole('option', { name: new RegExp('^' + name) }).first().click();
+  await expect(dialog).toBeHidden();
+}
+
+test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
   await page.route('**/data/destinations/index.json?*', route => route.fulfill({ json: fixtureIndex }));
   await page.route('**/data/destinations/provinces/*.json?*', route => {
@@ -34,26 +42,43 @@ test.beforeEach(async ({ page, context }) => {
   });
 });
 
-test('outside Indonesia starts in Jakarta and selecting a province fetches only its static shard', async ({ page }) => {
+test('starts on the national view without a location lookup and selecting a province fetches only its static shard', async ({ page }) => {
   const shards: string[] = [];
   page.on('request', request => {
     const pathname = new URL(request.url()).pathname;
     if (pathname.startsWith('/data/destinations/provinces/')) shards.push(pathname);
   });
-  await page.goto('/');
-  await expect(page.locator('#destination-province')).toHaveValue('31');
-  await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
-  expect(shards).toEqual(['/data/destinations/provinces/31.json']);
-  await page.locator('#destination-province').selectOption('32');
+  await page.goto('/?layer=destinations');
+  await expect(page.locator('.destination-explorer .place-trigger')).toContainText('Choose a province');
+  await expect(page.locator('.atlas-breadcrumb [aria-current="true"]')).toHaveText('National');
+  expect(shards).toEqual([]);
+  await pickProvince(page, 'Jawa Barat');
   await expect(page).toHaveURL(/region=32/);
   await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
   await expect(page.locator('.destination-table')).toContainText('Kawah Putih');
   await expect(page.locator('.destination-table')).toContainText('Gedung Sate');
-  expect(shards).toEqual(['/data/destinations/provinces/31.json', '/data/destinations/provinces/32.json']);
+  expect(shards).toEqual(['/data/destinations/provinces/32.json']);
+});
+
+test('province popup is searchable, shows place counts and the search input fills its container', async ({ page }) => {
+  await page.goto('/?layer=destinations&region=32');
+  await page.locator('.destination-explorer .place-trigger').click();
+  const dialog = page.getByRole('dialog', { name: 'Choose a province' });
+  await dialog.getByRole('combobox').fill('bali');
+  await expect(dialog.getByRole('option')).toHaveCount(1);
+  await expect(dialog.getByRole('option').first()).toContainText('Destinations');
+  await page.keyboard.press('Escape');
+  const shell = page.locator('.destination-search');
+  const input = shell.locator('input');
+  const shellBox = await shell.boundingBox();
+  const inputBox = await input.boundingBox();
+  expect(shellBox && inputBox && inputBox.width > shellBox.width - 60).toBe(true);
+  const filterBox = await page.locator('.destination-filters').boundingBox();
+  expect(shellBox && filterBox && Math.abs(shellBox.width - filterBox.width) < 2).toBe(true);
 });
 
 test('table composes search and filters and supports accessible sorting without new data requests', async ({ page }) => {
-  await page.goto('/?region=32');
+  await page.goto('/?layer=destinations&region=32');
   const rows = page.locator('.destination-table tbody tr');
   await expect(rows).toHaveCount(2);
   await expect(rows.first()).toContainText('Gedung Sate');
@@ -74,7 +99,7 @@ test('table composes search and filters and supports accessible sorting without 
   await expect(page.getByRole('status').filter({ hasText: 'No matching landmarks.' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Photo', exact: true }).selectOption('all');
   await page.locator('.destination-search input').fill('');
-  await page.locator('#destination-province').selectOption('51');
+  await pickProvince(page, 'Bali');
   await expect(page.getByRole('combobox', { name: 'District', exact: true })).toHaveValue('');
   await expect(rows).toHaveCount(2);
 });
@@ -93,7 +118,7 @@ test('stored Commons photos show full creator credits and license links without 
   });
   const searches: string[] = [];
   page.on('request', request => { if (request.url().includes('/w/api.php')) searches.push(request.url()); });
-  await page.goto('/?region=32');
+  await page.goto('/?layer=destinations&region=32');
   const credit = page.getByRole('link', { name: creator + ' ↗', exact: true });
   await expect(credit).toBeVisible();
   await expect(credit).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:Fixture.jpg');
@@ -102,7 +127,7 @@ test('stored Commons photos show full creator credits and license links without 
 });
 
 test('a province without reviewed photos retains placeholders', async ({ page }) => {
-  await page.goto('/?region=51');
+  await page.goto('/?layer=destinations&region=51');
   await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
   await expect(page.locator('.destination-placeholder').first()).toContainText('No photo available');
 });
