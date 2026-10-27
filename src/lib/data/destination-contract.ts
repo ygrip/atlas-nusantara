@@ -27,7 +27,10 @@ export interface Landmark {
   lat?: number;
   /** Optional Commons file title, e.g. "File:Example.jpg". */
   commonsFile?: string;
+  /** Backward-compatible featured photo. Equals images[0] when a gallery exists. */
   image?: DestinationPhoto;
+  /** One to eight independently credited, verified Commons photos. */
+  images?: DestinationPhoto[];
   sourceUrl?: string;
 }
 export interface DestinationCatalog {
