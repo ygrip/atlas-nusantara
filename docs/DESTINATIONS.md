@@ -227,3 +227,38 @@ Research-ready CSV of originally missing photos:
 \`research/missing-destination-images.csv\` (18,355 records at export time).
 It includes an appropriate name + district + province search query for each
 destination. Image coverage after later publication may differ.
+
+
+### Wikipedia crawl progress and diagnostics
+
+The crawler now logs startup and **each destination**: name, ID, district, each
+language request, result counts, coordinate-verified matches, duration,
+and why the selected article produced no eligible photos.
+
+- Ungeocoded destinations enter the review report as
+  `skipped-no-verified-destination-coordinates` without an API request.
+- The review JSONL adds `searchResults` and `imageChecks` arrays, which give
+  per-file reasons such as unrelated illustration, missing Commons metadata,
+  unsupported license/credit/format, or redirected file title.
+- The summary includes `apiQueries`, `noCoordinates`, and `elapsedSeconds`.
+- Use `--language=id` or `--language=en` for one-language scans; the default
+  is `--language=both` (Indonesian then English if not matched).
+- Cached HTTP responses persist. Reuse the same cache directory on retries.
+
+```bash
+git pull --ff-only origin feat/destination-galleries-verification-20261027
+
+# Small diagnostic pass
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=10 --language=id
+
+# Inspect 100 places, no publication
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=100
+
+# Search a province, publishing verified licensed images
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 --language=id --publish
+```
+
+The script searches Wikipedia **articles** by destination name alone, not
+Google Images. It requires a distinctive exact article title and coordinates
+within 2 km before examining Commons image files. This will have limited
+coverage for small attractions that do not have matching Wikipedia articles.
