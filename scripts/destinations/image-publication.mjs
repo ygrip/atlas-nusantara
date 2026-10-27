@@ -53,23 +53,35 @@ export function applyImageRegistry(index, shards, registry) {
     entries.set(entry.destinationId, entry);
   }
   let published = 0;
+  let photoCount = 0;
   let rejected = 0;
   const reviewedIds = new Set();
   for (const shard of Object.values(shards)) {
     for (const place of shard.landmarks) {
       delete place.image;
+      delete place.images;
       const entry = entries.get(place.id);
       if (!entry) continue;
       reviewedIds.add(place.id);
-      if (!verifiedEntry(place, entry)) { rejected++; continue; }
-      place.image = { ...entry.image };
+      const photos = entry.photos ?? [entry];
+      const validGallery = Array.isArray(photos) && photos.length >= 1 && photos.length <= 8
+        && (entry.photos === undefined || JSON.stringify(entry.image) === JSON.stringify(photos[0]?.image))
+        && photos.every(photo => verifiedEntry(place, { ...entry, ...photo }))
+        && new Set(photos.map(photo => photo.licenseEvidence.fileTitle)).size === photos.length
+        && new Set(photos.map(photo => photo.image.descriptionUrl)).size === photos.length;
+      if (!validGallery) { rejected++; continue; }
+      place.image = { ...photos[0].image };
+      if (photos.length > 1) place.images = photos.map(photo => ({ ...photo.image }));
       published++;
+      photoCount += photos.length;
     }
   }
   const missingDestinations = entries.size - reviewedIds.size;
   index.coverage.licensedImages = published;
+  index.coverage.licensedPhotos = photoCount;
   index.imageEnrichment = { policy: registry.policy, discoveredAt: registry.discoveredAt,
     evaluatedDestinations: registry.coverage?.evaluatedDestinations, publishedImages: published,
+    publishedPhotos: photoCount,
     rejectedOrStaleEntries: rejected, missingDestinations,
     registry: '/data/destinations/image-metadata.json',
     verification: 'Automated exact distinctive name and subject coordinate within 250 metres; Commons file license metadata checked. Not a claim of human visual review.' };
