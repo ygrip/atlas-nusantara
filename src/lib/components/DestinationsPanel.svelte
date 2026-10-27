@@ -131,7 +131,7 @@
           <tbody>
             {#each pageData.items as place (place.id)}
               <tr>
-                <td class="photo-cell"><DestinationImage name={place.name} image={place.image} /></td>
+                <td class="photo-cell"><DestinationImage name={place.name} image={place.image} images={place.images} /></td>
                 <th scope="row">{place.name}{#if place.officialId}<small class="official-id">{place.officialId}</small>{/if}</th>
                 <td><span class="destination-kind">{#if place.kind === 'natural'}<Leaf size={13} aria-hidden="true" />{m.destination_natural()}{:else if place.kind === 'built'}<LandmarkIcon size={13} aria-hidden="true" />{m.destination_built()}{:else}{m.mountain_other()}{/if}</span></td>
                 <td>{place.sourceDistrict ?? m.destination_no_district()}</td>
