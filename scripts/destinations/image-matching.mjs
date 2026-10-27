@@ -163,3 +163,45 @@ export function matchCommonsFileToDestination(place, fileTitle, camera) {
     sourceUrl: 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(fileTitle.replace(/ /g, '_'))
   };
 }
+
+
+const WIKIPEDIA_RADIUS_METERS = 2000;
+
+/**
+ * A Wikipedia page is a publication candidate only when its subject is the
+ * same distinctly named, geolocated destination. Search rank is never proof.
+ * Parenthetical disambiguators must identify the place's own region.
+ */
+export function matchWikipediaArticleToDestination(place, page, language) {
+  if (!place || typeof place.name !== 'string'
+    || !hasValidCoordinates(place.lat, place.lon)
+    || !['id', 'en'].includes(language)
+    || !page || page.ns !== 0 || !Number.isSafeInteger(page.pageid)
+    || typeof page.title !== 'string') return undefined;
+  const name = normalizeName(place.name);
+  if (!name || name.length < 8 || GENERIC_NAMES.has(name)
+    || !name.split(' ').some(word => word.length >= 3
+      && /\p{L}/u.test(word) && !GENERIC_WORDS.has(word))) return undefined;
+  const match = page.title.match(/^(.*?)\s+\(([^()]+)\)$/);
+  const title = match ? match[1] : page.title;
+  if (normalizeName(title) !== name) return undefined;
+  if (match) {
+    const region = normalizeName([place.sourceDistrict, place.sourceProvince].filter(Boolean).join(' '));
+    const qualifier = normalizeName(match[2]);
+    if (!qualifier || !(' ' + region + ' ').includes(' ' + qualifier + ' ')) return undefined;
+  }
+  const coordinates = (page.coordinates ?? []).filter(point =>
+    hasValidCoordinates(point.lat, point.lon));
+  if (coordinates.length !== 1) return undefined;
+  const point = coordinates[0];
+  const distance = distanceMeters(place.lat, place.lon, point.lat, point.lon);
+  if (distance > WIKIPEDIA_RADIUS_METERS) return undefined;
+  return {
+    method: 'wikipedia-exact-article-and-coordinate', verification: 'automated',
+    articleLanguage: language, articleId: page.pageid, articleTitle: page.title,
+    matchedLabel: place.name, articleLat: point.lat, articleLon: point.lon,
+    distanceMeters: distance,
+    sourceUrl: 'https://' + language + '.wikipedia.org/wiki/'
+      + encodeURIComponent(page.title.replace(/ /g, '_'))
+  };
+}
