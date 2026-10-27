@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { isReusablePhotoMetadata } from '../../src/lib/data/photo-license.js';
-import { buildSubjectIndex, matchDestination, matchCommonsFileToDestination } from './image-matching.mjs';
+import { buildSubjectIndex, matchDestination, matchCommonsFileToDestination, matchWikipediaArticleToDestination } from './image-matching.mjs';
 import { canonicalLicenseUrl, creatorCredit } from './image-license.mjs';
 
 export const IMAGE_REVIEW_POLICY = 'commons-wikidata-exact-name-250m-v1';
@@ -40,6 +40,19 @@ function verifiedEntry(place, entry) {
     if (!match || Math.abs(match.distanceMeters - evidence.distanceMeters) >= 0.01) return false;
     const fields = ['method', 'verification', 'fileTitle', 'matchedLabel', 'photoLat', 'photoLon', 'sourceUrl'];
     return fields.every(field => evidence[field] === match[field]);
+  }
+  if (evidence.method === 'wikipedia-exact-article-and-coordinate') {
+    if (license.requestedTitle !== license.fileTitle
+      || evidence.articleFileTitle !== license.fileTitle) return false;
+    const verified = matchWikipediaArticleToDestination(place, {
+      ns: 0, pageid: evidence.articleId, title: evidence.articleTitle,
+      coordinates: [{ lat: evidence.articleLat, lon: evidence.articleLon }]
+    }, evidence.articleLanguage);
+    if (!verified || !Number.isFinite(evidence.distanceMeters)
+      || Math.abs(verified.distanceMeters - evidence.distanceMeters) >= 0.01) return false;
+    const fields = ['method', 'verification', 'articleLanguage', 'articleId',
+      'articleTitle', 'matchedLabel', 'articleLat', 'articleLon', 'sourceUrl'];
+    return fields.every(field => evidence[field] === verified[field]);
   }
   if (!entry.subject || entry.subject.imageTitle !== license.requestedTitle
     || entry.subject.id !== evidence.subjectId || evidence.method !== 'exact-name-and-subject-coordinate') return false;
