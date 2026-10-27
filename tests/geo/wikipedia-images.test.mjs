@@ -4,7 +4,8 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  wikipediaSearchUrl, wikipediaArticleFiles, selectWikipediaArticle, discoverWikipediaPhotos
+  wikipediaSearchUrl, wikipediaArticleFiles, relevantWikipediaArticleFile,
+  selectWikipediaArticle, discoverWikipediaPhotos
 } from '../../scripts/destinations/search-wikipedia-images.mjs';
 import { matchWikipediaArticleToDestination } from '../../scripts/destinations/image-matching.mjs';
 import { IMAGE_REVIEW_POLICY } from '../../scripts/destinations/image-publication.mjs';
@@ -62,6 +63,14 @@ test('article match requires exact distinctive name and nearby independent coord
     ...article, coordinates: [{ lat: -6.3, lon: 110.48 }]
   }, 'id'), undefined);
   assert.equal(matchWikipediaArticleToDestination({ ...place, lat: undefined }, article, 'id'), undefined);
+});
+
+test('only place-related secondary article photos are eligible for galleries', () => {
+  assert.equal(relevantWikipediaArticleFile(place, article, 'File:Sri Gethuk.jpg'), true);
+  assert.equal(relevantWikipediaArticleFile(place, article, 'File:Panorama Gethuk.jpg'), true);
+  assert.equal(relevantWikipediaArticleFile(place, article, 'File:Flag Indonesia.png'), false);
+  assert.equal(relevantWikipediaArticleFile(place, article, 'File:Yogyakarta Province Map.jpg'), false);
+  assert.equal(relevantWikipediaArticleFile(place, article, 'File:Different waterfall.jpg'), false);
 });
 
 test('article images prioritize lead photo, dedupe and exclude non-bitmaps', () => {
