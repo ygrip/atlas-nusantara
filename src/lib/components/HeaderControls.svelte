@@ -142,8 +142,8 @@
   }
 
   function themeColor(theme: string) {
-    if (theme === 'dark') return '#1f1c22';
-    return '#f4ece1';
+    if (theme === 'dark') return '#1e191c';
+    return '#f8f5f3';
   }
 
   async function share() {
