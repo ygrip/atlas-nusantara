@@ -60,40 +60,65 @@ export function registrySubjects(bindings) {
   return { subjects, ambiguousCoordinates, labeledItems: groups.size };
 }
 
-export async function loadSubjectRegistry(directory, { fetcher = fetch, pageSize = 5000, delayMs = 1000 } = {}) {
+/** Independent selective scans avoid an expensive Cartesian product of P18 and P373. */
+const SUBJECT_SOURCES = [
+  { name: 'featured-photos', claim: '?item wdt:P18 ?image.' },
+  { name: 'commons-categories', claim: '?item wdt:P373 ?category.' }
+];
+
+export async function loadSubjectRegistry(directory, {
+  fetcher = fetch, pageSize = 500, delayMs = 1000, timeoutMs = 75000, maxPages = 500, pause
+} = {}) {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 5000)
+    throw Error('Wikidata pageSize must be between 1 and 5000');
   const resultPath = path.join(directory, 'wikidata-subjects.json');
   try {
     const cached = JSON.parse(await readFile(resultPath, 'utf8'));
-    // The older cache had only P18 images. Refresh it instead of silently losing P373 galleries.
-    if (cached.schemaVersion === 2 && Array.isArray(cached.subjects) && cached.complete === true) return cached;
+    if (cached.schemaVersion === 3 && Array.isArray(cached.subjects) && cached.complete === true) return cached;
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const client = new CrawlClient({ origin: 'https://query.wikidata.org',
-    cacheDirectory: path.join(directory, 'wikidata-http'), delayMs, timeoutMs: 75000, fetcher });
+    cacheDirectory: path.join(directory, 'wikidata-http'), delayMs, timeoutMs, fetcher, pause });
   const bindings = [];
   const requests = [];
   let fetchedAt;
-  for (let page = 0; page < 100; page++) {
-    const query = `SELECT ?item ?label ?image ?coordinates ?category WHERE { ${SUBJECTS} ${LABELS} }
-ORDER BY ?item ?label ?image ?coordinates ?category LIMIT ${pageSize} OFFSET ${page * pageSize}`;
-    const url = SPARQL + '?' + new URLSearchParams({ query, format: 'json' });
-    const response = await client.get(url);
-    const payload = JSON.parse(response.body);
-    const rows = payload.results?.bindings;
-    if (!Array.isArray(rows)) throw Error('Invalid Wikidata subject export');
-    fetchedAt ??= response.fetchedAt;
-    requests.push({ url, fetchedAt: response.fetchedAt, rows: rows.length });
-    bindings.push(...rows);
-    console.log('Wikidata registry page', page + 1, 'rows', rows.length);
-    if (rows.length === pageSize) continue;
-    const normalized = registrySubjects(bindings);
-    const result = { schemaVersion: 2, complete: true, fetchedAt,
-      source: 'Wikidata CC0; P17 Indonesia, P18 featured photo, P373 Commons category, P625 subject coordinate, id/en labels and aliases',
-      scope: 'Candidate registry, not proof that every Indonesian destination is represented',
-      requests, ...normalized };
-    await saveJson(resultPath, result);
-    return result;
+  for (const source of SUBJECT_SOURCES) {
+    let complete = false;
+    for (let page = 0; page < maxPages; page++) {
+      // A full-Indonesia OPTIONAL + OPTIONAL query exploded the intermediate
+      // result set and timed out; this scans one indexed claim at a time.
+      const query = [
+        'SELECT ?item ?label ?image ?coordinates ?category WHERE {',
+        source.claim,
+        '?item wdt:P17 wd:Q252; wdt:P625 ?coordinates.',
+        LABELS,
+        '}'
+      ].join('\n') + ' ORDER BY ?item ?label ?image ?coordinates ?category'
+        + ' LIMIT ' + pageSize + ' OFFSET ' + (page * pageSize);
+      const url = SPARQL + '?' + new URLSearchParams({ query, format: 'json' });
+      console.log('Wikidata', source.name, 'page', page + 1, '(cached if previously downloaded)');
+      const response = await client.get(url);
+      const payload = JSON.parse(response.body);
+      if (payload.error) throw Error('Wikidata query failed: ' + (payload.error.info ?? payload.error.code));
+      const rows = payload.results?.bindings;
+      if (!Array.isArray(rows)) throw Error('Invalid Wikidata subject export');
+      fetchedAt ??= response.fetchedAt;
+      requests.push({ source: source.name, url, fetchedAt: response.fetchedAt, rows: rows.length });
+      bindings.push(...rows);
+      console.log('Wikidata', source.name, 'page', page + 1, 'rows', rows.length);
+      if (rows.length < pageSize) {
+        complete = true;
+        break;
+      }
+    }
+    if (!complete) throw Error('Wikidata ' + source.name + ' exceeded bounded pagination; completed pages are cached');
   }
-  throw Error('Wikidata registry exceeded the bounded pagination limit');
+  const normalized = registrySubjects(bindings);
+  const result = { schemaVersion: 3, complete: true, fetchedAt,
+    source: 'Wikidata CC0; separately paginated P18 featured photos and P373 Commons categories, P17 Indonesia and P625 coordinates, id/en names and aliases',
+    scope: 'Candidate registry, not proof that every Indonesian destination is represented',
+    requests, ...normalized };
+  await saveJson(resultPath, result);
+  return result;
 }
 
 async function commonsResponse(client, url) {
