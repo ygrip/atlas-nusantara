@@ -135,3 +135,23 @@ npm run check
 **All-record image research queue**: use `node scripts/destinations/image-review-queue.mjs /tmp/atlas-image-review.jsonl` to generate one review item for each of the 18,596 records (or `--missing-only` to focus on gaps). Supports `--province=34` and `--limit=100` for bounded batches. Each item retains the stable destination ID, official name, province/district, verified coordinates if present, number of published photos, and human-facing Google Images and Wikimedia Commons discovery links. Research links are deliberately **not image data** and never become published photographs automatically.
 
 Google's Custom Search JSON API stopped accepting new customers in January 2026 and existing access is scheduled to end January 2027. The review queue links to Google Images for human research, without screen scraping, bypassing bot protections, or embedding unlicensed image results. Do not replace missing photos with visually similar beaches or temples: require a verifiable destination identity, appropriate location evidence, creator credit, and reusable file license before adding a registry entry. Zero-verified-image records must continue to display the placeholder.
+
+### Additional licensed Commons photo filling
+
+There are **two** complementary offline enrichment passes. Neither requires GitHub Actions or a deployed image backend. They rewrite the province shards, national aggregate, index and audit registry only after evidence validation; records are never populated with guessed image links.
+
+```sh
+# Wikidata exact-name/location subjects, P18 photos, and Commons P373 categories.
+npm run destinations:images:wikidata -- /tmp/atlas-photo-cache --publish
+
+# Commons file pages with a distinctive destination name and geotag within 350m.
+npm run destinations:images:commons -- /tmp/atlas-photo-cache --publish
+
+# Optional: process a bounded province batch before searching the whole set.
+npm run destinations:images:commons -- /tmp/atlas-photo-cache --province=34 --limit=100 --publish
+
+# Generate a research queue for remaining gaps with Google and Commons links.
+npm run destinations:images:queue -- /tmp/atlas-photo-review.jsonl --missing-only
+```
+
+The Wikimedia-only automatic pass cannot guarantee complete coverage: some source markers lack verified coordinates, Commons may not have a licensed photograph, and files may lack trustworthy subject evidence. Those destinations must retain placeholders until independently reviewed. Google Images pages are included for researcher navigation, not harvested or treated as image licensing evidence. The local passes use persistent request caches, throttling, and license/creator evidence. Existing verified photos remain intact if new discovery is incomplete.
