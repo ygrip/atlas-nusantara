@@ -11,7 +11,9 @@ import { IMAGE_REVIEW_POLICY } from '../../scripts/destinations/image-publicatio
 
 const place = {
   id: 'sisparnas-24702', officialId: '24702', provinceCode: '34',
-  name: 'Air Terjun Sri Gethuk', sourceDistrict: 'Kabupaten Gunung Kidul',
+  name: 'Air Terjun Sri Gethuk', kind: 'unknown',
+  sourceUrl: 'https://sisparnas.kemenpar.go.id/datapanel',
+  sourceDistrict: 'Kabupaten Gunung Kidul',
   sourceProvince: 'DI Yogyakarta', lat: -7.9428574, lon: 110.4871372
 };
 const article = {
@@ -77,17 +79,35 @@ async function fixture(run) {
   const cacheDirectory = path.join(root, 'cache');
   try {
     await mkdir(path.join(catalogDirectory, 'provinces'), { recursive: true });
-    const provinces = Array.from({ length: 38 }, (_, index) => {
-      const code = String(index + 11);
-      return { provinceCode: code, count: code === '34' ? 1 : 0 };
-    });
-    const index = { schemaVersion: 2, provinces,
-      coverage: { totalRecords: 1, licensedImages: 0 } };
+    const codes = ['11','12','13','14','15','16','17','18','19','21','31','32','33','34','35','36',
+      '51','52','53','61','62','63','64','65','71','72','73','74','75','76','81','82',
+      '91','92','93','94','95','96'];
+    const provinces = codes.map(code => ({
+      provinceCode: code, count: code === '34' ? 1 : 0,
+      natural: 0, built: 0, unknown: code === '34' ? 1 : 0,
+      shard: '/data/destinations/provinces/' + code + '.json'
+    }));
+    const base = {
+      fetchedAt: '2026-10-26T00:00:00Z',
+      source: 'SISPARNAS',
+      sourceUrl: 'https://sisparnas.kemenpar.go.id/datapanel',
+      scope: 'Fixture from one region'
+    };
+    const index = {
+      ...base, schemaVersion: 2, provinces, license: 'Metadata only',
+      attribution: 'SISPARNAS',
+      coverage: { totalRecords: 1, licensedImages: 0,
+        geocodedRecords: 1, classifiedRecords: 0, sourceCoveragePercent: null }
+    };
     await writeFile(path.join(catalogDirectory, 'index.json'), JSON.stringify(index));
     for (const province of provinces) {
       await writeFile(path.join(catalogDirectory, 'provinces', province.provinceCode + '.json'),
-        JSON.stringify({ provinceCode: province.provinceCode,
-          landmarks: province.provinceCode === '34' ? [place] : [] }));
+        JSON.stringify({
+          ...base, schemaVersion: 1, codeEdition: '2025',
+          provinceCode: province.provinceCode,
+          retrievedAt: base.fetchedAt,
+          landmarks: province.provinceCode === '34' ? [place] : []
+        }));
     }
     await writeFile(path.join(catalogDirectory, 'image-metadata.json'), JSON.stringify({
       schemaVersion: 1, policy: IMAGE_REVIEW_POLICY,
