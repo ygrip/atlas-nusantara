@@ -22,7 +22,10 @@ export interface DestinationIndex {
     totalRecords: number;
     geocodedRecords: number;
     classifiedRecords: number;
+    /** Number of destinations with one or more verified photographs. */
     licensedImages: number;
+    /** Number of individually credited photographs, including gallery extras. */
+    licensedPhotos?: number;
     sourceCoveragePercent: number | null;
   };
   provinces: ProvinceDestinations[];
