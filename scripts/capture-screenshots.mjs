@@ -21,7 +21,7 @@ async function open({ mobile = false, dark = false, path = '/' } = {}) {
   }, theme);
   await page.goto('http://127.0.0.1:4173' + path);
   await page.locator('main').waitFor();
-  if (path === '/') await page.locator('.region-list li').first().waitFor();
+  if (path === '/') await page.locator('#destination-province option[value="32"]').waitFor({ state: 'attached' });
   await page.evaluate(() => document.fonts.ready);
   return page;
 }
@@ -46,6 +46,9 @@ try {
   if (!mobileOnly) {
   page = await open();
   await save(page, 'home-light');
+  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
+  await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
+  await page.locator('.region-list li').first().waitFor();
   await align(page, '.clay-map');
   await page.locator('.atlas-3d[data-ready="true"]').waitFor({ timeout: 30000 });
   await save(page, 'atlas-3d', '.clay-map');
