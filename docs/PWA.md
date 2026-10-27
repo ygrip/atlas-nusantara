@@ -6,7 +6,7 @@ The flow follows the relevant `trick-it` patterns: one SvelteKit-owned registrat
 
 The install invitation is visible only on mobile-sized coarse-pointer web browsers that are not already running standalone. It is absent from desktop web and installed PWAs. Chromium's `beforeinstallprompt` is captured but never opened automatically. **Install app** invokes the native prompt only after a click. Browsers without that event receive menu guidance; Safari uses Share → Add to Home Screen. Standalone mode and `appinstalled` remove the offer. HTTPS, a production build and actual browser support are required; a simulated event test is not proof of native iOS installation.
 
-The manifest includes real 192/512 PNG icons, an Apple touch icon and standalone display. Application and browser chrome colors follow the saved light/dark theme.
+The manifest includes real 192/512 PNG icons, an Apple touch icon and standalone display. These are generated from the text-free Indonesian clay emblem used in the site header and favicon; regenerate with `npm run generate:icons` after installing Playwright Chromium. Application and browser chrome colors follow the saved light/dark theme.
 
 ## Update
 
