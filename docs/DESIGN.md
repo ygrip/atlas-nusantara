@@ -6,7 +6,7 @@ A clay atlas you can take apart: start with Indonesia, choose a province, then a
 
 The trick-it reference supplied high-level behaviour: a compact clay header, language selection with flags, mobile settings, source transparency and useful error recovery. Atlas Nusantara uses its own mark, illustrations and geography; reference artwork and identity were not copied.
 
-The palette stays warm cream, brown, peach, mint, lilac and sea blue. Light-mode surfaces use a warm edge, shallow bottom extrusion and restrained inset highlight—not a bright white perimeter glow. Dark mode uses the same tokens with its own surface contrast. Nunito is self-hosted.
+The visual identity follows *Merah Putih*: flag-inspired crimson on porcelain white, supported by quiet foliage green and brass-gold. Pale rose, leaf and champagne washes blend the colors across the hero, cards and control wells without making every button a primary action. Both themes retain shallow extruded clay edges, restrained inset highlights and readable text/focus contrast. Seven related red/green/gold shades distinguish island groups; labels and geometry remain the primary identifiers. Weather, relief and emergency severity keep independent meaningful data colors instead of being recolored for branding. Nunito is self-hosted.
 
 ## Page and shared state
 
@@ -36,6 +36,8 @@ GSAP owns hero/heading choreography; Lenis excludes the map, dialogs, table and 
 Cloud opacity follows forecast coverage. The camera-crossing veil is a presentation effect at an illustrative cloud height, not measured atmospheric volume. See [GEOMETRY.md](GEOMETRY.md) for the physical-data limitations.
 
 ## Screenshots
+
+The checked-in screenshots document the earlier palette and should be regenerated after this design update.
 
 Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-screenshots.mjs`. Images are actual production-build captures at 1440 × 1000 and 390 × 844, with reduced-motion static frames. Saved-place images use public city pins, not a private device location.
 
