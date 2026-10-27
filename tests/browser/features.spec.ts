@@ -90,9 +90,9 @@ test('previews and downloads a local PNG card with a public URL that excludes de
 test('keeps the directory usable when geometry cannot be fetched', async ({ page }) => {
   await page.route('**/data/geometry-2025/**', route => route.fulfill({ status: 404 }));
   await openAtlas(page);
-  await expect(page.locator('.region-list li')).toHaveCount(38);
+  await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   await page.getByRole('searchbox').fill('Papua Barat Daya');
-  await expect(page.locator('.region-list li')).toHaveCount(1);
+  await expect(page.locator('.region-table tbody tr')).toHaveCount(1);
 });
 
 test('shows source and support links and leaves optional advertising disabled', async ({ page }) => {
@@ -233,8 +233,8 @@ test('zooms, pans, resets, and navigates fixture geometry into the real code hie
   await map.getByRole('button', { name: 'Synthetic province fixture · 11' }).click({ force: true });
   await expect(page).toHaveURL(/region=11$/);
   await expect(page.locator('.atlas-breadcrumb')).toContainText('Aceh');
-  await expect(page.locator('.region-list').getByRole('button', { name: /Kabupaten Aceh Selatan/ })).toBeVisible();
-  await page.locator('.region-list').getByRole('button', { name: /Kabupaten Aceh Selatan/ }).click();
+  await expect(page.locator('.region-table').getByRole('button', { name: /Kabupaten Aceh Selatan/ })).toBeVisible();
+  await page.locator('.region-table').getByRole('button', { name: /Kabupaten Aceh Selatan/ }).click();
   await expect(page).toHaveURL(/region=11\.01$/);
   await expect(page.locator('.selected-region')).toContainText('11.01');
   await expect(page.locator('.selected-region')).not.toContainText('Code edition');

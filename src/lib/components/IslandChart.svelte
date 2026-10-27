@@ -29,10 +29,14 @@
   function barWidth(item: GroupTotals): string {
     return (item.total / largest) * 100 + '%';
   }
+
+  function showSegmentValue(value: number): boolean {
+    return value / largest >= 0.18;
+  }
 </script>
 
 <section class="clay-card island-chart" aria-labelledby="island-chart-heading">
-  <header>
+  <header class="chart-heading">
     <h3 id="island-chart-heading">{m.chart_islands_heading()}</h3>
     <p>{m.chart_islands_desc()}</p>
   </header>
@@ -51,8 +55,8 @@
           <span class="group-name"><span class="group-dot"></span>{ISLAND_GROUP_NAMES[item.group]}</span>
           <span class="track">
             <span class="bar" style={`width: ${barWidth(item)}`}>
-              {#if item.regencies > 0}<span class="segment regency" style={`flex: ${item.regencies} 1 0`}>{item.regencies}</span>{/if}
-              {#if item.municipalities > 0}<span class="segment city" style={`flex: ${item.municipalities} 1 0`}>{item.municipalities}</span>{/if}
+              {#if item.regencies > 0}<span class="segment regency" style={`flex: ${item.regencies} 1 0`}>{#if showSegmentValue(item.regencies)}{item.regencies}{/if}</span>{/if}
+              {#if item.municipalities > 0}<span class="segment city" style={`flex: ${item.municipalities} 1 0`}>{#if showSegmentValue(item.municipalities)}{item.municipalities}{/if}</span>{/if}
             </span>
           </span>
           <strong class="total">{number(item.total)}</strong>
@@ -60,7 +64,8 @@
       {/each}
     </ol>
 
-    <table class="visually-hidden">
+    <div class="visually-hidden">
+    <table>
       <caption>{m.chart_islands_heading()}</caption>
       <thead><tr><th scope="col">{m.table_island()}</th><th scope="col">{m.legend_regency()}</th><th scope="col">{m.legend_city()}</th><th scope="col">{m.table_total()}</th></tr></thead>
       <tbody>
@@ -69,13 +74,15 @@
         {/each}
       </tbody>
     </table>
+    </div>
   {/if}
 </section>
 
 <style>
   .island-chart { display: flex; flex-direction: column; gap: 14px; padding: clamp(18px, 2.6vw, 28px); min-width: 0; }
-  h3 { margin: 0; font-size: 1.25rem; letter-spacing: -.03em; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
+  .chart-heading { display: grid; gap: 4px; min-width: 0; }
+  .chart-heading h3 { margin: 0; font-size: 1.25rem; line-height: 1.2; letter-spacing: -.03em; }
+  .chart-heading p { margin: 0; color: var(--muted); font-size: .85rem; line-height: 1.5; }
   .legend { display: flex; gap: 16px; margin: 0; padding: 0; list-style: none; font-size: .75rem; font-weight: 800; }
   .legend li { display: inline-flex; align-items: center; gap: 7px; }
   .swatch { width: 16px; height: 16px; border-radius: 6px; box-shadow: inset 1px 1px 2px #ffffff80, 0 2px 0 var(--shadow); }

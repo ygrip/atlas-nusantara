@@ -41,37 +41,46 @@ async function save(page, name, selector) {
   console.log('Captured', name);
 }
 
+async function captureSections(page, prefix) {
+  for (const [name, selector] of [['island-groups', '.island-chart'], ['observatory', '#summary'], ['support', '#support'], ['footer', '.site-footer']]) {
+    await align(page, selector);
+    await save(page, `${prefix}-${name}`, selector);
+  }
+}
+
 try {
   let page;
   if (!mobileOnly) {
   page = await open();
   await save(page, 'home-light');
+  await captureSections(page, 'desktop');
   await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
-  await page.locator('.region-list li').first().waitFor();
+  await page.locator('.region-table tbody tr').first().waitFor();
   await align(page, '.clay-map');
   await page.locator('.atlas-3d[data-ready="true"]').waitFor({ timeout: 30000 });
   await save(page, 'atlas-3d', '.clay-map');
-  await page.locator('.region-list').getByRole('button', { name: 'Jawa Barat 32', exact: true }).click();
+  await page.locator('.region-table').getByRole('button', { name: 'Jawa Barat 32', exact: true }).click();
   await align(page, '.clay-map');
   await page.waitForTimeout(500);
   await save(page, 'province-relief', '.clay-map');
-  await page.locator('.region-list').getByRole('button', { name: 'Kota Bandung 32.73', exact: true }).click();
+  await page.locator('.region-table').getByRole('button', { name: 'Kota Bandung 32.73', exact: true }).click();
   await align(page, '.clay-map');
   await page.waitForTimeout(500);
   await save(page, 'city-weather', '.clay-map');
+  await save(page, 'region-directory', '.region-directory');
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National' }).click();
   await page.getByRole('button', { name: /Earthquakes BMKG/ }).click();
   await align(page, '.clay-map');
   await page.waitForTimeout(350);
   await save(page, 'earthquake-overlay', '.clay-map');
   await page.getByRole('button', { name: /Disaster reports/ }).click();
-  await page.locator('.hazard-list li').first().waitFor();
+  await page.locator('.hazard-panel[aria-busy="false"]').waitFor();
   await align(page, '.atlas-stage');
   await page.waitForTimeout(350);
   await save(page, 'disaster-reports', '.atlas-stage');
   await page.getByRole('button', { name: /Weather hazards/ }).click();
-  await page.locator('.hazard-list li').first().waitFor();
+  await page.locator('.hazard-panel[aria-busy="false"]').waitFor();
   await align(page, '.atlas-stage');
   await page.waitForTimeout(350);
   await save(page, 'weather-hazards', '.atlas-stage');
@@ -79,10 +88,12 @@ try {
 
   page = await open({ dark: true });
   await save(page, 'home-dark');
+  await captureSections(page, 'desktop-dark');
   await page.close();
 
   page = await open();
   await align(page, '#provinces');
+  await page.locator('#provinces tr.active-region').scrollIntoViewIfNeeded();
   await save(page, 'province-table', '#provinces');
   await page.getByRole('button', { name: 'Details · Jawa Barat', exact: true }).click();
   await save(page, 'province-popup');
@@ -104,7 +115,11 @@ try {
   await save(page, 'mobile-settings');
   await page.locator('.quick-menu').getByRole('button', { name: 'Choose your language', exact: true }).click();
   await save(page, 'language-popup');
+  await page.getByRole('dialog', { name: 'Choose your language' }).getByRole('searchbox').fill('Vietnamese');
+  await save(page, 'language-filtered');
   await page.keyboard.press('Escape');
+  await page.getByRole('dialog', { name: 'Choose your language' }).waitFor({ state: 'hidden' });
+  await captureSections(page, 'mobile');
   await align(page, '.clay-map');
   await page.locator('.atlas-3d[data-ready="true"]').waitFor({ timeout: 30000 });
   await save(page, 'mobile-atlas');
@@ -116,6 +131,8 @@ try {
   await save(page, 'mobile-home-dark');
   await page.getByRole('button', { name: 'Quick settings', exact: true }).click();
   await save(page, 'mobile-settings-dark');
+  await page.keyboard.press('Escape');
+  await captureSections(page, 'mobile-dark');
   await page.close();
 
   if (!mobileOnly) {

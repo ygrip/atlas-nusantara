@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import SupportPanel from '$lib/components/SupportPanel.svelte';
+  import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
   import AggregateSummary from '$lib/components/AggregateSummary.svelte';
   import SharePanel from '$lib/components/SharePanel.svelte';
@@ -101,7 +102,7 @@
           <span class="eyebrow">INDONESIA</span>
           <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
           <p>{m.atlas_intro()}</p>
-          <div class="notice"><span class="notice-dot" aria-hidden="true"></span>{m.disclaimer()}</div>
+
           <div class="hero-actions">
             <a class="clay-button primary" href="#atlas">{m.nav_atlas()} <span aria-hidden="true">↓</span></a>
             <a class="clay-button" href="#provinces">{m.nav_provinces()}</a>
@@ -167,17 +168,6 @@
 
     <SupportPanel />
   </main>
-  <footer class="site-footer">
-    <div class="footer-main">
-      <span class="footer-brand"><img src="/brand/logo.svg" alt="" width="32" height="32" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></span>
-      <nav class="footer-links" aria-label={m.legal_label()}>
-        <a href="/terms">{m.legal_terms_link()}</a>
-        <a href="/privacy">{m.legal_privacy_link()}</a>
-        <a href="https://github.com/ygrip/nusantara" target="_blank" rel="noopener noreferrer">{m.source_code()} ↗</a>
-      </nav>
-    </div>
-    <p class="footer-note">© Nusantara · {m.disclaimer()}</p>
-    <a href="/terms#sources">{m.source_details()} ↗</a>
-  </footer>
+  <SiteFooter />
 </div>
 <a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}>↑</a>
