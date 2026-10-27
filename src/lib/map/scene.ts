@@ -32,6 +32,7 @@ export interface SceneCallbacks {
   onhover: (code: string | undefined, clientX: number, clientY: number) => void;
   onzoom: (level: number) => void;
   onfeature?: (pin: MapPin | undefined, clientX: number, clientY: number) => void;
+  onpinclick?: (pin: MapPin) => void;
 }
 
 interface RegionEntry { id: number; code: string; name: string; bbox: [number, number, number, number]; rings: Vector2[][]; level: 'province' | 'city' }
@@ -554,7 +555,7 @@ export class AtlasScene {
       this.pointerDown = undefined;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
       const pin = this.pickPin(event.clientX, event.clientY);
-      if (pin) { this.callbacks.onfeature?.(pin, event.clientX, event.clientY); return; }
+      if (pin) { this.callbacks.onfeature?.(pin, event.clientX, event.clientY); this.callbacks.onpinclick?.(pin); return; }
       const region = this.pick(event.clientX, event.clientY);
       if (region) this.callbacks.onselect(region.code);
     });

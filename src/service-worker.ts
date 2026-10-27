@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { build, files, version } from '$service-worker';
 import { officialWarningUrl, parseNotification } from './lib/pwa/notification-payload';
+import { isDeferredAtlasAsset } from './lib/pwa/cache-policy';
 declare const self: ServiceWorkerGlobalScope;
 
 const cacheName = 'nusantara-' + version;
@@ -8,7 +9,7 @@ const cacheName = 'nusantara-' + version;
 const assets = [...build, ...files, '/200.html'].filter(path =>
  !path.startsWith('/data/snapshots/') && !path.startsWith('/data/geometry-2025/') &&
  !path.startsWith('/data/admin-2025/cities/') && path !== '/data/admin-2025/cities.json' &&
- path !== '/_app/version.json' && path !== '/service-worker.js' && !path.startsWith('/data/published/'));
+ path !== '/_app/version.json' && path !== '/service-worker.js' && !path.startsWith('/data/published/') && !isDeferredAtlasAsset(path));
 const assetPaths = new Set(assets);
 
 self.addEventListener('install', event => {
@@ -31,7 +32,7 @@ self.addEventListener('fetch', event => {
  event.respondWith((async () => {
   try {
    const response = await fetch(event.request);
-   const isRegionAsset = url.pathname.startsWith('/data/admin-2025/cities/') || url.pathname.startsWith('/data/geometry-2025/');
+   const isRegionAsset = url.pathname.startsWith('/data/admin-2025/cities/') || url.pathname.startsWith('/data/geometry-2025/') || isDeferredAtlasAsset(url.pathname);
    if (response.ok && (assetPaths.has(url.pathname) || isRegionAsset)) {
     const cache = await caches.open(cacheName);
     await cache.put(event.request, response.clone());

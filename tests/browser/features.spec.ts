@@ -20,6 +20,8 @@ async function useEnglish(page: Page) {
 async function openAtlas(page: Page) {
   await useEnglish(page);
   await page.goto('/');
+  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
+  await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
 }
 
@@ -167,6 +169,7 @@ test('unmapped warnings remain visible with an explicit coverage caveat and offi
   } }));
   await useEnglish(page);
   await page.goto('/?region=11');
+  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   const panel = page.locator('.snapshot-panel');
   await expect(panel).toContainText('These records have no verified region assignment.');
   await expect(panel.locator('.snapshot-records li')).toHaveCount(30);
@@ -216,6 +219,7 @@ test('zooms, pans, resets, and navigates fixture geometry into the real code hie
   await map.locator('..').getByRole('button', { name: 'Reset map view' }).click();
   await expect(scale).toHaveText('1.0×');
   const resetTransform = await map.locator('svg g').first().getAttribute('transform');
+  await map.scrollIntoViewIfNeeded();
   const box = await map.boundingBox();
   if (!box) throw new Error('Map has no layout box');
   await page.mouse.move(box.x + 40, box.y + 40);

@@ -12,6 +12,8 @@ test('3D relief map supports wheel zoom, camera controls and snapshot-only weath
     page.on('console', message => { if (message.type() === 'error' && /THREE|Shader|WebGLProgram/.test(message.text())) errors.push(message.text()); });
     page.on('request', request => { if (/bmkg\.go\.id/.test(request.url())) providerRequests.push(request.url()); });
     await page.goto(baseURL + '/');
+    await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
+    await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
     const map = page.locator('.atlas-3d');
     await expect(map).toHaveAttribute('data-ready', 'true', { timeout: 30000 });
     await map.scrollIntoViewIfNeeded();

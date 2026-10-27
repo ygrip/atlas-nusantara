@@ -3,6 +3,7 @@ import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
 const output = 'docs/screenshots';
+const mobileOnly = process.argv.includes('--mobile');
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ args: ['--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const issues = [];
@@ -41,7 +42,9 @@ async function save(page, name, selector) {
 }
 
 try {
-  let page = await open();
+  let page;
+  if (!mobileOnly) {
+  page = await open();
   await save(page, 'home-light');
   await align(page, '.clay-map');
   await page.locator('.atlas-3d[data-ready="true"]').waitFor({ timeout: 30000 });
@@ -90,11 +93,13 @@ try {
   await save(page, 'saved-weather', '#locations');
   await page.close();
 
+  }
+
   page = await open({ mobile: true });
   await save(page, 'mobile-home');
   await page.getByRole('button', { name: 'Quick settings', exact: true }).click();
   await save(page, 'mobile-settings');
-  await page.locator('.quick-menu').getByRole('button', { name: /Language/ }).click();
+  await page.locator('.quick-menu').getByRole('button', { name: 'Choose your language', exact: true }).click();
   await save(page, 'language-popup');
   await page.keyboard.press('Escape');
   await align(page, '.clay-map');
@@ -104,12 +109,20 @@ try {
   if (width[0] > width[1]) issues.push('Mobile horizontal overflow: ' + width.join('/'));
   await page.close();
 
+  page = await open({ mobile: true, dark: true });
+  await save(page, 'mobile-home-dark');
+  await page.getByRole('button', { name: 'Quick settings', exact: true }).click();
+  await save(page, 'mobile-settings-dark');
+  await page.close();
+
+  if (!mobileOnly) {
   page = await open({ mobile: true, path: '/missing-island' });
   await save(page, 'error-404');
   await page.close();
   page = await open({ path: '/terms' });
   await save(page, 'terms');
   await page.close();
+  }
   if (issues.length) throw Error(issues.join('\n'));
   console.log('Screenshots complete; no page errors or mobile overflow.');
 } finally {

@@ -1,0 +1,108 @@
+import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import type { Landmark } from '../../src/lib/data/destination-contract';
+
+test.use({ serviceWorkers: 'block' });
+const starter = JSON.parse(readFileSync(new URL('../../static/data/destinations/v1.json', import.meta.url), 'utf8'));
+const summaries = [...new Set<string>(starter.landmarks.map((place: { provinceCode: string }) => place.provinceCode))].map(provinceCode => {
+  const places = starter.landmarks.filter((place: { provinceCode: string }) => place.provinceCode === provinceCode);
+  return { provinceCode, count: places.length,
+    natural: places.filter((place: { kind: string }) => place.kind === 'natural').length,
+    built: places.filter((place: { kind: string }) => place.kind === 'built').length,
+    shard: '/data/destinations/provinces/' + provinceCode + '.json' };
+});
+const fixtureIndex = { ...starter, schemaVersion: 2, license: 'Editorial fixture', attribution: 'Atlas Nusantara',
+  provinces: summaries, coverage: { totalRecords: 76, classifiedRecords: 76, geocodedRecords: 0,
+    licensedImages: 0, sourceCoveragePercent: null } };
+
+function provinceFixture(code: string) {
+  return starter.landmarks.filter((place: { provinceCode: string }) => place.provinceCode === code).map((place: Landmark) => {
+    let sourceDistrict = 'Kabupaten Bandung';
+    if (place.kind === 'built') sourceDistrict = 'Kota Bandung';
+    return { ...place, officialId: place.id, sourceDistrict };
+  });
+}
+
+test.beforeEach(async ({ page, context }) => {
+  await context.grantPermissions(['geolocation']);
+  await context.setGeolocation({ latitude: 51.5072, longitude: -0.1276 });
+  await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
+  await page.route('**/data/destinations/index.json?*', route => route.fulfill({ json: fixtureIndex }));
+  await page.route('**/data/destinations/provinces/*.json?*', route => {
+    const code = new URL(route.request().url()).pathname.split('/').pop()?.replace('.json', '') ?? '';
+    return route.fulfill({ json: { ...starter, landmarks: provinceFixture(code) } });
+  });
+});
+
+test('outside Indonesia starts in Jakarta and selecting a province fetches only its static shard', async ({ page }) => {
+  const shards: string[] = [];
+  page.on('request', request => {
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.startsWith('/data/destinations/provinces/')) shards.push(pathname);
+  });
+  await page.goto('/');
+  await expect(page.locator('#destination-province')).toHaveValue('31');
+  await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
+  expect(shards).toEqual(['/data/destinations/provinces/31.json']);
+  await page.locator('#destination-province').selectOption('32');
+  await expect(page).toHaveURL(/region=32/);
+  await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.destination-table')).toContainText('Kawah Putih');
+  await expect(page.locator('.destination-table')).toContainText('Gedung Sate');
+  expect(shards).toEqual(['/data/destinations/provinces/31.json', '/data/destinations/provinces/32.json']);
+});
+
+test('table composes search and filters and supports accessible sorting without new data requests', async ({ page }) => {
+  await page.goto('/?region=32');
+  const rows = page.locator('.destination-table tbody tr');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText('Gedung Sate');
+  const nameHeader = page.getByRole('columnheader', { name: /Name/ });
+  await nameHeader.getByRole('button').click();
+  await expect(nameHeader).toHaveAttribute('aria-sort', 'descending');
+  await expect(rows.first()).toContainText('Kawah Putih');
+  await page.getByRole('combobox', { name: 'Category', exact: true }).selectOption('natural');
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText('Kawah Putih');
+  await page.getByRole('combobox', { name: 'Category', exact: true }).selectOption('all');
+  await page.getByRole('combobox', { name: 'District', exact: true }).selectOption('Kota Bandung');
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText('Gedung Sate');
+  await page.locator('.destination-search input').fill('curated-32-built');
+  await expect(rows).toHaveCount(1);
+  await page.getByRole('combobox', { name: 'Photo', exact: true }).selectOption('with-image');
+  await expect(page.getByRole('status').filter({ hasText: 'No matching landmarks.' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Photo', exact: true }).selectOption('all');
+  await page.locator('.destination-search input').fill('');
+  await page.locator('#destination-province').selectOption('51');
+  await expect(page.getByRole('combobox', { name: 'District', exact: true })).toHaveValue('');
+  await expect(rows).toHaveCount(2);
+});
+
+test('stored Commons photos show full creator credits and license links without runtime searches', async ({ page }) => {
+  const creator = 'Commons Photographer — full creator credit remains visible';
+  await page.route('**/upload.wikimedia.org/**', route => route.fulfill({
+    contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect width="640" height="400" fill="#98b9aa"/></svg>'
+  }));
+  await page.route('**/data/destinations/provinces/32.json?*', route => {
+    const landmarks = provinceFixture('32');
+    landmarks[0].image = { url: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Fixture.jpg',
+      descriptionUrl: 'https://commons.wikimedia.org/wiki/File:Fixture.jpg', credit: creator,
+      license: 'CC-BY-SA-4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', reviewedAt: '2026-10-27T00:00:00Z' };
+    return route.fulfill({ json: { ...starter, landmarks } });
+  });
+  const searches: string[] = [];
+  page.on('request', request => { if (request.url().includes('/w/api.php')) searches.push(request.url()); });
+  await page.goto('/?region=32');
+  const credit = page.getByRole('link', { name: creator + ' ↗', exact: true });
+  await expect(credit).toBeVisible();
+  await expect(credit).toHaveAttribute('href', 'https://commons.wikimedia.org/wiki/File:Fixture.jpg');
+  await expect(page.getByRole('link', { name: 'CC-BY-SA-4.0', exact: true })).toHaveAttribute('href', 'https://creativecommons.org/licenses/by-sa/4.0/');
+  expect(searches).toEqual([]);
+});
+
+test('a province without reviewed photos retains placeholders', async ({ page }) => {
+  await page.goto('/?region=51');
+  await expect(page.locator('.destination-table tbody tr')).toHaveCount(2);
+  await expect(page.locator('.destination-placeholder').first()).toContainText('No photo available');
+});

@@ -1,0 +1,118 @@
+import path from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { loadSubjectRegistry, loadCommonsPages, saveJson } from './image-discovery.mjs';
+import { buildSubjectIndex, matchDestination, normalizeName } from './image-matching.mjs';
+import { verifyCommonsPhoto } from './image-license.mjs';
+import { applyImageRegistry, destinationFingerprint, IMAGE_REVIEW_POLICY } from './image-publication.mjs';
+import { writeDestinationCatalog } from './catalog-output.mjs';
+
+export async function loadDestinationCatalog(directory) {
+  const index = JSON.parse(await readFile(path.join(directory, 'index.json'), 'utf8'));
+  if (!Array.isArray(index.provinces) || index.provinces.length !== 38) throw Error('Expected the full 38-province destination index');
+  const shards = {};
+  const places = [];
+  const ids = new Set();
+  for (const summary of index.provinces) {
+    if (!/^\d{2}$/.test(summary.provinceCode) || shards[summary.provinceCode]) throw Error('Invalid or duplicate province shard');
+    const shard = JSON.parse(await readFile(path.join(directory, 'provinces', summary.provinceCode + '.json'), 'utf8'));
+    if (!Array.isArray(shard.landmarks) || shard.landmarks.length !== summary.count) throw Error('Destination shard count mismatch');
+    for (const place of shard.landmarks) {
+      if (ids.has(place.id) || place.provinceCode !== summary.provinceCode) throw Error('Invalid destination identity in shard');
+      ids.add(place.id); places.push(place);
+    }
+    shards[summary.provinceCode] = shard;
+  }
+  if (places.length !== index.coverage.totalRecords) throw Error('Full catalog count mismatch');
+  return { index, shards, places };
+}
+
+export function selectLocationMatches(places, subjects) {
+  const subjectIndex = buildSubjectIndex(subjects);
+  const matches = [];
+  const outcomes = [];
+  let nameCandidates = 0;
+  for (const place of places) {
+    if (subjectIndex.has(normalizeName(place.name))) nameCandidates++;
+    if (!Number.isFinite(place.lat) || !Number.isFinite(place.lon)) {
+      outcomes.push({ id: place.id, status: 'no-verified-destination-coordinate' });
+      continue;
+    }
+    const match = matchDestination(place, subjectIndex);
+    if (!match) {
+      outcomes.push({ id: place.id, status: 'no-unambiguous-exact-name-and-location-match' });
+      continue;
+    }
+    matches.push({ place, ...match });
+  }
+  return { matches, outcomes, nameCandidates };
+}
+
+function verifiedEntry(match, subject, pages) {
+  for (const title of subject.imageTitles ?? [subject.imageTitle]) {
+    const metadata = pages.get(title);
+    if (!metadata) continue;
+    const photo = verifyCommonsPhoto(metadata.page, metadata.retrievedAt);
+    if (!photo) continue;
+    return { destinationId: match.place.id, destinationFingerprint: destinationFingerprint(match.place),
+      subject: { ...match.subject, imageTitle: title }, locationEvidence: match.evidence,
+      image: photo.image, licenseEvidence: { ...photo.evidence, requestedTitle: title } };
+  }
+  return undefined;
+}
+
+export function reviewMatchedPhotos(matches, subjects, pages) {
+  const byId = new Map(subjects.map(subject => [subject.id, subject]));
+  const entries = [];
+  const outcomes = [];
+  for (const match of matches) {
+    const subject = byId.get(match.subject.id);
+    const entry = verifiedEntry(match, subject, pages);
+    if (entry) {
+      entries.push(entry);
+      outcomes.push({ id: match.place.id, status: 'verified-image', subjectId: subject.id,
+        fileTitle: entry.licenseEvidence.fileTitle });
+    } else outcomes.push({ id: match.place.id, status: 'no-photo-passes-license-credit-or-restriction-policy', subjectId: subject.id });
+  }
+  entries.sort((left, right) => left.destinationId.localeCompare(right.destinationId));
+  return { entries, outcomes };
+}
+
+export async function publishImageRegistry(directory, catalog, registry) {
+  const result = applyImageRegistry(catalog.index, catalog.shards, registry);
+  if (result.rejected || result.missingDestinations) throw Error('Image registry no longer matches the current destination catalog');
+  await saveJson(path.join(directory, 'image-metadata.json'), registry);
+  await writeDestinationCatalog(directory, catalog.index, catalog.shards);
+  return result;
+}
+
+export async function discoverCatalogImages({ catalogDirectory, cacheDirectory, publish = false }) {
+  const catalog = await loadDestinationCatalog(catalogDirectory);
+  const subjects = await loadSubjectRegistry(cacheDirectory);
+  const locations = selectLocationMatches(catalog.places, subjects.subjects);
+  console.log('Full catalog evaluated:', catalog.places.length, 'name candidates:', locations.nameCandidates,
+    'verified subject locations:', locations.matches.length);
+  const byId = new Map(subjects.subjects.map(subject => [subject.id, subject]));
+  const titles = locations.matches.flatMap(match => byId.get(match.subject.id).imageTitles);
+  const pages = await loadCommonsPages(titles, cacheDirectory);
+  const reviewed = reviewMatchedPhotos(locations.matches, subjects.subjects, pages);
+  const outcomes = [...locations.outcomes, ...reviewed.outcomes].sort((left, right) => left.id.localeCompare(right.id));
+  const timestamps = [subjects.fetchedAt, ...[...pages.values()].map(page => page.retrievedAt)].sort();
+  const registry = { schemaVersion: 1, policy: IMAGE_REVIEW_POLICY,
+    discoveredAt: timestamps[timestamps.length - 1],
+    catalogFingerprint: createHash('sha256').update(catalog.places.map(destinationFingerprint).sort().join('\n')).digest('hex'),
+    sources: { subjectRegistry: subjects.source, subjectRegistryFetchedAt: subjects.fetchedAt,
+      subjectCount: subjects.subjects.length, ambiguousSubjectCoordinates: subjects.ambiguousCoordinates,
+      scope: subjects.scope, commons: 'https://commons.wikimedia.org/' },
+    coverage: { evaluatedDestinations: catalog.places.length, exactNameCandidates: locations.nameCandidates,
+      verifiedLocationMatches: locations.matches.length, licensedImages: reviewed.entries.length,
+      distinctImageFiles: new Set(reviewed.entries.map(entry => entry.licenseEvidence.fileTitle)).size,
+      withoutPublishedImage: catalog.places.length - reviewed.entries.length },
+    verification: 'Automated name, subject-coordinate, and file-license metadata verification; not human visual review.',
+    entries: reviewed.entries };
+  await saveJson(path.join(cacheDirectory, 'image-metadata.json'), registry);
+  await saveJson(path.join(cacheDirectory, 'discovery-results.json'), { policy: registry.policy,
+    discoveredAt: registry.discoveredAt, coverage: registry.coverage, outcomes });
+  if (publish) await publishImageRegistry(catalogDirectory, catalog, registry);
+  return registry.coverage;
+}

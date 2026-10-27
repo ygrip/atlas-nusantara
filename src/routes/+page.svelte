@@ -73,7 +73,7 @@
     return () => { sectionObserver.disconnect(); heroObserver.disconnect(); };
   }
 
-  let activeLayer = 'warning';
+  let activeLayer = 'destinations';
   const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin };
   const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
 </script>

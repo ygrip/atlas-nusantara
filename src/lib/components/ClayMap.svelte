@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { Box, ChevronDown, ChevronUp, CloudRain, Compass, Layers, LocateFixed, Map as MapIcon, Minus, Pause, Play, Plus, Rotate3d, Waves, Wind } from 'lucide-svelte';
   import { m } from '$lib/paraglide/messages.js';
   import type { GeometryPackage } from '$lib/geo/types';
@@ -10,6 +10,8 @@
   import { buildField, forecastTimes, loadForecast, nearestTimeIndex, type ForecastSnapshot, type WeatherField } from '$lib/map/weather';
   import WeatherReadout from './WeatherReadout.svelte';
   import SvgMap from './SvgMap.svelte';
+  import MountainDetails from './MountainDetails.svelte';
+  import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { MapPin, PointOverlay } from '$lib/map/overlays';
 
   let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, activeLayer = 'warning', overlay, geometryUnavailable = false }: {
@@ -41,6 +43,29 @@
   let zoomLevel = $state(1);
   let hover = $state<{ code: string; x: number; y: number }>();
   let feature = $state<{ pin: MapPin; x: number; y: number }>();
+  let selectedMountain = $state<MapPin>();
+  let mountainDetailHost = $state<HTMLDivElement>();
+  let mountainFilter = $state<'all' | 'active' | 'potential' | 'other'>('all');
+  const displayedOverlay = $derived(overlay?.id === 'mountains' && mountainFilter !== 'all'
+    ? { ...overlay, pins: overlay.pins.filter(pin => pin.category === mountainFilter) }
+    : overlay);
+  const renderedOverlay = $derived(displayedOverlay?.id === 'mountains'
+    ? { ...displayedOverlay, pins: visibleMountainPins(displayedOverlay.pins, zoomLevel) }
+    : displayedOverlay);
+
+  function handlePin(pin: MapPin) {
+    if (activeLayer === 'mountains') {
+      void showMountain(pin);
+      return;
+    }
+    if (activeLayer === 'destinations' && pin.provinceCode) onprovince(pin.provinceCode);
+  }
+
+  export async function showMountain(pin: MapPin) {
+    selectedMountain = pin;
+    await tick();
+    mountainDetailHost?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }
   let forecast = $state<ForecastSnapshot>();
   let times = $state<string[]>([]);
   let timeIndex = $state(0);
@@ -109,6 +134,7 @@
           hover = { code, x: x - bounds.left, y: y - bounds.top };
         },
         onzoom: level => { zoomLevel = level; },
+        onpinclick: handlePin,
         onfeature: (pin, x, y) => {
           if (!pin) { feature = undefined; return; }
           const bounds = target.getBoundingClientRect();
@@ -123,7 +149,7 @@
       const mask = rasteriseMask(nationalPackage.regions.map(region => region.path), 2048, 1024);
       created.setNational(nationalPackage, relief, mask, [2048, 1024]);
       created.setLayers(effectiveLayers);
-      if (nationalPackage.projection) created.setOverlay(overlay, nationalPackage.projection);
+      if (nationalPackage.projection) created.setOverlay(renderedOverlay, nationalPackage.projection);
       pushWeather();
       created.setProvince(openProvince, detail, false);
       created.setSelected(selectedCode);
@@ -213,6 +239,7 @@
   });
 
   $effect(() => { scene?.setSelected(selectedCode); });
+  $effect(() => { if (activeLayer !== 'mountains') selectedMountain = undefined; });
   const effectiveLayers = $derived.by(() => {
     if (activeLayer === 'warning') return layers;
     return { ...layers, wind: false, weather: false };
@@ -220,7 +247,7 @@
   $effect(() => { scene?.setLayers(effectiveLayers); });
   $effect(() => {
     if (!scene || !national?.projection) return;
-    scene.setOverlay(overlay, national.projection);
+    scene.setOverlay(renderedOverlay, national.projection);
   });
   $effect(() => {
     void timeIndex; void forecast; void scene; void playing;
@@ -288,6 +315,17 @@
     {/if}
   </div>
 
+  {#if activeLayer === 'mountains'}
+    <div class="mountain-filters" role="group" aria-label={m.layer_mountains()}>
+      <button type="button" aria-pressed={mountainFilter === 'all'} onclick={() => mountainFilter = 'all'}>{m.mountain_all()}</button>
+      <button type="button" aria-pressed={mountainFilter === 'active'} onclick={() => mountainFilter = 'active'}>{m.mountain_active()}</button>
+      <button type="button" aria-pressed={mountainFilter === 'potential'} onclick={() => mountainFilter = 'potential'}>{m.mountain_potential()}</button>
+      <button type="button" aria-pressed={mountainFilter === 'other'} onclick={() => mountainFilter = 'other'}>{m.mountain_other()}</button>
+      {#if displayedOverlay}<span class="mountain-count">{displayedOverlay.pins.length.toLocaleString()}</span>{/if}
+    </div>
+    {#if !overlay}<p class="mountain-notice" role="status">{m.source_not_connected_details()}</p>{/if}
+  {/if}
+
   {#if mode === '3d'}
     <div class="atlas-map atlas-3d" bind:this={host} data-ready={Boolean(scene && !loading)} role="application" aria-label={label + ' — ' + m.map_help_3d()}>
       {#if geometryUnavailable}<div class="map-loading" role="status">{m.data_unavailable()}</div>
@@ -316,8 +354,8 @@
           <div class="wind-ramp" aria-hidden="true"></div>
           <div class="wind-scale"><span>0</span><span>12</span><span>25</span><span>40+</span></div>
         {/if}
-        {#if overlay}
-          {#each overlay.legend as item}<p class="legend-title"><span class="overlay-symbol" class:triangle={item.symbol === 'triangle'} class:diamond={item.symbol === 'diamond'} style={`background:${item.color}`} aria-hidden="true"></span>{item.label}</p>{/each}
+        {#if displayedOverlay}
+          {#each displayedOverlay.legend as item, i}<p class="legend-title"><span class="overlay-symbol" class:triangle={item.symbol === 'triangle'} class:diamond={item.symbol === 'diamond'} style={`background:${item.color}`} aria-hidden="true"></span>{displayedOverlay.id === 'mountains' ? [m.mountain_active(), m.mountain_potential(), m.mountain_other()][i] : item.label}</p>{/each}
         {/if}
         <p class="legend-title">{m.map_relief()}</p>
         <div class="relief-ramp" aria-hidden="true"></div>
@@ -330,7 +368,11 @@
     </div>
   {:else}
     {#if webglFailed}<p class="map-notice" role="status">{m.map_webgl_unavailable()}</p>{/if}
-    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} {overlay} projection={national?.projection} />{/if}
+    {#if svgGeometry}<SvgMap geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} onpin={handlePin} projection={national?.projection} />{/if}
+  {/if}
+
+  {#if activeLayer === 'mountains' && selectedMountain}
+    <div bind:this={mountainDetailHost}><MountainDetails pin={selectedMountain} onclose={() => selectedMountain = undefined} /></div>
   {/if}
 
   {#if mode === '3d' && forecast && times.length > 0 && activeLayer === 'warning'}
@@ -360,6 +402,12 @@
 
 <style>
   .clay-map { display: grid; gap: 12px; min-width: 0; }
+  .mountain-filters { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .mountain-filters button { min-height:38px; border:1px solid var(--border); border-radius:13px; padding:6px 12px; color:inherit; background:var(--surface); font-size:.73rem; font-weight:800; cursor:pointer; box-shadow:0 2px 0 var(--border); }
+  .mountain-filters button[aria-pressed='true'] { background:var(--panel); box-shadow:inset 0 2px 5px var(--shadow); }
+  .mountain-count { margin-left:auto; font:800 .74rem ui-monospace,monospace; }
+  .mountain-notice { margin:0; font-size:.8rem; }
+
   /* Floating clay toolbar: view mode on the left, camera tools grouped on the right. */
   .map-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 8px; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(165deg, var(--surface), var(--panel)); box-shadow: 0 4px 0 -2px var(--border), inset 0 2px 1px var(--clay-highlight); }
   .segmented { display: inline-flex; padding: 4px; gap: 4px; border: 1px solid var(--border); border-radius: 17px; background: var(--panel); box-shadow: inset 0 2px 5px var(--shadow); }

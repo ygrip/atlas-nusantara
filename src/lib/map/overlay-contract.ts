@@ -10,7 +10,18 @@ export interface MapPin {
   color?: string;
   /** Optional per-pin symbol; falls back to the overlay symbol. */
   symbol?: PinSymbol;
+  /** BIG volcano class (A versus B/C), or mountain with no official volcano match. */
+  category?: 'active' | 'potential' | 'other';
+  /** Province summary identity, not an attraction coordinate. */
+  provinceCode?: string;
 }
+/** Shared category colours keep SVG and WebGL mountain pins consistent. */
+export function mountainColor(pin: MapPin): string | undefined {
+  if (pin.category === 'active') return '#ca5a48';
+  if (pin.category === 'potential') return '#c99245';
+  return undefined;
+}
+
 export interface OverlayLegend { label: string; color: string; symbol: PinSymbol }
 export interface PointOverlay {
   id: string;
@@ -49,6 +60,8 @@ export function validatePointOverlay(value: unknown): value is PointOverlay {
     if (pin.value !== undefined && !Number.isFinite(pin.value)) return false;
     if (pin.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(pin.color)) return false;
     if (pin.symbol !== undefined && !['circle', 'triangle', 'diamond'].includes(pin.symbol)) return false;
+    if (pin.category !== undefined && !['active', 'potential', 'other'].includes(pin.category)) return false;
+    if (pin.provinceCode !== undefined && !/^\d{2}$/.test(pin.provinceCode)) return false;
     ids.add(pin.id);
   }
   return Array.isArray(overlay.legend) && overlay.legend.length <= 20 && overlay.legend.every(item => typeof item.label === 'string' && /^#[0-9a-fA-F]{6}$/.test(item.color) && ['circle', 'triangle', 'diamond'].includes(item.symbol));

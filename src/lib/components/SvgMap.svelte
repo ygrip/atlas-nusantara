@@ -4,10 +4,12 @@
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
   import { projectLonLat } from '$lib/map/geometry';
-  import type { PointOverlay } from '$lib/map/overlays';
+  import { visibleMountainPins } from '$lib/map/mountain-density';
+  import type { PointOverlay, MapPin } from '$lib/map/overlays';
+  import { mountainColor } from '$lib/map/overlay-contract';
 
-  let { geometry, label, selectedCode, onselect, overlay, projection }: {
-    geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void;
+  let { geometry, label, selectedCode, onselect, onpin, overlay, projection }: {
+    geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void; onpin?: (pin: MapPin) => void;
     overlay?: PointOverlay; projection?: GeometryPackage['projection'];
   } = $props();
 
@@ -18,6 +20,12 @@
   $effect(() => { if (geometry !== previousGeometry) { previousGeometry = geometry; reset(); } });
 
   const box = $derived(geometry.viewBox.split(' ').map(Number));
+  const visiblePins = $derived.by(() => {
+    if (overlay?.id !== 'mountains') return overlay?.pins ?? [];
+    let scope: 'national' | 'province' = 'national';
+    if (geometry.level === 'city-regency') scope = 'province';
+    return visibleMountainPins(overlay.pins, scale, scope);
+  });
   const centerX = $derived(box[0] + box[2] / 2);
   const centerY = $derived(box[1] + box[3] / 2);
 
@@ -29,12 +37,16 @@
     const pointers = new Map<number, { x: number; y: number }>();
     let moved = 0;
     let touchCode: string | undefined;
+    let touchPin: string | undefined;
     let suppressClickUntil = 0;
     function coordinates(event: PointerEvent) { return { x: event.clientX, y: event.clientY }; }
     function down(event: PointerEvent) {
       if ((event.target as Element).closest('button')) return;
       pointers.set(event.pointerId, coordinates(event)); moved = 0;
-      if (event.pointerType === 'touch') touchCode = (event.target as Element).getAttribute('data-code') ?? undefined;
+      if (event.pointerType === 'touch') {
+        touchCode = (event.target as Element).closest('[data-code]')?.getAttribute('data-code') ?? undefined;
+        touchPin = (event.target as Element).closest('[data-pin-id]')?.getAttribute('data-pin-id') ?? undefined;
+      }
     }
     function move(event: PointerEvent) {
       const previous = pointers.get(event.pointerId);
@@ -59,11 +71,15 @@
     function up(event: PointerEvent) {
       if (!pointers.has(event.pointerId)) return;
       if (moved > 5 || event.pointerType === 'touch') suppressClickUntil = performance.now() + 300;
-      if (event.pointerType === 'touch' && moved < 5 && pointers.size === 1 && touchCode) onselect(touchCode);
+      if (event.pointerType === 'touch' && moved < 5 && pointers.size === 1) {
+        if (touchPin) { const hit = overlay?.pins.find(pin => pin.id === touchPin); if (hit) onpin?.(hit); }
+        else if (touchCode) onselect(touchCode);
+      }
+      touchPin = undefined;
       pointers.delete(event.pointerId);
       if (node.hasPointerCapture(event.pointerId)) node.releasePointerCapture(event.pointerId);
     }
-    function cancel(event: PointerEvent) { pointers.delete(event.pointerId); touchCode = undefined; }
+    function cancel(event: PointerEvent) { pointers.delete(event.pointerId); touchCode = undefined; touchPin = undefined; }
     function click(event: MouseEvent) { if (performance.now() < suppressClickUntil) { event.stopPropagation(); event.preventDefault(); } }
     function wheel(event: WheelEvent) {
       event.preventDefault();
@@ -104,12 +120,15 @@
         </path>
       {/each}
       {#if overlay && projection}
-        {#each overlay.pins as pin (pin.id)}
+        {#each visiblePins as pin (pin.id)}
           {@const point = projectLonLat(projection, pin.lon, pin.lat)}
           {@const radius = box[2] * 0.008}
-          {@const pinColor = pin.color ?? overlay.color}
+          {@const pinColor = pin.color ?? mountainColor(pin) ?? overlay.color}
           {@const pinSymbol = pin.symbol ?? overlay.symbol}
-          <g class="overlay-pin" class:epicentre={overlay.id === 'earthquake'} role="img" aria-label={pin.label}>
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex (SVG pin is keyboard-operable when a handler is provided) -->
+          <g class="overlay-pin" class:epicentre={overlay.id === 'earthquake'} role={onpin ? 'button' : 'img'} tabindex={onpin ? 0 : undefined}
+            data-pin-id={pin.id} data-code={pin.provinceCode} aria-label={pin.label} onclick={() => onpin?.(pin)}
+            onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onpin?.(pin); } }}>
             <title>{pin.label} · {pin.description ?? ''}</title>
             {#if pinSymbol === 'circle'}
               <circle cx={point.x} cy={point.y} r={radius} fill={pinColor} />
@@ -145,7 +164,11 @@
   .region-depth path { fill: #00000030; stroke: none; cursor: default; }
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: #e07a4f; }
+  .overlay-pin { cursor:pointer; }
+  .overlay-pin:focus { outline:none; filter:drop-shadow(0 0 7px #fff); }
   .overlay-pin circle, .overlay-pin polygon { stroke: #fff8e9; stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .overlay-pin[role='button'] { cursor: pointer; }
+  .overlay-pin[role='button']:focus-visible { outline: 3px solid var(--accent); }
   .map-help { margin: 0; font-size: .74rem; line-height: 1.5; opacity: .8; }
   @media (prefers-reduced-motion: reduce) { path, .tool { transition: none; } }
 </style>

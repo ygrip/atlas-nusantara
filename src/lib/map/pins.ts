@@ -1,6 +1,6 @@
 import { BufferAttribute, BufferGeometry, Color, Points, ShaderMaterial } from 'three';
 import { MAP_CENTER, projectLonLat } from './geometry';
-import type { PinSymbol, PointOverlay } from './overlay-contract';
+import { mountainColor, type PinSymbol, type PointOverlay } from './overlay-contract';
 import { pinFragment, pinVertex } from './shaders';
 import type { TerrainModel } from './terrain';
 
@@ -34,7 +34,7 @@ export function createPinPoints(
     positions[index * 3] = point.x - MAP_CENTER.x;
     positions[index * 3 + 1] = pinHeight(terrain, point.x, point.y);
     positions[index * 3 + 2] = point.y - MAP_CENTER.y;
-    const color = new Color(pin.color ?? overlay.color);
+    const color = new Color(pin.color ?? mountainColor(pin) ?? overlay.color);
     colors[index * 3] = color.r;
     colors[index * 3 + 1] = color.g;
     colors[index * 3 + 2] = color.b;
