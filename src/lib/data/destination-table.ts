@@ -7,6 +7,7 @@ export interface DestinationTableRecord {
   name: string;
   kind: string;
   image?: unknown;
+  images?: readonly unknown[];
   sourceDistrict?: string;
   officialId?: string;
 }
@@ -31,8 +32,9 @@ export function filterDestinations<T extends DestinationTableRecord>(
     if (query && !searchable.includes(query)) return false;
     if (options.kind && options.kind !== 'all' && record.kind !== options.kind) return false;
     if (options.district && district !== normalize(options.district)) return false;
-    if (options.image === 'with-image' && !record.image) return false;
-    if (options.image === 'without-image' && record.image) return false;
+    const hasImage = Boolean(record.image) || Boolean(record.images?.length);
+    if (options.image === 'with-image' && !hasImage) return false;
+    if (options.image === 'without-image' && hasImage) return false;
     return true;
   });
 }
