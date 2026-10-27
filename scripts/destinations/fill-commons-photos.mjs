@@ -73,10 +73,18 @@ export async function discoverCommonsNameGeotags({
     // Prefer supplementing existing one-photo records over replacing verified photos.
     if ((existing.get(place.id)?.photos?.length ?? (existing.has(place.id) ? 1 : 0)) >= MAX_PHOTOS) continue;
     async function search(name) {
-      const response = await client.get(searchUrl(name));
-      const payload = JSON.parse(response.body);
-      if (payload.error) throw Error('Commons search error for ' + place.name + ': ' + payload.error.code);
-      return candidatesFromCommonsSearch(place, payload);
+      const url = searchUrl(name);
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const response = await client.get(url);
+        const payload = JSON.parse(response.body);
+        if (!payload.error) return candidatesFromCommonsSearch(place, payload);
+        if (!['maxlag', 'ratelimited', 'readonly'].includes(payload.error.code) || attempt === 3) {
+          throw Error('Commons search error for ' + place.name + ': ' + payload.error.code);
+        }
+        await client.evictGet(url);
+        await pause(5000 * (attempt + 1));
+      }
+      throw Error('Commons search retry limit reached');
     }
     let matches = await search(place.name);
     // A local Commons title may omit a redundant last word ("Bunker Kaliadem"
