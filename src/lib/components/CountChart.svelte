@@ -9,8 +9,9 @@
   let chart: Chart<'bar'> | undefined;
   let failed = false;
 
-  /** One clay tone per layer: warnings mint, earthquakes peach, incidents lilac, hazards sky. */
-  const tones = ['#8fc7a0', '#f0aa80', '#bba7e2', '#8fc0d6'];
+  /** Semantic chart tones match the legend and update when the theme changes. */
+  const tones = ['var(--chart-red)', 'var(--chart-green)', 'var(--chart-gold)', 'var(--chart-rose)'];
+  const chartTones = () => ['--chart-red', '--chart-green', '--chart-gold', '--chart-rose'].map(cssValue);
 
   function cssValue(name: string): string {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -33,7 +34,7 @@
       Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip);
       const muted = cssValue('--muted');
       const font = { family: "'Nunito Variable', system-ui, sans-serif", weight: 700 as const, size: 12 };
-      chart = new Chart(canvas, { type: 'bar', data: { labels, datasets: [{ label: m.retained_records(), data: values, backgroundColor: tones, borderRadius: 14, borderSkipped: false, maxBarThickness: 64 }] }, options: {
+      chart = new Chart(canvas, { type: 'bar', data: { labels, datasets: [{ label: m.retained_records(), data: values, backgroundColor: chartTones(), borderRadius: 14, borderSkipped: false, maxBarThickness: 64 }] }, options: {
         responsive: true, maintainAspectRatio: false, animation: false,
         plugins: {
           legend: { display: false },
@@ -47,6 +48,7 @@
     }
     function recolor() {
       if (!chart) return;
+      chart.data.datasets[0].backgroundColor = chartTones();
       const muted = cssValue('--muted');
       const tooltip = chart.options.plugins?.tooltip;
       if (tooltip) {

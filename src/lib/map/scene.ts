@@ -39,7 +39,7 @@ interface RegionEntry { id: number; code: string; name: string; bbox: [number, n
 
 const ID_WIDTH = 2048;
 const ID_HEIGHT = 1024;
-const SELECTED_COLOR = new Color('#e07a4f');
+const SELECTED_COLORS: Record<ThemeName, Color> = { light: new Color('#ca374d'), dark: new Color('#ff8698') };
 const CITY_ID_OFFSET = 100;
 
 /** Default camera tilt (radians from straight down): steep enough to show relief and the rolled-over edge of the world. */
@@ -426,7 +426,7 @@ export class AtlasScene {
   }
 
   /**
-   * Palette per region id. RGB is the island-group clay tone (dimmed outside the open province, terracotta when selected);
+   * Palette per region id. RGB is the island-group clay tone (dimmed outside the open province, crimson when selected);
    * alpha is how strongly that colour tints the realistic land colour, so the selection stands out but the relief stays natural.
    */
   private updatePalette(): void {
@@ -449,7 +449,7 @@ export class AtlasScene {
         tint = TINT_DIMMED;
       }
       if (region.code === this.selectedCode || (region.level === 'province' && region.code === this.openProvince && this.cities.length === 0)) {
-        color = SELECTED_COLOR.clone();
+        color = SELECTED_COLORS[this.theme].clone();
         tint = TINT_SELECTED;
       }
       if (region.id === this.hoverId) {

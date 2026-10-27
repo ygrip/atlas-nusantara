@@ -31,7 +31,10 @@
 
   function reset() { scale = 1; panX = 0; panY = 0; }
   function zoom(factor: number) { scale = Math.min(8, Math.max(1, scale * factor)); if (scale === 1) { panX = 0; panY = 0; } }
-  function fill(code: string): string { return ISLAND_GROUP_COLORS[islandGroupOf(code)].light[0]; }
+  function fill(code: string): string {
+    const tones = ISLAND_GROUP_COLORS[islandGroupOf(code)];
+    return `--fill-light: ${tones.light[0]}; --fill-dark: ${tones.dark[0]}`;
+  }
 
   function interaction(node: HTMLDivElement) {
     const pointers = new Map<number, { x: number; y: number }>();
@@ -112,7 +115,7 @@
         {#each geometry.regions as region (region.id)}<path d={region.path} />{/each}
       </g>
       {#each geometry.regions as region (region.id)}
-        <path d={region.path} data-code={region.sourceCode} class:selected={selectedCode === region.sourceCode} style={`--fill: ${fill(region.sourceCode)}`}
+        <path d={region.path} data-code={region.sourceCode} class:selected={selectedCode === region.sourceCode} style={fill(region.sourceCode)}
           role="button" tabindex="0" aria-label={region.name + ' · ' + region.sourceCode}
           onclick={() => onselect(region.sourceCode)}
           onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onselect(region.sourceCode); } }}>
@@ -155,15 +158,16 @@
   .tool.reset { padding: 0 14px; }
   .map-controls output { min-width: 4ch; text-align: center; font: 800 .75rem ui-monospace, monospace; color: var(--muted); }
   @media (max-width: 700px) { .tool.reset .tool-label { display: none; } .tool.reset { padding: 0 10px; } }
-  .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, #bfe3ea, #8fc7d8); border: 1px solid var(--border, #e2d6c6); border-radius: 24px; overflow: hidden; }
+  .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, var(--green-wash), var(--map-bg)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
   .interactive { touch-action: none; cursor: grab; }
   .interactive:active { cursor: grabbing; }
   svg { width: 100%; height: auto; }
-  path { fill: var(--fill, #91b89b); stroke: #fffaf0; stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
+  path { fill: var(--fill-light, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
   .region-depth { pointer-events: none; }
   .region-depth path { fill: #00000030; stroke: none; cursor: default; }
+  :global(:root[data-theme='dark']) path:not(.selected) { fill: var(--fill-dark, #91b89b); }
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
-  path.selected { fill: #e07a4f; }
+  path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
   .overlay-pin { cursor:pointer; }
   .overlay-pin:focus { outline:none; filter:drop-shadow(0 0 7px #fff); }
   .overlay-pin circle, .overlay-pin polygon { stroke: #fff8e9; stroke-width: 2; vector-effect: non-scaling-stroke; }

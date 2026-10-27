@@ -14,14 +14,15 @@ export const ISLAND_GROUP_NAMES: Record<IslandGroup, string> = {
 export const ISLAND_GROUPS = Object.keys(ISLAND_GROUP_NAMES) as IslandGroup[];
 
 /** Light and dark clay tones per group: [top, side]. */
+/** Seven distinct island families within red, green, and brass-gold; preserve text labels. */
 export const ISLAND_GROUP_COLORS: Record<IslandGroup, { light: [string, string]; dark: [string, string] }> = {
-  sumatra: { light: ['#f3c3a0', '#d99a72'], dark: ['#c98f6b', '#8d5f45'] },
-  java: { light: ['#d4c6ef', '#a998cf'], dark: ['#a594cc', '#6e5f94'] },
-  'nusa-tenggara': { light: ['#f4dc9a', '#d4b664'], dark: ['#c9ad62', '#8a743b'] },
-  kalimantan: { light: ['#b9dcc4', '#84b494'], dark: ['#7fae8f', '#4d7a5c'] },
-  sulawesi: { light: ['#b6d3ea', '#80a8c8'], dark: ['#7ea3c2', '#4d7091'] },
-  maluku: { light: ['#f1b7b1', '#d0857e'], dark: ['#c4827c', '#87524d'] },
-  papua: { light: ['#cfe0a6', '#a2b872'], dark: ['#9cb36d', '#677a40'] }
+  sumatra: { light: ['#f2bfc2', '#d9959d'], dark: ['#cf919b', '#8e5965'] },
+  java: { light: ['#d88794', '#b55768'], dark: ['#c96d7b', '#813c4a'] },
+  'nusa-tenggara': { light: ['#efd9ae', '#c9ae75'], dark: ['#d9bc7d', '#95763f'] },
+  kalimantan: { light: ['#b5d7be', '#84b094'], dark: ['#8ebb9c', '#527960'] },
+  sulawesi: { light: ['#d3e0bb', '#abc48e'], dark: ['#acbf8f', '#718456'] },
+  maluku: { light: ['#f2d6d5', '#d6a9ad'], dark: ['#d4a2a6', '#94666d'] },
+  papua: { light: ['#d8c49c', '#b69d70'], dark: ['#baa06c', '#826a43'] }
 };
 
 const GROUP_BY_PREFIX: Record<string, IslandGroup> = {
