@@ -155,3 +155,16 @@ npm run destinations:images:queue -- /tmp/atlas-photo-review.jsonl --missing-onl
 ```
 
 The Wikimedia-only automatic pass cannot guarantee complete coverage: some source markers lack verified coordinates, Commons may not have a licensed photograph, and files may lack trustworthy subject evidence. Those destinations must retain placeholders until independently reviewed. Google Images pages are included for researcher navigation, not harvested or treated as image licensing evidence. The local passes use persistent request caches, throttling, and license/creator evidence. Existing verified photos remain intact if new discovery is incomplete.
+
+### Recovery from Wikidata TimeoutError
+
+If `npm run destinations:images:wikidata` fails inside `loadSubjectRegistry` with a Node/undici `TimeoutError`, update to the current PR branch and rerun the **same command with the same cache directory**. The crawler retries transient timeouts with backoff and increasingly generous client deadlines. Wikidata subject discovery now scans P18 and P373 separately in smaller pages instead of evaluating an expensive combined optional-property query. Successfully retrieved pages are cached by request URL and reused on later runs. Do not delete the cache directory to recover.
+
+```sh
+git pull --ff-only origin feat/destination-galleries-verification-20261027
+npm run destinations:images:wikidata -- /tmp/atlas-photo-cache --publish
+```
+
+If the Wikidata Query Service continues timing out server-side, rerun or use the independent Commons filename-and-geotag pass instead; the latter does not depend on SPARQL. It is still not guaranteed to find valid images for every record.
+
+These changes are committed with `[skip ci]` because automated actions are not necessary for local research and the project currently has a limited GitHub Actions quota.
