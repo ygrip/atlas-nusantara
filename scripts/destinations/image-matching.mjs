@@ -143,7 +143,13 @@ export function matchCommonsFileToDestination(place, fileTitle, camera) {
     word.length >= 3 && /\p{L}/u.test(word) && !GENERIC_WORDS.has(word));
   if (!distinctive || placeName.length < 8 || GENERIC_NAMES.has(placeName)) return undefined;
   // Preserve token boundaries: "Sari" must not match "Sarimukti".
-  if (!(' ' + filename + ' ').includes(' ' + placeName + ' ')) return undefined;
+  const phraseMatch = (' ' + filename + ' ').includes(' ' + placeName + ' ');
+  const placeTokens = placeName.split(' ');
+  const fileTokens = filename.split(' ');
+  const sharedPrefix = placeTokens.slice(0, fileTokens.length).join(' ') === filename
+    && fileTokens.length >= 2 && fileTokens.length >= placeTokens.length - 1
+    && fileTokens.some(word => word.length >= 4 && !GENERIC_WORDS.has(word));
+  if (!phraseMatch && !sharedPrefix) return undefined;
   const distance = distanceMeters(place.lat, place.lon, camera.lat, camera.lon);
   if (distance > CAMERA_RADIUS_METERS) return undefined;
   return {
