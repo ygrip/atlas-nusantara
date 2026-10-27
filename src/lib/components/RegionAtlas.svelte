@@ -5,16 +5,36 @@
   import { upgradeRegionCode } from '$lib/atlas/code-upgrades';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import type { GeometryPackage } from '$lib/geo/types';
+  import { provinceAtPosition, DEFAULT_DESTINATION_PROVINCE } from '$lib/geo/province-location';
+  import { requestStartupLocation, type StartupPosition } from '$lib/pwa/startup-location';
+  import { isProvinceCode } from '$lib/data/destination-index';
   import ClayMap from './ClayMap.svelte';
+  import DestinationsPanel from './DestinationsPanel.svelte';
+  import { loadDestinationIndex, loadDestinations, destinationOverlay, type DestinationCatalog, type DestinationIndex } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
   import { loadHazards, type HazardSnapshot } from '$lib/data/hazards';
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
-  export let layer = 'warning';
+  export let layer = 'destinations';
+  let initializingSelection = true;
+  let startupLocationStatus: 'explicit' | 'matched' | 'fallback' | undefined;
+  let selectionVersion = 0;
   let earthquakeArchive: EarthquakeArchive | undefined;
   let hazardSnapshot: HazardSnapshot | undefined;
+  let destinationCatalog: DestinationCatalog | undefined;
+  let destinationIndex: DestinationIndex | undefined;
+  let destinationRequest: AbortController | undefined;
+  let destinationLoading = false;
+  let destinationFailed = false;
+  let destinationIndexFailed = false;
+  $: void loadProvinceDestinations(layer, province?.code, destinationIndex);
   let customOverlay: PointOverlay | undefined;
+  let clayMap: ClayMap | undefined;
   let overlayRequest: AbortController | undefined;
-  $: activeOverlay = resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
+  let customOverlayLoading = false;
+  let customOverlayFailed = false;
+  $: activeOverlay = layer === 'destinations' && destinationIndex
+    ? destinationOverlay(national, destinationIndex, province?.code)
+    : resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
   $: void loadCustomOverlay(layer);
   import { ADMIN_DATA_PATH, CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   export let onselection: ((region: Region | undefined, geometry: GeometryPackage | undefined) => void) | undefined = undefined;
@@ -26,6 +46,11 @@
   let query = '';
   let loading = true;
   let failed = false;
+  let initialSelectionFailed = false;
+  let loadedCityProvince: string | undefined;
+  let pendingCityProvince: string | undefined;
+  let cityDirectoryPromise: Promise<void> | undefined;
+  $: void ensureCityDirectory(layer, province?.code);
   let national: GeometryPackage | undefined;
   let geometryLoaded = false;
   let detail: GeometryPackage | undefined;
@@ -40,48 +65,111 @@
     if (province) regions = cities;
   }
   $: filtered = regions.filter(region => (region.name + ' ' + region.code).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  let mountainLimit = 80;
+  $: mountainMatches = (customOverlay?.id === 'mountains' ? customOverlay.pins : []).filter(pin =>
+    (pin.label + ' ' + (pin.description ?? '')).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
   onMount(() => {
     const initial = new AbortController();
-    loadRegions(ADMIN_DATA_PATH + '/provinces.json', initial.signal)
-      .then(async payload => {
-        provinces = payload.regions; loading = false;
-        const storedCode = new URL(location.href).searchParams.get('region');
-        let requested: string | undefined;
-        if (storedCode) requested = upgradeRegionCode(storedCode);
-        if (requested && /^\d{2}(\.\d{2})?$/.test(requested)) {
-          const parent = provinces.find(item => item.code === requested.split('.')[0]);
-          if (parent) { await selectRegion(parent); city = cities.find(item => item.code === requested); updateUrl(); }
-        }
-      })
-      .catch(error => { if (error.name !== 'AbortError') { failed = true; loading = false; } });
-    void loadNational();
+    void initializeSelection(initial.signal);
+    void loadDestinationIndex(initial.signal).then(index => { if (!initial.signal.aborted) destinationIndex = index; })
+      .catch(error => {
+        if (!initial.signal.aborted) { destinationIndexFailed = true; console.warn('Destinations unavailable', error); }
+      });
     let active = true;
     const refreshEarthquakes = () => { void loadEarthquakes().then(archive => { if (active && archive) earthquakeArchive = archive; }); };
     const refreshHazards = () => { void loadHazards().then(snapshot => { if (active && snapshot) hazardSnapshot = snapshot; }); };
     refreshEarthquakes();
     refreshHazards();
     const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) { refreshEarthquakes(); refreshHazards(); } }, 15 * 60_000);
-    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); generation++; };
+    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); generation++; };
   });
 
-  async function fetchGeometry(url: string): Promise<GeometryPackage | undefined> {
+  async function loadProvinceDestinations(activeLayer: string, code: string | undefined, index: DestinationIndex | undefined) {
+    destinationRequest?.abort();
+    destinationCatalog = undefined;
+    destinationFailed = false;
+    destinationLoading = false;
+    if (activeLayer !== 'destinations' || !code || !index) return;
+    const request = new AbortController();
+    destinationRequest = request;
+    destinationLoading = true;
     try {
-      const response = await fetch(assetUrl(url));
+      const catalog = await loadDestinations(index, code, request.signal);
+      if (!request.signal.aborted) destinationCatalog = catalog;
+    } catch (error) {
+      if (!request.signal.aborted) { destinationFailed = true; console.warn('Destination province unavailable', code, error); }
+    } finally {
+      if (!request.signal.aborted) destinationLoading = false;
+    }
+  }
+
+  function requestedRegionCode(): string | undefined {
+    const stored = new URL(location.href).searchParams.get('region');
+    if (!stored) return undefined;
+    const code = upgradeRegionCode(stored);
+    if (!/^\d{2}(\.\d{2})?$/.test(code) || !isProvinceCode(code.split('.')[0])) return undefined;
+    return code;
+  }
+
+  async function initializeSelection(signal: AbortSignal) {
+    const initialVersion = selectionVersion;
+    const requested = requestedRegionCode();
+    const geometryPromise = loadNational(signal);
+    let positionPromise: Promise<StartupPosition | undefined> = Promise.resolve(undefined);
+    if (!requested) positionPromise = requestStartupLocation(navigator.geolocation, signal);
+    try {
+      const payload = await loadRegions(ADMIN_DATA_PATH + '/provinces.json', signal);
+      if (signal.aborted) return;
+      provinces = payload.regions;
+      loading = false;
+      const [geometry, position] = await Promise.all([geometryPromise, positionPromise]);
+      if (signal.aborted || selectionVersion !== initialVersion) return;
+      let code = DEFAULT_DESTINATION_PROVINCE;
+      let reason: 'explicit' | 'matched' | 'fallback' = 'fallback';
+      if (requested) { code = requested.split('.')[0]; reason = 'explicit'; }
+      else if (position) {
+        const located = provinceAtPosition(geometry, position.latitude, position.longitude);
+        if (located) { code = located; reason = 'matched'; }
+      }
+      const target = provinces.find(item => item.code === code);
+      if (!target) throw Error('Initial destination province is unavailable');
+      const expectedVersion = selectionVersion + 1;
+      await selectRegion(target, reason);
+      if (signal.aborted || selectionVersion !== expectedVersion) return;
+      if (requested?.includes('.')) {
+        await loadCityDirectory(code);
+        if (signal.aborted || selectionVersion !== expectedVersion) return;
+        city = cities.find(item => item.code === requested);
+        updateUrl();
+      }
+    } catch (error) {
+      if (!signal.aborted) { initialSelectionFailed = true; failed = true; loading = false; console.warn('Initial province unavailable', error); }
+    } finally {
+      if (!signal.aborted) initializingSelection = false;
+    }
+  }
+
+  async function fetchGeometry(url: string, signal?: AbortSignal): Promise<GeometryPackage | undefined> {
+    try {
+      const response = await fetch(assetUrl(url), { signal });
       if (!response.ok) return undefined;
       const payload = await response.json();
       if (payload.schemaVersion !== 1 || payload.codeEdition !== CODE_EDITION || !Array.isArray(payload.regions)) return undefined;
       return payload;
     } catch (error) {
       // A missing licensed package is a supported unavailable state, never synthetic geography.
-      console.warn('Geometry unavailable', url, error);
+      if (!signal?.aborted) console.warn('Geometry unavailable', url, error);
       return undefined;
     }
   }
 
-  async function loadNational() {
-    national = await fetchGeometry(GEOMETRY_DATA_PATH + '/national.json');
+  async function loadNational(signal: AbortSignal) {
+    const payload = await fetchGeometry(GEOMETRY_DATA_PATH + '/national.json', signal);
+    if (signal.aborted) return undefined;
+    national = payload;
     geometryLoaded = true;
+    return payload;
   }
 
   async function loadDetail(code: string) {
@@ -91,22 +179,62 @@
     if (request === generation) detail = payload;
   }
 
-  async function selectRegion(region: Region) {
+  async function selectRegion(region: Region, reason?: 'explicit' | 'matched' | 'fallback') {
+    selectionVersion++;
+    startupLocationStatus = reason;
+    initializingSelection = false;
     if (province) { city = region; updateUrl(); return; }
     controller?.abort();
-    controller = new AbortController();
-    province = region; city = undefined; cities = []; query = ''; loading = true; failed = false;
+    loadedCityProvince = undefined;
+    pendingCityProvince = undefined;
+    cityDirectoryPromise = undefined;
+    province = region; city = undefined; cities = []; query = ''; loading = false; failed = false;
+    initialSelectionFailed = false;
     updateUrl();
     void loadDetail(region.code);
-    try {
-      const payload = await loadRegions(ADMIN_DATA_PATH + '/cities/' + region.code + '.json', controller.signal);
-      if (province?.code === region.code) cities = payload.regions;
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') failed = true;
-    } finally { if (province?.code === region.code) loading = false; }
+    if (layer !== 'destinations') await loadCityDirectory(region.code);
+  }
+
+  function ensureCityDirectory(activeLayer: string, code: string | undefined) {
+    if (activeLayer !== 'destinations' && code) void loadCityDirectory(code);
+  }
+
+  function loadCityDirectory(code: string): Promise<void> {
+    if (loadedCityProvince === code || province?.code !== code) return Promise.resolve();
+    if (pendingCityProvince === code && cityDirectoryPromise) return cityDirectoryPromise;
+    controller?.abort();
+    const request = new AbortController();
+    controller = request;
+    pendingCityProvince = code;
+    loading = true;
+    failed = false;
+    cityDirectoryPromise = loadRegions(ADMIN_DATA_PATH + '/cities/' + code + '.json', request.signal)
+      .then(payload => {
+        if (!request.signal.aborted && province?.code === code) {
+          cities = payload.regions;
+          loadedCityProvince = code;
+        }
+      })
+      .catch(error => {
+        if (!request.signal.aborted && province?.code === code) {
+          failed = true;
+          console.warn('City directory unavailable', code, error);
+        }
+      })
+      .finally(() => {
+        if (controller === request) {
+          pendingCityProvince = undefined;
+          cityDirectoryPromise = undefined;
+          if (province?.code === code) loading = false;
+        }
+      });
+    return cityDirectoryPromise;
   }
 
   function returnToNational() {
+    selectionVersion++;
+    startupLocationStatus = undefined;
+    initializingSelection = false;
     controller?.abort(); province = undefined; city = undefined; query = ''; failed = false; loading = false;
     updateUrl();
     generation++;
@@ -131,6 +259,7 @@
   }
 
   function mapSelect(code: string) {
+    if (layer === 'destinations' && province) return;
     const region = regions.find(item => item.code === code);
     if (region) void selectRegion(region);
   }
@@ -138,14 +267,33 @@
   /** One public entry point for the table, a saved place, or a city detail button. */
   export async function openRegion(code: string) {
     const provinceCode = code.split('.')[0];
+    const parent = provinces.find(item => item.code === provinceCode);
+    if (!parent) return;
+    let expectedVersion: number;
     if (province?.code !== provinceCode) {
-      const parent = provinces.find(item => item.code === provinceCode);
-      if (!parent) return;
       province = undefined;
-      await selectRegion(parent);
+      const selection = selectRegion(parent);
+      expectedVersion = selectionVersion;
+      await selection;
+      if (selectionVersion !== expectedVersion) return;
+    } else {
+      expectedVersion = ++selectionVersion;
+      initializingSelection = false;
+      startupLocationStatus = undefined;
     }
-    if (code.includes('.')) selectCity(code);
-    else { city = undefined; updateUrl(); }
+    if (code.includes('.')) {
+      await loadCityDirectory(provinceCode);
+      if (selectionVersion !== expectedVersion) return;
+      selectCity(code);
+    } else showProvinceOnly();
+  }
+
+  function showProvinceOnly() {
+    selectionVersion++;
+    initializingSelection = false;
+    startupLocationStatus = undefined;
+    city = undefined;
+    updateUrl();
   }
 
   function resolveOverlay(id: string, archive: EarthquakeArchive | undefined, hazards: HazardSnapshot | undefined, custom: PointOverlay | undefined): PointOverlay | undefined {
@@ -160,16 +308,35 @@
     const definition = OVERLAY_DEFINITIONS.find(item => item.id === id);
     overlayRequest?.abort();
     customOverlay = undefined;
+    customOverlayLoading = false;
+    customOverlayFailed = false;
     if (!definition?.snapshotUrl) return;
     const request = new AbortController();
     overlayRequest = request;
+    customOverlayLoading = true;
     try {
-      const payload = await loadPointOverlay(definition.snapshotUrl, request.signal);
-      if (!request.signal.aborted) customOverlay = payload;
-    } catch (error) { if (!request.signal.aborted) console.warn('Overlay unavailable', id, error); }
+      const payload = await loadPointOverlay(assetUrl(definition.snapshotUrl), request.signal);
+      if (!request.signal.aborted) {
+        customOverlay = payload;
+        customOverlayFailed = !payload;
+      }
+    } catch (error) {
+      if (!request.signal.aborted) {
+        customOverlayFailed = true;
+        console.warn('Overlay unavailable', id, error);
+      }
+    } finally {
+      if (!request.signal.aborted) customOverlayLoading = false;
+    }
+  }
+
+  function selectMapCity(code: string) {
+    if (layer !== 'destinations') selectCity(code);
   }
 
   function selectCity(code: string) {
+    selectionVersion++;
+    startupLocationStatus = undefined;
     const region = cities.find(item => item.code === code);
     if (!region) return;
     city = region;
@@ -180,16 +347,47 @@
 <section class="region-atlas" aria-label={m.level_national()}>
   <nav class="atlas-breadcrumb" aria-label={m.level_province()}>
     <button type="button" onclick={returnToNational} aria-current={!province}>{m.level_national()}</button>
-    {#if province}<span aria-hidden="true">/</span><button type="button" onclick={() => { city = undefined; updateUrl(); }}>{province.name}</button>{/if}
+    {#if province}<span aria-hidden="true">/</span><button type="button" onclick={showProvinceOnly}>{province.name}</button>{/if}
     {#if city}<span aria-hidden="true">/</span><strong>{city.name}</strong>{/if}
   </nav>
   <div class="atlas-body">
     <div class="atlas-view">
-      <ClayMap label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
+      {#if initializingSelection}<p class="edition-note" role="status">{m.destination_locating()}</p>
+      {:else if startupLocationStatus === 'fallback'}<p class="edition-note" role="status">{m.destination_location_fallback()}</p>
+      {:else if startupLocationStatus === 'matched'}<p class="edition-note" role="status">{m.destination_location_matched()}</p>{/if}
+      <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
+        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} activeLayer={layer} overlay={activeOverlay} geometryUnavailable={geometryLoaded && !national} />
+      {#if layer === 'mountains'}
+        <p class="edition-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
+      {/if}
       <p class="edition-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
     <div class="region-directory">
+      {#if layer === 'destinations'}
+        <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+      {:else if layer === 'mountains'}
+        <label for="mountain-search">{m.mountain_search()}</label>
+        <input id="mountain-search" type="search" bind:value={query} autocomplete="off" />
+        {#if customOverlay?.id === 'mountains'}
+          <p class="directory-count" aria-live="polite">{mountainMatches.length.toLocaleString()} · {m.layer_mountains()}</p>
+          {#if mountainMatches.length === 0}<p role="status">{m.no_results()}</p>
+          {:else}
+            <ul class="region-list mountain-list">
+              {#each mountainMatches.slice(0, mountainLimit) as pin (pin.id)}
+                <li><button type="button" onclick={() => clayMap?.showMountain(pin)}>
+                  <span>{pin.label}</span>
+                  <small>{pin.category === 'active' ? m.mountain_active() : pin.category === 'potential' ? m.mountain_potential() : m.mountain_other()}</small>
+                </button></li>
+              {/each}
+            </ul>
+            {#if mountainLimit < mountainMatches.length}
+              <button class="mountain-more" type="button" onclick={() => mountainLimit += 80}>{m.mountain_more()}</button>
+            {/if}
+          {/if}
+        {:else if customOverlayLoading}<p role="status">{m.loading_data()}</p>
+        {:else if customOverlayFailed}<p role="alert">{m.data_unavailable()}</p>
+        {:else}<p role="status">{m.source_not_connected_details()}</p>{/if}
+      {:else}
       <label for="region-search">{m.region_search()}</label>
       <input id="region-search" type="search" bind:value={query} autocomplete="off" />
       <p class="directory-count" aria-live="polite">{filtered.length} · {#if province}{m.level_city()}{:else}{m.level_province()}{/if}</p>
@@ -206,6 +404,7 @@
         </ul>
       {/if}
       {#if city}<div class="selected-region" role="status"><h3>{m.region_detail()}</h3><strong>{city.name}</strong><br />{city.code} · {m.level_city()}<br />{province?.name}</div>{/if}
+      {/if}
     </div>
   </div>
 </section>

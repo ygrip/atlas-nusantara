@@ -1,6 +1,6 @@
 # Atlas Nusantara
 
-Explore Indonesia from the islands down to a city, with an interactive relief map and saved weather reports. Prepared for **https://nusantara.readynaz.com** on Cloudflare Workers.
+Atlas Nusantara brings information about Indonesia together—from provinces and cities to landscapes, destinations, culture and changing conditions. Explore the map, browse source-backed data layers and compare what different sources tell us. Prepared for **https://nusantara.readynaz.com** on Cloudflare Workers.
 
 **Not an emergency alert service.** Forecasts and earthquake records are dated snapshots. Missing data never means an all-clear.
 
@@ -14,11 +14,11 @@ Explore Indonesia from the islands down to a city, with an interactive relief ma
 
 - **38 provinces / 514 cities and regencies:** searchable directory, sortable table and city links all drive the same map selection.
 - **Real source-derived geography:** OCHA/BPS coastlines and boundaries, NOAA ETOPO1 terrain and bathymetry, pan/scroll/pinch zoom, tilt and north controls, plus an accessible SVG fallback.
-- **Dated weather and earthquake overlays:** 514 representative BMKG forecasts and 15 M5+ archive events in this capture. Wind, cloud, rain and sea visuals derive from the forecast snapshot. Layers have their own legends and pins.
+- **Information across Indonesia:** browse dated BMKG weather and earthquake snapshots, a BIG named-mountain inventory, and 18,596 source-linked SISPARNAS destinations across 38 provinces, including 241 records with verified, credited Commons image links. Layers have their own sources, limits, legends and map pins.
 - **Private weather cards:** saved places and rounded device location stay in localStorage. Language popup with flags, mobile quick settings, light/dark transitions and reduced-motion support.
 - **Mobile installation and recovery:** install invitation only on uninstalled mobile web; consent-based updates, illustrated HTTP 404 and runtime error views, independent 500/503 HTML fallbacks, Terms and Privacy pages.
 
-The map is simplified, not survey-grade or a legal border reference. Cloud altitude and wave motion are visual models, not satellite clouds or measured waves. **Disaster reports** merge BNPB official records, PetaBencana.id citizen reports and ANTARA/GDELT headlines through a cleaning [pipeline](docs/HAZARD_PIPELINE.md); they are unverified or preliminary and never an official warning. InaRISK hazard polygons are not connected. See [source evidence and limitations](docs/DATA_SOURCES.md).
+The atlas combines independent datasets; availability and coverage vary by layer, and the layers do not represent a complete inventory of Indonesia. The destination catalog contains 18,596 unique records returned by the public SISPARNAS API, versus its 18,982 national aggregate. Categories absent from individual records stay unclassified; invalid or out-of-province coordinates are omitted, not relocated. The mountain layer is a named-feature inventory, not every summit. The map is simplified, not survey-grade or a legal border reference. Cloud altitude and wave motion are visual models, not satellite clouds or measured waves. Disaster reports merge BNPB official records, PetaBencana.id citizen reports and ANTARA/GDELT headlines through a cleaning [pipeline](docs/HAZARD_PIPELINE.md); they are unverified or preliminary and never an official warning. InaRISK hazard polygons are not connected. See [source evidence and limitations](docs/DATA_SOURCES.md).
 
 ## Run and verify
 
@@ -45,6 +45,8 @@ The Worker integration uses isolated **local** workerd/D1/R2 resources and synth
 Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the supported fixes require framework/adapter major upgrades. Compatible tooling updates cleared the high/moderate findings. Review the remaining chain before enabling server-rendered routes.
 
 ## Refresh snapshots
+
+**Destinations are static and manually maintained:** 38 province JSON files plus a complete `national.json` download. The map uses an on-device location match at startup, with Jakarta for overseas/unavailable location and explicit region links taking priority. Each province has a searchable, filterable, sortable table with client-side pagination. No destination API or scheduled worker is needed. After editing source JSON, run `npm run build:destinations` offline; see [destination maintenance](docs/DESTINATIONS.md).
 
 Browsers do not call BMKG for the map or saved-place cards. These scripts fetch dated assets deliberately:
 

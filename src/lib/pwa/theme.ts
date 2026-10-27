@@ -10,7 +10,7 @@ export async function changeTheme(control: HTMLElement, update: () => void): Pro
   const transition = document.startViewTransition(update);
   try {
     await transition.ready;
-    await document.documentElement.animate({ clipPath: [`circle(0 at ${centerX}px ${centerY}px)`, `circle(${endRadius}px at ${centerX}px ${centerY}px)`] }, { pseudoElement: '::view-transition-new(root)', duration: 420, easing: 'ease-out' }).finished;
+    await document.documentElement.animate({ clipPath: [`circle(0 at ${centerX}px ${centerY}px)`, `circle(${endRadius}px at ${centerX}px ${centerY}px)`] }, { pseudoElement: '::view-transition-new(root)', duration: 450, easing: 'ease-out' }).finished;
   } catch (error) {
     if (!(error instanceof DOMException && error.name === 'AbortError')) console.warn('Theme reveal unavailable', error);
   }

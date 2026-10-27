@@ -9,6 +9,8 @@ async function useEnglish(page: Page) {
 
 async function openAtlas(page: Page) {
   await page.goto('/');
+  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
+  await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
   await expect(page.locator('.region-list li')).toHaveCount(38);
 }
@@ -104,6 +106,7 @@ test.describe('2025 atlas and locations', () => {
   test('adds, persists and removes a region pin', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
+    await page.locator('#province-code').selectOption('32');
     await page.getByRole('button', { name: 'Save place' }).click();
     await expect(page.locator('.pin')).toContainText('Jawa Barat');
     await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('nusantara:pins:v1') ?? '[]'))).toContainEqual(expect.objectContaining({ code: '32', type: 'region' }));
@@ -195,6 +198,7 @@ test.describe('2025 atlas and locations', () => {
     await context.setOffline(true);
     const offlineResponse = await page.goto('/?region=32');
     expect(offlineResponse?.ok()).toBeTruthy();
-    await expect(page.getByRole('searchbox')).toBeVisible();
+    await expect(page.locator('.masthead .brand')).toBeVisible();
+    await expect(page.locator('.destination-explorer')).toBeVisible();
   });
 });

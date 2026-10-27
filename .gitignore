@@ -25,3 +25,7 @@ static/data/admin-2025/districts.json
 static/data/admin-2025/manifest.json
 output/imagegen/
 tmp/imagegen/
+tmp/directory-crawl/
+tmp/sisparnas-crawl/
+tmp/destination-image-candidates.json
+tmp/commons-discovery/

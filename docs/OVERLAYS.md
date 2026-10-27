@@ -10,10 +10,37 @@ The base map does not know about earthquake, mountain, volcano or landmark datas
 | Earthquakes | Coordinate pins + archive panel | Dated BMKG M5+ archive |
 | Disaster reports (`incident`) | Coordinate pins + filterable list | Merged, cleaned events from BNPB DIBI (official), PetaBencana.id (citizen) and ANTARA/GDELT headlines (news). Diamonds official, circles citizen, triangles news; colour = disaster type |
 | Weather hazards (`hazard`) | Coordinate pins + list | Dated BMKG CAP nowcast warnings, pinned at the centre of each warned area, coloured by severity (no region codes inferred) |
+| Mountains | Category-coloured triangle pins in 2D/3D; details and photo fallback | BIG named mountains and A/B/C volcano classes |
+| Destinations | Province summary pins + photo gallery | Non-exhaustive 76-place starter selection; see [DESTINATIONS.md](DESTINATIONS.md) |
 
 Both layers read `static/data/observations/hazards.json`, written by the [hazard pipeline](HAZARD_PIPELINE.md) (`npm run snapshot:hazards`, CI job `hazard` every 15 minutes). Pins carry their own `color` and `symbol`. Events known only to province level are listed but not pinned. An empty snapshot is not proof of no incidents or low risk. InaRISK hazard polygons are still not connected.
 
 **Licence caution:** PetaBencana data is CC BY-NC 4.0 (a commercial licence needs an agreement). Review before enabling ads or paid features. News items are headlines and links only. See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#licensing-and-limits).
+
+## Mountain atlas provenance and limits
+
+`scripts/geo/build-mountains.mjs` pages through **both** the BIG national
+atlas's `Gunung` layer (1:250,000) and BIG's classified volcano layer,
+using their official ArcGIS REST features. It fails closed if the pages,
+record counts or identifiers do not match, rather than silently dropping
+peaks. The weekly/manual GitHub workflow writes a versioned static file to
+`static/data/observations/mountains.json`. It must succeed before the
+mountain layer can show data. There is no browser-side mass scrape.
+
+* **Active · Type A**: BIG Type A volcano, *not* the current PVMBG alert level.
+* **Volcanic · B/C**: BIG Type B/C, still potentially active. Never show as
+  extinct or safe.
+* **Other / unclassified**: a named BIG mountain without a matching classified
+  volcano record. **Not proof of inactivity**.
+
+The official atlas is a named-feature inventory at its published scale, not
+a complete census of every unnamed summit in Indonesia. Photos are looked
+up only when a mountain is opened, using exact-name Wikipedia page matches;
+an unavailable or mismatched photo falls back to a local illustration.
+Photo attribution links to the matched Wikipedia article. Do not copy
+images into the repo without reviewing their separate licensing terms.
+Display BIG attribution and confirm any downstream republication conditions
+for the generated snapshot with the operator.
 
 ## Add a point dataset
 

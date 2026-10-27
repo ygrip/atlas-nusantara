@@ -8,6 +8,8 @@
 
   let { onshare }: { onshare: () => void } = $props();
   const flags: Record<string, string> = { en: '🇬🇧', id: '🇮🇩', ms: '🇲🇾', fil: '🇵🇭', th: '🇹🇭', vi: '🇻🇳', my: '🇲🇲', km: '🇰🇭', lo: '🇱🇦', 'zh-SG': '🇸🇬', ta: '🇸🇬', tet: '🇹🇱', 'pt-TL': '🇹🇱' };
+  let root: HTMLDivElement;
+  let scrim: HTMLDivElement;
   let languageDialog: HTMLDialogElement;
   let trigger: HTMLButtonElement;
   let options: HTMLDivElement;
@@ -22,6 +24,22 @@
     const observer = new MutationObserver(sync);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
+  });
+
+  // Keep the expanded settings modal, including for keyboard and screen readers.
+  $effect(() => {
+    if (!expanded) return;
+    const changed: HTMLElement[] = [];
+    for (let node: HTMLElement | undefined = root; node && node !== document.body; node = node.parentElement ?? undefined) {
+      for (const sibling of node.parentElement?.children ?? []) {
+        if (sibling === node || sibling === scrim || !(sibling instanceof HTMLElement) || sibling.inert) continue;
+        sibling.inert = true;
+        changed.push(sibling);
+      }
+    }
+    return () => {
+      for (const element of changed) element.inert = false;
+    };
   });
 
   function portal(node: HTMLElement) {
@@ -67,7 +85,8 @@
   }
 
   async function openLanguages() {
-    languageReturnFocus = expanded ? trigger : document.activeElement as HTMLElement;
+    languageReturnFocus = document.activeElement as HTMLElement;
+    if (expanded) languageReturnFocus = trigger;
     closeMenu();
     await tick();
     languageDialog?.showModal();
@@ -83,17 +102,23 @@
     busy = true;
     try {
       await changeTheme(event.currentTarget as HTMLElement, () => {
-        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        let theme = 'dark';
+        if (document.documentElement.dataset.theme === 'dark') theme = 'light';
         document.documentElement.dataset.theme = theme;
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#1f1c22' : '#f4ece1');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor(theme));
         try { localStorage.setItem('nusantara:theme', theme); }
         catch (error) { console.warn('Theme preference could not be saved', error); }
       });
     } finally { busy = false; }
   }
 
+  function themeColor(theme: string) {
+    if (theme === 'dark') return '#1f1c22';
+    return '#f4ece1';
+  }
+
   async function share() {
-    closeMenu();
+    closeMenu(true);
     await tick();
     onshare();
   }
@@ -105,26 +130,32 @@
   }
 </script>
 
-<div class="header-controls" role="group" aria-label={m.nav_options()}>
+{#snippet themeIcon()}
+  <span class="theme-icon-swap" class:dark aria-hidden="true">
+    <Sun class="sun-icon" size={22} /><Moon class="moon-icon" size={22} />
+  </span>
+{/snippet}
+
+<div bind:this={root} class="header-controls" role="group" aria-label={m.nav_options()}>
   <div class="desktop-controls">
-    <button class="control-button language-trigger" type="button" onclick={openLanguages} aria-label={m.select_language()} aria-haspopup="dialog">
-      <span class="flag" aria-hidden="true">{flags[getLocale()]}</span><span>{localeNames[getLocale()]}</span><span aria-hidden="true">⌄</span>
+    <button class="control-button icon-control language-trigger" type="button" onclick={openLanguages} aria-label={m.select_language()} title={m.select_language()} aria-haspopup="dialog">
+      <Languages size={22} aria-hidden="true" />
     </button>
     <button class="control-button icon-control" type="button" onclick={toggleTheme} disabled={busy} aria-label={m.theme_toggle()} aria-pressed={dark}>
-      {#if dark}<Sun size={20} aria-hidden="true" />{:else}<Moon size={20} aria-hidden="true" />{/if}
+      {@render themeIcon()}
     </button>
     <button class="control-button icon-control" type="button" onclick={share} aria-label={m.share_heading()}><Share2 size={19} aria-hidden="true" /></button>
   </div>
 
-  <div class="menu-scrim" class:visible={expanded} use:portal>
+  <div bind:this={scrim} class="menu-scrim" class:visible={expanded} use:portal>
     {#if expanded}<button type="button" aria-label={m.dialog_close()} tabindex="-1" onclick={() => closeMenu()}></button>{/if}
   </div>
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="mobile-controls" class:expanded onkeydown={menuKeys}>
+  <div class="mobile-controls" class:expanded role="group" aria-label={m.nav_options()} onkeydown={menuKeys}>
     <svg class="goo-defs" width="0" height="0" aria-hidden="true" focusable="false">
       <filter id="nusantara-settings-goo">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" result="goo" />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8" result="goo" />
         <feComposite in="SourceGraphic" in2="goo" operator="atop" />
       </filter>
     </svg>
@@ -141,14 +172,14 @@
       <X class="close-icon" size={21} aria-hidden="true" />
     </button>
     <div bind:this={options} id="nusantara-quick-options" class="quick-menu" role="group" aria-label={m.nav_options()} inert={!expanded}>
-      <button type="button" class="quick-option" onclick={openLanguages} aria-haspopup="dialog">
-        <span class="flag" aria-hidden="true">{flags[getLocale()]}</span><span>{m.language_label()}</span><span class="menu-meta">{localeNames[getLocale()]}</span>
+      <button type="button" class="quick-option" onclick={openLanguages} aria-label={m.select_language()} title={m.select_language()} aria-haspopup="dialog">
+        <Languages size={22} aria-hidden="true" />
       </button>
-      <button type="button" class="quick-option" onclick={share}>
-        <Share2 size={18} aria-hidden="true" /><span>{m.share_heading()}</span>
+      <button type="button" class="quick-option" onclick={toggleTheme} disabled={busy} aria-label={m.theme_toggle()} title={m.theme_toggle()} aria-pressed={dark}>
+        {@render themeIcon()}
       </button>
-      <button type="button" class="quick-option" onclick={toggleTheme} disabled={busy} aria-label={m.theme_toggle()} aria-pressed={dark}>
-        {#if dark}<Sun size={18} aria-hidden="true" />{:else}<Moon size={18} aria-hidden="true" />{/if}<span>{m.theme_toggle()}</span>
+      <button type="button" class="quick-option" onclick={share} aria-label={m.share_heading()} title={m.share_heading()} aria-haspopup="dialog">
+        <Share2 size={22} aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -169,34 +200,39 @@
   .header-controls, .desktop-controls { display: flex; align-items: center; gap: 8px; }
   .control-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 16px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight), inset 0 -2px 4px var(--shadow); font-weight: 800; font-size: .8rem; }
   .control-button:active { transform: translateY(2px); box-shadow: inset 0 2px 5px var(--shadow); }
-  .icon-control { width: 44px; padding: 0; }
+  .icon-control { width: 48px; height: 48px; padding: 0; border-radius: 50%; }
+  .theme-icon-swap { display: grid; place-items: center; width: 22px; height: 22px; }
+  .theme-icon-swap :global(svg) { grid-area: 1 / 1; transition: opacity 180ms ease-out, transform 350ms var(--ease-bounce); }
+  .theme-icon-swap :global(.sun-icon) { opacity: 0; transform: rotate(-90deg) scale(.6); }
+  .theme-icon-swap.dark :global(.sun-icon) { opacity: 1; transform: none; }
+  .theme-icon-swap.dark :global(.moon-icon) { opacity: 0; transform: rotate(90deg) scale(.6); }
   .flag { font: 21px/1 system-ui; flex: 0 0 auto; }
-  .mobile-controls { display: none; position: relative; width: 46px; height: 46px; flex: 0 0 46px; --spring: cubic-bezier(.34, 1.56, .64, 1); }
+  .mobile-controls { display: none; position: relative; width: 48px; height: 48px; flex: 0 0 48px; --spring: cubic-bezier(.34, 1.56, .64, 1); }
   .goo-defs { position: absolute; width: 0; height: 0; pointer-events: none; }
   .menu-scrim { position: fixed; inset: 0; z-index: 29; pointer-events: none; visibility: hidden; opacity: 0; background: color-mix(in srgb, var(--page) 58%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 200ms ease-out, visibility 200ms; }
   .menu-scrim.visible { pointer-events: auto; visibility: visible; opacity: 1; }
   .menu-scrim button { width: 100%; height: 100%; border: 0; padding: 0; background: transparent; cursor: default; }
-  .goo-shadow { position: absolute; right: -9px; top: -9px; width: min(264px, calc(100vw - 22px)); height: 260px; pointer-events: none; filter: drop-shadow(0 3px 0 var(--border)) drop-shadow(0 11px 15px var(--shadow)); }
+  /* Libraries.dev Gooey pattern: filter only the merging surfaces, never the icons. */
+  .goo-shadow { position: absolute; right: -16px; top: -16px; width: 80px; height: 254px; pointer-events: none; filter: drop-shadow(0 0 .6px var(--border)) drop-shadow(0 4px 0 var(--border)) drop-shadow(0 10px 14px var(--shadow)); }
   .goo-shapes { position: absolute; inset: 0; filter: url(#nusantara-settings-goo); }
-  .goo-blob { position: absolute; top: 9px; right: 9px; height: 46px; width: 46px; border-radius: 19px; background: var(--surface); transition: transform 350ms var(--spring), width 350ms var(--spring), height 350ms var(--spring); }
-  .language-blob, .share-blob, .theme-blob { transform: scale(.45); }
-  .expanded .language-blob { width: calc(100% - 18px); height: 52px; transform: translateY(60px); }
-  .expanded .share-blob { width: calc(100% - 18px); height: 52px; transform: translateY(120px); transition-delay: 40ms; }
-  .expanded .theme-blob { width: calc(100% - 18px); height: 52px; transform: translateY(180px); transition-delay: 80ms; }
-  .quick-trigger { position: relative; z-index: 2; display: grid; place-items: center; width: 46px; height: 46px; border: 0; border-radius: 18px; background: transparent; color: var(--text); box-shadow: inset 0 2px 2px var(--clay-highlight); }
+  .goo-blob { position: absolute; top: 16px; right: 16px; height: 48px; width: 48px; border-radius: 50%; background: var(--surface); transition: transform 350ms var(--spring), background 180ms ease-out; }
+  .language-blob, .share-blob, .theme-blob { transform: scale(.5); }
+  .expanded .trigger-blob { background: var(--peach); }
+  .expanded .language-blob { transform: translateY(58px); }
+  .expanded .theme-blob { transform: translateY(116px); transition-delay: 60ms; }
+  .expanded .share-blob { transform: translateY(174px); transition-delay: 120ms; }
+  .quick-trigger { position: relative; z-index: 2; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text); }
   .quick-trigger :global(svg) { grid-area: 1 / 1; transition: transform 220ms ease, opacity 180ms ease; }
   .quick-trigger :global(.close-icon) { opacity: 0; transform: rotate(-80deg) scale(.65); }
   .expanded .quick-trigger :global(.settings-icon) { opacity: 0; transform: rotate(80deg) scale(.65); }
   .expanded .quick-trigger :global(.close-icon) { opacity: 1; transform: none; }
-  .quick-menu { position: absolute; top: 60px; right: 0; z-index: 3; width: min(246px, calc(100vw - 40px)); display: grid; gap: 8px; pointer-events: none; visibility: hidden; }
-  .expanded .quick-menu { pointer-events: auto; visibility: visible; }
-  .quick-option { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 13px; border: 0; border-radius: 18px; color: var(--text); background: transparent; text-align: left; font-size: .81rem; font-weight: 800; opacity: 0; transform: translateY(-24px) scale(.75); transition: opacity 170ms ease, transform 350ms var(--spring); }
-  .expanded .quick-option { opacity: 1; transform: none; }
-  .expanded .quick-option:nth-child(2) { transition-delay: 40ms; }
-  .expanded .quick-option:nth-child(3) { transition-delay: 80ms; }
-  .quick-option:active { transform: translateY(2px); }
-  .quick-option > span:not(.flag) { min-width: 0; }
-  .menu-meta { margin-left: auto; overflow: hidden; max-width: 90px; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); font-size: .7rem; }
+  .quick-menu { position: absolute; top: 0; right: 0; z-index: 3; width: 48px; pointer-events: none; }
+  .quick-option { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; color: var(--text); background: transparent; opacity: 0; visibility: hidden; transform: scale(.6); transition: opacity 180ms ease-out, transform 350ms var(--spring), visibility 0s linear 350ms; }
+  .expanded .quick-option { pointer-events: auto; opacity: 1; visibility: visible; transform: translateY(58px); transition-delay: 80ms, 0s, 0s; }
+  .expanded .quick-option:nth-child(2) { transform: translateY(116px); transition-delay: 140ms, 60ms, 0s; }
+  .expanded .quick-option:nth-child(3) { transform: translateY(174px); transition-delay: 200ms, 120ms, 0s; }
+  .quick-option:active, .quick-trigger:active { filter: brightness(.9); }
+  .quick-option:disabled { opacity: .55; }
   .language-dialog { width: min(580px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); overflow: auto; border: 1px solid var(--border); border-radius: 28px; padding: 24px; background: var(--surface); color: var(--text); box-shadow: 0 8px 0 -3px var(--border), 0 24px 70px #0003; }
   .language-dialog::backdrop { background: #19151a88; backdrop-filter: blur(4px); }
   .language-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
@@ -209,6 +245,6 @@
   .quick-trigger:focus-visible, .quick-option:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   @media(max-width: 760px) { .desktop-controls { display: none; } .mobile-controls { display: block; } }
   @media(max-width: 400px) { .language-dialog { padding: 18px; } .language-grid { grid-template-columns: minmax(0, 1fr); } }
-  @media(prefers-reduced-motion: reduce) { .goo-blob, .quick-trigger :global(svg), .quick-option, .menu-scrim { transition: none !important; } }
+  @media(prefers-reduced-motion: reduce) { .goo-blob, .quick-trigger :global(svg), .theme-icon-swap :global(svg), .quick-option, .menu-scrim { transition: none !important; } }
   @media(forced-colors: active) { .goo-shadow { display: none; } .quick-trigger, .quick-option { background: Canvas; border: 1px solid ButtonText; } }
 </style>

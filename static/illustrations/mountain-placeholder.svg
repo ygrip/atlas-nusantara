@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Mountain silhouette">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dcecf0"/><stop offset="1" stop-color="#f4eee2"/></linearGradient>
+    <linearGradient id="peak" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7f98a0"/><stop offset="1" stop-color="#496a64"/></linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#sky)"/>
+  <circle cx="495" cy="92" r="40" fill="#f3deb0" opacity=".9"/>
+  <path d="M0 340 160 155 285 285 395 100 640 345 640 400H0Z" fill="#aec2bb"/>
+  <path d="M80 400 275 125 400 300 472 205 640 400Z" fill="url(#peak)"/>
+  <path d="m275 125-52 74 52-14 37 20Z M395 100l-52 82 52-22 45 48Z" fill="#f4f6f1" opacity=".84"/>
+  <path d="M0 350q165-55 320 10t320-5v45H0Z" fill="#426e66" opacity=".8"/>
+</svg>

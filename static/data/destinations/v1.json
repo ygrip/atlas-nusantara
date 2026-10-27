@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 1,
+  "fetchedAt": "2026-10-27T00:00:00Z",
+  "source": "Editorial starter index",
+  "sourceUrl": "https://www.direktoripariwisata.id/peta",
+  "scope": "Non-exhaustive starter selection, two representative landmarks per province; coordinates are not claimed.",
+  "landmarks": [
+    {
+      "id": "curated-11-natural",
+      "provinceCode": "11",
+      "name": "Pantai Lampuuk",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-11-built",
+      "provinceCode": "11",
+      "name": "Masjid Raya Baiturrahman",
+      "kind": "built"
+    },
+    {
+      "id": "curated-12-natural",
+      "provinceCode": "12",
+      "name": "Danau Toba",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-12-built",
+      "provinceCode": "12",
+      "name": "Istana Maimun",
+      "kind": "built"
+    },
+    {
+      "id": "curated-13-natural",
+      "provinceCode": "13",
+      "name": "Lembah Harau",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-13-built",
+      "provinceCode": "13",
+      "name": "Jam Gadang",
+      "kind": "built"
+    },
+    {
+      "id": "curated-14-natural",
+      "provinceCode": "14",
+      "name": "Taman Nasional Tesso Nilo",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-14-built",
+      "provinceCode": "14",
+      "name": "Istana Siak Sri Indrapura",
+      "kind": "built"
+    },
+    {
+      "id": "curated-15-natural",
+      "provinceCode": "15",
+      "name": "Danau Kaco",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-15-built",
+      "provinceCode": "15",
+      "name": "Kompleks Candi Muaro Jambi",
+      "kind": "built"
+    },
+    {
+      "id": "curated-16-natural",
+      "provinceCode": "16",
+      "name": "Air Terjun Curup Maung",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-16-built",
+      "provinceCode": "16",
+      "name": "Jembatan Ampera",
+      "kind": "built"
+    },
+    {
+      "id": "curated-17-natural",
+      "provinceCode": "17",
+      "name": "Pantai Panjang",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-17-built",
+      "provinceCode": "17",
+      "name": "Benteng Marlborough",
+      "kind": "built"
+    },
+    {
+      "id": "curated-18-natural",
+      "provinceCode": "18",
+      "name": "Pulau Pahawang",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-18-built",
+      "provinceCode": "18",
+      "name": "Menara Siger",
+      "kind": "built"
+    },
+    {
+      "id": "curated-19-natural",
+      "provinceCode": "19",
+      "name": "Pantai Tanjung Tinggi",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-19-built",
+      "provinceCode": "19",
+      "name": "Museum Timah Indonesia",
+      "kind": "built"
+    },
+    {
+      "id": "curated-21-natural",
+      "provinceCode": "21",
+      "name": "Pantai Trikora",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-21-built",
+      "provinceCode": "21",
+      "name": "Jembatan Barelang",
+      "kind": "built"
+    },
+    {
+      "id": "curated-31-natural",
+      "provinceCode": "31",
+      "name": "Kepulauan Seribu",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-31-built",
+      "provinceCode": "31",
+      "name": "Monumen Nasional",
+      "kind": "built"
+    },
+    {
+      "id": "curated-32-natural",
+      "provinceCode": "32",
+      "name": "Kawah Putih",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-32-built",
+      "provinceCode": "32",
+      "name": "Gedung Sate",
+      "kind": "built"
+    },
+    {
+      "id": "curated-33-natural",
+      "provinceCode": "33",
+      "name": "Dataran Tinggi Dieng",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-33-built",
+      "provinceCode": "33",
+      "name": "Candi Borobudur",
+      "kind": "built"
+    },
+    {
+      "id": "curated-34-natural",
+      "provinceCode": "34",
+      "name": "Goa Pindul",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-34-built",
+      "provinceCode": "34",
+      "name": "Taman Sari Yogyakarta",
+      "kind": "built"
+    },
+    {
+      "id": "curated-35-natural",
+      "provinceCode": "35",
+      "name": "Gunung Bromo",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-35-built",
+      "provinceCode": "35",
+      "name": "Tugu Pahlawan",
+      "kind": "built"
+    },
+    {
+      "id": "curated-36-natural",
+      "provinceCode": "36",
+      "name": "Pantai Tanjung Lesung",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-36-built",
+      "provinceCode": "36",
+      "name": "Masjid Agung Banten",
+      "kind": "built"
+    },
+    {
+      "id": "curated-51-natural",
+      "provinceCode": "51",
+      "name": "Nusa Penida",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-51-built",
+      "provinceCode": "51",
+      "name": "Pura Ulun Danu Beratan",
+      "kind": "built"
+    },
+    {
+      "id": "curated-52-natural",
+      "provinceCode": "52",
+      "name": "Gili Trawangan",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-52-built",
+      "provinceCode": "52",
+      "name": "Istana Dalam Loka",
+      "kind": "built"
+    },
+    {
+      "id": "curated-53-natural",
+      "provinceCode": "53",
+      "name": "Danau Kelimutu",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-53-built",
+      "provinceCode": "53",
+      "name": "Kampung Adat Wae Rebo",
+      "kind": "built"
+    },
+    {
+      "id": "curated-61-natural",
+      "provinceCode": "61",
+      "name": "Danau Sentarum",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-61-built",
+      "provinceCode": "61",
+      "name": "Tugu Khatulistiwa",
+      "kind": "built"
+    },
+    {
+      "id": "curated-62-natural",
+      "provinceCode": "62",
+      "name": "Taman Nasional Tanjung Puting",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-62-built",
+      "provinceCode": "62",
+      "name": "Istana Kuning Pangkalan Bun",
+      "kind": "built"
+    },
+    {
+      "id": "curated-63-natural",
+      "provinceCode": "63",
+      "name": "Pegunungan Meratus",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-63-built",
+      "provinceCode": "63",
+      "name": "Masjid Sultan Suriansyah",
+      "kind": "built"
+    },
+    {
+      "id": "curated-64-natural",
+      "provinceCode": "64",
+      "name": "Kepulauan Derawan",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-64-built",
+      "provinceCode": "64",
+      "name": "Masjid Islamic Center Samarinda",
+      "kind": "built"
+    },
+    {
+      "id": "curated-65-natural",
+      "provinceCode": "65",
+      "name": "Taman Nasional Kayan Mentarang",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-65-built",
+      "provinceCode": "65",
+      "name": "Museum Kesultanan Bulungan",
+      "kind": "built"
+    },
+    {
+      "id": "curated-71-natural",
+      "provinceCode": "71",
+      "name": "Taman Laut Bunaken",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-71-built",
+      "provinceCode": "71",
+      "name": "Klenteng Ban Hin Kiong",
+      "kind": "built"
+    },
+    {
+      "id": "curated-72-natural",
+      "provinceCode": "72",
+      "name": "Danau Poso",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-72-built",
+      "provinceCode": "72",
+      "name": "Situs Megalitikum Lore Lindu",
+      "kind": "built"
+    },
+    {
+      "id": "curated-73-natural",
+      "provinceCode": "73",
+      "name": "Pantai Tanjung Bira",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-73-built",
+      "provinceCode": "73",
+      "name": "Benteng Rotterdam",
+      "kind": "built"
+    },
+    {
+      "id": "curated-74-natural",
+      "provinceCode": "74",
+      "name": "Taman Nasional Wakatobi",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-74-built",
+      "provinceCode": "74",
+      "name": "Benteng Keraton Buton",
+      "kind": "built"
+    },
+    {
+      "id": "curated-75-natural",
+      "provinceCode": "75",
+      "name": "Pulau Cinta",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-75-built",
+      "provinceCode": "75",
+      "name": "Benteng Otanaha",
+      "kind": "built"
+    },
+    {
+      "id": "curated-76-natural",
+      "provinceCode": "76",
+      "name": "Pantai Dato",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-76-built",
+      "provinceCode": "76",
+      "name": "Rumah Adat Boyang",
+      "kind": "built"
+    },
+    {
+      "id": "curated-81-natural",
+      "provinceCode": "81",
+      "name": "Pantai Ora",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-81-built",
+      "provinceCode": "81",
+      "name": "Benteng Amsterdam",
+      "kind": "built"
+    },
+    {
+      "id": "curated-82-natural",
+      "provinceCode": "82",
+      "name": "Pulau Morotai",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-82-built",
+      "provinceCode": "82",
+      "name": "Benteng Tolukko",
+      "kind": "built"
+    },
+    {
+      "id": "curated-91-natural",
+      "provinceCode": "91",
+      "name": "Danau Sentani",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-91-built",
+      "provinceCode": "91",
+      "name": "Stadion Lukas Enembe",
+      "kind": "built"
+    },
+    {
+      "id": "curated-92-natural",
+      "provinceCode": "92",
+      "name": "Taman Nasional Teluk Cenderawasih",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-92-built",
+      "provinceCode": "92",
+      "name": "Situs Sejarah Pulau Mansinam",
+      "kind": "built"
+    },
+    {
+      "id": "curated-93-natural",
+      "provinceCode": "93",
+      "name": "Taman Nasional Wasur",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-93-built",
+      "provinceCode": "93",
+      "name": "Monumen Kapsul Waktu Merauke",
+      "kind": "built"
+    },
+    {
+      "id": "curated-94-natural",
+      "provinceCode": "94",
+      "name": "Danau Paniai",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-94-built",
+      "provinceCode": "94",
+      "name": "Gereja Katedral Tiga Raja Timika",
+      "kind": "built"
+    },
+    {
+      "id": "curated-95-natural",
+      "provinceCode": "95",
+      "name": "Lembah Baliem",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-95-built",
+      "provinceCode": "95",
+      "name": "Rumah Honai Tradisional",
+      "kind": "built"
+    },
+    {
+      "id": "curated-96-natural",
+      "provinceCode": "96",
+      "name": "Kepulauan Raja Ampat",
+      "kind": "natural"
+    },
+    {
+      "id": "curated-96-built",
+      "provinceCode": "96",
+      "name": "Masjid Raya Al Akbar Sorong",
+      "kind": "built"
+    }
+  ]
+}

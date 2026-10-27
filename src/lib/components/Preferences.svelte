@@ -14,6 +14,7 @@
   let provinces = $state<Region[]>([]);
   let cities = $state<Region[]>([]);
   let selected = $state('32');
+  let manuallySelected = $state(false);
   let pins = $state<Pin[]>([]);
   let current = $state<Extract<Pin, { type: 'coordinates' }>>();
   let forecast = $state<ForecastSnapshot>();
@@ -21,7 +22,7 @@
   let busy = $state(false);
   let notificationPermission = $state<NotificationPermission | 'unavailable'>('unavailable');
   const names = $derived(new Map([...provinces, ...cities].map(region => [region.code, region.name])));
-  $effect(() => { if (selectedRegion) selected = selectedRegion.code; });
+  $effect(() => { if (selectedRegion && !manuallySelected) selected = selectedRegion.code; });
 
   onMount(() => {
     document.documentElement.lang = getLocale();
@@ -56,7 +57,7 @@
     if (!name || pins.some(pin => pin.type === 'region' && pin.code === selected)) return;
     if (pins.length >= 30) { status = m.pin_storage_error(); return; }
     const next: Pin[] = [...pins, { id: 'region:' + selected, type: 'region', code: selected, name, addedAt: new Date().toISOString() }];
-    try { writePins(next); pins = next; status = m.location_added(); }
+    try { writePins(next); pins = next; status = m.location_added(); manuallySelected = false; }
     catch (error) { console.warn('Place could not be saved', error); status = m.pin_storage_error(); }
   }
 
@@ -102,7 +103,7 @@
   </header>
   <form class="places-form" onsubmit={event => { event.preventDefault(); pinRegion(); }}>
     <label for="province-code">{m.pin_region_label()}</label>
-    <div><select id="province-code" bind:value={selected} disabled={provinces.length === 0}>
+    <div><select id="province-code" bind:value={selected} onchange={() => { manuallySelected = true; }} disabled={provinces.length === 0}>
       <optgroup label={m.level_province()}>{#each provinces as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
       <optgroup label={m.level_city()}>{#each cities as region}<option value={region.code}>{region.name}</option>{/each}</optgroup>
     </select><button type="submit" disabled={provinces.length === 0}><MapPin size={16} aria-hidden="true" />{m.pin_button()}</button></div>
