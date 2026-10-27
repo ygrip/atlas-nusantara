@@ -60,31 +60,57 @@ export class CrawlClient {
   }
 
   async request(target, request) {
-    for (let attempt = 0; attempt < 4; attempt++) {
+    const attempts = 4;
+    for (let attempt = 0; attempt < attempts; attempt++) {
       await this.pause(Math.max(0, this.lastRequest + this.delayMs - Date.now()));
       this.lastRequest = Date.now();
-      const response = await this.fetcher(target.href, {
-        ...request,
-        headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/json;q=0.9,*/*;q=0.1', ...request.headers },
-        redirect: 'manual', signal: AbortSignal.timeout(this.timeoutMs)
-      });
-      if (response.status >= 300 && response.status < 400) {
-        throw Error('Crawler stopped at redirect; inspect before following: ' + target.href + ' -> ' + response.headers.get('location'));
-      }
-      if (RETRYABLE.has(response.status) && attempt < 3) {
-        let delay = 5000 * (attempt + 1);
-        const retryAfter = response.headers.get('retry-after');
-        if (retryAfter && /^\d+$/.test(retryAfter)) delay = Math.max(delay, Number(retryAfter) * 1000);
-        if (delay > 120000) throw Error('Server requested a long pause; resume later: ' + target.href);
-        console.warn('Crawler backing off:', response.status, delay, target.href);
-        await response.body?.cancel();
+      try {
+        const response = await this.fetcher(target.href, {
+          ...request,
+          headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/json;q=0.9,*/*;q=0.1', ...request.headers },
+          redirect: 'manual',
+          // Progressive timeouts avoid repeatedly failing near the same deadline.
+          signal: AbortSignal.timeout(this.timeoutMs + attempt * 15000)
+        });
+        if (response.status >= 300 && response.status < 400) {
+          throw Error('Crawler stopped at redirect; inspect before following: ' + target.href + ' -> ' + response.headers.get('location'));
+        }
+        if (RETRYABLE.has(response.status) && attempt < attempts - 1) {
+          let delay = 5000 * (attempt + 1);
+          const retryAfter = response.headers.get('retry-after');
+          if (retryAfter && /^\d+$/.test(retryAfter)) delay = Math.max(delay, Number(retryAfter) * 1000);
+          if (delay > 120000) throw Error('Server requested a long pause; resume later: ' + target.href);
+          console.warn('Crawler backing off:', response.status, delay, target.origin);
+          await response.body?.cancel();
+          await this.pause(delay);
+          continue;
+        }
+        if (!response.ok) throw Error('Crawler HTTP ' + response.status + ': ' + target.href);
+        const body = await response.text();
+        if (body.length > 5_000_000) throw Error('Crawler response exceeds 5 MB: ' + target.href);
+        return { url: target.href, fetchedAt: new Date().toISOString(), body };
+      } catch (error) {
+        // TimeoutError comes from AbortSignal.timeout in Node/undici.
+        // Retry temporary connection resets as well, but never retry 4xx,
+        // redirects, invalid cached data, or programming errors.
+        const code = error?.cause?.code ?? error?.code;
+        const transient = ['TimeoutError', 'AbortError'].includes(error?.name)
+          || (error?.name === 'TypeError'
+            && ['ETIMEDOUT', 'ECONNRESET', 'EAI_AGAIN',
+              'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_SOCKET'].includes(code));
+        if (!transient) throw error;
+        if (attempt === attempts - 1) {
+          throw new Error(
+            'Crawler exhausted ' + attempts + ' attempts after a network timeout/error at ' +
+              target.origin + '. Successful page responses remain cached; rerun with the same cache directory.',
+            { cause: error }
+          );
+        }
+        const delay = 5000 * (attempt + 1);
+        console.warn('Crawler temporary network failure:', error.name, code ?? '', 'retry', attempt + 2, 'of', attempts,
+          'in', Math.round(delay / 1000), 'seconds on', target.origin);
         await this.pause(delay);
-        continue;
       }
-      if (!response.ok) throw Error('Crawler HTTP ' + response.status + ': ' + target.href);
-      const body = await response.text();
-      if (body.length > 5_000_000) throw Error('Crawler response exceeds 5 MB: ' + target.href);
-      return { url: target.href, fetchedAt: new Date().toISOString(), body };
     }
     throw Error('Crawler retry limit reached: ' + target.href);
   }
