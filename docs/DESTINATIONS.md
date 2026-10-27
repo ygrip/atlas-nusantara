@@ -168,3 +168,62 @@ npm run destinations:images:wikidata -- /tmp/atlas-photo-cache --publish
 If the Wikidata Query Service continues timing out server-side, rerun or use the independent Commons filename-and-geotag pass instead; the latter does not depend on SPARQL. It is still not guaranteed to find valid images for every record.
 
 These changes are committed with `[skip ci]` because automated actions are not necessary for local research and the project currently has a limited GitHub Actions quota.
+
+
+### Destination-first Wikipedia photo lookup
+
+Use this path **before** the nationwide Wikidata scan when enriching existing
+SISPARNAS destinations. This script reads missing images from the existing
+province shards, searches Indonesian Wikipedia first, then English Wikipedia,
+and inspects each article's free lead image plus directly included files.
+
+It does **not** paginate every Indonesian Wikidata item or require SerpApi.
+
+```sh
+# Dry run: 100 missing destinations; no production data changes
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=100
+
+# Publish only when matching article coordinates and Commons licenses are verified
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 --publish
+
+# Review one province without publishing images
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 \
+  --output=/tmp/atlas-wikipedia-yogyakarta.jsonl
+
+# Continue a batch after the last destination ID from the previous review output
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache \
+  --after=sisparnas-24702 --limit=100 --output=/tmp/atlas-next-100.jsonl
+```
+
+- **Article identity:** Requires exact distinctive normalized destination/article
+  name, a Wikipedia article coordinate within 2 km of the independently
+  verified SISPARNAS coordinate, and exactly one valid article match. This is
+  intentionally stricter than Wikipedia search rank. The article is searched
+  first in Indonesian, then English.
+- **Image validity:** Image filenames must appear on that Wikipedia article.
+  For publication, the image must have an acceptable Commons bitmap file,
+  reusable license, credited creator, and independently checked metadata.
+  Up to 8 independently attributed images may be stored for a destination.
+  No Wikipedia thumbnail or arbitrary search result is published by itself.
+- **Uncertain cases:** Destinations without coordinates, ambiguous Wikipedia
+  titles, missing articles, or images failing metadata checks retain
+  placeholders. Every scanned destination appears in the JSONL review report,
+  with candidate article URLs even if it was not auto-published.
+- **Cache:** Queries persist in subdirectories of the supplied cache directory;
+  rerunning a failed province pass reuses successful cached results. The
+  default report is \`/tmp/atlas-photo-cache/wikipedia-review.jsonl\`.
+  Supply distinct \`--output\` paths for multiple runs, since reports replace
+  the file.
+- **Publication:** \`--publish\` updates \`image-metadata.json\`, the national
+  aggregate, index and relevant province shards. Without this flag, the script
+  writes **only** its review JSONL and HTTP cache. Previously approved photos
+  remain in the registry. Commit and push from your machine only after review.
+- **Batching:** \`--limit=N\` limits *processed* missing-image destinations, not
+  Wikipedia result pages. \`--after=sisparnas-ID\` resumes scanning after a
+  stable catalog destination ID, including IDs already processed on previous
+  runs. \`--province=NN\` constrains the scan to one province.
+
+Research-ready CSV of originally missing photos:
+\`research/missing-destination-images.csv\` (18,355 records at export time).
+It includes an appropriate name + district + province search query for each
+destination. Image coverage after later publication may differ.
