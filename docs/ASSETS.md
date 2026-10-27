@@ -2,7 +2,7 @@
 
 ## Identity
 
-`static/brand/logo.svg`, `static/brand/favicon.svg` and `static/icon.svg` are original authored marks: warm clay islands/wave and a small sun, not a geographic boundary. `scripts/generate-icons.mjs` rasterizes the favicon into 192/512 px install icons. `scripts/generate-og.mjs` creates the original Open Graph card.
+`static/brand/indonesia-clay.webp` is the approved, text-free claymorphic Indonesian archipelago emblem, with red/white islands, turquoise sea, green foliage, and subtle gold/compass ornaments. It is decorative artwork, **not** a GIS coastline or administrative-boundary source. `static/brand/favicon-64.png`, `static/icon-192.png`, and `static/icon-512.png` are resized derivatives. Run `npm run generate:icons` after `npx playwright install chromium` to regenerate the PNGs from the committed WebP. The identity image was generated in ChatGPT for this project; no borrowed logo or third-party map artwork is used. `scripts/generate-og.mjs` still creates the separate Open Graph card.
 
 ## Illustrations
 
