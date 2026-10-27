@@ -83,7 +83,7 @@
 <div class="shell" bind:this={shell}>
   <header class="masthead">
     <a href="/" data-sveltekit-reload class="brand" aria-label="Nusantara">
-      <img class="brand-logo" src="/brand/logo.svg" alt="" width="44" height="44" />
+      <img class="brand-logo" src="/brand/indonesia-clay.webp" alt="" width="44" height="44" />
       <span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span>
     </a>
     <nav class="section-nav" aria-label={m.nav_label()}>
