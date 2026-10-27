@@ -16,7 +16,7 @@ export function startAtlasStory(root: HTMLElement): () => void {
     });
     lenis.on('scroll', ScrollTrigger.update);
     const context = gsap.context(() => {
-      gsap.fromTo('.hero-copy > *', { y: 12, opacity: 0.8 }, { y: 0, opacity: 1, duration: 0.55, stagger: 0.07, ease: 'power2.out', clearProps: 'transform,opacity' });
+
       for (const heading of root.querySelectorAll('main > section h2')) {
         gsap.fromTo(heading, { y: 8, opacity: 0.8 }, {
           y: 0, opacity: 1, duration: 0.4, ease: 'power2.out', clearProps: 'transform,opacity',

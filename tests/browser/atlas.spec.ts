@@ -12,20 +12,21 @@ async function openAtlas(page: Page) {
   await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await expect(page.getByRole('searchbox')).toBeVisible();
-  await expect(page.locator('.region-list li')).toHaveCount(38);
+  await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
 }
 
 test.describe('2025 atlas and locations', () => {
-  test('renders disclaimer, all locales and the 38-province directory', async ({ page }) => {
+  test('renders exploration copy, all locales and the 38-province directory', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
-    await expect(page.getByText('Not an emergency alert service. Follow official advisories.').first()).toBeVisible();
+    await expect(page.locator('.hero-copy')).toContainText('Get to know Indonesia');
+  await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
     await page.getByRole('button', { name: 'Choose your language', exact: true }).click();
     await expect(page.locator('.language-grid button')).toHaveCount(13);
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: '2D', exact: true }).click();
     await expect(page.locator('.atlas-map path[data-code]')).toHaveCount(38);
-    await expect(page.locator('.region-list li')).toHaveCount(38);
+    await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   });
 
   test('searches small-island provinces, opens province and city list, then returns to national level', async ({ page }) => {
@@ -34,10 +35,10 @@ test.describe('2025 atlas and locations', () => {
     await page.getByRole('searchbox').fill('Kepulauan Riau');
     await page.getByRole('button', { name: /Kepulauan Riau 21/ }).click();
     await expect(page.locator('.atlas-breadcrumb')).toContainText('Kepulauan Riau');
-    await expect(page.locator('.region-list li').first()).toBeVisible();
+    await expect(page.locator('.region-table tbody tr').first()).toBeVisible();
     await expect(page.locator('.directory-count')).toContainText('City / regency');
     await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National' }).click();
-    await expect(page.locator('.region-list li')).toHaveCount(38);
+    await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   });
 
   test('opens a province from its real polygon and selects a city', async ({ page }) => {

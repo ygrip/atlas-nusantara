@@ -104,7 +104,7 @@ test('returning to the province cancels delayed deep-city restoration', async ({
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'Jawa Barat', exact: true }).click();
   releaseCities();
   await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
-  await expect(page.locator('.region-list li')).toHaveCount(27);
+  await expect(page.locator('.region-table tbody tr')).toHaveCount(27);
   await expect(page.locator('.atlas-breadcrumb')).not.toContainText('Kota Bandung');
   await expect(page).toHaveURL(/region=32$/);
 });

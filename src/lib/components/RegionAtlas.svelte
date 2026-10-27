@@ -395,16 +395,82 @@
       {:else if failed}<p role="alert">{m.data_unavailable()}</p>
       {:else if filtered.length === 0}<p role="status">{m.no_results()}</p>
       {:else}
-        <ul class="region-list">
-          {#each filtered as region (region.code)}
-            <li><button type="button" onclick={() => selectRegion(region)} aria-pressed={city?.code === region.code}>
-              <span>{region.name}</span><small>{region.code}</small>
-            </button></li>
-          {/each}
-        </ul>
+        <!-- Scrollable table stays keyboard reachable and keeps region codes aligned. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+        <div class="region-table-scroll" tabindex="0" role="region" aria-label={province ? m.level_city() : m.level_province()}>
+          <table class="region-table">
+            <thead>
+              <tr><th scope="col">{m.table_code()}</th><th scope="col">{province ? m.level_city() : m.level_province()}</th><th scope="col"><span class="visually-hidden">{m.region_detail()}</span></th></tr>
+            </thead>
+            <tbody>
+              {#each filtered as region (region.code)}
+                <tr class:selected={city?.code === region.code}>
+                  <td class="region-code">{region.code}</td>
+                  <th scope="row"><button type="button" class="region-row-action" aria-label={region.name + ' ' + region.code} onclick={() => selectRegion(region)} aria-pressed={city?.code === region.code}>
+                    <span>{region.name}</span>
+                  </button></th>
+                  <td class="region-row-state">{#if city?.code === region.code}<span aria-hidden="true">✓</span><span class="visually-hidden">{m.region_detail()}</span>{:else}<span aria-hidden="true">›</span>{/if}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
       {/if}
       {#if city}<div class="selected-region" role="status"><h3>{m.region_detail()}</h3><strong>{city.name}</strong><br />{city.code} · {m.level_city()}<br />{province?.name}</div>{/if}
       {/if}
     </div>
   </div>
 </section>
+
+<style>
+  .region-table-scroll {
+    max-height: min(460px, 58vh);
+    overflow: auto;
+    margin-top: 12px;
+    padding: 0 8px 8px;
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: var(--clay-pressed);
+    overscroll-behavior: contain;
+  }
+  .region-table { width: 100%; min-width: 340px; border-collapse: separate; border-spacing: 0 5px; font-size: .82rem; }
+  .region-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 12px;
+    background: var(--panel);
+    color: var(--muted);
+    text-align: left;
+    font-size: .68rem;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+  .region-table tbody td, .region-table tbody th {
+    padding: 9px 12px;
+    background: var(--surface);
+    text-align: left;
+    font-weight: 500;
+  }
+  .region-table tbody tr:nth-child(even) td, .region-table tbody tr:nth-child(even) th {
+    background: color-mix(in srgb, var(--surface) 76%, var(--page));
+  }
+  .region-table tbody tr > :first-child { border-radius: 12px 0 0 12px; }
+  .region-table tbody tr > :last-child { border-radius: 0 12px 12px 0; }
+  .region-table tbody tr.selected td, .region-table tbody tr.selected th {
+    background: color-mix(in srgb, var(--mint) 74%, var(--surface));
+  }
+  .region-table tbody tr.selected > :first-child { box-shadow: inset 3px 0 var(--accent); }
+  .region-code { width: 72px; color: var(--muted); font: 700 .75rem ui-monospace, SFMono-Regular, monospace; font-variant-numeric: tabular-nums; }
+  .region-row-action { display: flex; width: 100%; min-height: 38px; align-items: center; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; font: inherit; font-weight: 750; cursor: pointer; }
+  .region-row-action:hover { color: var(--accent); }
+  .region-row-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  .region-row-state { width: 38px; color: var(--accent); text-align: center !important; font-size: 1.1rem; font-weight: 900 !important; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+  @media (max-width: 560px) {
+    .region-table-scroll { max-height: min(400px, 52vh); margin-inline: -3px; }
+    .region-table { min-width: 300px; }
+    .region-table tbody td, .region-table tbody th { padding-inline: 9px; }
+    .region-code { width: 62px; }
+  }
+</style>

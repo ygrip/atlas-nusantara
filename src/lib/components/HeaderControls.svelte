@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { Languages, Moon, Sun, Share2, SlidersHorizontal, X, Check } from 'lucide-svelte';
+  import { Languages, Moon, Sun, Share2, SlidersHorizontal, X, Check, Search } from 'lucide-svelte';
   import { changeTheme } from '$lib/pwa/theme';
   import { getLocale, locales, setLocale } from '$lib/paraglide/runtime.js';
-  import { localeNames } from '$lib/i18n/locales';
+  import { localeNames, localeEnglishNames } from '$lib/i18n/locales';
   import { m } from '$lib/paraglide/messages.js';
 
   let { onshare }: { onshare: () => void } = $props();
@@ -17,6 +17,32 @@
   let dark = $state(false);
   let busy = $state(false);
   let languageReturnFocus: HTMLElement | undefined;
+  let languageSearch: HTMLInputElement;
+  let languageQuery = $state('');
+  const filteredLocales = $derived(locales.filter(locale => normalizeLanguage(`${localeNames[locale]} ${localeEnglishNames[locale]} ${locale}`).includes(normalizeLanguage(languageQuery.trim()))));
+
+  function normalizeLanguage(value: string) {
+    return value.toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function languageKeys(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      languageDialog.close();
+      return;
+    }
+    if (!['ArrowDown', 'ArrowUp'].includes(event.key)) return;
+    const buttons = Array.from(languageDialog.querySelectorAll<HTMLButtonElement>('.language-grid button'));
+    if (!buttons.length) return;
+    event.preventDefault();
+    let direction = 1;
+    if (event.key === 'ArrowUp') direction = -1;
+    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    let next = current + direction;
+    if (current < 0 && direction < 0) next = buttons.length - 1;
+    next = (next + buttons.length) % buttons.length;
+    buttons[next]?.focus();
+  }
 
   onMount(() => {
     const sync = () => { dark = document.documentElement.dataset.theme === 'dark'; };
@@ -89,7 +115,10 @@
     if (expanded) languageReturnFocus = trigger;
     closeMenu();
     await tick();
+    languageQuery = '';
     languageDialog?.showModal();
+    await tick();
+    languageSearch?.focus();
   }
 
   function select(locale: (typeof locales)[number]) {
@@ -187,11 +216,17 @@
 
 <!-- Native dialog owns language selection focus and Escape handling. -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<dialog class="language-dialog" bind:this={languageDialog} aria-labelledby="language-title" onclick={closeBackdrop} onclose={() => languageReturnFocus?.focus()}>
+<dialog class="language-dialog" bind:this={languageDialog} aria-labelledby="language-title" onclick={closeBackdrop} onkeydown={languageKeys} onclose={() => languageReturnFocus?.focus()}>
   <header><div><span class="eyebrow"><Languages size={16} aria-hidden="true" /> {m.language_label()}</span><h2 id="language-title">{m.select_language()}</h2></div><button class="control-button icon-control" type="button" onclick={() => languageDialog?.close()} aria-label={m.dialog_close()}><X size={20} aria-hidden="true" /></button></header>
+  <label class="language-search">
+    <Search size={20} aria-hidden="true" />
+    <input bind:this={languageSearch} type="search" bind:value={languageQuery} aria-label={m.language_search()} placeholder={m.language_search()} autocomplete="off" />
+  </label>
   <div class="language-grid">
-    {#each locales as locale (locale)}
-      <button type="button" lang={locale} aria-pressed={getLocale() === locale} onclick={() => select(locale)}><span class="flag" aria-hidden="true">{flags[locale]}</span><span>{localeNames[locale]}</span>{#if getLocale() === locale}<Check size={17} aria-hidden="true" />{/if}</button>
+    {#each filteredLocales as locale (locale)}
+      <button type="button" lang={locale} aria-pressed={getLocale() === locale} onclick={() => select(locale)}><span class="flag" aria-hidden="true">{flags[locale]}</span><span class="language-name"><strong>{localeNames[locale]}</strong><small>{localeEnglishNames[locale]}</small></span>{#if getLocale() === locale}<Check size={17} aria-hidden="true" />{/if}</button>
+    {:else}
+      <p class="language-empty" role="status">{m.no_results()}</p>
     {/each}
   </div>
 </dialog>
@@ -238,7 +273,14 @@
   .language-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
   .language-dialog h2 { margin: 8px 0 0; font-size: 1.6rem; letter-spacing: -.035em; }
   .eyebrow { display: flex; gap: 6px; align-items: center; }
-  .language-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .language-search { display: flex; align-items: center; gap: 10px; padding: 0 14px; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); color: var(--muted); box-shadow: var(--clay-pressed); }
+  .language-search input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; }
+  .language-search:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .language-search input:focus-visible { outline: none; }
+  .language-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; max-height: min(440px, 52dvh); overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
+  .language-name { display: grid; gap: 3px; }
+  .language-name small { color: var(--muted); font-size: .7rem; font-weight: 650; }
+  .language-empty { grid-column: 1 / -1; padding: 24px 12px; color: var(--muted); text-align: center; }
   .language-grid button { min-height: 54px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); color: var(--text); text-align: left; font-size: .88rem; font-weight: 800; }
   .language-grid button[aria-pressed='true'] { background: var(--mint); border-color: var(--accent); }
   .language-grid button :global(svg) { margin-left: auto; flex-shrink: 0; }

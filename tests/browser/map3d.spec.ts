@@ -38,10 +38,10 @@ test('3D relief map supports wheel zoom, camera controls and snapshot-only weath
     const clouds = page.getByRole('button', { name: 'Clouds & rain', exact: true });
     await clouds.click();
     await expect(clouds).toHaveAttribute('aria-pressed', 'false');
-    await page.locator('.region-list').getByRole('button', { name: 'Papua Barat Daya 96', exact: true }).click();
+    await page.locator('.region-table').getByRole('button', { name: 'Papua Barat Daya 96', exact: true }).click();
     await expect(page.locator('.directory-count')).toContainText('6');
     await expect(page.locator('.weather-readout')).toContainText('Papua Barat Daya');
-    await page.locator('.region-list').getByRole('button', { name: 'Kota Sorong 96.71', exact: true }).click();
+    await page.locator('.region-table').getByRole('button', { name: 'Kota Sorong 96.71', exact: true }).click();
     await expect(page.locator('.weather-readout')).toContainText('Kota Sorong');
     await page.locator('.time-slider input').evaluate(input => {
       const slider = input as HTMLInputElement;

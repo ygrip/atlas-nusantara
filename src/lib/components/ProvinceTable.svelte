@@ -6,6 +6,7 @@
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, type ProvinceRow } from '$lib/directory/province-directory';
   import RingChart from './RingChart.svelte';
+  import { Check } from 'lucide-svelte';
 
   type SortKey = 'code' | 'name' | 'regencies' | 'municipalities' | 'total';
   type SortDirection = 'ascending' | 'descending';
@@ -98,6 +99,11 @@
     return '↓';
   }
 
+  function currentProvince(code: string): 'location' | undefined {
+    if (selectedCode?.split('.')[0] === code) return 'location';
+    return undefined;
+  }
+
   function share(count: number): string {
     return (count / largestTotal) * 100 + '%';
   }
@@ -175,7 +181,7 @@
             <tr class:active-region={selectedCode?.split('.')[0] === row.code} style={groupStyle(row.group)}>
               <td class="code">{row.code}</td>
               <th scope="row">
-                <button class="province-name province-link" type="button" onclick={() => openCode(row.code)}><span class="group-dot" title={ISLAND_GROUP_NAMES[row.group]}></span>{row.name}</button>
+                <button class="province-name province-link" type="button" aria-current={currentProvince(row.code)} onclick={() => openCode(row.code)}><span class="group-dot" title={ISLAND_GROUP_NAMES[row.group]}></span>{row.name}{#if currentProvince(row.code)}<span class="selected-marker"><Check size={13} aria-hidden="true" /></span>{/if}</button>
                 <small>{ISLAND_GROUP_NAMES[row.group]}</small>
               </th>
               <td class="numeric">{number(row.regencies.length)}</td>
@@ -243,7 +249,12 @@
 
 <style>
   .province-link { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-weight: 850; text-align: left; }
-  tr.active-region { background: var(--mint) !important; box-shadow: inset 4px 0 0 var(--accent); }
+  table tbody tr.active-region > th, table tbody tr.active-region > td { background: color-mix(in srgb, var(--mint) 60%, var(--surface)); box-shadow: inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); transform: none; }
+  tbody tr.active-region > :first-child { box-shadow: inset 4px 0 0 var(--accent), inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); color: var(--accent); }
+  tbody tr.active-region > :last-child { box-shadow: inset -1px 0 0 var(--border), inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); }
+  .selected-marker { display: inline-grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
+  .province-link { min-height: 44px; }
+  .province-link[aria-current='location'] { color: var(--accent); }
   .city-link { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; border: 0; padding: 6px; border-radius: 10px; background: transparent; color: inherit; text-align: left; }
   .city-link:hover { background: var(--mint); }
   .card-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }

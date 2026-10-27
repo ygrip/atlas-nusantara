@@ -74,8 +74,8 @@
 <section id="summary" class="aggregate-summary details" aria-labelledby="summary-heading" aria-busy={loading}>
   <span class="eyebrow">04 / OBSERVATORY</span>
   <h2 id="summary-heading">{m.summary_heading()}</h2>
-  <p>{m.summary_scope()}</p>
-  {#if loading}<p role="status">{m.loading_data()}</p>
+  <p class="summary-intro">{m.summary_scope()}</p>
+  {#if loading}<p class="summary-empty" role="status">{m.loading_data()}</p>
   {:else if !summary}<div class="summary-empty" role="status"><strong>{m.data_unavailable()}</strong><p>{m.no_observations()}</p></div>
   {:else}
     <p class="summary-window">{m.summary_window()} · {m.ingested_time()}: <time datetime={summary.generatedAt}>{date(summary.generatedAt)}</time></p>
@@ -110,3 +110,13 @@
     </div>
   {/if}
 </section>
+
+<style>
+  .aggregate-summary { display: grid; gap: 14px; min-width: 0; padding: clamp(18px, 3vw, 30px); }
+  .aggregate-summary > h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2.25rem); line-height: 1.15; letter-spacing: -.035em; }
+  .summary-intro { max-width: 68ch; margin: 0; color: var(--muted); line-height: 1.6; }
+  .summary-empty { display: grid; gap: 8px; margin: 0; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(160deg, var(--surface), var(--panel)); box-shadow: inset 0 1px 0 var(--clay-highlight), 0 4px 0 var(--border); }
+  .summary-empty strong { font-size: 1.1rem; }
+  .summary-empty p { margin: 0; color: var(--muted); line-height: 1.55; }
+  @media (max-width: 520px) { .aggregate-summary { padding: 18px; } }
+</style>
