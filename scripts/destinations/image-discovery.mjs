@@ -64,8 +64,8 @@ export async function loadSubjectRegistry(directory, { fetcher = fetch, pageSize
   const resultPath = path.join(directory, 'wikidata-subjects.json');
   try {
     const cached = JSON.parse(await readFile(resultPath, 'utf8'));
-    if (cached.schemaVersion !== 1 || !Array.isArray(cached.subjects) || cached.complete !== true) throw Error('Invalid subject registry cache');
-    return cached;
+    // The older cache had only P18 images. Refresh it instead of silently losing P373 galleries.
+    if (cached.schemaVersion === 2 && Array.isArray(cached.subjects) && cached.complete === true) return cached;
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const client = new CrawlClient({ origin: 'https://query.wikidata.org',
     cacheDirectory: path.join(directory, 'wikidata-http'), delayMs, timeoutMs: 75000, fetcher });
@@ -86,7 +86,7 @@ ORDER BY ?item ?label ?image ?coordinates ?category LIMIT ${pageSize} OFFSET ${p
     console.log('Wikidata registry page', page + 1, 'rows', rows.length);
     if (rows.length === pageSize) continue;
     const normalized = registrySubjects(bindings);
-    const result = { schemaVersion: 1, complete: true, fetchedAt,
+    const result = { schemaVersion: 2, complete: true, fetchedAt,
       source: 'Wikidata CC0; P17 Indonesia, P18 featured photo, P373 Commons category, P625 subject coordinate, id/en labels and aliases',
       scope: 'Candidate registry, not proof that every Indonesian destination is represented',
       requests, ...normalized };
