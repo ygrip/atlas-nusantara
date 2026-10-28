@@ -14,20 +14,24 @@ const OUTLINES: Record<PinSymbol, string> = {
   // A leaf growing from the lower left to the upper right.
   leaf: '<path d="M20 44C17 31 26 19 44 16C46 32 38 43 20 44Z"/>',
   // One pad and four toes; the strokes below are thin so the toes stay separate.
+  // A rice bowl: a half disc with a flat rim.
+  bowl: '<path d="M18 28H46C46 38 40 45 32 45C24 45 18 38 18 28Z"/>',
   paw: '<ellipse cx="32" cy="37" rx="9" ry="7"/><ellipse cx="19.5" cy="29" rx="3.2" ry="4" transform="rotate(-22 19.5 29)"/><ellipse cx="26.5" cy="20" rx="3.4" ry="4.4" transform="rotate(-8 26.5 20)"/><ellipse cx="37.5" cy="20" rx="3.4" ry="4.4" transform="rotate(8 37.5 20)"/><ellipse cx="44.5" cy="29" rx="3.2" ry="4" transform="rotate(22 44.5 29)"/>'
 };
 
 /** Stroke widths (rim, body) that thicken each outline; shapes made of small parts need thinner strokes. */
 const STROKES: Record<PinSymbol, { rim: number; body: number }> = {
-  circle: { rim: 9, body: 6 }, triangle: { rim: 9, body: 6 }, diamond: { rim: 9, body: 6 }, leaf: { rim: 8, body: 5 }, paw: { rim: 5, body: 3 }
+  circle: { rim: 9, body: 6 }, triangle: { rim: 9, body: 6 }, diamond: { rim: 9, body: 6 }, leaf: { rim: 8, body: 5 }, paw: { rim: 5, body: 3 }, bowl: { rim: 8, body: 5 }
 };
 
 /** Leaf and paw are drawn smaller than the plain shapes, so they are enlarged about the marker centre. */
-const SCALES: Partial<Record<PinSymbol, number>> = { leaf: 1.2, paw: 1.25 };
+const SCALES: Partial<Record<PinSymbol, number>> = { leaf: 1.2, paw: 1.25, bowl: 1.2 };
 
 /** Light details drawn over the body, such as the midrib of a leaf. */
 const DETAILS: Partial<Record<PinSymbol, string>> = {
-  leaf: '<path d="M22.5 42C28 33 34 26 41 20" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2.2" stroke-linecap="round"/>'
+  leaf: '<path d="M22.5 42C28 33 34 26 41 20" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2.2" stroke-linecap="round"/>',
+  // Three wisps of steam rising over the bowl.
+  bowl: '<path d="M26 24C24 21 28 19 26 16M32 24C30 21 34 19 32 16M38 24C36 21 40 19 38 16" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="2" stroke-linecap="round"/>'
 };
 
 /** Soft highlight blob sitting on the upper-left of the shape, where a clay surface catches light. */
@@ -36,7 +40,8 @@ const HIGHLIGHTS: Record<PinSymbol, { cx: number; cy: number; rx: number; ry: nu
   triangle: { cx: 28, cy: 33, rx: 5.5, ry: 3.5, angle: -60 },
   diamond: { cx: 24.5, cy: 23, rx: 6, ry: 3.8, angle: -45 },
   leaf: { cx: 27, cy: 26, rx: 5.5, ry: 3.2, angle: -50 },
-  paw: { cx: 28, cy: 35, rx: 4.5, ry: 2.4, angle: -20 }
+  paw: { cx: 28, cy: 35, rx: 4.5, ry: 2.4, angle: -20 },
+  bowl: { cx: 26, cy: 33, rx: 5, ry: 2.6, angle: -30 }
 };
 
 export function safeClayColor(color: string): string {

@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
   import { m } from '$lib/i18n/messages';
   import type { GeometryPackage } from '$lib/geo/types';
-  import { makeDestinationShareUrl, makeShareUrl, makeSpeciesShareUrl, renderDestinationShareCard, renderShareCard, renderSpeciesShareCard, summaryForShare, type ShareDestination, type ShareRegion, type ShareSpecies, type ShareSummary } from '$lib/share/card';
+  import { makeDestinationShareUrl, makeShareUrl, makeDishShareUrl, makeSpeciesShareUrl, renderDestinationShareCard, renderDishShareCard, renderShareCard, renderSpeciesShareCard, summaryForShare, type ShareDestination, type ShareDish, type ShareRegion, type ShareSpecies, type ShareSummary } from '$lib/share/card';
 
   export let region: ShareRegion | undefined = undefined;
   export let geometry: GeometryPackage | undefined = undefined;
@@ -62,6 +62,18 @@
       heading: m.species_share_heading()
     };
     await present(() => renderSpeciesShareCard({ species, caveat: m.species_share_caveat() }));
+  }
+
+  /** Shares one dish: photo or illustration, name, group, recipe count and description, with a link that reopens it. */
+  export async function openDish(request: { dish: ShareDish; provinceCode?: string }) {
+    if (busy) return;
+    const { dish } = request;
+    destinationShare = {
+      destination: { id: 'cuisine-' + dish.id, name: dish.name, location: dish.subtitle + ' · ' + dish.chipLabel, kindLabel: dish.kindLabel },
+      url: makeDishShareUrl(request.provinceCode, dish.id),
+      heading: m.cuisine_share_heading()
+    };
+    await present(() => renderDishShareCard({ dish, caveat: m.cuisine_share_caveat() }));
   }
 
   function renderRegionCard(): Promise<Blob> {

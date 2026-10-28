@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 2,
+  "fetchedAt": "2026-10-28T04:34:13.063Z",
+  "scope": "Dishes named in the Indonesian Wikipedia list of Indonesian cuisine, with recipes from Cookpad Indonesia and the LorthGyu corpus. Provinces are list associations, not proof of origin. Not an exhaustive census: a missing recipe or photo does not mean a dish does not exist.",
+  "license": "Dish names and summaries: Wikipedia, CC BY-SA 4.0. Recipes: written by their authors; each links to its source page and is shown with the author name. Photos are linked, never copied, with their credit and licence.",
+  "attribution": "Indonesian Wikipedia contributors; Cookpad Indonesia recipe authors; LorthGyu (MIT); Wikimedia Commons photographers (per file).",
+  "national": "/data/cuisine/national.json",
+  "sources": [
+    {
+      "name": "Wikipedia · Daftar masakan Indonesia",
+      "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia"
+    },
+    {
+      "name": "Cookpad Indonesia",
+      "url": "https://cookpad.com/id"
+    },
+    {
+      "name": "LorthGyu/indonesian-recipes (MIT)",
+      "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes"
+    },
+    {
+      "name": "Wikimedia Commons",
+      "url": "https://commons.wikimedia.org/wiki/Category:Cuisine_of_Indonesia"
+    }
+  ],
+  "coverage": {
+    "totalDishes": 2164,
+    "withoutProvince": 101,
+    "withRecipe": 1335,
+    "withImage": 1406,
+    "withSummary": 776,
+    "recipes": 3667
+  },
+  "groupCounts": {
+    "other": 792,
+    "condiments": 92,
+    "drinks": 107,
+    "snacks": 505,
+    "rice": 151,
+    "meat-fish": 215,
+    "soups": 170,
+    "noodles": 50,
+    "vegetables": 82
+  },
+  "provinces": [
+    {
+      "provinceCode": "11",
+      "count": 41,
+      "withRecipe": 20,
+      "withImage": 28,
+      "shard": "/data/cuisine/provinces/11.json"
+    },
+    {
+      "provinceCode": "12",
+      "count": 50,
+      "withRecipe": 38,
+      "withImage": 42,
+      "shard": "/data/cuisine/provinces/12.json"
+    },
+    {
+      "provinceCode": "13",
+      "count": 62,
+      "withRecipe": 54,
+      "withImage": 56,
+      "shard": "/data/cuisine/provinces/13.json"
+    },
+    {
+      "provinceCode": "14",
+      "count": 92,
+      "withRecipe": 45,
+      "withImage": 48,
+      "shard": "/data/cuisine/provinces/14.json"
+    },
+    {
+      "provinceCode": "15",
+      "count": 25,
+      "withRecipe": 17,
+      "withImage": 23,
+      "shard": "/data/cuisine/provinces/15.json"
+    },
+    {
+      "provinceCode": "16",
+      "count": 85,
+      "withRecipe": 64,
+      "withImage": 65,
+      "shard": "/data/cuisine/provinces/16.json"
+    },
+    {
+      "provinceCode": "17",
+      "count": 93,
+      "withRecipe": 35,
+      "withImage": 37,
+      "shard": "/data/cuisine/provinces/17.json"
+    },
+    {
+      "provinceCode": "18",
+      "count": 8,
+      "withRecipe": 5,
+      "withImage": 5,
+      "shard": "/data/cuisine/provinces/18.json"
+    },
+    {
+      "provinceCode": "19",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/19.json"
+    },
+    {
+      "provinceCode": "21",
+      "count": 213,
+      "withRecipe": 101,
+      "withImage": 122,
+      "shard": "/data/cuisine/provinces/21.json"
+    },
+    {
+      "provinceCode": "31",
+      "count": 64,
+      "withRecipe": 48,
+      "withImage": 51,
+      "shard": "/data/cuisine/provinces/31.json"
+    },
+    {
+      "provinceCode": "32",
+      "count": 114,
+      "withRecipe": 84,
+      "withImage": 91,
+      "shard": "/data/cuisine/provinces/32.json"
+    },
+    {
+      "provinceCode": "33",
+      "count": 252,
+      "withRecipe": 192,
+      "withImage": 196,
+      "shard": "/data/cuisine/provinces/33.json"
+    },
+    {
+      "provinceCode": "34",
+      "count": 107,
+      "withRecipe": 85,
+      "withImage": 87,
+      "shard": "/data/cuisine/provinces/34.json"
+    },
+    {
+      "provinceCode": "35",
+      "count": 182,
+      "withRecipe": 135,
+      "withImage": 138,
+      "shard": "/data/cuisine/provinces/35.json"
+    },
+    {
+      "provinceCode": "36",
+      "count": 17,
+      "withRecipe": 17,
+      "withImage": 17,
+      "shard": "/data/cuisine/provinces/36.json"
+    },
+    {
+      "provinceCode": "51",
+      "count": 51,
+      "withRecipe": 28,
+      "withImage": 32,
+      "shard": "/data/cuisine/provinces/51.json"
+    },
+    {
+      "provinceCode": "52",
+      "count": 73,
+      "withRecipe": 29,
+      "withImage": 29,
+      "shard": "/data/cuisine/provinces/52.json"
+    },
+    {
+      "provinceCode": "53",
+      "count": 61,
+      "withRecipe": 19,
+      "withImage": 19,
+      "shard": "/data/cuisine/provinces/53.json"
+    },
+    {
+      "provinceCode": "61",
+      "count": 79,
+      "withRecipe": 43,
+      "withImage": 43,
+      "shard": "/data/cuisine/provinces/61.json"
+    },
+    {
+      "provinceCode": "62",
+      "count": 22,
+      "withRecipe": 17,
+      "withImage": 17,
+      "shard": "/data/cuisine/provinces/62.json"
+    },
+    {
+      "provinceCode": "63",
+      "count": 54,
+      "withRecipe": 36,
+      "withImage": 42,
+      "shard": "/data/cuisine/provinces/63.json"
+    },
+    {
+      "provinceCode": "64",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/64.json"
+    },
+    {
+      "provinceCode": "65",
+      "count": 36,
+      "withRecipe": 14,
+      "withImage": 14,
+      "shard": "/data/cuisine/provinces/65.json"
+    },
+    {
+      "provinceCode": "71",
+      "count": 69,
+      "withRecipe": 46,
+      "withImage": 47,
+      "shard": "/data/cuisine/provinces/71.json"
+    },
+    {
+      "provinceCode": "72",
+      "count": 45,
+      "withRecipe": 21,
+      "withImage": 24,
+      "shard": "/data/cuisine/provinces/72.json"
+    },
+    {
+      "provinceCode": "73",
+      "count": 89,
+      "withRecipe": 49,
+      "withImage": 52,
+      "shard": "/data/cuisine/provinces/73.json"
+    },
+    {
+      "provinceCode": "74",
+      "count": 59,
+      "withRecipe": 17,
+      "withImage": 17,
+      "shard": "/data/cuisine/provinces/74.json"
+    },
+    {
+      "provinceCode": "75",
+      "count": 37,
+      "withRecipe": 22,
+      "withImage": 23,
+      "shard": "/data/cuisine/provinces/75.json"
+    },
+    {
+      "provinceCode": "76",
+      "count": 18,
+      "withRecipe": 13,
+      "withImage": 14,
+      "shard": "/data/cuisine/provinces/76.json"
+    },
+    {
+      "provinceCode": "81",
+      "count": 40,
+      "withRecipe": 24,
+      "withImage": 26,
+      "shard": "/data/cuisine/provinces/81.json"
+    },
+    {
+      "provinceCode": "82",
+      "count": 28,
+      "withRecipe": 14,
+      "withImage": 14,
+      "shard": "/data/cuisine/provinces/82.json"
+    },
+    {
+      "provinceCode": "91",
+      "count": 8,
+      "withRecipe": 6,
+      "withImage": 7,
+      "shard": "/data/cuisine/provinces/91.json"
+    },
+    {
+      "provinceCode": "92",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/92.json"
+    },
+    {
+      "provinceCode": "93",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/93.json"
+    },
+    {
+      "provinceCode": "94",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/94.json"
+    },
+    {
+      "provinceCode": "95",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/95.json"
+    },
+    {
+      "provinceCode": "96",
+      "count": 0,
+      "withRecipe": 0,
+      "withImage": 0,
+      "shard": "/data/cuisine/provinces/96.json"
+    }
+  ]
+}
