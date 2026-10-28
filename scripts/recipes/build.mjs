@@ -69,7 +69,7 @@ async function fetchWikipediaHTML() {
   const stop = html.indexOf('id="catlinks"', start);
   if (start < 0 || stop <= start) throw Error('Wikipedia article content markers are missing');
   const article = html.slice(start, stop);
-  const tokens=article.match(/<h3\\b[^>]*>[\\s\\S]*?<\\/h3>|<li\\b[^>]*>[\\s\\S]*?<\\/li>/gi)??[];
+  const tokens=article.match(/<h3\b[^>]*>[\s\S]*?<\/h3>|<li\b[^>]*>[\s\S]*?<\/li>/gi)??[];
   for(const token of tokens) {
     if(/^<h3\b/i.test(token)) {
       const heading=htmlText(token).replace(/\[sunting\].*/i,'').replace(/^provinsi\s+/i,'').toLowerCase();
@@ -226,7 +226,7 @@ async function enrichImages(records) {
       }
     } catch(error) {
       console.warn('Image metadata batch skipped:',String(error));
-      if (/\\b503\\b/.test(String(error))) {
+      if (/\b503\b/.test(String(error))) {
         console.warn('Wikimedia API unavailable; retaining only existing external photo links and credits.');
         break;
       }
