@@ -26,7 +26,7 @@ export function parseSearchResults(html) {
   const results = [];
   const seen = new Set();
   // Match links regardless of CSS class or HTML attribute ordering.
-  const anchor = /<a\\b(?=[^>]*href=["'](?:https:\\/\\/cookpad\\.com)?\\/id\\/resep\\/(\\d+)(?:[?\\/#][^"']*)?["'])[^>]*>([\\s\\S]*?)<\\/a>/gi;
+  const anchor = /<a\b(?=[^>]*href=["'](?:https:\/\/cookpad\.com)?\/id\/resep\/(\d+)(?:[?\/#][^"']*)?["'])[^>]*>([\s\S]*?)<\/a>/gi;
   for (const match of html.matchAll(anchor)) {
     const id = match[1];
     if (seen.has(id)) continue;
