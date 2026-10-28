@@ -14,6 +14,7 @@ Atlas Nusantara brings information about Indonesia together—from provinces and
 
 - **38 provinces / 514 cities and regencies:** searchable directory, sortable table and city links all drive the same map selection.
 - **Real source-derived geography:** OCHA/BPS coastlines and boundaries, NOAA ETOPO1 terrain and bathymetry, pan/scroll/pinch zoom, tilt and north controls, plus an accessible SVG fallback.
+- **Indonesian cuisine:** a provincial food and recipe explorer with Indonesian instructions, 13-language UI, optional independently credited Commons images, and an explicit split between listed dishes and actual recipes. See [CUISINE.md](docs/CUISINE.md).
 - **Information across Indonesia:** browse dated BMKG weather and earthquake snapshots, a BIG named-mountain inventory, and 18,596 source-linked SISPARNAS destinations across 38 provinces, including 241 records with verified, credited Commons image links. Layers have their own sources, limits, legends and map pins.
 - **Private weather cards:** saved places and rounded device location stay in localStorage. Language popup with flags, mobile quick settings, light/dark transitions and reduced-motion support.
 - **Mobile installation and recovery:** install invitation only on uninstalled mobile web; consent-based updates, illustrated HTTP 404 and runtime error views, independent 500/503 HTML fallbacks, Terms and Privacy pages.
