@@ -34,7 +34,7 @@ function localizeShell(locale, route, text) {
   const url = SITE + path;
   const direction = RIGHT_TO_LEFT.has(locale) ? 'rtl' : 'ltr';
   const title = text.site_title + ' — ' + text.og_headline;
-  const image = SITE + '/og/nusantara-' + locale + '.png';
+  const image = SITE + '/og/nusantara-' + locale + '.png?v=clay-discovery-2';
   const imageAlt = text.site_title + ': ' + text.og_headline + ' ' + text.og_tagline;
   let html = shell
     .replace('<html lang="en"', '<html lang="' + locale + '" dir="' + direction + '"')

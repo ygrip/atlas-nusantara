@@ -19,6 +19,7 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
       const labels = [];
       const gradients = [];
       const dots = [];
+      const images = [];
       const ctx = {
         fillStyle: '',
         strokeStyle: '',
@@ -30,7 +31,7 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
         beginPath() {},
         roundRect() {},
         clip() {},
-        drawImage() {},
+        drawImage(image) { images.push(image.url); },
         fill() {},
         stroke() {},
         moveTo() {},
@@ -38,8 +39,8 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
         arc(x, y, radius) { dots.push({ x, y, radius }); },
         measureText(text) { return { width: text.length * 12 }; },
         fillText(text) { labels.push({ text, color: this.fillStyle }); },
-        createLinearGradient() {
-          const gradient = { stops: [], addColorStop(position, color) { this.stops.push({ position, color }); } };
+        createLinearGradient(...coordinates) {
+          const gradient = { coordinates, stops: [], addColorStop(position, color) { this.stops.push({ position, color }); } };
           gradients.push(gradient);
           return gradient;
         }
@@ -50,7 +51,7 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
       globalThis.Image = class {
         naturalWidth = 320;
         naturalHeight = 240;
-        set src(_url) { this.onload?.(); }
+        set src(url) { this.url = url; this.onload?.(); }
       };
       const blob = await renderDishShareCard({
         dish: {
@@ -64,9 +65,14 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
       const label = labels.find(item => item.text === '2 recipes');
       assert.ok(label, 'the group or recipe label is drawn');
       assert.equal(label.color, theme === 'dark' ? '#f3e9de' : '#392f2b');
-      assert.equal(gradients.length, 1, 'the cuisine chip gets a raised surface gradient');
-      assert.equal(gradients[0].stops.length, 2);
-      assert.notEqual(gradients[0].stops[0].color, '#a9473a', 'the solid category color is not the text background');
+      const chipGradient = gradients.find(gradient => gradient.coordinates[0] === 96 && gradient.coordinates[1] > 600);
+      assert.ok(chipGradient, 'the cuisine chip gets its own raised surface gradient');
+      assert.equal(chipGradient.stops.length, 2);
+      assert.notEqual(chipGradient.stops[0].color, '#a9473a', 'the solid category color is not the text background');
+      assert.ok(images.includes('/brand/logo-256.png'), 'the export includes the atlas icon');
+      for (const text of ['Atlas Nusantara', 'nusantara.readynaz.com', 'Explore the atlas']) {
+        assert.ok(labels.some(label => label.text === text), 'the export includes ' + text);
+      }
       assert.ok(dots.some(item => item.radius === 5), 'the category remains visible as a small colored dot');
     }
   } finally {

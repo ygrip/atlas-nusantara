@@ -110,6 +110,7 @@ export interface ShareCardContent {
   caveat: string;
   labels: Record<ShareKind, string>;
   unavailable: string;
+  visitLabel?: string;
 }
 
 /** One shared place: its name, where it is, and (when available) a photo that may be drawn on the card. */
@@ -131,6 +132,7 @@ export interface DestinationCardContent {
   provinceCode: string;
   caveat: string;
   noPhoto: string;
+  visitLabel?: string;
 }
 
 interface ShareColors { page: string; card: string; text: string; muted: string; accent: string; border: string }
@@ -140,15 +142,117 @@ function shareColors(dark: boolean): ShareColors {
   return { page: '#f6f0e7', card: '#fffaf2', text: '#392f2b', muted: '#6c6057', accent: '#a74f29', border: '#d9cbb9' };
 }
 
-function drawCardFrame(context: CanvasRenderingContext2D, colors: ShareColors) {
-  context.fillStyle = colors.page;
-  context.fillRect(0, 0, 1080, 1080);
+function drawBrandHeader(context: CanvasRenderingContext2D, colors: ShareColors, logo: HTMLImageElement | undefined, visitLabel: string | undefined, includeVisitBadge = true) {
+  if (logo) {
+    context.save();
+    context.shadowColor = 'rgba(24, 17, 13, .18)';
+    context.shadowBlur = 8;
+    context.shadowOffsetY = 3;
+    context.drawImage(logo, 96, 62, 84, 84);
+    context.restore();
+  }
+  context.fillStyle = colors.text;
+  context.font = '800 30px "Nunito Variable", system-ui, sans-serif';
+  context.fillText('Atlas Nusantara', 198, 102, 350);
+  context.fillStyle = colors.muted;
+  context.font = '700 23px "Nunito Variable", system-ui, sans-serif';
+  context.textAlign = 'right';
+  context.fillText('nusantara.readynaz.com', 984, 99, 330);
+  context.textAlign = 'start';
+
+  if (!includeVisitBadge) return;
+  const text = visitLabel?.trim() || 'Explore the atlas';
+  const left = 670;
+  const top = 112;
+  const width = 314;
+  const height = 36;
+  context.save();
+  context.shadowColor = 'rgba(24, 17, 13, .14)';
+  context.shadowBlur = 7;
+  context.shadowOffsetY = 2;
+  const gradient = context.createLinearGradient(left, top, left, top + height);
+  gradient.addColorStop(0, blendHexColors(colors.card, colors.accent, .12));
+  gradient.addColorStop(1, blendHexColors(colors.card, colors.accent, .24));
+  context.fillStyle = gradient;
+  roundedRect(context, left, top, width, height, 14);
+  context.fill();
+  context.restore();
+  context.strokeStyle = colors.border;
+  context.lineWidth = 1;
+  roundedRect(context, left, top, width, height, 14);
+  context.stroke();
+  context.strokeStyle = 'rgba(255,255,255,.48)';
+  context.beginPath();
+  context.moveTo(left + 16, top + 2);
+  context.lineTo(left + width - 16, top + 2);
+  context.stroke();
+  context.fillStyle = colors.text;
+  context.font = '800 18px "Nunito Variable", system-ui, sans-serif';
+  context.textAlign = 'center';
+  context.fillText(text, left + width / 2, top + 24, width - 24);
+  context.textAlign = 'start';
+}
+
+function drawAtlasInvitation(context: CanvasRenderingContext2D, colors: ShareColors, label: string | undefined) {
+  context.save();
+  const surface = context.createLinearGradient(0, 754, 0, 838);
+  surface.addColorStop(0, blendHexColors(colors.accent, '#ffffff', .15));
+  surface.addColorStop(1, colors.accent);
+  context.fillStyle = surface;
+  context.shadowColor = 'rgba(24, 17, 13, .2)';
+  context.shadowBlur = 16;
+  context.shadowOffsetY = 7;
+  roundedRect(context, 240, 754, 600, 84, 30);
+  context.fill();
+  context.shadowColor = 'transparent';
   context.fillStyle = colors.card;
-  roundedRect(context, 42, 42, 996, 996, 36);
+  context.font = '900 34px "Nunito Variable", system-ui, sans-serif';
+  context.textAlign = 'center';
+  context.fillText(label ?? 'Explore the atlas', 540, 808, 552);
+  context.fillStyle = colors.text;
+  context.font = '800 32px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(new URL(PUBLIC_ORIGIN).hostname, 540, 894, 888);
+  context.restore();
+}
+
+function drawCardFrame(context: CanvasRenderingContext2D, colors: ShareColors) {
+  const card = { left: 42, top: 42, width: 996, height: 996, radius: 52 };
+  const pageGradient = context.createLinearGradient(0, 0, 1080, 1080);
+  pageGradient.addColorStop(0, colors.page);
+  pageGradient.addColorStop(1, blendHexColors(colors.page, colors.accent, .08));
+  context.fillStyle = pageGradient;
+  context.fillRect(0, 0, 1080, 1080);
+
+  context.save();
+  context.shadowColor = 'rgba(24, 17, 13, .22)';
+  context.shadowBlur = 34;
+  context.shadowOffsetY = 18;
+  context.fillStyle = colors.border;
+  roundedRect(context, card.left, card.top + 10, card.width, card.height, card.radius);
+  context.fill();
+  context.restore();
+
+  const surface = context.createLinearGradient(0, card.top, 0, card.top + card.height);
+  surface.addColorStop(0, blendHexColors(colors.card, '#ffffff', .2));
+  surface.addColorStop(.18, colors.card);
+  surface.addColorStop(1, blendHexColors(colors.card, colors.accent, .055));
+  context.fillStyle = surface;
+  roundedRect(context, card.left, card.top, card.width, card.height, card.radius);
   context.fill();
   context.strokeStyle = colors.border;
   context.lineWidth = 2;
   context.stroke();
+
+  context.save();
+  context.beginPath();
+  context.roundRect(card.left + 3, card.top + 3, card.width - 6, card.height - 6, card.radius - 3);
+  context.clip();
+  const sheen = context.createLinearGradient(0, card.top, 0, card.top + 22);
+  sheen.addColorStop(0, 'rgba(255,255,255,.42)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0)');
+  context.fillStyle = sheen;
+  context.fillRect(card.left + 4, card.top + 4, card.width - 8, 22);
+  context.restore();
 }
 
 function roundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
@@ -185,7 +289,7 @@ function wrapText(context: CanvasRenderingContext2D, text: string, x: number, y:
   return lineCount;
 }
 
-const DEFAULT_MAP_BOX = { left: 96, top: 300, width: 888, height: 385 };
+const DEFAULT_MAP_BOX = { left: 96, top: 320, width: 888, height: 365 };
 
 function drawGeometry(context: CanvasRenderingContext2D, geometry: GeometryPackage | undefined, dark: boolean, box = DEFAULT_MAP_BOX) {
   if (!geometry) return;
@@ -220,6 +324,7 @@ function drawGeometry(context: CanvasRenderingContext2D, geometry: GeometryPacka
 }
 
 export async function renderShareCard(content: ShareCardContent): Promise<Blob> {
+  const brandRequest = loadSharePhoto('/brand/logo-256.png');
   const canvas = document.createElement('canvas');
   const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   canvas.width = 1080 * ratio;
@@ -227,21 +332,21 @@ export async function renderShareCard(content: ShareCardContent): Promise<Blob> 
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is not available');
   await document.fonts.ready;
+  const brand = await brandRequest;
   context.scale(ratio, ratio);
   const dark = document.documentElement.dataset.theme === 'dark';
   const colors = shareColors(dark);
   drawCardFrame(context, colors);
-  context.fillStyle = colors.accent;
-  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
-  context.fillText('NUSANTARA', 96, 126);
+  const publicSummary = summaryForShare(content.summary, content.region);
+  drawBrandHeader(context, colors, brand, content.visitLabel, Boolean(content.region || publicSummary));
   context.fillStyle = colors.text;
   context.font = '800 48px "Nunito Variable", system-ui, sans-serif';
-  wrapText(context, content.title, 96, 190, 888, 57, 2);
+  const titleLines = wrapText(context, content.title, 96, 190, 888, 57, 2);
   context.fillStyle = colors.muted;
   context.font = '600 27px "Nunito Variable", system-ui, sans-serif';
-  let subtitle = content.subtitle;
-  if (content.region?.name) subtitle = content.region.name;
-  wrapText(context, subtitle, 96, 260, 888, 35, 1);
+  let subtitleY = 260;
+  if (titleLines > 1) subtitleY = 292;
+  wrapText(context, content.subtitle, 96, subtitleY, 888, 35, 1);
   const geometry = geometryForShare(content.geometry, content.region);
   drawGeometry(context, geometry, dark);
   if (!geometry) {
@@ -251,7 +356,7 @@ export async function renderShareCard(content: ShareCardContent): Promise<Blob> 
     context.fillText(content.unavailable, 540, 490, 760);
     context.textAlign = 'start';
   }
-  const publicSummary = summaryForShare(content.summary, content.region);
+  if (!publicSummary && !content.region) drawAtlasInvitation(context, colors, content.visitLabel);
   if (publicSummary) {
     const generatedAt = new Intl.DateTimeFormat(document.documentElement.lang, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(publicSummary.generatedAt));
     context.fillStyle = colors.text;
@@ -341,22 +446,25 @@ function drawProvinceFallback(context: CanvasRenderingContext2D, content: Destin
 
 /** A square card for one destination: its photo (or province outline), name, location and the photo credit. */
 export async function renderDestinationShareCard(content: DestinationCardContent): Promise<Blob> {
+  const brandRequest = loadSharePhoto('/brand/logo-256.png');
   const canvas = document.createElement('canvas');
   const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   canvas.width = 1080 * ratio;
   canvas.height = 1080 * ratio;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is not available');
-  const photoRequest = content.destination.imageUrl ? loadSharePhoto(content.destination.imageUrl) : Promise.resolve(undefined);
+  let photoRequest = Promise.resolve<HTMLImageElement | undefined>(undefined);
+  if (content.destination.imageUrl) photoRequest = loadSharePhoto(content.destination.imageUrl);
   await document.fonts.ready;
-  const photo = await photoRequest;
+  const [photo, brand] = await Promise.all([photoRequest, brandRequest]);
   context.scale(ratio, ratio);
   const dark = document.documentElement.dataset.theme === 'dark';
   const colors = shareColors(dark);
   drawCardFrame(context, colors);
+  drawBrandHeader(context, colors, brand, content.visitLabel);
   context.fillStyle = colors.accent;
-  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
-  context.fillText('NUSANTARA · ' + content.destination.kindLabel.toUpperCase(), 96, 126, 888);
+  context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(content.destination.kindLabel.toUpperCase(), 96, 147, 888);
   if (photo) drawPhotoCover(context, photo);
   else drawProvinceFallback(context, content, colors, dark);
   context.fillStyle = colors.text;
@@ -407,6 +515,7 @@ export interface ShareSpecies {
 export interface SpeciesCardContent {
   species: ShareSpecies;
   caveat: string;
+  visitLabel?: string;
 }
 
 const SPECIES_PHOTO_BOX = { left: 96, top: 150, width: 888, height: 400 };
@@ -498,23 +607,26 @@ function drawCuisineChip(context: CanvasRenderingContext2D, label: string, group
 /** A square card for one species: photo (or illustration), name, Latin name, IUCN status, description and photo credit. */
 export async function renderSpeciesShareCard(content: SpeciesCardContent): Promise<Blob> {
   const { species } = content;
+  const brandRequest = loadSharePhoto('/brand/logo-256.png');
   const canvas = document.createElement('canvas');
   const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   canvas.width = 1080 * ratio;
   canvas.height = 1080 * ratio;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is not available');
-  const photoRequest = species.imageUrl ? loadSharePhoto(species.imageUrl) : Promise.resolve(undefined);
+  let photoRequest = Promise.resolve<HTMLImageElement | undefined>(undefined);
+  if (species.imageUrl) photoRequest = loadSharePhoto(species.imageUrl);
   const placeholderRequest = loadSharePhoto(species.placeholderUrl);
   await document.fonts.ready;
-  const photo = await photoRequest;
+  const [photo, brand] = await Promise.all([photoRequest, brandRequest]);
   const picture = photo ?? await placeholderRequest;
   context.scale(ratio, ratio);
   const colors = shareColors(document.documentElement.dataset.theme === 'dark');
   drawCardFrame(context, colors);
+  drawBrandHeader(context, colors, brand, content.visitLabel);
   context.fillStyle = colors.accent;
-  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
-  context.fillText('NUSANTARA · ' + species.kindLabel.toUpperCase(), 96, 126, 888);
+  context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(species.kindLabel.toUpperCase(), 96, 145, 888);
   if (photo) drawSpeciesPhoto(context, photo, colors);
   else drawSpeciesPhoto(context, picture, colors, species.placeholderBackground);
 
@@ -582,28 +694,32 @@ export interface ShareDish {
 export interface DishCardContent {
   dish: ShareDish;
   caveat: string;
+  visitLabel?: string;
 }
 
 /** A square card for one dish: photo (or illustration), name, group, recipe count, description and photo credit. */
 export async function renderDishShareCard(content: DishCardContent): Promise<Blob> {
   const { dish } = content;
+  const brandRequest = loadSharePhoto('/brand/logo-256.png');
   const canvas = document.createElement('canvas');
   const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
   canvas.width = 1080 * ratio;
   canvas.height = 1080 * ratio;
   const context = canvas.getContext('2d');
   if (!context) throw new Error('Canvas is not available');
-  const photoRequest = dish.imageUrl ? loadSharePhoto(dish.imageUrl) : Promise.resolve(undefined);
+  let photoRequest = Promise.resolve<HTMLImageElement | undefined>(undefined);
+  if (dish.imageUrl) photoRequest = loadSharePhoto(dish.imageUrl);
   const placeholderRequest = loadSharePhoto(dish.placeholderUrl);
   await document.fonts.ready;
-  const photo = await photoRequest;
+  const [photo, brand] = await Promise.all([photoRequest, brandRequest]);
   const picture = photo ?? await placeholderRequest;
   context.scale(ratio, ratio);
   const colors = shareColors(document.documentElement.dataset.theme === 'dark');
   drawCardFrame(context, colors);
+  drawBrandHeader(context, colors, brand, content.visitLabel);
   context.fillStyle = colors.accent;
-  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
-  context.fillText('NUSANTARA · ' + dish.kindLabel.toUpperCase(), 96, 126, 888);
+  context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(dish.kindLabel.toUpperCase(), 96, 145, 888);
   if (photo) drawSpeciesPhoto(context, photo, colors);
   else drawSpeciesPhoto(context, picture, colors, dish.placeholderBackground);
 

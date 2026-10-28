@@ -36,6 +36,12 @@ test('population pyramid follows the selected province and city', async ({ page 
 });
 
 test('every destination row can be shared with its own name and location', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async (data: ShareData) => {
+      (window as Window & { sharedItem?: unknown }).sharedItem = { title: data.title, text: data.text, url: data.url };
+    } });
+  });
   await page.goto('/?layer=destinations&region=35');
   const firstRow = page.locator('.destination-table tbody tr').first();
   await expect(firstRow).toBeVisible();
@@ -44,9 +50,14 @@ test('every destination row can be shared with its own name and location', async
   const dialog = page.getByRole('dialog', { name: 'Share this place' });
   // The card waits up to eight seconds for the photo before it falls back to the province outline.
   await expect(dialog).toBeVisible({ timeout: 20_000 });
-  await expect(dialog.locator('img')).toBeVisible();
+  await expect(dialog.locator('.share-preview')).toBeVisible();
   await expect(dialog).toContainText(name);
   await expect(dialog).toContainText('Jawa Timur');
+  const caption = await dialog.locator('.share-caption').innerText();
+  await dialog.getByRole('button', { name: 'Share', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as Window & { sharedItem?: unknown }).sharedItem)).toEqual({
+    title: name + ' — Atlas Nusantara', text: caption, url: expect.stringContaining('destination=')
+  });
 });
 
 test('a place card shows the clock of the place, not of the browser', async ({ page }) => {

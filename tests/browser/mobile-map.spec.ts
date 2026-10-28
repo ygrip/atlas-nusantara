@@ -147,6 +147,8 @@ for (const colorScheme of ['light', 'dark'] as const) {
   expect(await button.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('gradient');
   const bounds = await button.boundingBox();
   expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  await expect(dialog.locator('.share-preview')).toBeVisible();
+  await expect(dialog.locator('.share-logo img')).toBeVisible();
   await dialog.screenshot({ path: `test-results/mobile-share-dialog-${colorScheme}.png` });
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();

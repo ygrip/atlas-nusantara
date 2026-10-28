@@ -12,7 +12,7 @@ const CITIES_AND_REGENCIES = 514;
 const require = createRequire(import.meta.url);
 
 const settings = JSON.parse(await readFile('project.inlang/settings.json', 'utf8'));
-const logo = 'data:image/webp;base64,' + (await readFile('static/brand/indonesia-clay.webp')).toString('base64');
+const logo = 'data:image/png;base64,' + (await readFile('static/brand/logo-256.png')).toString('base64');
 const nunito = 'data:font/woff2;base64,' + (await readFile(require.resolve('@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2'))).toString('base64');
 
 const escapeHtml = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -31,14 +31,14 @@ body { position: relative; font-family: 'Nunito', 'Noto Sans', system-ui, sans-s
 .blob.two { width: 150px; height: 150px; right: 520px; top: -62px; background: var(--gold-wash); box-shadow: inset 8px 10px 18px #ffffffb0, inset -10px -12px 20px #9a722f26; }
 .card { position: absolute; left: 44px; top: 44px; width: 1112px; height: 542px; border: 3px solid #fffaf6; border-radius: 56px;
   background: linear-gradient(160deg, #fffefd, var(--surface) 55%, #f8efec); box-shadow: 0 12px 0 -2px #e4d2ce, 18px 30px 56px #81565a30, inset 5px 6px 10px #ffffffd0, inset -8px -10px 18px #ae787b18; }
-.copy { position: absolute; left: 92px; top: 80px; width: 540px; height: 466px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+.copy { position: absolute; left: 92px; top: 80px; width: 540px; height: 430px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; }
+.copy > * { max-width: 100%; overflow-wrap: anywhere; }
 .brand-name { padding: 9px 22px; border-radius: 999px; background: var(--red-wash); box-shadow: inset 3px 4px 6px #ffffffb8, inset -3px -4px 7px #b9223822; font-size: 25px; font-weight: 900; letter-spacing: .02em; color: var(--accent); }
-h1 { font-size: 68px; line-height: 1.12; font-weight: 900; letter-spacing: -.01em; }
+h1 { font-size: 68px; line-height: 1.12; font-weight: 900; letter-spacing: -.01em; text-wrap: balance; }
 .tagline { font-size: 27px; line-height: 1.35; font-weight: 700; color: var(--muted); }
 .cta { padding: 13px 26px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 21px; line-height: 1.3; font-weight: 800;
   box-shadow: 0 6px 0 #8e1a2c, 4px 10px 16px #b9223840, inset 3px 3px 5px #ffffff4d; }
-.note { font-size: 16px; line-height: 1.4; font-weight: 700; color: var(--muted); }
-.domain { position: absolute; right: 92px; bottom: 76px; font-size: 18px; font-weight: 800; color: var(--muted); }
+.domain { position: absolute; left: 92px; bottom: 70px; font-size: 20px; font-weight: 800; color: var(--muted); }
 .logo-stage { position: absolute; right: 100px; top: 78px; width: 260px; height: 260px; display: grid; place-items: center; border-radius: 50%;
   background: radial-gradient(circle at 32% 28%, #fff, var(--panel) 72%); box-shadow: 0 10px 0 #e4d2ce, 12px 22px 36px var(--shadow), inset 6px 8px 12px #fff, inset -8px -10px 18px #ae787b24; }
 .logo-stage img { width: 218px; height: 218px; object-fit: contain; filter: drop-shadow(5px 9px 8px #5e4a3455); }
@@ -55,7 +55,6 @@ h1 { font-size: 68px; line-height: 1.12; font-weight: 900; letter-spacing: -.01e
   <h1 id="headline">${escapeHtml(text.og_headline)}</h1>
   <p class="tagline" id="tagline">${escapeHtml(text.og_tagline)}</p>
   <p class="cta">${escapeHtml(text.og_cta)}</p>
-  <p class="note">${escapeHtml(text.disclaimer)}</p>
 </div>
 <p class="domain">nusantara.readynaz.com</p>
 <div class="logo-stage"><img src="${logo}" alt=""></div>
@@ -70,7 +69,7 @@ async function fitCopy(browserPage) {
     const column = document.getElementById('copy');
     const headline = document.getElementById('headline');
     const tagline = document.getElementById('tagline');
-    const overflows = () => column.scrollHeight > column.clientHeight + 1;
+    const overflows = () => column.scrollHeight > column.clientHeight + 1 || column.scrollWidth > column.clientWidth + 1;
     let headlineSize = 68;
     while (headlineSize > 40 && overflows()) {
       headlineSize -= 2;
@@ -94,6 +93,11 @@ try {
     await browserPage.setContent(page(locale, text), { waitUntil: 'load' });
     await browserPage.evaluate(() => document.fonts.ready);
     await fitCopy(browserPage);
+    const copyFits = await browserPage.evaluate(() => {
+      const column = document.getElementById('copy');
+      return column.scrollHeight <= column.clientHeight + 1 && column.scrollWidth <= column.clientWidth + 1;
+    });
+    if (!copyFits) throw new Error('Social preview copy overflows for locale ' + locale);
     await browserPage.screenshot({ path: 'static/og/nusantara-' + locale + '.png' });
     await browserPage.close();
     console.log('og image: ' + locale);

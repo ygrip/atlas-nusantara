@@ -55,10 +55,17 @@ test('previews and downloads a local PNG card with a public URL that excludes de
     localStorage.setItem('nusantara:pins:v1', JSON.stringify([{ id: 'geo:-6.209,106.846', type: 'coordinates', lat: -6.209, lng: 106.846, name: '-6.209, 106.846', addedAt: new Date().toISOString() }]));
     Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: async (data: ShareData) => {
-      (window as Window & { sharedData?: { url: string; fileTypes: string[] } }).sharedData = {
-        url: data.url ?? '', fileTypes: (data.files ?? []).map(file => file.type)
+      (window as Window & { sharedData?: { url: string; fileTypes: string[]; title: string; text: string } }).sharedData = {
+        url: data.url ?? '', fileTypes: (data.files ?? []).map(file => file.type), title: data.title ?? '', text: data.text ?? ''
       };
     } });
+    const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (image, ...coordinates: number[]) {
+      if (image instanceof HTMLImageElement && image.src.endsWith('/brand/logo-256.png')) {
+        (window as Window & { shareLogoDrawn?: boolean }).shareLogoDrawn = true;
+      }
+      return Reflect.apply(drawImage, this, [image, ...coordinates]);
+    };
     const original = HTMLCanvasElement.prototype.toBlob;
     const releases: Array<() => void> = [];
     const state = window as Window & { releaseShareCard?: () => void; shareCardPending?: boolean };
@@ -85,6 +92,9 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   await page.evaluate(() => (window as Window & { releaseShareCard?: () => void }).releaseShareCard?.());
   await expect(dialog.getByRole('img', { name: 'Nusantara public atlas share card' })).toBeVisible();
   await expect(dialog.locator('.share-loading')).toBeHidden();
+  await expect(dialog.locator('.share-logo img')).toHaveAttribute('src', '/brand/logo-256.png');
+  await expect(dialog.getByRole('link', { name: 'nusantara.readynaz.com' })).toHaveAttribute('href', 'https://nusantara.readynaz.com/');
+  expect(await page.evaluate(() => (window as Window & { shareLogoDrawn?: boolean }).shareLogoDrawn)).toBe(true);
   expect(await actionButtons.nth(0).evaluate(element => element.getBoundingClientRect().width)).toBeCloseTo(await actionButtons.nth(1).evaluate(element => element.getBoundingClientRect().width), 0);
   await expect(dialog.getByRole('button', { name: 'Copy public link' })).toHaveCount(0);
   const image = await dialog.getByRole('img').evaluate(async node => {
@@ -96,7 +106,11 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   expect([1080, 2160]).toContain(image.width);
   expect([1080, 2160]).toContain(image.height);
   await dialog.getByRole('button', { name: 'Share', exact: true }).click();
-  await expect.poll(() => page.evaluate(() => (window as Window & { sharedData?: { url: string; fileTypes: string[] } }).sharedData)).toEqual({ url: 'https://nusantara.readynaz.com/', fileTypes: ['image/png'] });
+  await expect.poll(() => page.evaluate(() => (window as Window & { sharedData?: unknown }).sharedData)).toEqual({
+    url: 'https://nusantara.readynaz.com/', fileTypes: ['image/png'],
+    title: 'Atlas Nusantara — Find your next favourite in Indonesia.',
+    text: 'So many islands. So much to discover. Find your next favourite place, flavour or natural wonder on Atlas Nusantara.'
+  });
   const downloadPromise = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Download PNG' }).click();
   const download = await downloadPromise;
@@ -116,6 +130,23 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   await page.evaluate(() => (window as Window & { releaseShareCard?: () => void }).releaseShareCard?.());
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('button', { name: 'Share this atlas', exact: true })).toBeFocused();
+});
+
+test('copies the inviting caption and public link when native sharing is unavailable', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+      writeText: async (text: string) => { (window as Window & { copiedShare?: string }).copiedShare = text; }
+    } });
+  });
+  await openAtlas(page);
+  await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Share this atlas' });
+  await expect(dialog.locator('.share-preview')).toBeVisible();
+  const caption = await dialog.locator('.share-caption').innerText();
+  await dialog.getByRole('button', { name: 'Share', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as Window & { copiedShare?: string }).copiedShare)).toBe(caption + '\n\nhttps://nusantara.readynaz.com/');
+  await expect(dialog.getByRole('status')).toHaveText('Public link copied.');
 });
 
 test('keeps the directory usable when geometry cannot be fetched', async ({ page }) => {
@@ -144,13 +175,21 @@ test('serves production-root canonical and OG metadata plus a local PNG image', 
     canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href'),
     ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute('content'),
     ogImage: document.querySelector('meta[property="og:image"]')?.getAttribute('content'),
-    description: document.querySelector('meta[name="description"]')?.getAttribute('content')
+    description: document.querySelector('meta[name="description"]')?.getAttribute('content'),
+    title: document.querySelector('meta[property="og:title"]')?.getAttribute('content'),
+    ogDescription: document.querySelector('meta[property="og:description"]')?.getAttribute('content'),
+    twitterTitle: document.querySelector('meta[name="twitter:title"]')?.getAttribute('content')
   }));
   expect(metadata.canonical).toBe('https://nusantara.readynaz.com/');
   expect(metadata.ogUrl).toBe('https://nusantara.readynaz.com/');
-  expect(metadata.ogImage).toBe('https://nusantara.readynaz.com/og/nusantara.png');
-  expect(metadata.description).toContain('Not an emergency alert service');
-  const image = await request.get('/og/nusantara.png');
+  expect(metadata).toMatchObject({
+    ogImage: 'https://nusantara.readynaz.com/og/nusantara.png?v=clay-discovery-2',
+    title: 'Atlas Nusantara — Find your next favourite in Indonesia.',
+    twitterTitle: 'Atlas Nusantara — Find your next favourite in Indonesia.',
+    description: expect.stringContaining('places, local flavours, wildlife and weather'),
+    ogDescription: expect.stringContaining('Pick a place, follow your curiosity, and start exploring.')
+  });
+  const image = await request.get('/og/nusantara.png?v=clay-discovery-2');
   expect(image.status()).toBe(200);
   expect(image.headers()['content-type']).toContain('image/png');
   expect((await image.body()).subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
