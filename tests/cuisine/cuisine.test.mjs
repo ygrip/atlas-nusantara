@@ -167,6 +167,27 @@ test('assembling a dish orders recipes and photos and keeps the record valid', (
   assert.equal('images' in bare, false);
 });
 
+test('curated regional evidence is source-backed and covers all previously empty provinces', async () => {
+  const regional = await readJson('scripts/recipes/regional-evidence.json');
+  const missing = ['19', '64', '92', '93', '94', '95', '96'];
+  assert.deepEqual(Object.keys(regional).sort(), missing);
+  for (const code of missing) {
+    const names = new Set();
+    assert.ok(regional[code].length > 0, code + ' has source groups');
+    for (const group of regional[code]) {
+      assert.match(group.source, /^https:\/\//);
+      assert.ok(group.dishes.length > 0, code + ' group is not empty');
+      for (const name of group.dishes) {
+        assert.ok(name.trim().length >= 3, 'dish names are meaningful');
+        assert.ok(!names.has(name.toLowerCase()), code + ' has no duplicate dishes');
+        names.add(name.toLowerCase());
+      }
+    }
+    assert.ok(names.size >= 4, code + ' has multiple researched foods');
+  }
+  assert.equal(isCuisineDish({ ...dish, originStatus: 'regional-source' }), true);
+});
+
 test('published index, 38 province shards and the national file agree', async () => {
   const index = await readJson('static/data/cuisine/index.json');
   const national = await readJson('static/data/cuisine/national.json');
