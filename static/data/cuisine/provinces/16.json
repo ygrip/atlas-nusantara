@@ -3,21 +3,1143 @@
   "provinceCode": "16",
   "items": [
     {
-      "id": "pempek",
-      "name": "Pempek",
+      "id": "bolu-8-jam",
+      "name": "Bolu 8 Jam",
       "provinceCodes": [
         "16"
       ],
-      "articleUrl": "https://id.wikipedia.org/wiki/Pempek",
-      "image": {
-        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Pempek%20palembang.jpg?width=640",
-        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Pempek_palembang.jpg",
-        "credit": "Arvinefriani",
-        "license": "CC BY 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-        "reviewedAt": "2026-10-28T00:00:00Z",
-        "source": "Wikimedia Commons"
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Bolu_8_Jam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "bolu-kojo",
+      "name": "Bolu kojo",
+      "provinceCodes": [
+        "16",
+        "17"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Bolu_kojo",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "bolu-lapis",
+      "name": "Bolu Lapis",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Bolu_Lapis",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "brengkes",
+      "name": "Brengkes",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Brengkes",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "brengkes-tempoyak",
+      "name": "Brengkes Tempoyak",
+      "provinceCodes": [
+        "15",
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Brengkes_Tempoyak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "brengkes-udang",
+      "name": "Brengkes Udang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Brengkes_Udang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "burgo",
+      "name": "Burgo",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Burgo",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "celimpungan",
+      "name": "Celimpungan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Celimpungan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "cucuk-gigi",
+      "name": "Cucuk Gigi",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Cucuk_Gigi",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-adaan",
+      "name": "Empek-empek Adaan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Adaan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-kapal-selam",
+      "name": "Empek-empek Kapal Selam",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Kapal_Selam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-kerupuk",
+      "name": "Empek-empek Kerupuk",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Kerupuk",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-kulit",
+      "name": "Empek-empek Kulit",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Kulit",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-lenggang",
+      "name": "Empek-empek Lenggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Lenggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-lenjer",
+      "name": "Empek-empek Lenjer",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Lenjer",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-panggang",
+      "name": "Empek-empek Panggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Panggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-pistel",
+      "name": "Empek-empek Pistel",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Pistel",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-tahu",
+      "name": "Empek-empek Tahu",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek_Tahu",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "empek-empek-pempek",
+      "name": "Empek-empek/pempek",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Empek-empek",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "engkak-ketan",
+      "name": "Engkak Ketan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Engkak_Ketan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "es-kacang-merah",
+      "name": "Es Kacang merah",
+      "provinceCodes": [
+        "16",
+        "71"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Es_Kacang_merah",
+      "recipe": {
+        "ingredients": [
+          "250 gram kacang merah kering",
+          "1 liter air untuk merebus",
+          "150 gram gula merah, sisir halus",
+          "2 sdm gula pasir",
+          "2 lembar daun pandan, simpulkan",
+          "1/2 sdt garam",
+          "200 ml santan kental dari 1/2 butir kelapa",
+          "es batu secukupnya",
+          "100 ml susu kental manis"
+        ],
+        "steps": [
+          "Rendam kacang merah minimal 3 jam atau semalaman, lalu cuci bersih dan tiriskan.",
+          "Rebus kacang merah dengan 1 liter air menggunakan api sedang sampai empuk, sekitar 45 menit.",
+          "Masukkan gula merah, gula pasir, daun pandan, dan garam. Aduk rata, masak 10 menit sampai gula larut dan kacang mulai pecah.",
+          "Kecilkan api, tuang santan sambil diaduk pelan. Masak sampai mendidih sekali, angkat dan biarkan hangat.",
+          "Isi gelas dengan es batu, tuang kacang merah beserta kuahnya, tambahkan susu kental manis.",
+          "Sajikan segera selagi dingin."
+        ],
+        "category": "minuman",
+        "difficulty": "mudah",
+        "timeMinutes": 60,
+        "language": "id",
+        "status": "source",
+        "sourceUrl": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes"
       },
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        },
+        {
+          "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes",
+          "role": "recipe",
+          "license": "MIT"
+        }
+      ],
+      "broadRegion": "Jawa"
+    },
+    {
+      "id": "gandus",
+      "name": "Gandus",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gandus",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gangan-udang-satang",
+      "name": "Gangan Udang satang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gangan_Udang_satang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gulai-malbi",
+      "name": "Gulai Malbi",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gulai_Malbi",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gulai-tempoyak",
+      "name": "Gulai Tempoyak",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gulai_Tempoyak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-pais",
+      "name": "Ikan Pais",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_Pais",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-pakasam",
+      "name": "Ikan Pakasam",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_Pakasam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-peda",
+      "name": "Ikan Peda",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_Peda",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-rusip",
+      "name": "Ikan Rusip",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_Rusip",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-salai",
+      "name": "Ikan Salai",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_Salai",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "juadah-ketan",
+      "name": "Juadah Ketan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Juadah_Ketan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kemplang",
+      "name": "Kemplang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kemplang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kemplang-goreng",
+      "name": "Kemplang Goreng",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kemplang_Goreng",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kemplang-panggang",
+      "name": "Kemplang Panggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kemplang_Panggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kerupuk",
+      "name": "Kerupuk",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kerupuk",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kluntup",
+      "name": "Kluntup",
+      "provinceCodes": [
+        "14",
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kluntup",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kue-bangket",
+      "name": "Kue bangket",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kue_bangket",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kue-lapan-jam",
+      "name": "Kue lapan jam",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kue_lapan_jam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kue-maksuba",
+      "name": "Kue maksuba",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kue_maksuba",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kue-satu",
+      "name": "Kue satu",
+      "provinceCodes": [
+        "16",
+        "21"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kue_satu",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "kumbu",
+      "name": "Kumbu",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Kumbu",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "laksa",
+      "name": "Laksa",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Laksa",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "laksan",
+      "name": "Laksan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Laksan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "lakso",
+      "name": "Lakso",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Lakso",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "lempok-duren",
+      "name": "Lempok Duren",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Lempok_Duren",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "lenggang",
+      "name": "Lenggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Lenggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "lepat-pisang",
+      "name": "Lepat Pisang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Lepat_Pisang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "maksuba",
+      "name": "Maksuba",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Maksuba",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "mi-celor",
+      "name": "Mi Celor",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Mi_Celor",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "mie-celor",
+      "name": "Mie Celor",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Mie_Celor",
+      "recipe": {
+        "ingredients": [
+          "500 gram mie kuning basah",
+          "1 liter kaldu udang atau ayam",
+          "200 gram udang, kupas sisakan ekornya",
+          "500 ml santan kental",
+          "2 sdm ebi, rendam air panas lalu tiriskan",
+          "bumbu halus: 6 bawang merah, 4 bawang putih, 3 kemiri, 1 sdt merica butir, 1 sdt garam",
+          "2 batang serai, memarkan",
+          "3 lembar daun jeruk",
+          "4 butir telur, rebus lalu kupas",
+          "100 gram toge, seduh air panas",
+          "2 batang seledri, iris halus",
+          "50 gram bawang goreng"
+        ],
+        "steps": [
+          "Rebus mie kuning dalam air mendidih 1–2 menit. Angkat, tiriskan, aduk dengan sedikit minyak agar tidak lengket.",
+          "Haluskan ebi bersama bumbu halus sampai lembut.",
+          "Tumis bumbu halus, serai, dan daun jeruk dengan api sedang sampai harum dan matang.",
+          "Masukkan udang, aduk sampai berubah warna. Tuang kaldu, masak sampai mendidih.",
+          "Kecilkan api, tuang santan sambil diaduk perlahan agar tidak pecah. Koreksi rasa dengan garam, masak sampai kuah sedikit mengental.",
+          "Tata mie di mangkuk, siram kuah panas, beri toge, telur rebus, seledri, dan bawang goreng.",
+          "Sajikan panas dengan jeruk limau dan sambal rawit."
+        ],
+        "category": "makanan_utama",
+        "difficulty": "sedang",
+        "timeMinutes": 60,
+        "language": "id",
+        "status": "source",
+        "sourceUrl": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes"
+      },
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        },
+        {
+          "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes",
+          "role": "recipe",
+          "license": "MIT"
+        }
+      ],
+      "broadRegion": "Sumatera"
+    },
+    {
+      "id": "model",
+      "name": "Model",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Model",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "nasi-lemak",
+      "name": "Nasi lemak",
+      "provinceCodes": [
+        "15",
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Nasi_lemak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "nasi-minyak",
+      "name": "Nasi Minyak",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Nasi_Minyak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "nasi-samin",
+      "name": "Nasi Samin",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Nasi_Samin",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "otak-otak",
+      "name": "Otak-otak",
+      "provinceCodes": [
+        "16",
+        "21",
+        "36"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Otak-otak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-adaan",
+      "name": "Pempek Adaan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Adaan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-isi-udang",
+      "name": "Pempek Isi Udang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Isi_Udang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-kapal-selam",
+      "name": "Pempek Kapal Selam",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Kapal_Selam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-keriting",
+      "name": "Pempek Keriting",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Keriting",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-kulit",
+      "name": "Pempek Kulit",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Kulit",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-lenggang",
+      "name": "Pempek Lenggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Lenggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-lenjer",
+      "name": "Pempek Lenjer",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Lenjer",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-palembang",
+      "name": "Pempek Palembang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "seed-reviewed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek",
       "recipe": {
         "language": "id",
         "status": "original-adaptation",
@@ -43,11 +1165,437 @@
           "Untuk cuko, didihkan gula aren bersama air, cabai, bawang putih, dan cuka. Saring lalu sajikan bersama pempek yang digoreng sebentar bila disukai."
         ]
       },
-      "originStatus": "seed-reviewed",
+      "image": {
+        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Pempek%20palembang.jpg?width=640",
+        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Pempek_palembang.jpg",
+        "credit": "Arvinefriani",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+        "reviewedAt": "2026-10-28T00:00:00Z",
+        "source": "Wikimedia Commons"
+      },
       "sources": [
+        {
+          "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes",
+          "role": "recipe",
+          "license": "MIT"
+        },
         {
           "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
           "role": "regional-cuisine-list"
+        }
+      ],
+      "broadRegion": "Sumatera"
+    },
+    {
+      "id": "pempek-panggang",
+      "name": "Pempek Panggang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Panggang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-pistel",
+      "name": "Pempek Pistel",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Pistel",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pempek-telor",
+      "name": "Pempek Telor",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pempek_Telor",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pepes-asam-belimbing",
+      "name": "pepes asam belimbing",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pepes_asam_belimbing",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pepes-tempoyak",
+      "name": "pepes tempoyak",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pepes_tempoyak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-ayam",
+      "name": "Pindang Ayam",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_Ayam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-daging-tulang",
+      "name": "Pindang Daging/Tulang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_Daging%2FTulang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-ikan-patin",
+      "name": "Pindang Ikan patin",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_Ikan_patin",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-maranjat",
+      "name": "Pindang maranjat",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_maranjat",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-pegagan",
+      "name": "Pindang pegagan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_pegagan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "pindang-salai",
+      "name": "Pindang Salai",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Pindang_Salai",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "rujak-mie",
+      "name": "Rujak Mie",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Rujak_Mie",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-goreng-campur",
+      "name": "Sambal Goreng Campur",
+      "provinceCodes": [
+        "14",
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_Goreng_Campur",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-jokjok",
+      "name": "Sambal jokjok",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_jokjok",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-kemang",
+      "name": "Sambal Kemang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_Kemang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-kweni",
+      "name": "Sambal Kweni",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_Kweni",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-lingkung",
+      "name": "Sambal Lingkung",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_Lingkung",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sambal-mbacang",
+      "name": "Sambal Mbacang",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sambal_Mbacang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sayur-kasam",
+      "name": "Sayur Kasam",
+      "provinceCodes": [
+        "14",
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sayur_Kasam",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "srikayo",
+      "name": "Srikayo",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Srikayo",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "tekwan",
+      "name": "Tekwan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Tekwan",
+      "recipe": {
+        "ingredients": [
+          "250 gram daging ikan tenggiri giling",
+          "125 gram tepung sagu",
+          "1 butir telur",
+          "100 ml air es",
+          "2 siung bawang putih, haluskan",
+          "1 sdt garam",
+          "1/2 sdt merica bubuk",
+          "1 liter air kaldu udang",
+          "2 sdm ebi, rendam air panas lalu haluskan",
+          "2 siung bawang putih, geprek",
+          "100 gram soun, seduh air panas",
+          "50 gram jamur kuping kering, rendam dan iris"
+        ],
+        "steps": [
+          "Campur ikan tenggiri, tepung sagu, telur, bawang putih halus, garam, merica, dan air es. Uleni sampai kalis dan bisa dibentuk.",
+          "Panaskan air dalam panci hingga hampir mendidih, kecilkan api. Bentuk adonan bulat kecil memakai dua sendok yang dicelup air, lalu masukkan ke air.",
+          "Masak sampai pentol mengapung, angkat dan tiriskan.",
+          "Tumis bawang putih geprek dan ebi sampai harum. Tuang kaldu udang, didihkan.",
+          "Masukkan jamur kuping ke kuah, bumbui dengan sisa garam dan merica secukupnya.",
+          "Tata soun di mangkuk, beri pentol tekwan, siram kuah panas.",
+          "Taburi bawang goreng dan daun bawang, sajikan hangat."
+        ],
+        "category": "makanan_utama",
+        "difficulty": "sedang",
+        "timeMinutes": 75,
+        "language": "id",
+        "status": "source",
+        "sourceUrl": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes"
+      },
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        },
+        {
+          "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes",
+          "role": "recipe",
+          "license": "MIT"
+        }
+      ],
+      "broadRegion": "Sumatera"
+    },
+    {
+      "id": "wajik-ketan",
+      "name": "Wajik Ketan",
+      "provinceCodes": [
+        "16"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Wajik_Ketan",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
         }
       ]
     }

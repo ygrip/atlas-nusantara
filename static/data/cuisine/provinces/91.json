@@ -3,22 +3,117 @@
   "provinceCode": "91",
   "items": [
     {
+      "id": "anuve-habre",
+      "name": "Anuve Habre",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Anuve_Habre",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "aunu-senebre",
+      "name": "Aunu Senebre",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Aunu_Senebre",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "eurimoo",
+      "name": "Eurimoo",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Eurimoo",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-bakar-manokwari",
+      "name": "Ikan bakar Manokwari",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_bakar_Manokwari",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-bungkus",
+      "name": "Ikan bungkus",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_bungkus",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "ikan-kuah-kuning",
+      "name": "Ikan kuah kuning",
+      "provinceCodes": [
+        "81",
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Ikan_kuah_kuning",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
       "id": "papeda",
       "name": "Papeda",
       "provinceCodes": [
         "81",
         "91"
       ],
+      "originStatus": "wikipedia-listed",
       "articleUrl": "https://id.wikipedia.org/wiki/Papeda",
-      "image": {
-        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Papeda%20dari%20Indonesia%20bagian%20timur.jpg?width=640",
-        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Papeda_dari_Indonesia_bagian_timur.jpg",
-        "credit": "Tumanisme",
-        "license": "CC BY-SA 4.0",
-        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
-        "reviewedAt": "2026-10-28T00:00:00Z",
-        "source": "Wikimedia Commons"
-      },
       "recipe": {
         "language": "id",
         "status": "original-adaptation",
@@ -39,11 +134,46 @@
           "Sajikan hangat bersama ikan kuah kuning atau lauk berkuah khas Indonesia timur."
         ]
       },
-      "originStatus": "seed-reviewed",
+      "image": {
+        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Papeda%20dari%20Indonesia%20bagian%20timur.jpg?width=640",
+        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Papeda_dari_Indonesia_bagian_timur.jpg",
+        "credit": "Tumanisme",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "reviewedAt": "2026-10-28T00:00:00Z",
+        "source": "Wikimedia Commons"
+      },
       "sources": [
         {
           "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        },
+        {
+          "url": "https://huggingface.co/datasets/LorthGyu/indonesian-recipes",
+          "role": "recipe",
+          "license": "MIT"
+        },
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
           "role": "regional-cuisine-list"
+        }
+      ],
+      "broadRegion": "Maluku/Papua"
+    },
+    {
+      "id": "sate-ulat-sagu",
+      "name": "Sate ulat sagu",
+      "provinceCodes": [
+        "91"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sate_ulat_sagu",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
         }
       ]
     }
