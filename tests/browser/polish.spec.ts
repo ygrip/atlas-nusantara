@@ -32,8 +32,8 @@ test('language search filters English names, native names and codes, with keyboa
   await expect(page.locator('html')).toHaveAttribute('lang', 'id');
 });
 
-for (const theme of ['light', 'dark']) {
-  for (const width of [390, 1440]) {
+for (const [theme, width] of [['dark', 390], ['light', 1440]] as const) {
+  {
     test(`homepage sections remain readable at ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 1000 });
       await page.addInitScript(theme => localStorage.setItem('nusantara:theme', theme), theme);

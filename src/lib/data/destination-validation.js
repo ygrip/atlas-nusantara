@@ -32,6 +32,9 @@ export function isDestinationRecord(value) {
     // An older reader still uses image; it must refer to the same lead photo.
     if (!item.image || JSON.stringify(item.image) !== JSON.stringify(item.images[0])) return false;
   }
+  if (item.webImages !== undefined && (!Array.isArray(item.webImages) || item.webImages.length < 1
+    || item.webImages.length > 8 || new Set(item.webImages).size !== item.webImages.length
+    || !item.webImages.every(url => typeof url === 'string' && url.length <= 2000 && url.startsWith('https://')))) return false;
   if (item.sourceUrl !== undefined && (typeof item.sourceUrl !== 'string' || !item.sourceUrl.startsWith('https://'))) return false;
   return true;
 }

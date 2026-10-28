@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { EDITION_COUNTS } from '$lib/atlas/edition';
   import RingChart from './RingChart.svelte';

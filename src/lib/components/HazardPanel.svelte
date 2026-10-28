@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import WarningList from './WarningList.svelte';
   import { activeWarnings, eventColor, eventLabel, EVENT_KINDS, kindLabel, loadHazards, severityColor, type DisasterEvent, type EventKind, type HazardSnapshot, type HazardWarning } from '$lib/data/hazards';
