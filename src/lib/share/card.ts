@@ -449,6 +449,52 @@ function drawStatusChip(context: CanvasRenderingContext2D, species: ShareSpecies
   return drawChip(context, species.statusCode + ' · ' + species.statusLabel, species.statusColor, species.statusTextColor, x, y);
 }
 
+/** Mix a restrained group tint into the share card surface; canvas doesn't inherit CSS theme variables. */
+function blendHexColors(base: string, accent: string, fraction: number): string {
+  if (!/^#[\da-f]{6}$/i.test(base) || !/^#[\da-f]{6}$/i.test(accent)) return base;
+  return '#' + [1, 3, 5].map(index => {
+    const a = Number.parseInt(base.slice(index, index + 2), 16);
+    const b = Number.parseInt(accent.slice(index, index + 2), 16);
+    return Math.round(a + (b - a) * fraction).toString(16).padStart(2, '0');
+  }).join('');
+}
+
+/** The cuisine share chip matches the on-page raised, tinted badge in either theme. */
+function drawCuisineChip(context: CanvasRenderingContext2D, label: string, groupColor: string, colors: ShareColors, x: number, y: number): number {
+  context.save();
+  context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
+  const width = Math.min(888, context.measureText(label).width + 60);
+  const height = 42;
+  const gradient = context.createLinearGradient(x, y, x + width, y + height);
+  gradient.addColorStop(0, blendHexColors(colors.card, groupColor, .1));
+  gradient.addColorStop(1, blendHexColors(colors.card, groupColor, .18));
+
+  // The shallow bottom edge and a highlight give the badge the same clay relief as the UI.
+  context.fillStyle = colors.border;
+  roundedRect(context, x, y + 3, width, height, 15);
+  context.fill();
+  context.fillStyle = gradient;
+  roundedRect(context, x, y, width, height, 15);
+  context.fill();
+  context.lineWidth = 1;
+  context.strokeStyle = blendHexColors(colors.border, groupColor, .25);
+  context.stroke();
+  context.strokeStyle = blendHexColors(colors.card, '#ffffff', .35);
+  context.beginPath();
+  context.moveTo(x + 15, y + 2);
+  context.lineTo(x + width - 15, y + 2);
+  context.stroke();
+
+  context.beginPath();
+  context.arc(x + 21, y + height / 2, 5, 0, Math.PI * 2);
+  context.fillStyle = groupColor;
+  context.fill();
+  context.fillStyle = colors.text;
+  context.fillText(label, x + 37, y + 29, width - 50);
+  context.restore();
+  return y + height;
+}
+
 /** A square card for one species: photo (or illustration), name, Latin name, IUCN status, description and photo credit. */
 export async function renderSpeciesShareCard(content: SpeciesCardContent): Promise<Blob> {
   const { species } = content;
@@ -522,8 +568,8 @@ export interface ShareDish {
   kindLabel: string;
   /** For example "3 recipes". */
   chipLabel: string;
+  /** Category color accents the claymorphic chip, rather than sitting under its text. */
   chipColor: string;
-  chipTextColor: string;
   description: string;
   /** Openly licensed Commons photo that the canvas may read; omitted for Cookpad photos, which send no CORS header. */
   imageUrl?: string;
@@ -568,7 +614,7 @@ export async function renderDishShareCard(content: DishCardContent): Promise<Blo
   context.fillStyle = colors.muted;
   context.font = '600 24px "Nunito Variable", system-ui, sans-serif';
   context.fillText(dish.subtitle, 96, cursor, 888);
-  cursor = drawChip(context, dish.chipLabel, dish.chipColor, dish.chipTextColor, 96, cursor + 18) + 40;
+  cursor = drawCuisineChip(context, dish.chipLabel, dish.chipColor, colors, 96, cursor + 18) + 40;
 
   context.fillStyle = colors.text;
   context.font = '600 25px "Nunito Variable", system-ui, sans-serif';
