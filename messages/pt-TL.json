@@ -403,5 +403,22 @@
   "population_source_provinces": "Tabela de províncias do BPS",
   "population_source_pyramid": "Tabela de idade e sexo do BPS",
   "tab_overview": "Visão geral",
-  "tab_province_detail": "Detalhe da província"
+  "tab_province_detail": "Detalhe da província",
+  "layer_cuisine": "Gastronomia",
+  "cuisine_heading": "Receitas de toda a Indonésia",
+  "cuisine_description": "Explore pratos regionais, ingredientes, preparação e créditos das fotografias.",
+  "cuisine_search": "Pesquisar pratos",
+  "cuisine_choose_province": "Selecione uma província no mapa para ver mais pratos.",
+  "cuisine_empty": "Nenhum prato corresponde à pesquisa.",
+  "cuisine_no_image": "Fotografia indisponível",
+  "cuisine_minutes": "min",
+  "cuisine_recipe": "Ver receita",
+  "cuisine_no_recipe": "Receita indisponível",
+  "cuisine_id_fallback": "Esta receita está disponível apenas em indonésio.",
+  "cuisine_machine_notice": "A tradução automática ainda não foi revista.",
+  "cuisine_ingredients": "Ingredientes",
+  "cuisine_steps": "Preparação",
+  "cuisine_recipe_source": "Fonte da receita",
+  "cuisine_more": "Mostrar mais",
+  "cuisine_scope_notice": "A cobertura é parcial. As associações provinciais seguem a lista citada; nem todos os pratos têm receita ou fotografia."
 }
