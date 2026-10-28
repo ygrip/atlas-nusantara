@@ -4,6 +4,10 @@ name: Build cuisine catalog
 on:
   workflow_dispatch:
     inputs:
+      curate_only:
+        description: 'Enrich existing published data from curated regional references without crawling'
+        type: boolean
+        default: false
       crawl:
         description: 'Run the Cookpad and Wikipedia crawl stages (resumable, cached between runs)'
         type: boolean
@@ -30,13 +34,17 @@ jobs:
           key: cuisine-crawl-${{ github.run_id }}
           restore-keys: cuisine-crawl-
       - name: Crawl Cookpad Indonesia (resumable)
-        if: ${{ inputs.crawl }}
+        if: ${{ !inputs.curate_only && inputs.crawl }}
         run: node scripts/recipes/crawl-cookpad.mjs --concurrency=4 --delay-ms=500
       - name: Fetch Wikipedia summaries and Commons photo licences (resumable)
         if: ${{ inputs.crawl }}
         run: node scripts/recipes/fetch-wikipedia.mjs --concurrency=4 --delay-ms=300
       - name: Build province shards and the national export
+        if: ${{ !inputs.curate_only }}
         run: node scripts/recipes/build.mjs
+      - name: Enrich existing published catalog (offline)
+        if: ${{ inputs.curate_only }}
+        run: node scripts/recipes/enrich-existing.mjs
       - name: Verify generated catalog
         run: node --test tests/cuisine/*.test.mjs
       - name: Commit generated data
