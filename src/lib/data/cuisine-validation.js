@@ -5,7 +5,7 @@ import { isProvinceCodeValue } from './destination-validation.js';
 /** @typedef {import('./cuisine-contract').CuisineIndex} CuisineIndex */
 
 export const CUISINE_GROUPS = ['rice', 'noodles', 'soups', 'meat-fish', 'vegetables', 'snacks', 'drinks', 'condiments', 'other'];
-const ORIGIN_STATUSES = ['wikipedia-listed', 'seed-reviewed', 'unmapped'];
+const ORIGIN_STATUSES = ['wikipedia-listed', 'seed-reviewed', 'regional-source', 'unmapped'];
 const RECIPE_SOURCES = ['cookpad', 'lorthgyu', 'atlas'];
 const IMAGE_SOURCES = ['commons', 'cookpad'];
 export const MAX_CUISINE_IMAGES = 4;
