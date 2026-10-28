@@ -403,5 +403,22 @@
   "population_source_provinces": "Talahanayan ng lalawigan ng BPS",
   "population_source_pyramid": "Talahanayan ng edad at kasarian ng BPS",
   "tab_overview": "Pangkalahatang-ideya",
-  "tab_province_detail": "Detalye ng lalawigan"
+  "tab_province_detail": "Detalye ng lalawigan",
+  "layer_cuisine": "Pagkaing rehiyonal",
+  "cuisine_heading": "Mga resipe mula sa Indonesia",
+  "cuisine_description": "Tuklasin ang mga pagkaing rehiyonal, sangkap, paraan ng pagluluto, at kredito sa larawan.",
+  "cuisine_search": "Maghanap ng putahe",
+  "cuisine_choose_province": "Pumili ng lalawigan sa mapa para sa higit pang putahe.",
+  "cuisine_empty": "Walang tumutugmang putahe.",
+  "cuisine_no_image": "Walang larawan",
+  "cuisine_minutes": "minuto",
+  "cuisine_recipe": "Tingnan ang resipe",
+  "cuisine_no_recipe": "Wala pang resipe",
+  "cuisine_id_fallback": "Sa wikang Indonesian lamang ang resipeng ito.",
+  "cuisine_machine_notice": "Hindi pa nasusuri ang salin ng makina.",
+  "cuisine_ingredients": "Mga sangkap",
+  "cuisine_steps": "Paraan ng pagluluto",
+  "cuisine_recipe_source": "Pinagmulan ng resipe",
+  "cuisine_more": "Tingnan pa",
+  "cuisine_scope_notice": "Hindi pa kumpleto ang saklaw. Batay sa pinagkunang listahan ang pag-uugnay sa mga lalawigan; hindi lahat ay may resipe o larawan."
 }
