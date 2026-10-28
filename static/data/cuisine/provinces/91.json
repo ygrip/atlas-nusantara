@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "provinceCode": "91",
+  "items": [
+    {
+      "id": "papeda",
+      "name": "Papeda",
+      "provinceCodes": [
+        "81",
+        "91"
+      ],
+      "articleUrl": "https://id.wikipedia.org/wiki/Papeda",
+      "image": {
+        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Papeda%20dari%20Indonesia%20bagian%20timur.jpg?width=640",
+        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Papeda_dari_Indonesia_bagian_timur.jpg",
+        "credit": "Tumanisme",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "reviewedAt": "2026-10-28T00:00:00Z",
+        "source": "Wikimedia Commons"
+      },
+      "recipe": {
+        "language": "id",
+        "status": "original-adaptation",
+        "sourceUrl": "https://id.wikipedia.org/wiki/Papeda",
+        "category": "makanan_utama",
+        "difficulty": "mudah",
+        "timeMinutes": 20,
+        "ingredients": [
+          "150 g tepung sagu",
+          "500 ml air",
+          "Sejumput garam",
+          "Ikan kuah kuning atau lauk berkuah untuk menyajikan"
+        ],
+        "steps": [
+          "Larutkan tepung sagu dengan sedikit air suhu ruang dalam wadah tahan panas hingga tidak bergumpal.",
+          "Didihkan sisa air, lalu tuang perlahan ke dalam larutan sagu sambil diaduk kuat.",
+          "Aduk terus hingga sagu bening, mengental, dan bertekstur elastis.",
+          "Sajikan hangat bersama ikan kuah kuning atau lauk berkuah khas Indonesia timur."
+        ]
+      },
+      "originStatus": "seed-reviewed",
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "regional-cuisine-list"
+        }
+      ]
+    }
+  ]
+}
