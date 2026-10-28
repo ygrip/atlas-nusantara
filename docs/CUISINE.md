@@ -9,7 +9,7 @@ Atlas Nusantara provides a manually published, **static** cuisine layer at \`/?l
 - Wikipedia-linked dish articles provide candidate page-image references. The builder requests file metadata from Wikimedia Commons and accepts only eligible CC0/CC BY/CC BY-SA/public-domain photos with author, license and description-page links. Missing images stay missing. Per-file license terms apply; attribution is displayed in cards.
 - The four seed recipes are **original Atlas Nusantara recipe adaptations**, not text copied from Wikipedia. Background references are not presented as recipe instruction sources.
 
-The first committed \`static/data/cuisine\` snapshot intentionally contains **4 reviewed starter recipes and 4 photographs**: Rendang, Pempek, Soto Banjar, Papeda. The build script can produce a much larger catalogue, but **the full external aggregation has not been run or validated in this change**. Do not label this a complete census.
+The published `static/data/cuisine` snapshot (2026-10-28) contains **2,278 dish entries, 159 matched recipes, and 4 credited external Wikimedia Commons photo URLs**, grouped into 38 province shards. Four original seed recipes are preserved: Rendang, Pempek, Soto Banjar, and Papeda. The Wikipedia list and recipe matches are not an exhaustive, independently verified census. Most image enrichment was unavailable because the Wikimedia metadata API returned HTTP 503. Missing photos remain empty rather than being copied or guessed.
 
 ## Image delivery policy: external URLs only
 
