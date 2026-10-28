@@ -1,6 +1,6 @@
 # Installation, cache busting and updates
 
-The flow follows the relevant `trick-it` patterns: one SvelteKit-owned registration, `updateViaCache: 'none'`, an explicit installation action, waiting-worker approval and offline shell caching. No PWA plugin or visitor account is needed.
+The flow follows the relevant `trick-it` patterns: one SvelteKit-owned registration, `updateViaCache: 'none'`, an explicit installation action and offline shell caching. No PWA plugin or visitor account is needed.
 
 ## Install
 
@@ -10,9 +10,13 @@ The manifest includes real 192/512 PNG icons, an Apple touch icon and standalone
 
 ## Update
 
-New workers cache the shell and **wait**, rather than calling `skipWaiting()` during install. The app checks while visible/online, on resume and through **Check for updates**, without replacing a worker that is already installing or waiting.
+New workers cache the shell and **wait**, rather than calling `skipWaiting()` during install. The app checks in the background while visible/online and on resume, without replacing a worker that is already installing or waiting. There are no update buttons, update notices or already-installed controls.
 
-**Update and reload** sends a same-origin client message to activate the waiting worker. Only the approving tab reloads. Other tabs show their own notice instead of interrupting use; activation retains the immediately previous shell cache so old immutable imports have a grace fallback. **Later** dismisses the notice. Activation failures time out visibly rather than leaving a disabled action forever. Reload preserves localStorage locations/preferences and the public region URL; temporary previews and camera state are not promised to survive it.
+The browser activates a waiting worker after the old app windows close; there is no forced mid-session reload. Activation retains the immediately previous shell cache so old immutable imports have a grace fallback. Reopening preserves browser-stored locations/preferences and the public region URL; temporary previews and camera state are not promised to survive it.
+
+## Notification settings
+
+When browser permission is granted, the control shows **Disable notifications** instead of asking for permission again. The on/off setting persists in IndexedDB so the page and service worker share it. Disabling saves the opt-out before unsubscribing any existing push endpoint and closing displayed notifications. The service worker checks the setting before displaying every push and suppresses delivery if the setting cannot be read. Browser permission itself cannot be revoked by website code; visitors can revoke it in browser site settings. Enabling does not create a live alert subscription: production push delivery remains unconfigured.
 
 ## Cache policy
 
@@ -22,4 +26,4 @@ New workers cache the shell and **wait**, rather than calling `skipWaiting()` du
 - Province geometry/city lists and relief are lazy, not a bulk GIS precache. Only requested packages are added at runtime. Release-versioned weather/earthquake assets are saved snapshots with visible dates, not current-warning publications.
 - Provider `/data/published/*`, `/data/snapshots/*` and `/api/*` bypass service-worker CacheStorage. Hot publication HTTP caches obey their own short CDN TTL and absolute manifest validity. Cold archives are `no-store`; offline provider data is not represented as fresh.
 
-Browser tests cover install-event consent/manual guidance, mocked waiting-worker approval and location persistence, release-key requests, real icon assets and the actual offline shell. Real OS install dialogs, installed iOS/Android behavior, production headers and deployed update rollout remain device/deployment checks.
+Browser tests cover install-event consent/manual guidance, silent background update checks and location persistence, release-key requests, transparent PNG icons and the actual offline shell. Real OS install dialogs and installed iOS/Android rollout remain native-device checks.

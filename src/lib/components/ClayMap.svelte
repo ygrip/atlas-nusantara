@@ -301,7 +301,8 @@
     scene.setOverlay(renderedOverlay, national.projection);
   });
   $effect(() => {
-    void timeIndex; void focusedForecast; void scene; void playing;
+    void timeIndex; void focusedForecast;
+    scene?.setPlayback(playing);
     pushWeather();
   });
 
@@ -309,7 +310,8 @@
   $effect(() => {
     if (!playing || !mapVisible || !documentVisible) return;
     let last = performance.now();
-    let frame = requestAnimationFrame(function advance(now) {
+    const timer = setInterval(() => {
+      const now = performance.now();
       progress += (now - last) / 1000 / PLAY_STEP_SECONDS;
       last = now;
       if (progress >= 1) {
@@ -318,9 +320,8 @@
         else timeIndex += 1;
       }
       pushWeather();
-      frame = requestAnimationFrame(advance);
-    });
-    return () => cancelAnimationFrame(frame);
+    }, 1000 / 30);
+    return () => clearInterval(timer);
   });
 
   function settleStage() {

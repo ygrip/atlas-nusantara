@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const headers = readFileSync('build/_headers', 'utf8');
 const cspLine = headers.split('\n').find(line => line.trim().startsWith('Content-Security-Policy:'));
@@ -8,7 +8,7 @@ const policy = cspLine.trim().slice('Content-Security-Policy:'.length).trim();
 
 test.use({ serviceWorkers: 'block' });
 
-test('CSP permits the atlas and opt-in ads, while blocking untrusted inline code', async ({ page }) => {
+test('CSP permits the atlas and automatic ads, while blocking untrusted inline code', async ({ page }) => {
   const violations: string[] = [];
   const adRequests: string[] = [];
   await page.exposeFunction('recordPolicyViolation', (directive: string) => violations.push(directive));
@@ -21,7 +21,7 @@ test('CSP permits the atlas and opt-in ads, while blocking untrusted inline code
     const url = new URL(route.request().url());
     if (url.hostname === 'pagead2.googlesyndication.com') {
       adRequests.push(url.href);
-      await route.fulfill({ contentType: 'application/javascript', body: 'window.adsbygoogle={push:function(){window.__testAdRequests=(window.__testAdRequests||0)+1;}};' });
+      await route.fulfill({ contentType: 'application/javascript', body: 'window.adsbygoogle={push:function(){window.__testAdRequests=(window.__testAdRequests||0)+1;document.querySelector("ins[data-ad-slot]").dataset.adStatus="filled";}};' });
       return;
     }
     if (url.origin === 'http://127.0.0.1:4173' && route.request().resourceType() === 'document') {
@@ -33,9 +33,8 @@ test('CSP permits the atlas and opt-in ads, while blocking untrusted inline code
   });
   await page.goto('/');
   await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
-  expect(adRequests).toHaveLength(0);
-  await expect(page.getByRole('button', { name: 'Load advertisement' })).toBeVisible();
-  await page.getByRole('button', { name: 'Load advertisement' }).click();
+  await expect(page.getByRole('button', { name: 'Load advertisement' })).toHaveCount(0);
+  await expect(page.locator('.network-ad-slot')).toBeVisible();
   await expect(page.locator('ins.adsbygoogle')).toHaveAttribute('data-ad-slot', '5292790825');
   await expect(page.locator('ins.adsbygoogle')).not.toHaveAttribute('data-adtest');
   await expect.poll(() => page.evaluate(() => (window as unknown as { __testAdRequests?: number }).__testAdRequests)).toBe(1);

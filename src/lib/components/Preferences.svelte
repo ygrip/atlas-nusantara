@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { MapPin, Navigation, Bell } from 'lucide-svelte';
+  import { MapPin, Navigation, Bell, BellOff } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import { ADMIN_DATA_PATH } from '$lib/atlas/edition';
   import { loadForecast, type ForecastSnapshot } from '$lib/map/weather';
   import { assetUrl } from '$lib/pwa/assets';
   import { readPins, writePins, readCurrentLocation, writeCurrentLocation, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions';
+  import { readNotificationsEnabled, writeNotificationsEnabled, stopPushNotifications } from '$lib/pwa/notification-settings';
   import WeatherPlaceCard from './WeatherPlaceCard.svelte';
   import PlacePicker from './PlacePicker.svelte';
   import type { PlaceOption } from '$lib/atlas/place-search';
@@ -22,6 +23,9 @@
   let status = $state('');
   let busy = $state(false);
   let notificationPermission = $state<NotificationPermission | 'unavailable'>('unavailable');
+  let notificationsEnabled = $state(true);
+  let notificationsReady = $state(false);
+  const notificationsActive = $derived(notificationPermission === 'granted' && notificationsEnabled);
   const placeOptions = $derived.by((): PlaceOption[] => {
     const provinceNames = new Map(provinces.map(region => [region.code, region.name]));
     const provinceOptions: PlaceOption[] = provinces.map(region => ({ code: region.code, name: region.name, level: 'province' }));
@@ -35,7 +39,23 @@
     let disposed = false;
     const controller = new AbortController();
     readSavedPlaces();
-    if ('Notification' in window && 'serviceWorker' in navigator) notificationPermission = Notification.permission;
+    async function syncNotifications() {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+      try {
+        const enabled = await readNotificationsEnabled();
+        if (disposed) return;
+        notificationPermission = Notification.permission;
+        notificationsEnabled = enabled;
+        notificationsReady = true;
+      } catch (error) {
+        console.warn('Notification settings unavailable', error);
+        if (!disposed) { notificationsReady = false; status = m.notification_settings_error(); }
+      }
+    }
+    void syncNotifications();
+    const refreshNotifications = () => { if (!document.hidden) void syncNotifications(); };
+    window.addEventListener('focus', refreshNotifications);
+    document.addEventListener('visibilitychange', refreshNotifications);
     void Promise.all([
       loadRegions(ADMIN_DATA_PATH + '/provinces.json', controller.signal),
       loadRegions(ADMIN_DATA_PATH + '/cities.json', controller.signal)
@@ -50,7 +70,7 @@
     const forecastTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshForecast(); }, 2 * 60 * 60_000);
     const sync = (event: StorageEvent) => { if (event.key?.startsWith('nusantara:')) readSavedPlaces(); };
     window.addEventListener('storage', sync);
-    return () => { disposed = true; controller.abort(); clearInterval(forecastTimer); window.removeEventListener('storage', sync); };
+    return () => { disposed = true; controller.abort(); clearInterval(forecastTimer); window.removeEventListener('storage', sync); window.removeEventListener('focus', refreshNotifications); document.removeEventListener('visibilitychange', refreshNotifications); };
   });
 
   function readSavedPlaces() {
@@ -90,10 +110,21 @@
   async function notifications() {
     busy = true;
     try {
+      if (notificationsActive) {
+        await writeNotificationsEnabled(false);
+        notificationsEnabled = false;
+        await stopPushNotifications();
+        status = '';
+        return;
+      }
       notificationPermission = await requestNotifications();
-      status = m.notification_setup();
+      if (notificationPermission === 'granted') {
+        await writeNotificationsEnabled(true);
+        notificationsEnabled = true;
+      }
+      status = '';
       if (notificationPermission === 'denied') status = m.permission_denied();
-    } catch (error) { console.warn('Notification permission unavailable', error); notificationPermission = 'unavailable'; status = m.permissions_unsupported(); }
+    } catch (error) { console.warn('Notification settings could not be updated', error); status = m.notification_settings_error(); }
     finally { busy = false; }
   }
 
@@ -119,7 +150,12 @@
     </div>
     <p class="forecast-note">{m.forecast_archive_note()} <a href="https://data.bmkg.go.id/prakiraan-cuaca/" target="_blank" rel="noreferrer">BMKG ↗</a></p>
   {:else}<p class="empty">{m.no_pins()}</p>{/if}
-  <div class="notification-settings"><button type="button" onclick={notifications} disabled={busy || notificationPermission === 'unavailable' || notificationPermission === 'denied'}><Bell size={15} aria-hidden="true" />{m.notify_button()}</button><small>{m.notification_setup()}</small></div>
+  <div class="notification-settings">
+    <button type="button" onclick={notifications} aria-pressed={notificationsActive} disabled={busy || !notificationsReady || notificationPermission === 'unavailable' || notificationPermission === 'denied'}>
+      {#if notificationsActive}<BellOff size={15} aria-hidden="true" />{m.notify_disable()}{:else}<Bell size={15} aria-hidden="true" />{m.notify_button()}{/if}
+    </button>
+    <small>{m.notification_setup()}</small>
+  </div>
 </section>
 
 <style>

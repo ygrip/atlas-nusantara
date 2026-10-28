@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { choosePlace, openProvinceDetails } from './layers';
 
 const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
@@ -79,7 +79,7 @@ test.describe('2025 atlas and locations', () => {
     const table = page.locator('#provinces .province-table');
     await openProvinceDetails(page);
     await expect(table.locator('tbody tr')).toHaveCount(38);
-    await table.getByRole('button', { name: 'Papua', exact: true }).click();
+    await table.locator('.group-filter').getByRole('button', { name: 'Papua', exact: true }).click();
     await expect(table.locator('tbody tr')).toHaveCount(6);
     await table.getByRole('button', { name: 'Details · Papua Selatan' }).click();
     const dialog = page.getByRole('dialog', { name: 'Papua Selatan' });
@@ -174,8 +174,8 @@ test.describe('2025 atlas and locations', () => {
     });
     await openAtlas(page);
     if (browserName === 'webkit') await expect(page.getByRole('button', { name: 'Enable notifications' })).toBeDisabled();
-    else await expect(page.getByRole('button', { name: 'Enable notifications' })).toBeEnabled();
-    await expect(page.getByText('Notification permission is not an active alert subscription.')).toBeVisible();
+    else await expect(page.getByRole('button', { name: 'Disable notifications' })).toBeEnabled();
+    await expect(page.getByText('Live alerts are not connected yet. Turning notifications off here does not revoke browser permission.', { exact: true })).toHaveCount(1);
   });
 
   test('gives each locale its own path and switches every text in place, without reloading', async ({ page }) => {

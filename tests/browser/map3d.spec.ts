@@ -1,4 +1,4 @@
-import { chromium, expect, test } from '@playwright/test';
+import { chromium, expect, test } from './fixtures';
 import { chooseLayer } from './layers';
 
 test('3D relief map supports wheel zoom, camera controls and snapshot-only weather', async ({ browserName, baseURL }) => {

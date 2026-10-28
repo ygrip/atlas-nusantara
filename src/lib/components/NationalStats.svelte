@@ -59,7 +59,7 @@
   let slots = $state([0, 1, 2]);
   let nextMetric = 3;
   let nextSlot = 0;
-  let paused = $state(false);
+  let paused = $state(true);
   let hovering = $state(false);
   let inView = $state(false);
   let reducedMotion = $state(false);

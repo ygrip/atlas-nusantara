@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { chooseLayer } from './layers';
 
 test('population layer: national trend and pyramid tabs, province filter, heat legend, no observatory', async ({ page }) => {

@@ -28,9 +28,16 @@ test('hero geometry and clay cutouts stay light', () => {
   }
 });
 
-test('hero motion is CSS-only, pauses offscreen and honors reduced motion', () => {
+test('hero motion is finite, CSS-only and honors reduced motion', () => {
   assert.ok(hero.includes('prefers-reduced-motion'));
-  assert.ok(hero.includes('IntersectionObserver'));
+  assert.ok(!/infinite|IntersectionObserver|plate-top|plate-middle/.test(hero));
   assert.ok(!/gsap|requestAnimationFrame|pointermove|mousemove|:hover/.test(hero));
   assert.ok(!hero.includes('FIG.'));
+});
+
+test('hero bevel preserves aligned silhouettes with a thin three-plate edge', () => {
+  assert.ok(hero.includes('transform="translate(0 1.5)"'));
+  assert.ok(hero.includes('transform="translate(0 3)"'));
+  assert.ok(hero.includes('transform="translate(0 5)"'));
+  assert.ok(!/startAtlasStory|word-mask/.test(page));
 });

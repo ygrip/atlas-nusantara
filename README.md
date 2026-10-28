@@ -61,6 +61,8 @@ node scripts/ingestion/earthquake-snapshot.mjs
 
 Scheduled refreshes are defined for **weather every 3 hours** and **earthquakes every 25 minutes**. Collection/publishing requires repository flags and the intended CDN credentials; it has not been activated remotely. See [SNAPSHOT_REFRESH.md](docs/SNAPSHOT_REFRESH.md).
 
+These snapshot schedules are separate from the five-minute Cloudflare scheduler tick. The Worker has configured due intervals of five minutes for BMKG CAP nowcasts and fifteen minutes for BMKG earthquakes; it fetches only operator-approved sources. Those collectors remain inactive. A scheduler tick, configured source interval, and timestamp of an actual collection are not interchangeable.
+
 Forecast capture takes about 10 minutes at under 60 requests/minute. It verifies provider code/name pairs, reports missing points and retains the previous file if fewer than 90% succeed. Captured data remains dated when offline; it is never labeled live.
 
 Administrative codes follow the pinned 2025 transcription. See [DATA_SOURCES.md](docs/DATA_SOURCES.md) for its checksum, upstream header discrepancy and explicit BMKG crosswalk. Rebuilding geometry and relief is documented in [GEOMETRY.md](docs/GEOMETRY.md).

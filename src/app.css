@@ -45,8 +45,7 @@
 html { scroll-behavior: smooth; }
 /* Keep native page zoom outside the map; map viewports handle their own gestures. */
 html, body { touch-action: pan-x pan-y pinch-zoom; }
-html.lenis, html.lenis body { height: auto; }
-html.lenis { scroll-behavior: auto !important; }
+
 body { margin: 0; background: radial-gradient(1100px 610px at 0% -12%, var(--red-wash), transparent 62%), radial-gradient(820px 520px at 100% 6%, var(--green-wash), transparent 60%), radial-gradient(650px 450px at 82% 95%, var(--gold-wash), transparent 68%), var(--page); background-attachment: fixed; color: var(--text); }
 [id] { scroll-margin-top: 112px; }
 button, select, input { font: inherit; color: var(--text); }
@@ -112,14 +111,10 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(26px, 3.
 .hero-copy .share-panel { margin-top: 4px; }
 .hero-tagline { margin: -4px 0 0; font-size: clamp(1.1rem, 2.1vw, 1.5rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; color: var(--accent); text-wrap: balance; }
 
-/* Hero copy entrance: CSS only, so the finished text is already the resting state with or without JS.
-   Words rise out of a mask one by one; the rest of the copy follows in a short stagger. */
+/* One finite copy entrance; headings use native text instead of per-word animation layers. */
 .hero-copy .rise { animation: hero-rise 720ms cubic-bezier(.2, .8, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
-.hero-copy h1 .word-mask { display: inline-block; overflow: hidden; vertical-align: top; padding: .06em .05em; margin: -.06em -.05em; }
-.hero-copy h1 .word { display: inline-block; animation: hero-word 820ms cubic-bezier(.16, .84, .24, 1) backwards; animation-delay: calc(var(--w, 1) * 110ms + 140ms); }
 @keyframes hero-rise { from { opacity: .4; transform: translateX(-26px); } }
-@keyframes hero-word { from { transform: translateY(108%); } }
-@media (prefers-reduced-motion: reduce) { .hero-copy .rise, .hero-copy h1 .word { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .hero-copy .rise { animation: none; } }
 
 .stat-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.8vw, 20px); }
 .stat-card .animated-number { font-variant-numeric: tabular-nums; }

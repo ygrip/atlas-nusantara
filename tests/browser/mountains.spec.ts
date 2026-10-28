@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { chooseLayer } from './layers';
 
 test('mountain directory and keyboard pins open a detail popup without replacing disaster layers', async ({ page }) => {

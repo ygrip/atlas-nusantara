@@ -24,8 +24,8 @@
   <p>{m.terms_liability_text()}</p>
   <h2>{m.terms_links_title()}</h2>
   <p>{m.terms_links_text()}</p>
-  <h2>Optional advertisements and verified downloads</h2>
-  <p>The homepage may display one clearly labelled Google advertisement after you opt in. Advertisements are separate from the atlas’s data, source attributions and public-safety guidance; their presence does not imply endorsement. Ad blockers or declining ads do not restrict ordinary browsing. Ad delivery depends on Google’s availability, publisher approval and applicable consent requirements.</p>
+  <h2>Advertisements and verified downloads</h2>
+  <p>The homepage automatically requests one clearly labelled Google advertisement. Empty, blocked or failed placements are hidden. Advertisements are separate from the atlas’s data, source attributions and public-safety guidance; their presence does not imply endorsement. Ad blockers do not restrict ordinary browsing. Ad delivery depends on Google’s availability, publisher approval and applicable consent requirements.</p>
   <p>Archive downloads require Cloudflare Turnstile verification and are subject to request, size and daily limits. Passing verification does not grant access to an unapproved or unavailable dataset. Do not bypass verification, automate abuse, or treat this atlas as an emergency alert service.</p>
   <h2>{m.terms_changes_title()}</h2>
   <p>{m.terms_changes_text()}</p>

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './fixtures';
 import { chooseLayer } from './layers';
 // Deterministic provider/geometry fixtures must not be bypassed by a controlling service worker.
 test.use({ serviceWorkers: 'block' });

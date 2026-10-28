@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
+  import type { GeometryPackage, SvgRegion } from '$lib/geo/types';
+  import { CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
+  import { assetUrl } from '$lib/pwa/assets';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { ISLAND_GROUPS, ISLAND_GROUP_NAMES, type IslandGroup } from '$lib/atlas/islands';
   import { groupStyle } from '$lib/directory/group-style';
@@ -14,6 +17,7 @@
   let { onopen, selectedCode }: { onopen?: (code: string) => void; selectedCode?: string } = $props();
 
   let rows = $state<ProvinceRow[]>([]);
+  let provinceShapes = $state<Record<string, SvgRegion>>({});
   let loading = $state(true);
   let failed = $state(false);
   let groupFilter = $state<IslandGroup | undefined>(undefined);
@@ -58,12 +62,45 @@
 
   onMount(() => {
     let active = true;
+    const controller = new AbortController();
     loadProvinceDirectory()
       .then(loaded => { if (active) rows = loaded; })
       .catch(() => { if (active) failed = true; })
       .finally(() => { if (active) loading = false; });
-    return () => { active = false; };
+    void fetch(assetUrl(GEOMETRY_DATA_PATH + '/national.json'), { signal: controller.signal })
+      .then(response => {
+        if (!response.ok) throw new Error('Province map geometry is unavailable');
+        return response.json() as Promise<GeometryPackage>;
+      })
+      .then(geometry => {
+        if (!active) return;
+        if (geometry.schemaVersion !== 1 || geometry.codeEdition !== CODE_EDITION || !Array.isArray(geometry.regions)) throw Error('Province map geometry has an unsupported edition or format');
+        provinceShapes = Object.fromEntries(geometry.regions
+          .filter(region => /^\d{2}$/.test(region.sourceCode) && region.path && validBounds(region.bbox))
+          .map(region => [region.sourceCode, region]));
+      })
+      .catch(error => {
+        if (active && !controller.signal.aborted) console.warn('Province silhouettes unavailable', error);
+      });
+    return () => { active = false; controller.abort(); };
   });
+
+  function validBounds(bounds: number[]): boolean {
+    return bounds.length === 4 && bounds.every(Number.isFinite) && bounds[2] > bounds[0] && bounds[3] > bounds[1];
+  }
+
+  function shapeViewBox(region: SvgRegion): string {
+    const [left, top, right, bottom] = region.bbox;
+    const width = right - left;
+    const height = bottom - top;
+    const padding = Math.max(width, height) * 0.12;
+    return `${left - padding} ${top - padding} ${width + padding * 2} ${height + padding * 2}`;
+  }
+
+  function shapeDepth(region: SvgRegion): number {
+    const [left, top, right, bottom] = region.bbox;
+    return Math.max(right - left, bottom - top) * 0.06;
+  }
 
   function number(value: number): string {
     return new Intl.NumberFormat(getLocale()).format(value);
@@ -177,7 +214,23 @@
             <tr class:active-region={selectedCode?.split('.')[0] === row.code} style={groupStyle(row.group)}>
               <td class="code">{row.code}</td>
               <th scope="row">
-                <button class="province-name province-link" type="button" aria-current={currentProvince(row.code)} onclick={() => openCode(row.code)}><span class="group-dot" title={ISLAND_GROUP_NAMES[row.group]}></span>{row.name}{#if currentProvince(row.code)}<span class="selected-marker"><Check size={13} aria-hidden="true" /></span>{/if}</button>
+                <button class="province-name province-link" type="button" aria-current={currentProvince(row.code)} onclick={() => openCode(row.code)}>
+                  {#if provinceShapes[row.code]}
+                    <svg class="province-silhouette" viewBox={shapeViewBox(provinceShapes[row.code])} aria-hidden="true" focusable="false">
+                      <defs>
+                        <linearGradient id={'province-clay-' + row.code} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="var(--clay-map-top)" />
+                          <stop offset="100%" stop-color="var(--clay-map-side)" />
+                        </linearGradient>
+                      </defs>
+                      <path class="silhouette-side" d={provinceShapes[row.code].path} transform={'translate(0 ' + shapeDepth(provinceShapes[row.code]) + ')'} />
+                      <path class="silhouette-top" d={provinceShapes[row.code].path} fill={'url(#province-clay-' + row.code + ')'} />
+                    </svg>
+                  {:else}
+                    <span class="province-placeholder" aria-hidden="true"><span class="group-dot"></span></span>
+                  {/if}
+                  <span>{row.name}</span>{#if currentProvince(row.code)}<span class="selected-marker"><Check size={13} aria-hidden="true" /></span>{/if}
+                </button>
                 <small>{ISLAND_GROUP_NAMES[row.group]}</small>
               </th>
               <td class="numeric">{number(row.regencies.length)}</td>
@@ -249,7 +302,14 @@
   tbody tr.active-region > :first-child { box-shadow: inset 4px 0 0 var(--accent), inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); color: var(--accent); }
   tbody tr.active-region > :last-child { box-shadow: inset -1px 0 0 var(--border), inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); }
   .selected-marker { display: inline-grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
-  .province-link { min-height: 44px; }
+  .province-link { min-height: 60px; }
+  .province-silhouette { --clay-map-top: var(--group-top-light); --clay-map-side: var(--group-side-light); display: block; flex: 0 0 76px; width: 76px; height: 54px; overflow: visible; filter: drop-shadow(0 3px 3px color-mix(in srgb, var(--shadow) 48%, transparent)); }
+  .silhouette-side { fill: var(--clay-map-side); }
+  .silhouette-top { stroke: color-mix(in srgb, var(--clay-map-side) 82%, var(--border)); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  :global([data-theme='dark']) .province-silhouette { --clay-map-top: var(--group-top-dark); --clay-map-side: var(--group-side-dark); }
+  :global([data-theme='dark']) .silhouette-top { stroke: color-mix(in srgb, var(--clay-map-side) 78%, white); }
+  .province-placeholder { display: grid; place-items: center; flex: 0 0 76px; width: 76px; height: 54px; }
+  .group-dot { flex: 0 0 18px; width: 18px; height: 18px; }
   .province-link[aria-current='location'] { color: var(--accent); }
   .city-link { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; border: 0; padding: 6px; border-radius: 10px; background: transparent; color: inherit; text-align: left; }
   .city-link:hover { background: var(--mint); }
@@ -283,7 +343,7 @@
   tbody tr:hover th, tbody tr:hover td { transform: translateY(-2px); box-shadow: 0 5px 0 var(--shadow); background: var(--mint); }
   .code { font-family: ui-monospace, SFMono-Regular, monospace; color: var(--muted); font-weight: 700; }
   .province-name { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; }
-  tbody th small { display: block; margin: 2px 0 0 25px; color: var(--muted); font-size: .7rem; font-weight: 650; }
+  tbody th small { display: block; margin: 2px 0 0 85px; color: var(--muted); font-size: .7rem; font-weight: 650; }
   td.numeric { font-variant-numeric: tabular-nums; font-weight: 700; }
   td.total { display: table-cell; white-space: nowrap; }
   .meter { display: inline-block; vertical-align: middle; width: 84px; height: 10px; margin-right: 10px; border-radius: 99px; background: var(--panel); box-shadow: inset 1px 1px 3px var(--shadow); overflow: hidden; }

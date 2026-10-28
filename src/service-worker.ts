@@ -2,6 +2,7 @@
 import { build, files, version } from '$service-worker';
 import { officialWarningUrl, parseNotification } from './lib/pwa/notification-payload';
 import { isDeferredAtlasAsset } from './lib/pwa/cache-policy';
+import { readNotificationsEnabled } from './lib/pwa/notification-settings';
 declare const self: ServiceWorkerGlobalScope;
 
 const cacheName = 'nusantara-' + version;
@@ -69,10 +70,13 @@ self.addEventListener('push', event => {
  try { payload = event.data.json(); } catch { return; }
  const notification = parseNotification(payload);
  if (!notification) return;
- event.waitUntil(self.registration.showNotification(notification.title, {
-  body: notification.body, icon: '/icon-192.png', tag: notification.id,
-  data: { url: notification.url, source: notification.source, expiresAt: notification.expiresAt }
- }));
+ event.waitUntil(readNotificationsEnabled().then(enabled => {
+  if (!enabled) return;
+  return self.registration.showNotification(notification.title, {
+   body: notification.body, icon: '/icon-192.png', tag: notification.id,
+   data: { url: notification.url, source: notification.source, expiresAt: notification.expiresAt }
+  });
+ }).catch(error => console.warn('Notification suppressed because settings or delivery are unavailable', error)));
 });
 self.addEventListener('notificationclick', event => {
  event.notification.close();

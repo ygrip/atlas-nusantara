@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Download, RefreshCw, Smartphone } from 'lucide-svelte';
+  import { Download, Smartphone } from 'lucide-svelte';
   import { dev } from '$app/environment';
   import { m } from '$lib/i18n/messages';
   import { watchUpdates } from '$lib/pwa/updates';
@@ -13,14 +13,9 @@
   let updates: ReturnType<typeof watchUpdates> | undefined;
   let installed = false;
   let mobile = false;
-  let workerReady = false;
-  let available = false;
-  let applying = false;
-  let checking = false;
   let showGuide = false;
   let status = '';
   let supported = false;
-  let updateTimeout: ReturnType<typeof setTimeout> | undefined;
 
   onMount(() => {
     const mode = matchMedia('(display-mode: standalone)');
@@ -30,25 +25,18 @@
     device.addEventListener('change', detectMobile);
     function detectInstalled() { installed = mode.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone); }
     function installReady(event: Event) { event.preventDefault(); prompt = event as InstallPrompt; }
-    function appInstalled() { installed = true; prompt = undefined; showGuide = false; status = m.pwa_installed(); }
+    function appInstalled() { installed = true; prompt = undefined; showGuide = false; status = ''; }
     detectInstalled();
     mode.addEventListener('change', detectInstalled);
     window.addEventListener('beforeinstallprompt', installReady);
     window.addEventListener('appinstalled', appInstalled);
     supported = !dev && isSecureContext && 'serviceWorker' in navigator;
+    // Check in the background; the browser activates waiting updates after old app windows close.
     if (supported) updates = watchUpdates({
-      ready: () => workerReady = true,
-      waiting: () => available = true,
-      controllerChanged: previouslyControlled => {
-        if (applying) { clearTimeout(updateTimeout); location.reload(); return; }
-        // Another tab may accept an update. This tab still waits for its own consent.
-        if (previouslyControlled) available = true;
-      },
-      checked: () => status = m.pwa_checked(),
-      failed: (error, manual) => { console.warn('PWA update check failed', error); if (manual) status = m.pwa_update_error(); }
+      failed: error => console.warn('PWA update check failed', error)
     });
     return () => {
-      updates?.destroy(); clearTimeout(updateTimeout);
+      updates?.destroy();
       mode.removeEventListener('change', detectInstalled);
       device.removeEventListener('change', detectMobile);
       window.removeEventListener('beforeinstallprompt', installReady);
@@ -66,15 +54,6 @@
       if (choice.outcome === 'accepted') status = m.pwa_install_requested();
     } catch (error) { console.warn('Installation prompt unavailable', error); showGuide = true; }
   }
-  async function check() {
-    checking = true;
-    try { await updates?.check(true); } finally { checking = false; }
-  }
-  function applyUpdate() {
-    applying = true;
-    if (!updates?.activate()) { location.reload(); return; }
-    updateTimeout = setTimeout(() => { applying = false; status = m.pwa_update_error(); }, 10000);
-  }
 </script>
 
 {#if mobile && !installed}
@@ -84,13 +63,9 @@
     <div class="pwa-copy"><strong>{m.pwa_heading()}</strong><p>{m.pwa_description()}</p></div>
   </div>
   <div class="pwa-actions">
-    <button class="pwa-install" type="button" onclick={install} disabled={installed}>
+    <button class="pwa-install" type="button" onclick={install}>
       <Download size={17} strokeWidth={2.4} aria-hidden="true" />
-      <span>{#if installed}{m.pwa_installed()}{:else}{m.pwa_install()}{/if}</span>
-    </button>
-    <button class="pwa-secondary" type="button" onclick={check} disabled={!workerReady || checking}>
-      <RefreshCw size={16} strokeWidth={2.3} aria-hidden="true" />
-      <span>{m.pwa_check_updates()}</span>
+      <span>{m.pwa_install()}</span>
     </button>
   </div>
   {#if showGuide}<p class="pwa-message pwa-guide" role="status">{m.pwa_manual_install()}</p>{/if}
@@ -99,20 +74,7 @@
 </section>
 {/if}
 
-{#if installed}
-  <button class="pwa-check" type="button" onclick={check} disabled={!workerReady || checking}>{m.pwa_check_updates()}</button>
-  {#if status}<p role="status">{status}</p>{/if}
-{/if}
-
-{#if available}
-  <aside class="pwa-update" role="status" aria-live="polite">
-    <strong>{m.pwa_update_ready()}</strong><p>{m.pwa_update_explanation()}</p>
-    <div class="pwa-actions"><button type="button" onclick={applyUpdate} disabled={applying}>{m.pwa_update_reload()}</button><button type="button" onclick={() => available = false} disabled={applying}>{m.pwa_later()}</button></div>
-  </aside>
-{/if}
-
 <style>
-  .pwa-check { justify-self: start; }
   .pwa-panel {
     position: relative;
     isolation: isolate;
@@ -187,12 +149,10 @@
   }
   .pwa-actions .pwa-install:active:not(:disabled) { box-shadow: inset 0 2px 5px color-mix(in srgb, #241116 32%, transparent); }
   .pwa-message { grid-column: 1 / -1; margin: -8px 0 0; }
-  .pwa-update { position: fixed; z-index: 30; bottom: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); padding: 22px; background: var(--surface); color: var(--text); border: 2px solid var(--accent); border-radius: 20px; box-shadow: 0 12px 32px #0003; }
-  .pwa-update .pwa-actions { margin-top: 14px; }
   @media (max-width: 560px) {
     .pwa-panel { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-    .pwa-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); justify-content: stretch; }
-    .pwa-actions button { min-width: 0; padding-inline: 10px; }
+    .pwa-actions { justify-content: stretch; }
+    .pwa-actions button { flex: 1; min-width: 0; padding-inline: 10px; }
   }
   @media (prefers-reduced-motion: reduce) {
     button { transition: none; }

@@ -2,11 +2,11 @@
 
 `config/ads.json` uses public publisher `ca-pub-5501931731194817` from trick-it and the operator-provided homepage slot `5292790825`. The operator requested `testMode: false`: live requests omit the `data-adtest` attribute. The validator accepts explicit boolean modes, and disabling `enabled` prevents the placement from rendering.
 
-The homepage has exactly one configured placement. No Google SDK or advertising request loads until a visitor selects **Load advertisement**. The choice is per document and is not persisted. Legal links perform full navigation so Google's loaded SDK does not remain active in the Privacy Policy or Terms document. Reloading does not erase information Google may already have stored. Provider no-fill and SDK/ad-blocker failures never prevent the atlas from working.
+The homepage has exactly one configured placement and automatically requests it once the slot has a usable layout. There is no load button or per-document opt-in. No-fill, blocked SDKs and network failures collapse the entire placement; a 30-second response deadline after the slot first becomes viewable also collapses a stalled placement. A legitimate below-fold ad does not expire before the visitor reaches it. The ad is never auto-refreshed. Legal links perform full navigation so Google's loaded SDK does not remain active in the Privacy Policy or Terms document. Provider no-fill and SDK/ad-blocker failures never prevent the atlas from working.
 
-The opt-in is not a certified consent-management platform. Site/ad-unit approval and applicable Google or regional consent requirements remain operator responsibilities. In particular, do not treat a local button or test-mode switch as satisfying certified-CMP requirements. The integration does not establish AdSense approval or guarantee ad fill.
+Automatic loading is the operator's explicit choice, not consent certification. Site/ad-unit approval and applicable Google or regional consent requirements remain operator responsibilities. A test-mode switch does not satisfy certified-CMP requirements. The integration does not establish AdSense approval or guarantee ad fill.
 
-The runtime supports test mode for development: set `testMode: true` to emit `data-adtest="on"`. Test requests still contact third parties and remain opt-in.
+The runtime supports test mode for development: set `testMode: true` to emit `data-adtest="on"`. Test requests still contact third parties. Browser tests mock the SDK rather than generating live advertising traffic.
 
 ## CSP
 

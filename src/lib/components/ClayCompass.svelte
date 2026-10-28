@@ -43,10 +43,5 @@
 
 <style>
   .clay-compass { display: block; filter: drop-shadow(0 4px 0 var(--border)); }
-  .needle { transform-origin: 60px 58px; animation: compass-sway 6s ease-in-out infinite; }
-  @keyframes compass-sway {
-    0%, 100% { transform: rotate(-14deg); }
-    50% { transform: rotate(18deg); }
-  }
-  @media (prefers-reduced-motion: reduce) { .needle { animation: none; transform: rotate(8deg); } }
+  .needle { transform-origin: 60px 58px; transform: rotate(8deg); }
 </style>

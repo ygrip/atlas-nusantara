@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-/** Load Google's SDK only after the visitor opts in and the slot is visible. */
+/** Load Google's SDK once after the configured slot has a usable layout. */
 function loadLibrary(client: string): Promise<void> {
   if (publisher && publisher !== client) return Promise.reject(new Error('AdSense publisher cannot change within a document'));
   if (library) return library;
@@ -46,7 +46,7 @@ export function canRequestAd(element: HTMLElement): boolean {
   return getComputedStyle(element).visibility === 'visible';
 }
 
-/** Request one ad once; never refresh or make the network request before consent. */
+/** Request one ad once; never auto-refresh a placement. */
 export async function requestAd(element: HTMLElement, client: string): Promise<boolean> {
   if (requested.has(element)) return true;
   if (!canRequestAd(element)) return false;

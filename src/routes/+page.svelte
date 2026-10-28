@@ -6,7 +6,7 @@
   import AggregateSummary from '$lib/components/AggregateSummary.svelte';
   import SharePanel from '$lib/components/SharePanel.svelte';
   import HeaderControls from '$lib/components/HeaderControls.svelte';
-  import { startAtlasStory } from '$lib/motion/atlas-story';
+
   import HeroArchipelago from '$lib/components/HeroArchipelago.svelte';
   import type { ShareRegion, ShareSummary } from '$lib/share/card';
   import type { GeometryPackage } from '$lib/geo/types';
@@ -32,7 +32,7 @@
   let selectedGeometry: GeometryPackage | undefined;
   let publicSummary: ShareSummary | undefined;
   let sharePanel: SharePanel | undefined;
-  let shell: HTMLDivElement;
+
   let atlas: RegionAtlas | undefined;
   let activeSection = 'atlas';
   let showTop = false;
@@ -56,8 +56,7 @@
   onMount(() => {
     activeLayer = layerFromUrl();
     mounted = true;
-    const stopStory = startAtlasStory(shell);
-    return () => { stopSections?.(); stopSections = undefined; stopStory(); };
+    return () => { stopSections?.(); stopSections = undefined; };
   });
 
   function currentFor(id: string): 'location' | undefined {
@@ -105,16 +104,13 @@
   }
 </script>
 
-{#snippet words(text: string)}
-  {#each text.split(' ') as word, index (index)}<span class="word-mask"><span class="word" style={'--w:' + (index + 1)}>{word}</span></span>{' '}{/each}
-{/snippet}
 
 <svelte:head><title>{m.site_title()} — {m.og_headline()}</title></svelte:head>
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
-<div class="shell" bind:this={shell}>
+<div class="shell">
   <header class="masthead">
     <a href={pathFor('/')} data-sveltekit-reload class="brand" aria-label="Nusantara">
-      <img class="brand-logo" src="/brand/indonesia-clay.webp" alt="" width="44" height="44" />
+      <img class="brand-logo" src="/brand/logo-256.png" alt="" width="44" height="44" />
       <span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span>
     </a>
     <nav class="section-nav" aria-label={m.nav_label()}>
@@ -132,7 +128,7 @@
         <HeroArchipelago alt={m.hero_art_alt()} />
         <div class="hero-copy">
           <span class="eyebrow rise" style="--i:0">INDONESIA</span>
-          <h1 id="site-title"><span class="brand-desktop">{@render words(m.site_title())}</span><span class="brand-mobile">{@render words('Nusantara')}</span></h1>
+          <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
           <span class="hero-tagline rise" style="--i:3">{m.og_headline()}</span>
           <p class="rise" style="--i:4">{m.atlas_intro()}</p>
 

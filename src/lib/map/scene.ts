@@ -16,6 +16,7 @@ import { MAP_CENTER, parseRings } from './geometry';
 import { MapTouchGestures } from './touch-gestures';
 import { TerrainModel } from './terrain';
 import { FIELD_HEIGHT, FIELD_WIDTH, packField, PLANE_HEIGHT, PLANE_WIDTH, sampleChannel, type WeatherField } from './weather';
+import { weatherActivity } from './weather-motion';
 import { CLOUD_BASE_HEIGHT, CLOUD_TOP_HEIGHT } from './layout';
 import { THEMES, type ThemeName } from './themes';
 import { applyThemeToShared, createSharedUniforms, type SharedUniforms } from './shared-uniforms';
@@ -53,6 +54,7 @@ const CLOUD_UNITS_PER_KMH = 0.12;
 const CLOUD_NOISE_SCALE = 0.011;
 const CLOUD_MID_HEIGHT = (CLOUD_BASE_HEIGHT + CLOUD_TOP_HEIGHT) / 2;
 const CLOUD_HALF_THICKNESS = (CLOUD_TOP_HEIGHT - CLOUD_BASE_HEIGHT) / 2;
+const EFFECT_FRAME_INTERVAL_MS = 1000 / 30;
 
 /**
  * The 2D <-> 3D transition runs on one timeline (0 = flat plan view, 1 = the 2.5D world). Going to 3D plays it forward:
@@ -117,6 +119,7 @@ export class AtlasScene {
   private readonly resizeObserver: ResizeObserver;
   private readonly visibilityObserver: IntersectionObserver;
   private frame = 0;
+  private frameTimer: ReturnType<typeof setTimeout> | undefined;
   private visible = true;
   private lastTime = performance.now();
   private elapsed = 0;
@@ -148,6 +151,8 @@ export class AtlasScene {
   private fieldA: WeatherField = emptyField();
   private fieldB: WeatherField = emptyField();
   private weatherMix = 0;
+  private weatherMotion = { cloud: false, rain: false, wind: false };
+  private effectsPlaying = false;
   private provinces: RegionEntry[] = [];
   private cities: RegionEntry[] = [];
   private byId = new Map<number, RegionEntry>();
@@ -225,7 +230,8 @@ export class AtlasScene {
     this.resizeObserver.observe(container);
     this.visibilityObserver = new IntersectionObserver(entries => {
       this.visible = entries.some(entry => entry.isIntersecting);
-      if (this.visible) this.start();
+      if (this.visible) { this.lastTime = performance.now(); this.start(); }
+      else this.stopScheduling();
     });
     this.visibilityObserver.observe(container);
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -330,13 +336,21 @@ export class AtlasScene {
     this.dirty = true;
   }
 
+  setPlayback(playing: boolean): void {
+    if (playing === this.effectsPlaying) return;
+    this.effectsPlaying = playing;
+    this.invalidate();
+  }
+
   setWeather(current: WeatherField, next: WeatherField | undefined, mix: number): void {
-    if (current !== this.fieldA) { this.fieldA = current; this.replaceWeatherTexture('A', current); }
     const following = next ?? current;
+    const changed = current !== this.fieldA || following !== this.fieldB || mix !== this.weatherMix;
+    if (current !== this.fieldA) { this.fieldA = current; this.replaceWeatherTexture('A', current); }
     if (following !== this.fieldB) { this.fieldB = following; this.replaceWeatherTexture('B', following); }
     this.weatherMix = mix;
+    this.weatherMotion = weatherActivity(this.fieldA, this.fieldB, mix);
     this.shared.weatherMix.value = mix;
-    this.windParticles.setFields(this.fieldA, this.fieldB, mix);
+    this.windParticles.setFields(this.fieldA, this.fieldB, mix, changed && !this.effectsPlaying);
     this.rain.setFields(this.fieldA, this.fieldB, mix);
     this.invalidate();
   }
@@ -476,7 +490,7 @@ export class AtlasScene {
 
   dispose(): void {
     this.disposed = true;
-    cancelAnimationFrame(this.frame);
+    this.stopScheduling();
     this.resizeObserver.disconnect();
     this.visibilityObserver.disconnect();
     document.removeEventListener('visibilitychange', this.onVisibility);
@@ -776,7 +790,11 @@ export class AtlasScene {
 
   // --- loop ---------------------------------------------------------------------------------
 
-  private readonly onVisibility = () => { if (!document.hidden) this.start(); };
+  private readonly onVisibility = () => {
+    if (document.hidden) { this.stopScheduling(); return; }
+    this.lastTime = performance.now();
+    this.start();
+  };
 
   private invalidate(): void {
     this.dirty = true;
@@ -784,9 +802,19 @@ export class AtlasScene {
   }
 
   private start(): void {
-    if (this.frame || this.disposed || this.rendering) return;
+    if (this.disposed || this.rendering || !this.visible || document.hidden) return;
+    clearTimeout(this.frameTimer);
+    this.frameTimer = undefined;
+    if (this.frame) return;
     this.lastTime = performance.now();
     this.frame = requestAnimationFrame(this.tick);
+  }
+
+  private stopScheduling(): void {
+    cancelAnimationFrame(this.frame);
+    clearTimeout(this.frameTimer);
+    this.frame = 0;
+    this.frameTimer = undefined;
   }
 
   private meanWind(): { u: number; v: number } {
@@ -873,28 +901,54 @@ export class AtlasScene {
     this.rendering = true;
     const delta = Math.min(0.05, (now - this.lastTime) / 1000);
     this.lastTime = now;
-    const animating = !this.reducedMotion;
-    if (animating) this.elapsed += delta;
     this.stepFlight(now);
     this.stepMorph(now);
-    if (this.controls.update()) this.dirty = true;
+    const controlsMoving = this.controls.update();
+    if (controlsMoving) this.dirty = true;
     this.handlePendingHover();
-    this.updateParticleView();
-    this.advanceWeather(delta, animating);
-    this.shared.time.value = this.elapsed;
-    this.shared.flash.value = this.flash;
-    this.shared.flashPosition.value.copy(this.flashPosition);
+    const effectsAnimating = this.hasAnimatedEffects();
+    if (this.dirty || effectsAnimating) this.updateParticleView();
+    if (effectsAnimating) {
+      this.elapsed += delta;
+      this.advanceWeather(delta, true);
+      this.shared.time.value = this.elapsed;
+      this.shared.flash.value = this.flash;
+      this.shared.flashPosition.value.copy(this.flashPosition);
+    } else if (this.dirty) {
+      this.advanceWeather(0, false);
+      this.flash = 0;
+      this.shared.flash.value = 0;
+    }
+    const moving = controlsMoving || this.flight !== undefined || this.morphAnimation !== undefined;
     this.updateCloudVeil();
     this.space.follow(this.camera);
-
-    if (animating || this.dirty) {
+    const renderFrame = this.dirty || effectsAnimating || moving;
+    if (renderFrame) {
       this.renderer.render(this.scene, this.camera);
       this.dirty = false;
     }
-    const keepGoing = animating || this.flight !== undefined || this.controls.enableDamping;
+    const keepGoing = effectsAnimating || moving;
     this.rendering = false;
-    if (this.visible && !document.hidden && keepGoing) this.frame = requestAnimationFrame(this.tick);
+    if (this.visible && !document.hidden && keepGoing) {
+      if (effectsAnimating && !moving) {
+        this.frameTimer = setTimeout(() => {
+          this.frameTimer = undefined;
+          if (!this.disposed && this.visible && !document.hidden) this.frame = requestAnimationFrame(this.tick);
+        }, EFFECT_FRAME_INTERVAL_MS);
+      } else {
+        this.frame = requestAnimationFrame(this.tick);
+      }
+    }
   };
+
+  private hasAnimatedEffects(): boolean {
+    if (!this.effectsPlaying || this.reducedMotion || this.morphValue < 1) return false;
+    const seaMoving = this.layers.sea && this.sea?.mesh.visible;
+    const cloudMoving = this.layers.weather && this.clouds?.volume.visible && this.weatherMotion.cloud;
+    const windMoving = this.layers.wind && this.windParticles.lines.visible && this.weatherMotion.wind;
+    const rainMoving = this.layers.weather && this.rain.lines.visible && this.weatherMotion.rain;
+    return Boolean(seaMoving || cloudMoving || windMoving || rainMoving);
+  }
 
   /** Thunderstorm points flicker briefly; frequency is modest so it informs rather than distracts. */
   private updateLightning(delta: number): void {

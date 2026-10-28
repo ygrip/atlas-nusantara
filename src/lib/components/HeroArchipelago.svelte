@@ -1,9 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-
   let { alt }: { alt: string } = $props();
-  let stage: HTMLDivElement;
-  let visible = $state(true);
 
   /**
    * Seven island families share one geography projection. Each is a three-plate clay stack
@@ -24,30 +20,20 @@
    * as a percentage of the map box; width is a percentage of the map box width.
    */
   const ornaments = [
-    { id: 'tiger', x: 23, y: 59.5, width: 8.6, delay: 0 },
-    { id: 'volcano', x: 33.3, y: 69.3, width: 8.5, delay: 60 },
-    { id: 'orangutan', x: 41.2, y: 39.8, width: 9, delay: 120 },
-    { id: 'flag', x: 51, y: 57, width: 10.5, delay: 180 },
-    { id: 'komodo', x: 53.9, y: 82.3, width: 10, delay: 240 },
-    { id: 'pinisi', x: 69.6, y: 84.5, width: 9.5, delay: 300 },
-    { id: 'cendrawasih', x: 86.3, y: 55.7, width: 7.5, delay: 360 }
+    { id: 'tiger', x: 23, y: 59.5, width: 8.6 },
+    { id: 'volcano', x: 33.3, y: 69.3, width: 8.5 },
+    { id: 'orangutan', x: 41.2, y: 39.8, width: 9 },
+    { id: 'flag', x: 51, y: 57, width: 10.5 },
+    { id: 'komodo', x: 53.9, y: 82.3, width: 10 },
+    { id: 'pinisi', x: 69.6, y: 84.5, width: 9.5 },
+    { id: 'cendrawasih', x: 86.3, y: 55.7, width: 7.5 }
   ];
   const imageSize = { tiger: [406, 420], volcano: [361, 420], orangutan: [411, 420], flag: [222, 420],
     komodo: [420, 297], pinisi: [374, 420], cendrawasih: [302, 420] } as Record<string, number[]>;
 
-  // The only script: stop the idle loops while the hero is offscreen.
-  onMount(() => {
-    if (typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(
-      entries => { visible = entries[entries.length - 1].isIntersecting; },
-      { rootMargin: '80px 0px' }
-    );
-    observer.observe(stage);
-    return () => observer.disconnect();
-  });
 </script>
 
-<div class="anatomy-stage" role="img" aria-label={alt} data-visible={visible} bind:this={stage}>
+<div class="anatomy-stage" role="img" aria-label={alt}>
   <div class="world">
     <svg class="island-scene" xmlns="http://www.w3.org/2000/svg" viewBox="-10 40 1020 440"
       aria-hidden="true" focusable="false">
@@ -60,14 +46,13 @@
         <path d="M180 430q14-8 28 0t28 0"/>
       </g>
 
-      {#each islands as island, index (island.id)}
+      {#each islands as island (island.id)}
         <g class="island-assembly"
-          style={'--top:' + island.top + ';--middle:' + island.middle + ';--base:' + island.base +
-            ';--delay:' + (index * 80) + 'ms'}>
+          style={'--top:' + island.top + ';--middle:' + island.middle + ';--base:' + island.base}>
           <title>{island.label}</title>
-          <g class="stack-shadow"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 26)"/></g>
-          <g class="stack-base"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 17)"/></g>
-          <g class="stack-middle"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 8)"/></g>
+          <g class="stack-shadow"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 5)"/></g>
+          <g class="stack-base"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 3)"/></g>
+          <g class="stack-middle"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 1.5)"/></g>
           <g class="stack-top"><use href={'/illustrations/atlas-anatomy.svg#' + island.id}/></g>
         </g>
       {/each}
@@ -75,7 +60,7 @@
 
     {#each ornaments as ornament (ornament.id)}
       <span class={'ornament ornament-' + ornament.id}
-        style={'--x:' + ornament.x + '%;--y:' + ornament.y + '%;--w:' + ornament.width + '%;--delay:' + ornament.delay + 'ms'}
+        style={'--x:' + ornament.x + '%;--y:' + ornament.y + '%;--w:' + ornament.width + '%'}
         aria-hidden="true">
         <img src={'/illustrations/hero/' + ornament.id + '.webp'} alt=""
           width={imageSize[ornament.id][0]} height={imageSize[ornament.id][1]}
@@ -124,10 +109,10 @@
   }
   .island-scene { display: block; width: 100%; height: 100%; overflow: visible; }
   .sea-ripples { opacity: .5; }
-  .stack-shadow { fill: #2d5f52; opacity: .2; }
-  .stack-base { fill: var(--base); stroke: var(--base); stroke-width: 2.2; stroke-linejoin: round; }
-  .stack-middle { fill: var(--middle); stroke: var(--middle); stroke-width: 2; stroke-linejoin: round; }
-  .stack-top { fill: var(--top); stroke: #fff8e8; stroke-width: 1.3; stroke-linejoin: round; }
+  .stack-shadow { fill: #2d5f52; opacity: .16; }
+  .stack-base { fill: var(--base); stroke: var(--base); stroke-width: 1.2; stroke-linejoin: round; }
+  .stack-middle { fill: var(--middle); stroke: var(--middle); stroke-width: 1; stroke-linejoin: round; }
+  .stack-top { fill: var(--top); stroke: #fff8e8; stroke-width: .8; stroke-linejoin: round; }
 
   .ornament {
     position: absolute;
@@ -148,26 +133,9 @@
     background: radial-gradient(closest-side, #2d5f5266, transparent);
   }
 
-  /* Entrance (CSS only, first paint): the whole map glides right as the copy slides in, then the
-     top plates settle one island at a time and the clay figures pop onto them. The resting pose is
-     both the static first frame and the end frame, so nothing depends on JavaScript. */
-  .world { animation: world-glide 1600ms cubic-bezier(.22, .8, .2, 1) backwards; }
-  .stack-top { animation: plate-top 1000ms cubic-bezier(.3, 1.35, .5, 1) backwards; animation-delay: calc(500ms + var(--delay)); }
-  .stack-middle { animation: plate-middle 1000ms cubic-bezier(.3, 1.35, .5, 1) backwards; animation-delay: calc(500ms + var(--delay)); }
-  .ornament { animation: ornament-pop 900ms cubic-bezier(.3, 1.4, .5, 1) backwards; animation-delay: calc(1000ms + var(--delay)); }
-  @keyframes world-glide { from { translate: -17% 0; scale: 1.1; } }
-  @keyframes plate-top { from { transform: translateY(-15px); } }
-  @keyframes plate-middle { from { transform: translateY(-7px); } }
-  @keyframes ornament-pop { from { opacity: 0; translate: 0 -22px; scale: .86; } }
-
-  /* Idle: compositor-only, tiny, and paused offscreen. */
-  .ornament-flag img { transform-origin: 30% 90%; animation: flag-sway 6400ms ease-in-out 2600ms infinite alternate; }
-  .ornament-pinisi img { transform-origin: 50% 90%; animation: boat-bob 4800ms ease-in-out 2600ms infinite alternate; }
-  .ornament-cendrawasih img { animation: bird-float 8200ms ease-in-out 2600ms infinite alternate; }
-  @keyframes flag-sway { from { transform: rotate(-.7deg); } to { transform: rotate(.9deg); } }
-  @keyframes boat-bob { from { transform: translateY(0) rotate(0deg); } to { transform: translateY(-1.5px) rotate(-1.4deg); } }
-  @keyframes bird-float { from { transform: translateY(0); } to { transform: translateY(-3px); } }
-  .anatomy-stage[data-visible='false'] * { animation-play-state: paused; }
+  /* One short entrance for the entire solid stack; no separated plates or perpetual idle loops. */
+  .world { animation: world-glide 650ms cubic-bezier(.22, .8, .2, 1) backwards; }
+  @keyframes world-glide { from { translate: -2% 0; } }
 
   @media (max-width: 720px) {
     .anatomy-stage::after {
@@ -176,8 +144,7 @@
         color-mix(in srgb, var(--surface) 80%, transparent) 46%,
         transparent 72%);
     }
-    .world { top: auto; bottom: 10px; right: auto; left: -6%; width: 112%; margin-block: 0; }
-    @keyframes world-glide { from { translate: -8% 0; scale: 1.05; } }
+    .world { top: auto; bottom: 10px; right: auto; left: 2%; width: 96%; margin-block: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     .anatomy-stage * { animation: none !important; }

@@ -10,7 +10,7 @@
 
 <div class="shell legal-shell">
   <nav class="legal-top" aria-label={m.legal_label()}>
-    <a class="legal-back" href={pathFor('/')}><img src="/brand/indonesia-clay.webp" alt="" width="32" height="32" /><span class="brand-desktop">← Atlas Nusantara</span><span class="brand-mobile">← Nusantara</span></a>
+    <a class="legal-back" href={pathFor('/')}><img src="/brand/logo-256.png" alt="" width="32" height="32" /><span class="brand-desktop">← Atlas Nusantara</span><span class="brand-mobile">← Nusantara</span></a>
     <span class="legal-links"><a href={pathFor('/terms')}>{m.legal_terms_link()}</a><a href={pathFor('/privacy')}>{m.legal_privacy_link()}</a></span>
   </nav>
   <main id="main-content">
