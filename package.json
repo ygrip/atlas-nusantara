@@ -66,5 +66,13 @@
     "lucide-svelte": "^1.0.1",
     "three": "^0.180.0",
     "web-push": "^3.6.7"
+  },
+  "allowScripts": {
+    "better-sqlite3@13.0.3": true,
+    "better-sqlite3@12.11.1": true,
+    "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
+    "msgpackr-extract@3.0.4": true,
+    "workerd@1.20261023.1": true
   }
 }
