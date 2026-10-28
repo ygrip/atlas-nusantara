@@ -74,3 +74,11 @@ It is a developer step only (the browser never calls a model), validates line co
 - **Summaries** are the opening of the Wikipedia article the list links to. Some links are redirects, so a name and its summary can describe a close variant.
 - **Recipes are written by Cookpad users and keep their copyright.** The atlas shows each recipe with the author and a link to the original page, but republishing the national file commercially needs its own review of Cookpad's terms. Recipes are informational: food safety, allergies and quantities still need a human check.
 - **Type** and **photos** are not curated. The interface strings for the new keys were machine-translated; Khmer, Lao, Burmese, Tamil and Tetum need native review.
+
+## Regional supplementary sources
+
+The Wikipedia cuisine list omits dishes from several provinces. The curated `scripts/recipes/regional-supplements.json` adds documented associations for Bangka Belitung (19), East Kalimantan (64), West Papua (92), South Papua (93), Central Papua (94), Highland Papua (95), and Southwest Papua (96). Each row includes a named food, province code, short Indonesian description and supporting regional-tourism URL. A province association is **not** evidence of exclusive origin, especially after the 2022 Papuan province split.
+
+The offline builder merges these entries after Wikipedia, recipes and seeds; normalized dish names are deduplicated so papeda stays one national dish with multiple province associations. A documented regional entry without a recipe/photo remains valid, and the UI uses the existing placeholder. No synthetic recipes, unauthorized photo copies or unverified origin claims are introduced. The builder retains these associations on subsequent rebuilds.
+
+After editing the supplement, regenerate snapshots with `npm run build:cuisine` (internet required), run `npm test`, and commit `static/data/cuisine/index.json`, `national.json` and all affected province shards together. Until a regeneration is committed, existing published province counts remain unchanged.
