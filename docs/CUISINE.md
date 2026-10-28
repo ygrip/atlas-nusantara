@@ -42,7 +42,7 @@ Commons photos are read from `upload.wikimedia.org`, which sends CORS headers (t
 
 ## Rebuild
 
-Everything caches under `tmp/recipes-cache/` (ignored by Git) and the crawl stages are resumable. Run from the repository root:
+For **source-backed regional additions without recrawling**, use `npm run enrich:cuisine`. This updates the existing national file, index and all province shards, preserving stored recipes/photos. It is safe to rerun and runs automatically before the app production build. Commit the regenerated JSON when the evidence list changes.\n\nFor a **full recrawl**, everything caches under `tmp/recipes-cache/` (ignored by Git) and the crawl stages are resumable. Run from the repository root:
 
 ```bash
 node scripts/recipes/crawl-cookpad.mjs          # about 40 minutes for ~2,200 dishes; concurrency 3 and 700 ms delay by default
