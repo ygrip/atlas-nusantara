@@ -21,7 +21,7 @@ async function open({ mobile = false, dark = false, path = '/' } = {}) {
   }, theme);
   await page.goto('http://127.0.0.1:4173' + path);
   await page.locator('main').waitFor();
-  if (path === '/') await page.locator('#destination-province option[value="32"]').waitFor({ state: 'attached' });
+  if (path === '/') await page.locator('.region-table tbody tr').first().waitFor({ timeout: 30000 });
   await page.evaluate(() => document.fonts.ready);
   return page;
 }
@@ -41,6 +41,34 @@ async function save(page, name, selector) {
   console.log('Captured', name);
 }
 
+/** Opens the layer popup, narrows it by name and picks the first match. */
+async function chooseLayer(page, name) {
+  await page.locator('.layer-picker-trigger').click();
+  const dialog = page.locator('dialog.map-dialog[open]');
+  await dialog.getByRole('searchbox').fill(name);
+  await dialog.locator('.layer-option').filter({ hasText: name }).first().click();
+  await dialog.waitFor({ state: 'detached' });
+}
+
+/** Opens the searchable place popup on the "Your places" form and picks the first match. */
+async function choosePlace(page, name) {
+  await page.locator('.place-trigger').click();
+  const dialog = page.getByRole('dialog', { name: 'Choose a place' });
+  await dialog.getByRole('combobox').fill(name);
+  await dialog.getByRole('option', { name: new RegExp('^' + name) }).first().click();
+  await dialog.waitFor({ state: 'hidden' });
+}
+
+async function openProvinceDetails(page) {
+  const tab = page.locator('#provinces').getByRole('tab', { name: 'Province details' });
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    await tab.click();
+    if (await tab.getAttribute('aria-selected') === 'true') break;
+    await page.waitForTimeout(300);
+  }
+  await page.locator('#provinces .province-table tbody tr').first().waitFor();
+}
+
 async function captureSections(page, prefix) {
   for (const [name, selector] of [['island-groups', '.island-chart'], ['observatory', '#summary'], ['support', '#support'], ['footer', '.site-footer']]) {
     await align(page, selector);
@@ -54,7 +82,6 @@ try {
   page = await open();
   await save(page, 'home-light');
   await captureSections(page, 'desktop');
-  await page.getByRole('button', { name: /^Weather(?: BMKG)?$/ }).click();
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National', exact: true }).click();
   await page.locator('.region-table tbody tr').first().waitFor();
   await align(page, '.clay-map');
@@ -70,20 +97,26 @@ try {
   await save(page, 'city-weather', '.clay-map');
   await save(page, 'region-directory', '.region-directory');
   await page.locator('.atlas-breadcrumb').getByRole('button', { name: 'National' }).click();
-  await page.getByRole('button', { name: /Earthquakes BMKG/ }).click();
+  await chooseLayer(page, 'Earthquakes');
   await align(page, '.clay-map');
   await page.waitForTimeout(350);
   await save(page, 'earthquake-overlay', '.clay-map');
-  await page.getByRole('button', { name: /Disaster reports/ }).click();
+  await chooseLayer(page, 'Disaster reports');
   await page.locator('.hazard-panel[aria-busy="false"]').waitFor();
   await align(page, '.atlas-stage');
   await page.waitForTimeout(350);
   await save(page, 'disaster-reports', '.atlas-stage');
-  await page.getByRole('button', { name: /Weather hazards/ }).click();
+  await chooseLayer(page, 'Weather hazards');
   await page.locator('.hazard-panel[aria-busy="false"]').waitFor();
   await align(page, '.atlas-stage');
   await page.waitForTimeout(350);
   await save(page, 'weather-hazards', '.atlas-stage');
+  for (const [layer, name] of [['Mountains', 'layer-mountains'], ['Destinations', 'layer-destinations'], ['Population', 'layer-population'], ['Cuisine', 'layer-cuisine'], ['Flora', 'layer-flora'], ['Fauna', 'layer-fauna'], ['Local languages', 'layer-languages']]) {
+    await chooseLayer(page, layer);
+    await align(page, '.atlas-stage');
+    await page.waitForTimeout(900);
+    await save(page, name, '.atlas-stage');
+  }
   await page.close();
 
   page = await open({ dark: true });
@@ -91,16 +124,17 @@ try {
   await captureSections(page, 'desktop-dark');
   await page.close();
 
-  page = await open();
+  page = await open({ path: '/?region=32' });
   await align(page, '#provinces');
+  await openProvinceDetails(page);
   await page.locator('#provinces tr.active-region').scrollIntoViewIfNeeded();
   await save(page, 'province-table', '#provinces');
   await page.getByRole('button', { name: 'Details · Jawa Barat', exact: true }).click();
   await save(page, 'province-popup');
   await page.getByRole('button', { name: 'Close', exact: true }).click();
-  for (const code of ['32.73', '96.71']) {
-    await page.locator('#province-code').selectOption(code);
-    await page.locator('.places-form button').click();
+  for (const place of ['Kota Bandung', 'Kota Jayapura']) {
+    await choosePlace(page, place);
+    await page.locator('.places-form button[type="submit"], .places-form > div > button:not(.place-trigger)').last().click();
   }
   await page.locator('.weather-place .current-weather').first().waitFor();
   await align(page, '#locations');

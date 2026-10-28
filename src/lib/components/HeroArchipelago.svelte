@@ -24,14 +24,15 @@
    * as a percentage of the map box; width is a percentage of the map box width.
    */
   const ornaments = [
-    { id: 'volcano', x: 33.3, y: 69.3, width: 8.5, delay: 0 },
-    { id: 'orangutan', x: 41.2, y: 39.8, width: 9, delay: 90 },
+    { id: 'tiger', x: 23, y: 59.5, width: 8.6, delay: 0 },
+    { id: 'volcano', x: 33.3, y: 69.3, width: 8.5, delay: 60 },
+    { id: 'orangutan', x: 41.2, y: 39.8, width: 9, delay: 120 },
     { id: 'flag', x: 51, y: 57, width: 10.5, delay: 180 },
-    { id: 'komodo', x: 53.9, y: 82.3, width: 10, delay: 270 },
-    { id: 'pinisi', x: 69.6, y: 84.5, width: 9.5, delay: 360 },
-    { id: 'cendrawasih', x: 86.3, y: 55.7, width: 7.5, delay: 450 }
+    { id: 'komodo', x: 53.9, y: 82.3, width: 10, delay: 240 },
+    { id: 'pinisi', x: 69.6, y: 84.5, width: 9.5, delay: 300 },
+    { id: 'cendrawasih', x: 86.3, y: 55.7, width: 7.5, delay: 360 }
   ];
-  const imageSize = { volcano: [361, 420], orangutan: [411, 420], flag: [222, 420],
+  const imageSize = { tiger: [406, 420], volcano: [361, 420], orangutan: [411, 420], flag: [222, 420],
     komodo: [420, 297], pinisi: [374, 420], cendrawasih: [302, 420] } as Record<string, number[]>;
 
   // The only script: stop the idle loops while the hero is offscreen.
@@ -115,9 +116,9 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    right: 1%;
+    right: 0;
     margin-block: auto;
-    width: 76%;
+    width: 73%;
     aspect-ratio: 1020 / 440;
     transform-origin: 72% 50%;
   }
