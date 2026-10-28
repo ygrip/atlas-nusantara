@@ -50,10 +50,56 @@ async function fetchJSON(url) {
   if (!response.ok) throw new Error(response.status+' '+url);
   return response.json();
 }
+function htmlText(value) {
+  return stripTags(value)
+    .replace(/&#(x[0-9a-f]+|\d+);/gi,(_,code)=>String.fromCodePoint(code[0].toLowerCase()==='x'?parseInt(code.slice(1),16):Number(code)))
+    .replace(/\s+/g,' ').trim();
+}
+async function fetchWikipediaHTML() {
+  // Wikimedia frequently returns 503 for /w/api.php from hosted runners,
+  // while the article itself responds 200. Use only ordinary article text and links.
+  const response=await fetch(WIKI,{headers:{'User-Agent':UA,'Accept':'text/html'},signal:AbortSignal.timeout(30000)});
+  if(!response.ok)throw Error('Wikipedia HTML unavailable: '+response.status);
+  const html=await response.text();
+  if(html.length<10000)throw Error('Wikipedia HTML unexpectedly short');
+  const entries=new Map();
+  let provinceCode=null;
+  const tokens=html.match(/<h3\b[^>]*>[\s\S]*?<\/h3>|<li\b[^>]*>[\s\S]*?<\/li>/gi)??[];
+  for(const token of tokens) {
+    if(/^<h3\b/i.test(token)) {
+      const heading=htmlText(token).replace(/\[sunting\].*/i,'').replace(/^provinsi\s+/i,'').toLowerCase();
+      provinceCode=ALIASES.get(heading)??null;
+      continue;
+    }
+    if(!provinceCode)continue;
+    const anchors=[...token.matchAll(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+    const anchor=anchors.find(match=>!/(?:#|Special:|Bantuan:|Kategori:|File:|Berkas:)/i.test(match[1]) && !/sunting/i.test(htmlText(match[2])));
+    const name=htmlText(token).replace(/\[\d+\]\s*$/,'').trim();
+    if(!name||name.length>100||/^(?:referensi|lihat juga|catatan|daftar)/i.test(name))continue;
+    const k=key(name);
+    if(k.length<3)continue;
+    const existing=entries.get(k)??{name,provinces:new Set(),articleTitle:null};
+    existing.provinces.add(provinceCode);
+    if(anchor&&!existing.articleTitle) {
+      try{
+        const link=new URL(anchor[1].replace(/&amp;/g,'&'),WIKI);
+        if(link.hostname.endsWith('wikipedia.org')&&link.pathname.startsWith('/wiki/'))
+          existing.articleTitle=decodeURIComponent(link.pathname.slice(6)).replace(/_/g,' ');
+      }catch{}
+    }
+    entries.set(k,existing);
+  }
+  if(entries.size<200)throw Error('Wikipedia HTML parser found only '+entries.size+' dishes. Refusing incomplete publication.');
+  console.log('Wikipedia API unavailable; HTML fallback found '+entries.size+' dish names.');
+  return [...entries.values()].map(e=>({...e,provinces:[...e.provinces].sort()}));
+}
+
 async function fetchWikipedia() {
   const url = new URL('https://id.wikipedia.org/w/api.php');
   for(const [k,v] of Object.entries({action:'parse',page:'Daftar_masakan_Indonesia',prop:'wikitext',format:'json',formatversion:'2'})) url.searchParams.set(k,v);
-  const result = await fetchJSON(url.toString());
+  let result;
+  try { result = await fetchJSON(url.toString()); }
+  catch(error) { console.warn('Wikipedia API unavailable, trying the article HTML:',String(error)); return fetchWikipediaHTML(); }
   const wikiText = result.parse?.wikitext;
   const raw = typeof wikiText === 'string' ? wikiText : wikiText?.['*'];
   if (typeof raw !== 'string' || raw.length < 2000) throw Error('Wikipedia recipe list unavailable or too short');
