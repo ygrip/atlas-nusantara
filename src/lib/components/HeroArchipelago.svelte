@@ -335,7 +335,7 @@
   :global(html[data-theme='dark']) .ambient-one { background: #645d40; }
   :global(html[data-theme='dark']) .ambient-two { background: #426556; }
   @media (max-width: 600px) {
-    .world { width: 115%; }
+    .world { width: 100%; } /* Keep Sumatra and Papua entirely in view. */
     .ornament { filter: drop-shadow(0 3px 2px #2e564333); }
     .ornament-flag { filter: drop-shadow(0 4px 4px #375b4f55); }
   }
