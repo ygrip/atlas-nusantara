@@ -124,6 +124,7 @@ export function mergeCatalog(list, recipes) {
     if (!base.recipe || candidate.steps.join('').length > base.recipe.steps.join('').length) base.recipe = candidate;
     if (wiki && !base.provinceCodes.length) base.provinceCodes = [...wiki.provinceCodes];
     if (wiki && !base.sourceUrls.includes(WIKI_INDEX)) base.sourceUrls.unshift(WIKI_INDEX);
+    if (!base.sourceUrls.includes(RECIPE_SOURCE)) base.sourceUrls.push(RECIPE_SOURCE);
     records.set(key,base);
   }
   return [...records.values()].sort((a,b)=>a.name.localeCompare(b.name,'id'));
