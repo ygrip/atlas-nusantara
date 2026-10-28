@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "provinceCode": "18",
+  "items": [
+    {
+      "id": "buak-balak",
+      "name": "Buak Balak",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Buak_Balak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "buak-lambang-sari",
+      "name": "Buak Lambang Sari",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Buak_Lambang_Sari",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gelemok",
+      "name": "Gelemok",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gelemok",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gulai-balak",
+      "name": "Gulai Balak",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gulai_Balak",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "gulai-taboh",
+      "name": "Gulai Taboh",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Gulai_Taboh",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "keripik-pisang",
+      "name": "Keripik Pisang",
+      "provinceCodes": [
+        "18",
+        "35"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Keripik_Pisang",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "sekubal-ketan-lapis",
+      "name": "Sekubal/Ketan Lapis",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Sekubal",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    },
+    {
+      "id": "seruwit",
+      "name": "Seruwit",
+      "provinceCodes": [
+        "18"
+      ],
+      "originStatus": "wikipedia-listed",
+      "articleUrl": "https://id.wikipedia.org/wiki/Seruwit",
+      "recipe": null,
+      "image": null,
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "province-list"
+        }
+      ]
+    }
+  ]
+}
