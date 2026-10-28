@@ -45,7 +45,7 @@ for (const [theme, width] of [['dark', 390], ['light', 1440]] as const) {
       const summary = page.locator('#summary');
       expect(parseFloat(await summary.evaluate(el => getComputedStyle(el).paddingLeft))).toBeGreaterThanOrEqual(18);
       await expect(page.locator('.hero-copy')).not.toContainText('Not an emergency alert service');
-      expect(await page.locator('.hero-art img').evaluate(el => el.getAnimations().length)).toBe(0);
+      expect(await page.locator('.anatomy-stage .ornament-volcano img').evaluate(el => el.getAnimations().length)).toBe(0);
       await openProvinceDetails(page);
       const active = page.locator('#provinces tr.active-region');
       await expect(active).toHaveCount(1);
