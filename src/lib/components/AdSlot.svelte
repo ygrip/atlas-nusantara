@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   const enabled = import.meta.env.VITE_SPONSOR_ENABLED === 'true';
   const title = String(import.meta.env.VITE_SPONSOR_TITLE ?? '').slice(0, 120);
   let href: string | undefined;

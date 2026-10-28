@@ -24,6 +24,17 @@ export function isDestinationRecord(value) {
     || !Number.isFinite(item.lon) || !Number.isFinite(item.lat) || Math.abs(item.lon) > 180 || Math.abs(item.lat) > 90)) return false;
   if (item.commonsFile !== undefined && (typeof item.commonsFile !== 'string' || !/^File:[^<>]{1,220}$/.test(item.commonsFile))) return false;
   if (item.image !== undefined && !isReusablePhotoMetadata(item.image)) return false;
+  if (item.images !== undefined) {
+    if (!Array.isArray(item.images) || item.images.length < 1 || item.images.length > 8
+      || !item.images.every(isReusablePhotoMetadata)) return false;
+    const urls = item.images.map(photo => photo.descriptionUrl);
+    if (new Set(urls).size !== urls.length) return false;
+    // An older reader still uses image; it must refer to the same lead photo.
+    if (!item.image || JSON.stringify(item.image) !== JSON.stringify(item.images[0])) return false;
+  }
+  if (item.webImages !== undefined && (!Array.isArray(item.webImages) || item.webImages.length < 1
+    || item.webImages.length > 8 || new Set(item.webImages).size !== item.webImages.length
+    || !item.webImages.every(url => typeof url === 'string' && url.length <= 2000 && url.startsWith('https://')))) return false;
   if (item.sourceUrl !== undefined && (typeof item.sourceUrl !== 'string' || !item.sourceUrl.startsWith('https://'))) return false;
   return true;
 }

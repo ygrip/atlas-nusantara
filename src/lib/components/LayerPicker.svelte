@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ComponentType } from 'svelte';
   import { Check, ChevronDown, Search } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import MapDialog from './MapDialog.svelte';
 
   interface LayerChoice { id: string; label: () => string; source: string; icon: ComponentType }

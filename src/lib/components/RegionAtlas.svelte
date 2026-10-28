@@ -1,13 +1,18 @@
 <script lang="ts">
   import { assetUrl } from '$lib/pwa/assets';
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
+  import { page } from '$app/stores';
+  import { getLocaleForUrl } from '$lib/paraglide/runtime.js';
   import { upgradeRegionCode } from '$lib/atlas/code-upgrades';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import type { GeometryPackage } from '$lib/geo/types';
   import { isProvinceCode } from '$lib/data/destination-index';
   import ClayMap from './ClayMap.svelte';
   import DestinationsPanel from './DestinationsPanel.svelte';
+  import SpeciesPanel from './SpeciesPanel.svelte';
+  import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';
+  import { isSpeciesKind, loadProvinceSpecies, loadSpeciesIndex, speciesOverlay, type SpeciesCatalog, type SpeciesIndex, type SpeciesKind } from '$lib/data/species';
   import DirectoryTable, { type DirectoryColumn, type DirectoryRow } from './DirectoryTable.svelte';
   import RegionDetails from './RegionDetails.svelte';
   import DataExport from './DataExport.svelte';
@@ -23,12 +28,18 @@
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
   import { latestYear, loadPopulation, type PopulationData } from '$lib/data/population';
   import { populationHeatmap } from '$lib/data/population-heatmap';
+  import { loadLanguages, type LanguageData } from '$lib/data/languages';
+  import { languageHeatmap } from '$lib/data/language-heatmap';
+  import type { RegionHeatmap } from '$lib/map/heatmap';
   export let layer = 'warning';
   /** Year shown by the population heat map; the newest year when not set. */
   export let populationYear: number | undefined = undefined;
   let populationData: PopulationData | undefined;
   $: if (layer === 'population' && !populationData) void ensurePopulation();
-  $: heatmap = layer === 'population' && populationData ? populationHeatmap(populationData, populationYear ?? latestYear(populationData)) : undefined;
+  let languageData: LanguageData | undefined;
+  $: if (layer === 'language' && !languageData) void ensureLanguages();
+  let heatmap: RegionHeatmap | undefined;
+  $: heatmap = chooseHeatmap(layer, populationData, populationYear, languageData);
   let initializingSelection = true;
   let selectionVersion = 0;
   let earthquakeArchive: EarthquakeArchive | undefined;
@@ -43,16 +54,36 @@
   let destinationFailed = false;
   let destinationIndexFailed = false;
   $: void loadProvinceDestinations(layer, province?.code, destinationIndex);
+  // Flora and fauna follow the destinations pattern: a small index, one lazy shard per province, a national file for download only.
+  let speciesIndexes: Partial<Record<SpeciesKind, SpeciesIndex>> = {};
+  let speciesIndexFailed: Partial<Record<SpeciesKind, boolean>> = {};
+  let speciesCatalog: SpeciesCatalog | undefined;
+  let speciesRequest: AbortController | undefined;
+  let speciesLoading = false;
+  let speciesFailed = false;
+  $: void ensureSpeciesIndex(layer);
+  $: void loadSpeciesProvince(layer, province?.code, speciesIndexes);
   let customOverlay: PointOverlay | undefined;
   let clayMap: ClayMap | undefined;
   let overlayRequest: AbortController | undefined;
   let customOverlayLoading = false;
   let customOverlayFailed = false;
-  $: activeOverlay = layer === 'destinations' && destinationIndex
-    ? destinationOverlay(national, destinationIndex, province?.code)
-    : layer === 'cuisine' && cuisineIndex
-      ? cuisineOverlay(national, cuisineIndex, province?.code)
-      : resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
+  /**
+   * Labels, legends and table cells below are built into data, not in the template, so a new
+   * language must rebuild them. Naming `locale` inside a reactive statement makes that happen.
+   */
+  let activeOverlay: ReturnType<typeof resolveOverlay> | ReturnType<typeof destinationOverlay>;
+  let directoryRows: DirectoryRow[] = [];
+  let selectedWeather: ReturnType<typeof summariseWeather> | undefined;
+  let mountainRows: DirectoryRow[] = [];
+  $: locale = getLocaleForUrl($page.url);
+  $: {
+    void locale;
+    if (layer === 'destinations' && destinationIndex) activeOverlay = destinationOverlay(national, destinationIndex, province?.code);
+    else if (layer === 'cuisine' && cuisineIndex) activeOverlay = cuisineOverlay(national, cuisineIndex, province?.code);
+    else if (isSpeciesKind(layer) && speciesIndexes[layer]) activeOverlay = speciesOverlay(layer, national, speciesIndexes[layer], province?.code);
+    else activeOverlay = resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
+  }
   $: void loadCustomOverlay(layer);
   import { ADMIN_DATA_PATH, CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   export let onselection: ((region: Region | undefined, geometry: GeometryPackage | undefined) => void) | undefined = undefined;
@@ -92,20 +123,16 @@
   function coordinatesOf(code: string) {
     return coordinatesByCode.get(code) ?? (forecast ? forecastCoordinates(forecast, code) : undefined);
   }
-  $: directoryColumns = buildColumns(showWeather);
-  $: directoryRows = buildRows(filtered, showWeather, forecast, forecastTime, coordinatesByCode, city?.code);
-  $: selectedRegion = city ?? province;
-  $: selectedWeather = showWeather && forecast && selectedRegion ? summariseWeather(forecast, selectedRegion.code, forecastTime) : undefined;
-  $: selectedParent = city ? province?.name : undefined;
-
-  function buildColumns(withWeather: boolean): DirectoryColumn[] {
-    if (!withWeather) return [];
-    return [
-      { id: 'weather', label: m.table_weather() },
-      { id: 'lat', label: m.table_latitude(), numeric: true },
-      { id: 'lon', label: m.table_longitude(), numeric: true }
-    ];
+  $: {
+    void locale;
+    directoryRows = buildRows(filtered, showWeather, forecast, forecastTime, coordinatesByCode, city?.code);
   }
+  $: selectedRegion = city ?? province;
+  $: {
+    void locale;
+    selectedWeather = showWeather && forecast && selectedRegion ? summariseWeather(forecast, selectedRegion.code, forecastTime) : undefined;
+  }
+  $: selectedParent = city ? province?.name : undefined;
 
   function buildRows(items: Region[], withWeather: boolean, snapshot: ForecastSnapshot | undefined, time: string | undefined, _coordinates: unknown, selectedCode: string | undefined): DirectoryRow[] {
     return items.map(region => {
@@ -153,16 +180,15 @@
     return { lat: formatDegrees(pin.lat), lon: formatDegrees(pin.lon) };
   }
 
-  const mountainColumns = (): DirectoryColumn[] => [
-    { id: 'status', label: m.table_status() },
-    { id: 'lat', label: m.table_latitude(), numeric: true },
-    { id: 'lon', label: m.table_longitude(), numeric: true }
-  ];
-
   function mountainStatus(category: string | undefined): string {
     if (category === 'active') return m.mountain_active();
     if (category === 'potential') return m.mountain_potential();
     return m.mountain_other();
+  }
+
+  $: {
+    void locale;
+    mountainRows = buildMountainRows(mountainMatches.slice(0, mountainLimit));
   }
 
   function buildMountainRows(pins: typeof mountainMatches): DirectoryRow[] {
@@ -194,7 +220,7 @@
     refreshEarthquakes();
     refreshHazards();
     const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) { refreshEarthquakes(); refreshHazards(); } }, 15 * 60_000);
-    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); generation++; };
+    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); generation++; };
   });
 
   async function loadProvinceDestinations(activeLayer: string, code: string | undefined, index: DestinationIndex | undefined) {
@@ -213,6 +239,39 @@
       if (!request.signal.aborted) { destinationFailed = true; console.warn('Destination province unavailable', code, error); }
     } finally {
       if (!request.signal.aborted) destinationLoading = false;
+    }
+  }
+
+  async function ensureSpeciesIndex(activeLayer: string) {
+    if (!isSpeciesKind(activeLayer) || speciesIndexes[activeLayer] || speciesIndexFailed[activeLayer]) return;
+    const kind = activeLayer;
+    try {
+      const index = await loadSpeciesIndex(kind);
+      speciesIndexes = { ...speciesIndexes, [kind]: index };
+    } catch (error) {
+      speciesIndexFailed = { ...speciesIndexFailed, [kind]: true };
+      console.warn('Species index unavailable', kind, error);
+    }
+  }
+
+  async function loadSpeciesProvince(activeLayer: string, code: string | undefined, indexes: Partial<Record<SpeciesKind, SpeciesIndex>>) {
+    speciesRequest?.abort();
+    speciesCatalog = undefined;
+    speciesFailed = false;
+    speciesLoading = false;
+    if (!isSpeciesKind(activeLayer) || !code) return;
+    const index = indexes[activeLayer];
+    if (!index) return;
+    const request = new AbortController();
+    speciesRequest = request;
+    speciesLoading = true;
+    try {
+      const catalog = await loadProvinceSpecies(index, code, request.signal);
+      if (!request.signal.aborted) speciesCatalog = catalog;
+    } catch (error) {
+      if (!request.signal.aborted) { speciesFailed = true; console.warn('Species province unavailable', activeLayer, code, error); }
+    } finally {
+      if (!request.signal.aborted) speciesLoading = false;
     }
   }
 
@@ -296,11 +355,11 @@
     initialSelectionFailed = false;
     updateUrl();
     void loadDetail(region.code);
-    if (layer !== 'destinations') await loadCityDirectory(region.code);
+    if (!isProvinceCatalogLayer(layer)) await loadCityDirectory(region.code);
   }
 
   function ensureCityDirectory(activeLayer: string, code: string | undefined) {
-    if (activeLayer !== 'destinations' && code) void loadCityDirectory(code);
+    if (!isProvinceCatalogLayer(activeLayer) && code) void loadCityDirectory(code);
   }
 
   function loadCityDirectory(code: string): Promise<void> {
@@ -362,7 +421,7 @@
   }
 
   function mapSelect(code: string) {
-    if (layer === 'destinations' && province) return;
+    if (isProvinceCatalogLayer(layer) && province) return;
     const region = regions.find(item => item.code === code);
     if (region) void selectRegion(region);
   }
@@ -439,6 +498,20 @@
     finally { cuisineIndexLoading = false; }
   }
 
+  function chooseHeatmap(activeLayer: string, population: PopulationData | undefined, year: number | undefined, languages: LanguageData | undefined): RegionHeatmap | undefined {
+    if (activeLayer === 'population' && population) return populationHeatmap(population, year ?? latestYear(population));
+    if (activeLayer === 'language' && languages) return languageHeatmap(languages);
+    return undefined;
+  }
+
+  async function ensureLanguages() {
+    try {
+      languageData = await loadLanguages();
+    } catch (error) {
+      console.warn('Language data unavailable', error);
+    }
+  }
+
   async function ensurePopulation() {
     try {
       populationData = await loadPopulation();
@@ -448,7 +521,7 @@
   }
 
   function selectMapCity(code: string) {
-    if (layer !== 'destinations') selectCity(code);
+    if (!isProvinceCatalogLayer(layer)) selectCity(code);
   }
 
   function selectCity(code: string) {
@@ -478,7 +551,9 @@
     </div>
     <div class="region-directory">
       {#if layer === 'destinations'}
-        <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+        <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} provinceGeometry={geometry} onprovince={openProvince} />
+      {:else if isSpeciesKind(layer)}
+        <SpeciesPanel kind={layer} species={speciesCatalog?.species ?? []} index={speciesIndexes[layer]} loading={initializingSelection || speciesLoading || (!speciesIndexes[layer] && !speciesIndexFailed[layer])} failed={initialSelectionFailed || speciesFailed || Boolean(speciesIndexFailed[layer])} {provinces} provinceCode={province?.code} onprovince={openProvince} />
       {:else if layer === 'mountains'}
         <label for="mountain-search">{m.mountain_search()}</label>
         <input id="mountain-search" type="search" bind:value={query} autocomplete="off" />
@@ -487,8 +562,8 @@
           {#if mountainMatches.length === 0}<p role="status">{m.no_results()}</p>
           {:else}
             <div class="mountain-list">
-              <DirectoryTable label={m.layer_mountains()} nameHeader={m.table_name()} detailLabel={m.region_detail()} columns={mountainColumns()}
-                rows={buildMountainRows(mountainMatches.slice(0, mountainLimit))} onopen={openMountain} />
+              <DirectoryTable label={m.layer_mountains()} nameHeader={m.table_name()} detailLabel={m.region_detail()} columns={[{ id: 'status', label: m.table_status() }, { id: 'lat', label: m.table_latitude(), numeric: true }, { id: 'lon', label: m.table_longitude(), numeric: true }]}
+                rows={mountainRows} onopen={openMountain} />
             </div>
             {#if mountainLimit < mountainMatches.length}
               <button class="mountain-more" type="button" onclick={() => mountainLimit += 80}>{m.mountain_more()}</button>
@@ -506,7 +581,7 @@
       {:else if filtered.length === 0}<p role="status">{m.no_results()}</p>
       {:else}
         <DirectoryTable label={province ? m.level_city() : m.level_province()} codeHeader={m.table_code()} nameHeader={province ? m.level_city() : m.level_province()}
-          detailLabel={m.region_detail()} columns={directoryColumns} rows={directoryRows} onopen={openRegionRow} />
+          detailLabel={m.region_detail()} columns={showWeather ? [{ id: 'weather', label: m.table_weather() }, { id: 'lat', label: m.table_latitude(), numeric: true }, { id: 'lon', label: m.table_longitude(), numeric: true }] : []} rows={directoryRows} onopen={openRegionRow} />
       {/if}
       {#if selectedRegion}
         <RegionDetails name={selectedRegion.name} code={selectedRegion.code} levelLabel={city ? m.level_city() : m.level_province()} parentName={selectedParent}

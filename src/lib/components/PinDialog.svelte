@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ExternalLink, Share2 } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import type { MapPin, PointOverlay } from '$lib/map/overlay-contract';
   import { mountainColor } from '$lib/map/overlay-contract';
   import ClayPinIcon from './ClayPinIcon.svelte';

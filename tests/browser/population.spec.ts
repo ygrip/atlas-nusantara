@@ -37,7 +37,7 @@ test('population layer: national trend and pyramid tabs, province filter, heat l
 
   // Selecting a province filters the panel to that province.
   await page.locator('svg path[data-code="32"]').click();
-  await expect(panel.getByRole('heading', { name: /Jawa Barat/ })).toBeVisible();
+  await expect(panel.getByRole('heading', { level: 3, name: /Jawa Barat/ })).toBeVisible();
   await expect(panel.locator('.summary.five')).toBeVisible();
   await expect(panel.locator('.history-table tbody tr')).toHaveCount(5);
 });

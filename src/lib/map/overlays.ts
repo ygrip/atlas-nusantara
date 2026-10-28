@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages.js';
+import { m } from '$lib/i18n/messages';
 import type { EarthquakeArchive } from '$lib/data/earthquakes';
 import { activeWarnings, eventColor, eventLabel, EVENT_KINDS, EVENT_TYPES, hasMapPoint, kindLabel, kindSymbol, severityColor, type HazardSnapshot } from '$lib/data/hazards';
 
@@ -13,9 +13,14 @@ export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   { id: 'incident', label: m.layer_disaster_reports, source: 'BNPB · PetaBencana', renderer: 'points', icon: 'incident' },
   { id: 'hazard', label: m.layer_weather_hazards, source: 'BMKG', renderer: 'points', icon: 'hazard' },
   { id: 'destinations', label: m.layer_destinations, source: 'Tourism', renderer: 'points', icon: 'landmark' },
+  // Species per province from GBIF with KSDAE, iNaturalist and other sources; province shards plus a national download. See docs/SPECIES.md.
+  { id: 'flora', label: m.layer_flora, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'flora' },
+  { id: 'fauna', label: m.layer_fauna, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'fauna' },
   { id: 'cuisine', label: m.layer_cuisine, source: 'Wikipedia · recipes', renderer: 'points', icon: 'food' },
   // Yearly national statistics shown in a panel (pyramid and history); no map pins, no worker. See docs/OVERLAYS.md.
-  { id: 'population', label: m.layer_population, source: 'BPS', renderer: 'statistics', icon: 'population' }
+  { id: 'population', label: m.layer_population, source: 'BPS', renderer: 'statistics', icon: 'population' },
+  // Number of local languages per province (Peta Bahasa); a heat map and a panel, no pins. See docs/OVERLAYS.md.
+  { id: 'language', label: m.layer_languages, source: 'Badan Bahasa', renderer: 'statistics', icon: 'language' }
 ];
 
 export function earthquakeOverlay(archive: EarthquakeArchive): PointOverlay {

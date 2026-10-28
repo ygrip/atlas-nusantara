@@ -4,7 +4,7 @@
   import { loadPublished, publicationExpired } from '$lib/data/publication';
   import type { ShareSummary } from '$lib/share/card';
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m, type MessageKey } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { Bell, Activity, Flame, Mountain } from 'lucide-svelte';
   import { observatoryKind, type ObservatoryKind } from '$lib/data/observatory';
@@ -21,8 +21,8 @@
   let controller: AbortController | undefined;
   let expiryTimer: ReturnType<typeof setInterval> | undefined;
   const kinds = [
-    { id: 'warning' as const, label: m.layer_weather, icon: Bell }, { id: 'earthquake' as const, label: m.layer_earthquakes, icon: Activity },
-    { id: 'incident' as const, label: m.layer_history, icon: Flame }, { id: 'hazard' as const, label: m.layer_hazards, icon: Mountain }
+    { id: 'warning' as const, label: 'layer_weather' as MessageKey, icon: Bell }, { id: 'earthquake' as const, label: 'layer_earthquakes' as MessageKey, icon: Activity },
+    { id: 'incident' as const, label: 'layer_history' as MessageKey, icon: Flame }, { id: 'hazard' as const, label: 'layer_hazards' as MessageKey, icon: Mountain }
   ];
   $: activeKind = observatoryKind(layer);
   $: shownKinds = kinds.filter(kind => kind.id === activeKind);
@@ -89,13 +89,13 @@
     <p class="summary-window">{m.summary_window()} · {m.ingested_time()}: <time datetime={summary.generatedAt}>{date(summary.generatedAt)}</time></p>
     <div class="summary-counts">
       {#each shownKinds as kind (kind.id)}
-        <article><span class="count-label"><span class="count-icon"><svelte:component this={kind.icon} size={18} aria-hidden="true" /></span>{kind.label()}</span><strong>{new Intl.NumberFormat(getLocale()).format(summary.counts[kind.id])}</strong><small>{m.retained_records()}</small>
+        <article><span class="count-label"><span class="count-icon"><svelte:component this={kind.icon} size={18} aria-hidden="true" /></span>{m[kind.label]()}</span><strong>{new Intl.NumberFormat(getLocale()).format(summary.counts[kind.id])}</strong><small>{m.retained_records()}</small>
         </article>
       {/each}
     </div>
     <section class="archive-downloads" aria-label={m.download_data()}>
       {#each shownKinds as kind (kind.id)}
-        {#if canDownload(kind.id)}<div class="archive-entry" data-kind={kind.id}><strong>{kind.label()}</strong><ColdDownload kind={kind.id} /></div>{/if}
+        {#if canDownload(kind.id)}<div class="archive-entry" data-kind={kind.id}><strong>{m[kind.label]()}</strong><ColdDownload kind={kind.id} /></div>{/if}
       {/each}
     </section>
     <div class="derived-panel">
