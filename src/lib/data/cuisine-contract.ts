@@ -45,9 +45,9 @@ export interface CuisineDish {
   id: string;
   name: string;
   group: CuisineGroup;
-  /** Provinces whose Wikipedia list names the dish. An association, not proof of exclusive origin. */
+  /** Provinces whose regional references document the dish. An association, not proof of exclusive origin. */
   provinceCodes: string[];
-  originStatus: 'wikipedia-listed' | 'seed-reviewed' | 'unmapped';
+  originStatus: 'wikipedia-listed' | 'seed-reviewed' | 'regional-sourced' | 'unmapped';
   /** Short Wikipedia summary in Indonesian; "" when the dish has no article. */
   summary: string;
   summaryLanguage?: 'id';
