@@ -233,7 +233,7 @@
                   <button type="button" class="open-dish" onclick={(event) => { event.stopPropagation(); selected = dish; }} aria-haspopup="dialog" aria-label={m.cuisine_open_details({ name: dish.name })}>{dish.name}</button>
                   {#if dish.provinceCodes.length > 1}<small>{m.cuisine_in_provinces({ count: dish.provinceCodes.length })}</small>{/if}
                 </th>
-                <td><span class="group-badge" style:background={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span></td>
+                <td><span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span></td>
                 <td class="recipe-cell">
                   {#if recipeCount(dish) > 0}
                     <span class="has-recipe"><BookOpen size={12} aria-hidden="true" /> {m.cuisine_recipe_count({ count: recipeCount(dish) })}</span>
@@ -348,7 +348,33 @@
   .open-dish { display: block; padding: 0; border: 0; background: transparent; color: var(--text); font: inherit; font-weight: 800; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 55%, transparent); text-underline-offset: 3px; }
   .open-dish:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
   .has-recipe { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 16%, transparent); font-size: .72rem; font-weight: 750; }
-  .group-badge { display: inline-block; padding: 3px 9px; border-radius: 9px; color: #1a1a1a; font-size: .72rem; font-weight: 850; }
+  .group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    padding: 4px 10px;
+    border: 1px solid color-mix(in srgb, var(--group-color) 28%, var(--border));
+    border-radius: 12px;
+    background: linear-gradient(155deg,
+      color-mix(in srgb, var(--group-color) 10%, var(--surface)),
+      color-mix(in srgb, var(--group-color) 18%, var(--panel)));
+    box-shadow: 0 3px 0 -1px color-mix(in srgb, var(--group-color) 30%, var(--border)),
+      0 5px 10px -8px var(--shadow),
+      inset 0 1px 1px var(--clay-highlight);
+    color: var(--text);
+    font-size: .72rem;
+    font-weight: 850;
+    line-height: 1.35;
+  }
+  .group-badge::before {
+    content: '';
+    flex: 0 0 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--group-color);
+    box-shadow: inset 0 1px 1px #ffffff55, 0 1px 1px var(--shadow);
+  }
     .recipe-cell { min-width: 150px; }
   .pagination button { min-height: 44px; padding: 7px 14px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); font: inherit; font-weight: 750; cursor: pointer; }
   .pagination button:disabled { opacity: .5; cursor: default; }
