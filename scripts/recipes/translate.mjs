@@ -19,19 +19,20 @@ if (!requested.length || requested.some(locale=>!LOCALES[locale])) {
 const apiKey=process.env.OPENAI_API_KEY, model=process.env.OPENAI_TRANSLATE_MODEL;
 if(!apiKey || !model) throw Error('OPENAI_API_KEY and OPENAI_TRANSLATE_MODEL are required for optional translation');
 const catalog=JSON.parse(await readFile('static/data/cuisine/national.json','utf8'));
-if(catalog.schemaVersion!==1||!Array.isArray(catalog.items))throw Error('Invalid cuisine national dataset');
-const source=catalog.items.filter(item=>item.recipe?.language==='id'&&item.recipe.ingredients?.length&&item.recipe.steps?.length);
+if(catalog.schemaVersion!==2||!Array.isArray(catalog.dishes))throw Error('Invalid cuisine national dataset');
+// Only each dish's first recipe is translated; the dialog applies a translation to that recipe alone.
+const source=catalog.dishes.filter(item=>item.recipes?.[0]?.language==='id'&&item.recipes[0].ingredients?.length&&item.recipes[0].steps?.length);
 const fileFor = locale=>'static/data/cuisine/locales/'+locale+'.json';
 await mkdir('static/data/cuisine/locales',{recursive:true});
 function isValid(row,origin) {
   return row?.id===origin.id && typeof row.name==='string' && row.name.trim().length>0
-    && Array.isArray(row.ingredients) && row.ingredients.length===origin.recipe.ingredients.length
-    && Array.isArray(row.steps) && row.steps.length===origin.recipe.steps.length
+    && Array.isArray(row.ingredients) && row.ingredients.length===origin.recipes[0].ingredients.length
+    && Array.isArray(row.steps) && row.steps.length===origin.recipes[0].steps.length
     && row.ingredients.every(x=>typeof x==='string' && x.trim())
     && row.steps.every(x=>typeof x==='string' && x.trim());
 }
 async function callTranslation(locale,batch) {
-  const input=batch.map(item=>({id:item.id,name:item.name,ingredients:item.recipe.ingredients,steps:item.recipe.steps}));
+  const input=batch.map(item=>({id:item.id,name:item.name,ingredients:item.recipes[0].ingredients,steps:item.recipes[0].steps}));
   const response=await fetch('https://api.openai.com/v1/chat/completions',{
     method:'POST',
     headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},
@@ -58,7 +59,7 @@ for(const locale of requested){
   const output=fileFor(locale);
   let existing={locale,sourceLanguage:'id',items:{}};
   try {const previous=JSON.parse(await readFile(output,'utf8'));if(previous.locale===locale)existing=previous;} catch{}
-  const pending=source.filter(item=>!existing.items[item.id]||existing.items[item.id].ingredients.length!==item.recipe.ingredients.length||existing.items[item.id].steps.length!==item.recipe.steps.length);
+  const pending=source.filter(item=>!existing.items[item.id]||existing.items[item.id].ingredients.length!==item.recipes[0].ingredients.length||existing.items[item.id].steps.length!==item.recipes[0].steps.length);
   console.log(locale+': '+pending.length+' pending recipes');
   for(let i=0;i<pending.length;i+=4){
     const batch=pending.slice(i,i+4);

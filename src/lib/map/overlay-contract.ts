@@ -1,5 +1,5 @@
-/** Shape of a clay marker. Leaf and paw mark the flora and fauna layers. */
-export const PIN_SYMBOLS = ['circle', 'triangle', 'diamond', 'leaf', 'paw'] as const;
+/** Shape of a clay marker. Leaf, paw and bowl mark the flora, fauna and cuisine layers. */
+export const PIN_SYMBOLS = ['circle', 'triangle', 'diamond', 'leaf', 'paw', 'bowl'] as const;
 export type PinSymbol = (typeof PIN_SYMBOLS)[number];
 export interface MapPin {
   id: string;

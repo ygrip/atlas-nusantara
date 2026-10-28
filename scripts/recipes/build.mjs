@@ -1,15 +1,19 @@
 /**
- * Offline/manual Indonesian culinary catalog builder.
+ * Offline/manual Indonesian culinary catalog builder (schema 2, like the flora and fauna layers).
  * Sources:
  *   Wikipedia id: Daftar_masakan_Indonesia (dish names + province associations)
  *   Hugging Face: LorthGyu/indonesian-recipes (MIT recipe ingredients + steps)
- *   Wikimedia Commons: file description and per-image license metadata.
+ *   tmp/recipes-cache/cookpad: recipes crawled by crawl-cookpad.mjs (optional, resumable stage)
+ *   tmp/recipes-cache/wikipedia: summaries and Commons photos fetched by fetch-wikipedia.mjs (optional, resumable stage)
  *
  * IMPORTANT: Never claim that a broad dataset region (e.g. "Jawa") is a province.
  * A missing recipe/photo remains explicitly null; do not guess.
  */
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { isLikelyDish } from './classify.mjs';
+import { assembleDish } from './assemble.mjs';
+import { isCuisineDish } from '../../src/lib/data/cuisine-validation.js';
 
 const ROOT = 'static/data/cuisine';
 const SEED = 'scripts/recipes/seed.json';
@@ -35,7 +39,6 @@ const NAME_ALIASES = new Map([
   ['papeda kuah kuning','papeda']
 ]);
 const ACCEPTED_LICENSE = /^(?:CC0|CC BY(?:-SA)?(?:\s|\-|$)|Public domain)/i;
-const SOURCE = {wiki:WIKI,recipes:HF};
 const stripTags = text => String(text??'').replace(/<[^>]*>/g,'').replace(/&(?:nbsp|amp|quot|lt|gt);/g, x => ({'&nbsp;':' ','&amp;':'&','&quot;':'"','&lt;':'<','&gt;':'>'}[x])).trim();
 const key = s => String(s??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const canon = s => NAME_ALIASES.get(key(s)) ?? key(s);
@@ -195,62 +198,78 @@ function merge(wiki, recipes, seed) {
     return item;
   }).sort((a,b)=>a.name.localeCompare(b.name,'id'));
 }
-async function enrichImages(records) {
-  const candidates=records.filter(r=>r.articleUrl&&!r.image);
-  // Exclude entries without a Wikipedia article; never match merely by similar filenames.
-  for(let i=0;i<candidates.length;i+=25) {
-    const batch=candidates.slice(i,i+25);
-    const articleTitles=batch.map(r=>decodeURIComponent(r.articleUrl.split('/wiki/')[1]).replace(/_/g,' '));
-    try {
-      const articleUrl=new URL('https://id.wikipedia.org/w/api.php');
-      for(const [k,v] of Object.entries({action:'query',format:'json',redirects:'1',prop:'pageimages',piprop:'name',titles:articleTitles.join('|')})) articleUrl.searchParams.set(k,v);
-      const pages=Object.values((await fetchJSON(articleUrl.toString())).query?.pages??{});
-      const files=[...new Set(pages.map(x=>x.pageimage).filter(Boolean))].map(x=>'File:'+x);
-      if (!files.length) continue;
-      const fileUrl=new URL('https://commons.wikimedia.org/w/api.php');
-      for(const [k,v] of Object.entries({action:'query',format:'json',prop:'imageinfo',iiprop:'url|extmetadata|mime',iiurlwidth:'640',titles:files.join('|')})) fileUrl.searchParams.set(k,v);
-      const filePages=Object.values((await fetchJSON(fileUrl.toString())).query?.pages??{});
-      const imageByName=new Map(filePages.map(p=>[p.title?.replace(/^File:/,''),p.imageinfo?.[0]]));
-      for (const page of pages) {
-        if (!page.pageimage) continue;
-        const info=imageByName.get(page.pageimage), metadata=info?.extmetadata;
-        const license=stripTags(metadata?.LicenseShortName?.value);
-        const credit=stripTags(metadata?.Artist?.value).slice(0,280);
-        const pageTitle=page.title?.replace(/_/g,' ');
-        const matched=batch.find(row=>canon(decodeURIComponent(row.articleUrl.split('/wiki/')[1]).replace(/_/g,' '))===canon(pageTitle));
-        if(!matched||!info?.thumburl||!credit||!ACCEPTED_LICENSE.test(license)||!/^image\/(?:jpeg|png|webp)$/i.test(info.mime??'')) continue;
-        matched.image={
-          url:info.thumburl, descriptionUrl:info.descriptionurl??'https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(page.pageimage),
-          credit,license,licenseUrl:stripTags(metadata?.LicenseUrl?.value)||null,reviewedAt:new Date().toISOString(),source:'Wikimedia Commons'
-        };
-      }
-    } catch(error) {
-      console.warn('Image metadata batch skipped:',String(error));
-      if (/\b503\b/.test(String(error))) {
-        console.warn('Wikimedia API unavailable; retaining only existing external photo links and credits.');
-        break;
-      }
-    }
-  }
+const SOURCES = [
+  {name:'Wikipedia · Daftar masakan Indonesia',url:WIKI},
+  {name:'Cookpad Indonesia',url:'https://cookpad.com/id'},
+  {name:'LorthGyu/indonesian-recipes (MIT)',url:HF},
+  {name:'Wikimedia Commons',url:'https://commons.wikimedia.org/wiki/Category:Cuisine_of_Indonesia'}
+];
+const CACHE=join('tmp','recipes-cache');
+async function readCache(path) {
+  try { return JSON.parse(await readFile(path,'utf8')); }
+  catch(error) { if(error.code==='ENOENT') return undefined; throw error; }
 }
-async function publish(records) {
-  await mkdir(join(ROOT,'provinces'),{recursive:true});
-  const timestamp=new Date().toISOString();
-  const summaries=Object.entries(PROVINCES).map(([code,name])=>{
-    const items=records.filter(r=>r.provinceCodes.includes(code));
-    return {provinceCode:code,name,count:items.length,withRecipe:items.filter(r=>r.recipe).length,withImage:items.filter(r=>r.image).length,shard:'/data/cuisine/provinces/'+code+'.json'};
-  });
-  for(const summary of summaries) {
-    const items=records.filter(r=>r.provinceCodes.includes(summary.provinceCode));
-    await writeFile(join(ROOT,'provinces',summary.provinceCode+'.json'),JSON.stringify({schemaVersion:1,provinceCode:summary.provinceCode,items},null,2)+'\n');
+/** Recipes the Cookpad crawl kept for one dish, best liked first. */
+async function readCookpad(dishId) {
+  const search=await readCache(join(CACHE,'cookpad','search',dishId+'.json'));
+  const recipes=[];
+  for(const recipeId of search?.recipeIds??[]) {
+    const recipe=await readCache(join(CACHE,'cookpad','recipes',recipeId+'.json'));
+    if(recipe&&!recipe.missing) recipes.push(recipe);
   }
-  const index={schemaVersion:1,generatedAt:timestamp,attribution:'Indonesian Wikipedia contributors; LorthGyu (MIT); Wikimedia Commons image authors (per file).',sources:SOURCE,totals:{dishes:records.length,withRecipe:records.filter(r=>r.recipe).length,withImage:records.filter(r=>r.image).length,unmapped:records.filter(r=>!r.provinceCodes.length).length},provinces:summaries,featured:records.filter(r=>r.recipe&&r.image).slice(0,12),national:'/data/cuisine/national.json'};
+  return recipes.sort((a,b)=>((b.likes??0)+(b.bookmarks??0))-((a.likes??0)+(a.bookmarks??0)));
+}
+async function assemble(records) {
+  const dishes=[], dropped=[];
+  for(const item of records) {
+    const cookpad=await readCookpad(item.id);
+    const wikipedia=await readCache(join(CACHE,'wikipedia','summary',item.id+'.json'));
+    const hasRecipe=Boolean(item.recipe)||cookpad.length>0;
+    const likely=isLikelyDish({description:wikipedia?.description,summary:wikipedia?.summary,hasRecipe,hasArticle:Boolean(item.articleUrl)});
+    if(!likely) { dropped.push(item.name); continue; }
+    const dish=assembleDish({item,cookpad,wikipedia});
+    if(!isCuisineDish(dish)) { console.warn('Dropping invalid dish record',item.id); continue; }
+    dishes.push(dish);
+  }
+  console.log('Dropped '+dropped.length+' entries that are not dishes, e.g. '+dropped.slice(0,12).join(', '));
+  return dishes;
+}
+function richness(dish) {
+  return (dish.recipes?.length??0)*4+(dish.images?.length??0)*2+(dish.summary?1:0);
+}
+async function publish(dishes) {
+  await mkdir(join(ROOT,'provinces'),{recursive:true});
+  const fetchedAt=new Date().toISOString();
+  const rank=(a,b)=>richness(b)-richness(a)||a.name.localeCompare(b.name,'id');
+  const summaries=[];
+  for(const [code] of Object.entries(PROVINCES)) {
+    const items=dishes.filter(d=>d.provinceCodes.includes(code)).sort(rank);
+    summaries.push({provinceCode:code,count:items.length,withRecipe:items.filter(d=>d.recipes).length,withImage:items.filter(d=>d.images).length,shard:'/data/cuisine/provinces/'+code+'.json'});
+    await writeFile(join(ROOT,'provinces',code+'.json'),JSON.stringify({schemaVersion:2,fetchedAt,provinceCode:code,dishes:items})+'\n');
+  }
+  const national=[...dishes].sort(rank);
+  const groupCounts={};
+  for(const dish of dishes) groupCounts[dish.group]=(groupCounts[dish.group]??0)+1;
+  const index={
+    schemaVersion:2,fetchedAt,
+    scope:'Dishes named in the Indonesian Wikipedia list of Indonesian cuisine, with recipes from Cookpad Indonesia and the LorthGyu corpus. Provinces are list associations, not proof of origin. Not an exhaustive census: a missing recipe or photo does not mean a dish does not exist.',
+    license:'Dish names and summaries: Wikipedia, CC BY-SA 4.0. Recipes: written by their authors; each links to its source page and is shown with the author name. Photos are linked, never copied, with their credit and licence.',
+    attribution:'Indonesian Wikipedia contributors; Cookpad Indonesia recipe authors; LorthGyu (MIT); Wikimedia Commons photographers (per file).',
+    national:'/data/cuisine/national.json',
+    sources:SOURCES,
+    coverage:{
+      totalDishes:dishes.length,withoutProvince:dishes.filter(d=>!d.provinceCodes.length).length,
+      withRecipe:dishes.filter(d=>d.recipes).length,withImage:dishes.filter(d=>d.images).length,withSummary:dishes.filter(d=>d.summary).length,
+      recipes:dishes.reduce((total,d)=>total+(d.recipes?.length??0),0)
+    },
+    groupCounts,provinces:summaries
+  };
   await writeFile(join(ROOT,'index.json'),JSON.stringify(index,null,2)+'\n');
-  await writeFile(join(ROOT,'national.json'),JSON.stringify({schemaVersion:1,generatedAt:timestamp,items:records},null,2)+'\n');
-  console.log('Published '+records.length+' dishes, '+index.totals.withRecipe+' recipes, '+index.totals.withImage+' credited photos, '+index.totals.unmapped+' unassigned; 38 province shards.');
+  await writeFile(join(ROOT,'national.json'),JSON.stringify({schemaVersion:2,fetchedAt,provinceCode:null,dishes:national})+'\n');
+  const c=index.coverage;
+  console.log('Published '+c.totalDishes+' dishes, '+c.withRecipe+' with recipes ('+c.recipes+' recipes), '+c.withImage+' with photos, '+c.withoutProvince+' unassigned; 38 province shards.');
 }
 const seed=JSON.parse(await readFile(SEED,'utf8'));
 const [wiki,recipes]=await Promise.all([fetchWikipedia(),fetchRecipes()]);
 const merged=merge(wiki,recipes,seed);
-if(!process.argv.includes('--skip-images')) await enrichImages(merged);
-await publish(merged);
+await publish(await assemble(merged));

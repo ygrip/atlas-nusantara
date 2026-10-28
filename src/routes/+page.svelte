@@ -21,7 +21,6 @@
   import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
   import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
   import HazardPanel from '$lib/components/HazardPanel.svelte';
-  import CuisinePanel from '$lib/components/CuisinePanel.svelte';
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
@@ -156,9 +155,7 @@
       </div>
       <div class="clay-card atlas-stage">
         <RegionAtlas bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
-        {#if activeLayer === 'cuisine'}
-          <CuisinePanel provinceCode={selectedRegion?.code.split('.')[0]} />
-        {:else if activeLayer === 'earthquake'}
+        {#if activeLayer === 'earthquake'}
           <EarthquakePanel />
         {:else if activeLayer === 'incident'}
           <HazardPanel kind="reports" />

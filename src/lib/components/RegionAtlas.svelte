@@ -11,6 +11,7 @@
   import ClayMap from './ClayMap.svelte';
   import DestinationsPanel from './DestinationsPanel.svelte';
   import SpeciesPanel from './SpeciesPanel.svelte';
+  import CuisinePanel from './CuisinePanel.svelte';
   import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';
   import { isSpeciesKind, loadProvinceSpecies, loadSpeciesIndex, speciesOverlay, type SpeciesCatalog, type SpeciesIndex, type SpeciesKind } from '$lib/data/species';
   import DirectoryTable, { type DirectoryColumn, type DirectoryRow } from './DirectoryTable.svelte';
@@ -23,7 +24,7 @@
   import { forecastCoordinates, summariseWeather } from '$lib/map/weather-summary';
   import { loadDestinationIndex, loadDestinations, destinationOverlay, type DestinationCatalog, type DestinationIndex } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
-  import { cuisineOverlay, loadCuisineIndex, type CuisineIndex } from '$lib/data/cuisine';
+  import { cuisineOverlay, isCuisineLayer, loadCuisineIndex, loadProvinceCuisine, type CuisineCatalog, type CuisineIndex } from '$lib/data/cuisine';
   import { loadHazards, type HazardSnapshot } from '$lib/data/hazards';
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
   import { latestYear, loadPopulation, type PopulationData } from '$lib/data/population';
@@ -46,9 +47,16 @@
   let hazardSnapshot: HazardSnapshot | undefined;
   let destinationCatalog: DestinationCatalog | undefined;
   let destinationIndex: DestinationIndex | undefined;
+  // Cuisine follows the same pattern as flora and fauna: a small index, one lazy shard per province, a national file for download only.
   let cuisineIndex: CuisineIndex | undefined;
   let cuisineIndexLoading = false;
+  let cuisineIndexFailed = false;
+  let cuisineCatalog: CuisineCatalog | undefined;
+  let cuisineRequest: AbortController | undefined;
+  let cuisineLoading = false;
+  let cuisineFailed = false;
   $: void ensureCuisineIndex(layer);
+  $: void loadCuisineProvinceCatalog(layer, province?.code, cuisineIndex);
   let destinationRequest: AbortController | undefined;
   let destinationLoading = false;
   let destinationFailed = false;
@@ -220,7 +228,7 @@
     refreshEarthquakes();
     refreshHazards();
     const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) { refreshEarthquakes(); refreshHazards(); } }, 15 * 60_000);
-    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); generation++; };
+    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); cuisineRequest?.abort(); generation++; };
   });
 
   async function loadProvinceDestinations(activeLayer: string, code: string | undefined, index: DestinationIndex | undefined) {
@@ -491,11 +499,35 @@
   }
 
   async function ensureCuisineIndex(activeLayer: string) {
-    if (activeLayer !== 'cuisine' || cuisineIndex || cuisineIndexLoading) return;
+    if (!isCuisineLayer(activeLayer) || cuisineIndex || cuisineIndexLoading || cuisineIndexFailed) return;
     cuisineIndexLoading = true;
-    try { cuisineIndex = await loadCuisineIndex(); }
-    catch (error) { console.warn('Cuisine index unavailable', error); }
-    finally { cuisineIndexLoading = false; }
+    try {
+      cuisineIndex = await loadCuisineIndex();
+    } catch (error) {
+      cuisineIndexFailed = true;
+      console.warn('Cuisine index unavailable', error);
+    } finally {
+      cuisineIndexLoading = false;
+    }
+  }
+
+  async function loadCuisineProvinceCatalog(activeLayer: string, code: string | undefined, index: CuisineIndex | undefined) {
+    cuisineRequest?.abort();
+    cuisineCatalog = undefined;
+    cuisineFailed = false;
+    cuisineLoading = false;
+    if (!isCuisineLayer(activeLayer) || !code || !index) return;
+    const request = new AbortController();
+    cuisineRequest = request;
+    cuisineLoading = true;
+    try {
+      const catalog = await loadProvinceCuisine(index, code, request.signal);
+      if (!request.signal.aborted) cuisineCatalog = catalog;
+    } catch (error) {
+      if (!request.signal.aborted) { cuisineFailed = true; console.warn('Cuisine province unavailable', code, error); }
+    } finally {
+      if (!request.signal.aborted) cuisineLoading = false;
+    }
   }
 
   function chooseHeatmap(activeLayer: string, population: PopulationData | undefined, year: number | undefined, languages: LanguageData | undefined): RegionHeatmap | undefined {
@@ -554,6 +586,8 @@
         <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} provinceGeometry={geometry} onprovince={openProvince} />
       {:else if isSpeciesKind(layer)}
         <SpeciesPanel kind={layer} species={speciesCatalog?.species ?? []} index={speciesIndexes[layer]} loading={initializingSelection || speciesLoading || (!speciesIndexes[layer] && !speciesIndexFailed[layer])} failed={initialSelectionFailed || speciesFailed || Boolean(speciesIndexFailed[layer])} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+      {:else if isCuisineLayer(layer)}
+        <CuisinePanel dishes={cuisineCatalog?.dishes ?? []} index={cuisineIndex} loading={initializingSelection || cuisineLoading || (!cuisineIndex && !cuisineIndexFailed)} failed={initialSelectionFailed || cuisineFailed || cuisineIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
       {:else if layer === 'mountains'}
         <label for="mountain-search">{m.mountain_search()}</label>
         <input id="mountain-search" type="search" bind:value={query} autocomplete="off" />

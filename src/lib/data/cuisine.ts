@@ -1,121 +1,81 @@
+import { m } from '$lib/i18n/messages';
 import { assetUrl } from '$lib/pwa/assets';
 import type { GeometryPackage } from '$lib/geo/types';
-import type { PointOverlay } from '$lib/map/overlays';
-import { m } from '$lib/paraglide/messages.js';
+import type { PointOverlay } from '$lib/map/overlay-contract';
+import { CUISINE_GROUPS as GROUP_IDS, isCuisineCatalog, isCuisineIndex } from './cuisine-validation.js';
+import type { CuisineCatalog, CuisineDish, CuisineGroup, CuisineIndex, CuisineTranslations } from './cuisine-contract';
+export type { CuisineCatalog, CuisineDish, CuisineGroup, CuisineImage, CuisineIndex, CuisineRecipe, CuisineTranslation, CuisineTranslations } from './cuisine-contract';
 
-export interface CuisinePhoto {
-  url: string; descriptionUrl: string; credit: string; license: string; licenseUrl?: string | null;
-}
-export interface CuisineRecipe {
-  language: string; status: string; category?: string | null; difficulty?: string | null;
-  timeMinutes?: number | null; ingredients: string[]; steps: string[]; sourceUrl: string;
-}
-export interface CuisineItem {
-  id: string; name: string; provinceCodes: string[]; originStatus: string;
-  articleUrl?: string | null; recipe?: CuisineRecipe | null; image?: CuisinePhoto | null;
-  broadRegion?: string | null; sources: Array<{ url: string; role: string; license?: string }>;
-}
-export interface CuisineProvince {
-  provinceCode: string; name: string; count: number; withRecipe: number; withImage: number; shard: string;
-}
-export interface CuisineIndex {
-  schemaVersion: number; generatedAt: string; attribution: string; sources: {wiki: string; recipes: string};
-  totals: {dishes: number; withRecipe: number; withImage: number; unmapped: number};
-  provinces: CuisineProvince[]; featured: CuisineItem[]; national: string; scope?: string;
-}
-export interface CuisineTranslation {
-  name: string; ingredients: string[]; steps: string[]; status: 'machine-unreviewed' | 'human-reviewed';
-}
-export interface CuisineTranslations { locale: string; items: Record<string, CuisineTranslation> }
+/** The validation module is plain JavaScript (the build scripts share it), so the typed id list is declared here. */
+export const CUISINE_GROUPS = GROUP_IDS as CuisineGroup[];
 
-/** Photos are hotlinked directly to Wikimedia Commons; never accept a local asset or storage copy. */
-export function isExternalCuisinePhoto(value: unknown): value is CuisinePhoto {
-  if (!value || typeof value !== 'object') return false;
-  const photo = value as CuisinePhoto;
-  try {
-    const image = new URL(photo.url);
-    const description = new URL(photo.descriptionUrl);
-    const imageHost = image.hostname.toLowerCase();
-    const directCommons = imageHost === 'commons.wikimedia.org' && image.pathname.startsWith('/wiki/Special:FilePath/');
-    const wikimediaCdn = imageHost === 'upload.wikimedia.org' || imageHost === 'thumb.wikimedia.org';
-    return image.protocol === 'https:' && !image.username && !image.password && (directCommons || wikimediaCdn)
-      && description.protocol === 'https:' && description.hostname === 'commons.wikimedia.org'
-      && description.pathname.startsWith('/wiki/File:')
-      && typeof photo.credit === 'string' && photo.credit.trim().length > 0
-      && typeof photo.license === 'string' && photo.license.trim().length > 0;
-  } catch { return false; }
+const CUISINE_COLOR = '#bb7448';
+
+export function isCuisineLayer(layer: string): boolean {
+  return layer === 'cuisine';
 }
 
-export function isCuisineItem(value: unknown): value is CuisineItem {
-  if (!value || typeof value !== 'object') return false;
-  const x = value as CuisineItem;
-  return /^[a-z0-9-]{1,120}$/.test(x.id) && typeof x.name === 'string' && x.name.length <= 160 && x.name.length > 0
-    && Array.isArray(x.provinceCodes) && x.provinceCodes.every(code=>/^\d{2}$/.test(code))
-    && Array.isArray(x.sources)
-    && (!x.recipe || (Array.isArray(x.recipe.ingredients) && Array.isArray(x.recipe.steps)
-      && x.recipe.ingredients.every(v=>typeof v === 'string') && x.recipe.steps.every(v=>typeof v === 'string')))
-    && (!x.image || isExternalCuisinePhoto(x.image));
-}
-export function validateCuisineIndex(value: unknown): value is CuisineIndex {
-  if (!value || typeof value !== 'object') return false;
-  const x = value as CuisineIndex;
-  return x.schemaVersion === 1 && Array.isArray(x.provinces)
-    && x.provinces.length <= 38 && x.provinces.every(p=>/^\d{2}$/.test(p.provinceCode)
-      && Number.isInteger(p.count) && p.count >= 0
-      && p.shard === '/data/cuisine/provinces/'+p.provinceCode+'.json')
-    && Array.isArray(x.featured) && x.featured.every(isCuisineItem)
-    && typeof x.attribution === 'string' && x.attribution.length > 0;
-}
 export async function loadCuisineIndex(signal?: AbortSignal): Promise<CuisineIndex> {
-  const response = await fetch(assetUrl('/data/cuisine/index.json'),{signal});
-  if (!response.ok) throw Error('Cuisine index unavailable');
-  const parsed: unknown = await response.json();
-  if (!validateCuisineIndex(parsed)) throw Error('Invalid cuisine index');
-  return parsed;
+  const response = await fetch(assetUrl('/data/cuisine/index.json'), { signal });
+  if (!response.ok) throw new Error('Cuisine index unavailable');
+  const value: unknown = await response.json();
+  if (!isCuisineIndex(value)) throw new Error('Cuisine index failed validation');
+  return value;
 }
-export async function loadCuisineProvince(index: CuisineIndex, code: string, signal?: AbortSignal): Promise<CuisineItem[]> {
-  const province = index.provinces.find(p=>p.provinceCode === code);
-  if (!province) return [];
-  const response = await fetch(assetUrl(province.shard),{signal});
-  if (!response.ok) throw Error('Cuisine province unavailable');
-  const parsed: unknown = await response.json();
-  const x = parsed as {schemaVersion?:number;provinceCode?:string;items?:unknown[]};
-  if (!x || x.schemaVersion !== 1 || x.provinceCode !== code || !Array.isArray(x.items)
-    || x.items.length !== province.count || !x.items.every(isCuisineItem)
-    || x.items.some(item=>!(item as CuisineItem).provinceCodes.includes(code))) throw Error('Cuisine shard failed validation');
-  return x.items as CuisineItem[];
+
+/** One province's dishes, read only when that province is selected. The national file is a download, never fetched here. */
+export async function loadProvinceCuisine(index: CuisineIndex, code: string, signal?: AbortSignal): Promise<CuisineCatalog> {
+  const province = index.provinces.find(item => item.provinceCode === code);
+  if (!province) throw new Error('Unknown cuisine province');
+  const response = await fetch(assetUrl(province.shard), { signal });
+  if (!response.ok) throw new Error('Cuisine catalog unavailable');
+  const value: unknown = await response.json();
+  if (!isCuisineCatalog(value) || value.provinceCode !== code || value.dishes.length !== province.count) {
+    throw new Error('Cuisine province catalog failed validation');
+  }
+  const withRecipe = value.dishes.filter((dish: CuisineDish) => dish.recipes).length;
+  const withImage = value.dishes.filter((dish: CuisineDish) => dish.images).length;
+  if (withRecipe !== province.withRecipe || withImage !== province.withImage) throw new Error('Cuisine province totals disagree with the index');
+  return value;
 }
+
+/** Optional reviewed or machine translations of each dish's first recipe; a missing locale file just means Indonesian only. */
 export async function loadCuisineTranslations(locale: string, signal?: AbortSignal): Promise<CuisineTranslations | null> {
   if (locale === 'id' || !/^[a-zA-Z]{2,3}(?:-[a-zA-Z]{2,3})?$/.test(locale)) return null;
-  const response = await fetch(assetUrl('/data/cuisine/locales/'+locale+'.json'),{signal});
+  const response = await fetch(assetUrl('/data/cuisine/locales/' + locale + '.json'), { signal });
   if (response.status === 404) return null;
-  if (!response.ok) throw Error('Cuisine translations unavailable');
-  const parsed: unknown = await response.json();
-  const x = parsed as CuisineTranslations;
-  if (!x || x.locale !== locale || !x.items || typeof x.items !== 'object') throw Error('Cuisine locale failed validation');
-  return x;
+  if (!response.ok) throw new Error('Cuisine translations unavailable');
+  // Static hosting answers a missing file with the app shell (HTML, status 200); that also means "no translation yet".
+  if (!response.headers.get('content-type')?.includes('json')) return null;
+  const value = (await response.json()) as CuisineTranslations;
+  if (!value || value.locale !== locale || !value.items || typeof value.items !== 'object') throw new Error('Cuisine locale failed validation');
+  return value;
 }
-export function cuisineOverlay(geometry: GeometryPackage | undefined, index: CuisineIndex, code?: string): PointOverlay | undefined {
+
+/** One summary marker per province, never a fabricated restaurant or cooking location. */
+export function cuisineOverlay(geometry: GeometryPackage | undefined, index: CuisineIndex, selectedProvince?: string): PointOverlay | undefined {
   if (!geometry?.projection) return undefined;
   const projection = geometry.projection;
   const pins: PointOverlay['pins'] = [];
   for (const region of geometry.regions) {
-    if (code && region.sourceCode !== code) continue;
-    const summary = index.provinces.find(p=>p.provinceCode === region.sourceCode);
-    if (!summary || !summary.count) continue;
-    // Province centroid marker for a count only. Not an invented restaurant or dish location.
-    const x=(region.bbox[0]+region.bbox[2])/2;
-    const y=(region.bbox[1]+region.bbox[3])/2;
-    const lambda=(x-projection.translate[0])/projection.scale;
-    const mercator=(projection.translate[1]-y)/projection.scale;
+    if (selectedProvince && region.sourceCode !== selectedProvince) continue;
+    const summary = index.provinces.find(item => item.provinceCode === region.sourceCode);
+    if (!summary || summary.count === 0) continue;
+    const x = (region.bbox[0] + region.bbox[2]) / 2;
+    const y = (region.bbox[1] + region.bbox[3]) / 2;
+    const lambda = (x - projection.translate[0]) / projection.scale;
+    const mercator = (projection.translate[1] - y) / projection.scale;
     pins.push({
-      id:'cuisine-'+summary.provinceCode, provinceCode:summary.provinceCode, color:'#bb7448', symbol:'circle',
-      lon:lambda*180/Math.PI,lat:(2*Math.atan(Math.exp(mercator))-Math.PI/2)*180/Math.PI,
-      label:region.name+' · '+summary.count+' '+m.layer_cuisine(),
-      description:m.cuisine_choose_province()
+      id: region.sourceCode + '-cuisine', provinceCode: region.sourceCode,
+      label: region.name + ' · ' + m.cuisine_count({ count: summary.count.toLocaleString() }),
+      description: m.cuisine_with_recipe({ count: summary.withRecipe.toLocaleString() }) + ' · ' + m.cuisine_choose_province(),
+      lon: lambda * 180 / Math.PI, lat: (2 * Math.atan(Math.exp(mercator)) - Math.PI / 2) * 180 / Math.PI,
+      color: CUISINE_COLOR, symbol: 'bowl'
     });
   }
-  return {id:'cuisine',source:'Wikipedia · HF Recipes · Commons',sourceUrl:index.sources.wiki,
-    attribution:index.attribution,fetchedAt:index.generatedAt,color:'#bb7448',symbol:'circle',
-    legend:[{label:m.layer_cuisine(),color:'#bb7448',symbol:'circle'}],pins};
+  return {
+    id: 'cuisine', source: index.sources[0].name, sourceUrl: index.sources[0].url, fetchedAt: index.fetchedAt,
+    attribution: index.attribution, color: CUISINE_COLOR, symbol: 'bowl', pins,
+    legend: [{ label: m.layer_cuisine(), color: CUISINE_COLOR, symbol: 'bowl' }]
+  };
 }
