@@ -37,9 +37,14 @@ Cloud opacity follows forecast coverage. The camera-crossing veil is a presentat
 
 ## Screenshots
 
-The home screenshots (`home-light`, `home-dark`, `mobile-home`, `mobile-home-dark`) show the full-bleed archipelago hero; other captures document the earlier palette and should be regenerated after this design update.
+All captures were regenerated against the current app (full-bleed archipelago hero, layer picker, province-first tables). They are production-build captures at 1440 × 1000 and 390 × 844 with reduced-motion static frames, so the hero entrance animation is not shown.
 
-Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-screenshots.mjs`. Images are actual production-build captures at 1440 × 1000 and 390 × 844, with reduced-motion static frames. Saved-place images use public city pins, not a private device location.
+Run `npm run build`, `node scripts/serve-built.mjs`, then:
+
+- `node scripts/capture-screenshots.mjs` for the viewport and section images, including every data layer;
+- `node scripts/capture-full-page.mjs` for the stitched `full-page-*.jpg` images.
+
+Saved-place images use public city pins, not a private device location.
 
 | Home | Theme |
 |---|---|
@@ -78,6 +83,36 @@ Saved places are claymorphic cards with an animated scene per forecast code (sun
 | Recovery | Terms |
 |---|---|
 | ![Illustrated 404](screenshots/error-404.png) | ![Terms and sources](screenshots/terms.png) |
+
+### More data layers
+
+| Mountains | Destinations | Population |
+|---|---|---|
+| ![Mountains](screenshots/layer-mountains.png) | ![Destinations](screenshots/layer-destinations.png) | ![Population estimates](screenshots/layer-population.png) |
+
+| Cuisine | Flora | Fauna |
+|---|---|---|
+| ![Cuisine](screenshots/layer-cuisine.png) | ![Flora](screenshots/layer-flora.png) | ![Fauna](screenshots/layer-fauna.png) |
+
+![Local languages](screenshots/layer-languages.png)
+
+### Full pages
+
+Native `fullPage` screenshots go blank on lazy, scroll-animated pages, so these are stitched from settled viewport slices (workflow from [MengTo/Skills `stitched-full-page-capture`](https://github.com/MengTo/Skills/tree/main/agent-skills/codex/stitched-full-page-capture)): warm the page once, scroll in overlapping steps, wait for each slice to settle, hide fixed chrome after the first slice, then stitch.
+
+| Light | Dark | Mobile |
+|---|---|---|
+| ![Light full page](screenshots/full-page-light.jpg) | ![Dark full page](screenshots/full-page-dark.jpg) | ![Mobile full page](screenshots/full-page-mobile.jpg) |
+
+### Visual hierarchy review
+
+Read from the stitched pages, top to bottom:
+
+1. **Hero** is the first read: the H1 is the largest type on the page, the crimson tagline and the filled primary button follow, and the clay flag is the single focal figure on the map. Every island group has one figure (Sumatra's is a tiger, placed on the south-east coast so it does not sit under the copy).
+2. **National stats** come second. The three tinted cards are the heaviest blocks after the hero and clearly subordinate to it; the carousel dots, pause button and source note are quiet.
+3. **Atlas** is the strongest competitor to the hero: the dark, saturated 3D map is the highest-contrast area on the page. This is deliberate (it is the product), but it means the hero must stay compact; keep it under about 520 px tall.
+4. **Province, observatory, places and support** cards share one surface level and one heading style, so they read as an even sequence of sections, not as competing focal points.
+5. **Known weaknesses:** the empty-looking search field and the table header in the atlas section have little visual weight; the observatory section shows a "Verified data is unavailable" card at the same weight as real content when only saved snapshots exist.
 
 ## Support and source
 

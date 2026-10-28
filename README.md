@@ -10,6 +10,8 @@ Atlas Nusantara brings information about Indonesia together—from provinces and
 |---|---|---|
 | ![3D Indonesia map](docs/screenshots/atlas-3d.png) | ![City weather and relief](docs/screenshots/city-weather.png) | ![Saved weather cards](docs/screenshots/saved-weather.png) |
 
+Full pages, stitched from settled viewport captures: [light](docs/screenshots/full-page-light.jpg), [dark](docs/screenshots/full-page-dark.jpg) and [mobile](docs/screenshots/full-page-mobile.jpg).
+
 ## What works
 
 - **38 provinces / 514 cities and regencies:** searchable directory, sortable table and city links all drive the same map selection.
