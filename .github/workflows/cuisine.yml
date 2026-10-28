@@ -1,0 +1,42 @@
+name: Build cuisine catalogue
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/cuisine-recipes-wikipedia
+    paths:
+      - .github/workflows/cuisine.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cuisine-dataset-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Aggregate the Wikipedia list and licensed recipes
+        run: node scripts/cuisine/build.mjs --images=180
+      - name: Verify cuisine tests
+        run: node --test tests/geo/cuisine.test.mjs
+      - name: Commit full catalogue to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add static/data/cuisine/catalog.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data(cuisine): publish sourced dishes and recipes"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
