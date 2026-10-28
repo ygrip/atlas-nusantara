@@ -44,7 +44,7 @@ export interface OverlayDefinition {
   label: () => string;
   source: string;
   renderer: 'weather' | 'points' | 'statistics' | 'unavailable';
-  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark' | 'population';
+  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark' | 'population' | 'food';
   snapshotUrl?: string;
 }
 
