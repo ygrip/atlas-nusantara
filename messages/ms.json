@@ -403,5 +403,22 @@
   "population_source_provinces": "Jadual wilayah BPS",
   "population_source_pyramid": "Jadual umur dan jantina BPS",
   "tab_overview": "Gambaran",
-  "tab_province_detail": "Butiran wilayah"
+  "tab_province_detail": "Butiran wilayah",
+  "layer_cuisine": "Masakan",
+  "cuisine_heading": "Resipi dari seluruh Indonesia",
+  "cuisine_description": "Terokai hidangan daerah, bahan, cara memasak dan kredit foto.",
+  "cuisine_search": "Cari hidangan",
+  "cuisine_choose_province": "Pilih wilayah pada peta untuk melihat lebih banyak hidangan.",
+  "cuisine_empty": "Tiada hidangan yang sepadan.",
+  "cuisine_no_image": "Foto tidak tersedia",
+  "cuisine_minutes": "minit",
+  "cuisine_recipe": "Lihat resipi",
+  "cuisine_no_recipe": "Resipi tidak tersedia",
+  "cuisine_id_fallback": "Resipi ini hanya tersedia dalam bahasa Indonesia.",
+  "cuisine_machine_notice": "Terjemahan mesin belum disemak.",
+  "cuisine_ingredients": "Bahan-bahan",
+  "cuisine_steps": "Cara memasak",
+  "cuisine_recipe_source": "Latar belakang resipi",
+  "cuisine_more": "Tunjukkan lagi",
+  "cuisine_scope_notice": "Liputan belum lengkap. Hubungan wilayah mengikut senarai sumber; tidak semua hidangan mempunyai resipi atau foto."
 }
