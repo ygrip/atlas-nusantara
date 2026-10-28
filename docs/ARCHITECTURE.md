@@ -18,7 +18,7 @@ Paraglide supplies 13 locales. The language picker is a native dialog with flags
 
 ## Static routes and errors
 
-The build retains `200.html` for offline recovery, emits `index.html`, copies shells to `terms/index.html` and `privacy/index.html`, and emits a `404.html` router shell. Workers Static Assets uses `not_found_handling: "404-page"`: known pages return 200, unknown routes return 404 and render the illustrated Svelte error view. **Do not restore `/* /200.html 200`**: it incorrectly rewrites real data assets.
+SvelteKit prerenders the homepage, Terms and Privacy in all 13 URL locales (39 real HTML pages). Request-scoped Paraglide state keeps the content, headings and metadata in the correct language before JavaScript runs. Absolute asset paths support both clean URLs and directory indexes. The build retains `200.html` for offline recovery and emits a `404.html` client error fallback; it never overwrites the prerendered pages with that empty shell. Workers Static Assets uses `not_found_handling: "404-page"`: known pages return 200, unknown routes return 404 and render the illustrated Svelte error view. **Do not restore `/* /200.html 200`**: it incorrectly rewrites real data assets.
 
 Unexpected client errors expose only a safe incident reference. Independent `500.html` and `503.html` pages need no JavaScript, fonts or image requests; a host must serve them with the appropriate status when using them as infrastructure fallbacks.
 

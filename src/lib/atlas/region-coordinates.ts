@@ -1,4 +1,4 @@
-import { unprojectToLonLat } from '../map/geometry.ts';
+import { unprojectToLonLat } from '../map/projection.ts';
 
 export interface Coordinates { lat: number; lon: number }
 

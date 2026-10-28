@@ -1,4 +1,4 @@
-import { projectLonLat } from './geometry.ts';
+import { projectLonLat } from './projection.ts';
 import { isBmkgSource, loadSavedSnapshot } from '../data/saved-snapshot.ts';
 import { CODE_EDITION } from '../atlas/edition.ts';
 

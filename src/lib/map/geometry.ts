@@ -1,4 +1,5 @@
 import { Shape, Path, Vector2 } from 'three';
+import { projectLonLat as projectCoordinates } from './projection.ts';
 
 /** A closed ring of projected map points (SVG coordinates: x right, y down). */
 export type Ring = Vector2[];
@@ -86,18 +87,11 @@ export function ringsToShapes(rings: Ring[]): Shape[] {
   return exteriors.map(exterior => exterior.shape);
 }
 
-/** Projects longitude/latitude to the national SVG plane with the package's d3 Mercator parameters. */
+/** Projects longitude/latitude as Three.js coordinates for vector-consuming scene callers. */
 export function projectLonLat(projection: { scale: number; translate: [number, number] }, lon: number, lat: number): Vector2 {
-  const lambda = (lon * Math.PI) / 180;
-  const phi = (lat * Math.PI) / 180;
-  const x = projection.translate[0] + projection.scale * lambda;
-  const y = projection.translate[1] - projection.scale * Math.log(Math.tan(Math.PI / 4 + phi / 2));
-  return new Vector2(x, y);
+  const point = projectCoordinates(projection, lon, lat);
+  return new Vector2(point.x, point.y);
 }
 
-/** Inverse of projectLonLat: the longitude and latitude (degrees) of a point on the national SVG plane. */
-export function unprojectToLonLat(projection: { scale: number; translate: [number, number] }, x: number, y: number): { lon: number; lat: number } {
-  const lambda = (x - projection.translate[0]) / projection.scale;
-  const phi = 2 * Math.atan(Math.exp(-(y - projection.translate[1]) / projection.scale)) - Math.PI / 2;
-  return { lon: (lambda * 180) / Math.PI, lat: (phi * 180) / Math.PI };
-}
+/** The inverse Mercator projection is engine-free and shared with static-map callers. */
+export { unprojectToLonLat } from './projection.ts';

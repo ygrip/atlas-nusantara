@@ -50,12 +50,15 @@ for (const outcome of ['unfilled', 'blocked', 'stalled'] as const) {
     await expect(page.locator('ins[data-ad-slot]')).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Load advertisement' })).toHaveCount(0);
     if (outcome === 'stalled') {
-      await expect.poll(() => page.evaluate(() => document.querySelector('#nusantara-adsense') !== null)).toBe(true);
+      await expect(page.locator('#nusantara-adsense')).toHaveCount(0);
       await page.clock.fastForward(31_000);
       await expect(page.locator('.network-ad-slot')).toBeVisible();
       await page.locator('.network-ad-slot').scrollIntoViewIfNeeded();
       await expect(page.locator('.network-ad-slot')).toBeInViewport();
+      await expect(page.locator('#nusantara-adsense')).toHaveCount(1);
       await page.clock.fastForward(31_000);
+    } else {
+      await page.locator('.network-ad-slot').scrollIntoViewIfNeeded();
     }
     await expect(page.locator('.network-ad-slot')).toBeHidden();
     await expect(page.locator('.region-table tbody tr')).toHaveCount(38);

@@ -13,8 +13,9 @@
     suffix?: string;
   } = $props();
 
-  let shown = $state(0);
-  let settled = $state(false);
+  // The initial HTML must contain the real fact, including for readers without JavaScript.
+  let shown = $state(untrack(() => value));
+  let settled = $state(true);
   let visible = $state(false);
   let element = $state<HTMLElement>();
   let reducedMotion = false;
@@ -35,9 +36,10 @@
     const target = value;
     if (!visible) return;
     if (reducedMotion) { shown = target; settled = true; return; }
-    settled = false;
     // Read without subscribing: the animation writes `shown` every frame and must not restart itself.
     const from = untrack(() => shown);
+    if (from === target) { settled = true; return; }
+    settled = false;
     const start = performance.now();
     let frame = requestAnimationFrame(function tick(now) {
       shown = countUpValue(from, target, now - start, duration);

@@ -37,6 +37,8 @@ test('CSP permits the atlas and automatic ads, while blocking untrusted inline c
   await expect(page.locator('.network-ad-slot')).toBeVisible();
   await expect(page.locator('ins.adsbygoogle')).toHaveAttribute('data-ad-slot', '5292790825');
   await expect(page.locator('ins.adsbygoogle')).not.toHaveAttribute('data-adtest');
+  expect(adRequests).toHaveLength(0);
+  await page.locator('.network-ad-slot').scrollIntoViewIfNeeded();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __testAdRequests?: number }).__testAdRequests)).toBe(1);
   expect(adRequests).toHaveLength(1);
   expect(violations).toEqual([]);

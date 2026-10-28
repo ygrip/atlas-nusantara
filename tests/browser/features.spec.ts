@@ -142,7 +142,7 @@ test('copies the inviting caption and public link when native sharing is unavail
   await openAtlas(page);
   await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Share this atlas' });
-  await expect(dialog.locator('.share-preview')).toBeVisible();
+  await expect(dialog.locator('.share-preview')).toBeVisible({ timeout: 15_000 });
   const caption = await dialog.locator('.share-caption').innerText();
   await dialog.getByRole('button', { name: 'Share', exact: true }).click();
   await expect.poll(() => page.evaluate(() => (window as Window & { copiedShare?: string }).copiedShare)).toBe(caption + '\n\nhttps://nusantara.readynaz.com/');

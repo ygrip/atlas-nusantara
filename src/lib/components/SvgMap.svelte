@@ -2,7 +2,7 @@
   import { m } from '$lib/i18n/messages';
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
-  import { projectLonLat } from '$lib/map/geometry';
+  import { projectLonLat } from '$lib/map/projection';
   import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { PointOverlay, MapPin } from '$lib/map/overlays';
   import { mountainColor, type PinSymbol } from '$lib/map/overlay-contract';

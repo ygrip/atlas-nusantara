@@ -1,20 +1,36 @@
 /// <reference lib="webworker" />
-import { build, files, version } from '$service-worker';
+import { version } from '$service-worker';
 import { officialWarningUrl, parseNotification } from './lib/pwa/notification-payload';
-import { isDeferredAtlasAsset } from './lib/pwa/cache-policy';
+import { isDeferredAtlasAsset, isValidShellAssetList } from './lib/pwa/cache-policy';
 import { readNotificationsEnabled } from './lib/pwa/notification-settings';
 declare const self: ServiceWorkerGlobalScope;
 
 const cacheName = 'nusantara-' + version;
-// Cache the shell, not every province or provider snapshot on installation.
-const assets = [...build, ...files, '/200.html'].filter(path =>
- !path.startsWith('/data/snapshots/') && !path.startsWith('/data/geometry-2025/') &&
- !path.startsWith('/data/admin-2025/cities/') && path !== '/data/admin-2025/cities.json' &&
- path !== '/_app/version.json' && path !== '/service-worker.js' && !path.startsWith('/data/published/') && !isDeferredAtlasAsset(path));
-const assetPaths = new Set(assets);
+// The generated manifest contains only URLs needed to render and hydrate the initial shell.
+const SHELL_MANIFEST = '/pwa-shell.json';
+
+async function readShellAssets(): Promise<string[]> {
+ const response = await fetch(SHELL_MANIFEST, { cache: 'no-store' });
+ if (!response.ok) throw new Error('Shell cache manifest request failed: ' + response.status);
+ const manifest: unknown = await response.json();
+ if (!manifest || typeof manifest !== 'object' || !('assets' in manifest) || !isValidShellAssetList(manifest.assets)) {
+  throw new Error('Shell cache manifest is invalid');
+ }
+ return manifest.assets;
+}
+
+function isCacheableAtlasAsset(path: string): boolean {
+ if (path.startsWith('/_app/immutable/')) return true;
+ if (path.startsWith('/data/admin-2025/cities/') || path.startsWith('/data/geometry-2025/')) return true;
+ return isDeferredAtlasAsset(path);
+}
 
 self.addEventListener('install', event => {
- event.waitUntil(caches.open(cacheName).then(cache => cache.addAll(assets)));
+ event.waitUntil((async () => {
+  const assets = await readShellAssets();
+  const cache = await caches.open(cacheName);
+  await cache.addAll(assets);
+ })());
 });
 self.addEventListener('activate', event => {
  event.waitUntil(Promise.all([
@@ -33,8 +49,7 @@ self.addEventListener('fetch', event => {
  event.respondWith((async () => {
   try {
    const response = await fetch(event.request);
-   const isRegionAsset = url.pathname.startsWith('/data/admin-2025/cities/') || url.pathname.startsWith('/data/geometry-2025/') || isDeferredAtlasAsset(url.pathname);
-   if (response.ok && (assetPaths.has(url.pathname) || isRegionAsset)) {
+   if (response.ok && isCacheableAtlasAsset(url.pathname)) {
     const cache = await caches.open(cacheName);
     await cache.put(event.request, response.clone());
    }

@@ -1,0 +1,28 @@
+# Atlas Nusantara
+
+> Explore Indonesia's places, local food, plants, wildlife and weather through an interactive regional atlas in 13 languages.
+
+Atlas Nusantara is maintained by [ygrip](https://github.com/ygrip). It combines public reference catalogues and dated environmental observations where available. Sources, licenses, coverage and timestamps matter: a missing record is not evidence that no event occurred. This is not an emergency alert service. Follow official BMKG and BNPB advisories for safety decisions.
+
+## Key pages
+
+- [Atlas](https://nusantara.readynaz.com/): Indonesia's regions, maps, places, food and biodiversity.
+- [Province directory](https://nusantara.readynaz.com/#provinces): browse provinces and their regional details.
+- [Sources and terms](https://nusantara.readynaz.com/terms#sources): source attribution, licensing and limitations.
+- [Privacy](https://nusantara.readynaz.com/privacy): local preferences, optional location, notifications and advertising.
+
+## Languages
+
+- [English](https://nusantara.readynaz.com/)
+- [Bahasa Indonesia](https://nusantara.readynaz.com/id)
+- [Bahasa Melayu](https://nusantara.readynaz.com/ms)
+- [Filipino](https://nusantara.readynaz.com/fil)
+- [Thai](https://nusantara.readynaz.com/th)
+- [Vietnamese](https://nusantara.readynaz.com/vi)
+- [Burmese](https://nusantara.readynaz.com/my)
+- [Khmer](https://nusantara.readynaz.com/km)
+- [Lao](https://nusantara.readynaz.com/lo)
+- [Chinese (Singapore)](https://nusantara.readynaz.com/zh-SG)
+- [Tamil](https://nusantara.readynaz.com/ta)
+- [Tetum](https://nusantara.readynaz.com/tet)
+- [Portuguese (Timor-Leste)](https://nusantara.readynaz.com/pt-TL)

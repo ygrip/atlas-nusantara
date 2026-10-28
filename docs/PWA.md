@@ -20,10 +20,11 @@ When browser permission is granted, the control shows **Disable notifications** 
 
 ## Cache policy
 
-- Vite hashes JS/CSS and serves `/_app/immutable/*` with immutable one-year HTTP caching.
+- Vite hashes JS/CSS and serves `/_app/immutable/*` with immutable one-year HTTP caching. A generated `/pwa-shell.json` lists only the actual page modulepreload/stylesheet dependencies, `/200.html`, manifest, app icons, logo and critical font. Installation validates the same-origin path list and precaches this bounded shell; a malformed/unavailable manifest fails installation instead of creating an incomplete offline cache.
+- Other immutable modules and large data/catalogue assets enter the release cache only after they are requested successfully. First install does not fetch unused maps, province datasets, fonts, or any of the 13 social-preview images. A successful initial install still contains the static offline fallback.
 - SvelteKit's release version names shell caches and versions mutable administrative/geometry JSON requests. Offline matching ignores that query only inside the release-scoped static cache.
 - HTML is `no-store`; the worker and manifest revalidate; `/_app/version.json` is `no-store` and is excluded from service-worker caching.
 - Province geometry/city lists and relief are lazy, not a bulk GIS precache. Only requested packages are added at runtime. Release-versioned weather/earthquake assets are saved snapshots with visible dates, not current-warning publications.
 - Provider `/data/published/*`, `/data/snapshots/*` and `/api/*` bypass service-worker CacheStorage. Hot publication HTTP caches obey their own short CDN TTL and absolute manifest validity. Cold archives are `no-store`; offline provider data is not represented as fresh.
 
-Browser tests cover install-event consent/manual guidance, silent background update checks and location persistence, release-key requests, transparent PNG icons and the actual offline shell. Real OS install dialogs and installed iOS/Android rollout remain native-device checks.
+Browser tests cover install-event consent/manual guidance, silent background update checks and location persistence, release-key requests, transparent PNG icons and the actual offline shell. Cache-policy tests validate shell manifest paths, bounds, duplicates and traversal rejection. Real OS install dialogs and installed iOS/Android rollout remain native-device checks.

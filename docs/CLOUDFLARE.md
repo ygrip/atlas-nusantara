@@ -50,7 +50,7 @@ Successful exports use `no-store`, enforce current source approval and the stric
 
 `GET /api/export` returns 405. Legacy D1-backed `/api/summary`, `/api/sources`, `/api/regions` and `/api/snapshots/*` are removed (404). Regions come directly from Git-versioned `/data/admin-2025/*` assets.
 
-Static Assets uses `not_found_handling: "404-page"`. The build emits known Terms/Privacy route shells and a 404 router shell; unknown URLs return HTTP 404 rather than rendering the homepage with 200. Local workerd integration verifies this routing. The `/200.html` asset is retained only for offline recovery; no wildcard redirect is restored.
+Static Assets uses `not_found_handling: "404-page"`. The build prerenders the homepage and Terms/Privacy in 13 languages and emits a 404 router fallback; unknown URLs return HTTP 404 rather than rendering the homepage with 200. Local workerd integration verifies this routing. The `/200.html` asset is retained only for offline recovery; no wildcard redirect is restored.
 
 Checked-in weather and earthquake snapshots are a separate, explicitly dated release asset path. They do not activate the scheduled source registry or current-warning publication.
 

@@ -17,6 +17,7 @@
   let mounted = false;
   let requesting = false;
   let requested = false;
+  let nearViewport = false;
   let resizeObserver: ResizeObserver | undefined;
 
   onMount(() => {
@@ -34,6 +35,14 @@
       visibilityObserver.disconnect();
     });
     visibilityObserver.observe(element);
+    // Automatic loading starts shortly before the placement is visible, not during hero paint.
+    const loadingObserver = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      nearViewport = true;
+      void loadAd();
+      loadingObserver.disconnect();
+    }, { rootMargin: '500px 0px' });
+    loadingObserver.observe(element);
     function updateStatus() {
       const status = element.dataset.adStatus;
       if (status !== 'filled' && status !== 'unfilled') return;
@@ -52,13 +61,14 @@
       mounted = false;
       clearTimeout(timeout);
       observer.disconnect();
+      loadingObserver.disconnect();
       visibilityObserver.disconnect();
       resizeObserver?.disconnect();
     };
   });
 
   async function loadAd() {
-    if (!adsConfig || !adElement || requested || requesting || !canRequestAd(adElement)) return;
+    if (!nearViewport || !adsConfig || !adElement || requested || requesting || !canRequestAd(adElement)) return;
     requesting = true;
     try {
       requested = await requestAd(adElement, adsConfig.client);
