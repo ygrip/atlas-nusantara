@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run compile:locales && vite build && node scripts/prepare-static.mjs && node scripts/export-error-page.mjs",
+    "build": "npm run enrich:cuisine && npm run compile:locales && vite build && node scripts/prepare-static.mjs && node scripts/export-error-page.mjs",
     "preview": "vite preview",
     "check": "npm run compile:locales && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:locales": "node scripts/check-locales.mjs",
@@ -18,6 +18,7 @@
     "build:languages": "node scripts/languages/build-language-counts.mjs",
     "build:destinations": "node scripts/destinations/catalog-output.mjs static/data/destinations",
     "build:cuisine": "node scripts/recipes/build.mjs",
+    "enrich:cuisine": "node scripts/recipes/enrich-existing.mjs",
     "translate:cuisine": "node scripts/recipes/translate.mjs",
     "destinations:images:wikidata": "node scripts/destinations/discover-images.mjs",
     "destinations:images:wikipedia": "node scripts/destinations/search-wikipedia-images.mjs",
