@@ -82,3 +82,24 @@ The Wikipedia cuisine list omits dishes from several provinces. The curated `scr
 The offline builder merges these entries after Wikipedia, recipes and seeds; normalized dish names are deduplicated so papeda stays one national dish with multiple province associations. A documented regional entry without a recipe/photo remains valid, and the UI uses the existing placeholder. No synthetic recipes, unauthorized photo copies or unverified origin claims are introduced. The builder retains these associations on subsequent rebuilds.
 
 After editing the supplement, regenerate snapshots with `npm run build:cuisine` (internet required), run `npm test`, and commit `static/data/cuisine/index.json`, `national.json` and all affected province shards together. Until a regeneration is committed, existing published province counts remain unchanged.
+
+### Local regional enrichment
+
+The supplement contains **32 distinct dish names and 43 province associations**. The `reviewStatus` field distinguishes `source-backed` from `needs-source-review`. Some shared Papuan dishes require more specific location evidence; the marker is preserved in published dish sources as `association-pending-review`, not misrepresented as a verified origin.
+
+From the repository root (Node 22+):
+
+```bash
+# 1. Optional: enrich just the 32 new/updated names before rebuilding.
+node scripts/recipes/crawl-cookpad.mjs --regional-only --concurrency=2 --delay-ms=1200
+node scripts/recipes/fetch-wikipedia.mjs --regional-only --concurrency=2 --delay-ms=800
+
+# 2. Build all published JSON from source and caches.
+npm run build:cuisine
+
+# 3. Validate schema, counts and project checks.
+npm test
+npm run check
+```
+
+The Cookpad stage extracts recipe JSON-LD from public results, caches author attribution and ingredient/step fields, and stops after repeated blocks. The Wikipedia stage only processes supplemental entries with a known `articleUrl`; it accepts only Commons image metadata with compatible open licences. Neither script fabricates recipes or fetches images from Google Images. Review URLs, spelling and local attribution before treating `needs-source-review` records as verified. Re-running is resumable from `tmp/recipes-cache`.
