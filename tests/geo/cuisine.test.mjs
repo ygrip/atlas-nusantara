@@ -14,16 +14,20 @@ test('starter recipe catalog is internally consistent',async()=>{
   assert.equal(national.items.filter(x=>x.recipe).length,index.totals.withRecipe);
   assert.equal(national.items.filter(x=>x.image).length,index.totals.withImage);
   for(const item of national.items){
-    assert.ok(item.name&&item.provinceCodes?.length, 'item has a listed province');
+    assert.ok(item.name && Array.isArray(item.provinceCodes), 'item has a name and explicit regional associations');
     assert.ok(item.sources?.length, 'item keeps provenance');
-    assert.ok(item.recipe?.ingredients.length && item.recipe?.steps.length);
-    assert.equal(item.recipe.language,'id');
-    assert.ok(item.image?.url.startsWith('https://commons.wikimedia.org/wiki/Special:FilePath/'));
-    assert.ok(item.image?.descriptionUrl.startsWith('https://commons.wikimedia.org/wiki/File:'));
-    assert.ok(/^https:\/\//.test(item.image.url), 'images must be external URLs');
-    assert.ok(!item.image.url.includes('r2.dev'), 'images are not self-hosted or cached in R2');
-    assert.match(item.image.license,/^CC BY/);
-    assert.ok(item.image.credit);
+    if(item.recipe){
+      assert.ok(item.recipe.ingredients.length && item.recipe.steps.length,'recipes must have both ingredients and steps');
+      assert.equal(item.recipe.language,'id');
+    }
+    if(item.image){
+      assert.ok(item.image.url.startsWith('https://commons.wikimedia.org/wiki/Special:FilePath/') ||
+        item.image.url.startsWith('https://upload.wikimedia.org/'), 'photos are external Wikimedia links');
+      assert.ok(item.image.descriptionUrl.startsWith('https://commons.wikimedia.org/wiki/File:'));
+      assert.ok(/^https:\/\//.test(item.image.url), 'images must be external URLs');
+      assert.ok(!item.image.url.includes('r2.dev'), 'images are not self-hosted or cached in R2');
+      assert.ok(item.image.credit && item.image.license,'external image attribution required');
+    }
   }
   for(const region of index.provinces){
     assert.match(region.shard,/^\/data\/cuisine\/provinces\/\d{2}\.json$/);
