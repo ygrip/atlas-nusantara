@@ -89,8 +89,54 @@ test('scrollable tables get the dedicated scrollbar and stay keyboard reachable'
   await expect.poll(() => scroller.evaluate(element => element.scrollTop)).toBeGreaterThan(before);
 });
 
-test('hero image fills its frame', async ({ page }) => {
+test('hero anatomy has correctly layered islands, no map tilt, and a centered prominent flag', async ({ page }) => {
   await page.goto('/');
-  const fit = await page.locator('.hero-art img').evaluate(image => getComputedStyle(image).objectFit);
-  expect(fit).toBe('cover');
+  const stage = page.locator('.anatomy-stage');
+  await expect(stage).toBeVisible();
+  await expect(stage.locator('.island-assembly')).toHaveCount(7);
+  await expect(stage.locator('.stack-top use')).toHaveCount(7);
+  await expect(stage.locator('.stack-base use')).toHaveCount(7);
+  await expect(stage.locator('.ornament')).toHaveCount(8);
+  const composition = await stage.evaluate(element => {
+    const world = element.querySelector('.world')!;
+    const flag = element.querySelector('.ornament-flag')!;
+    const w = world.getBoundingClientRect();
+    const f = flag.getBoundingClientRect();
+    return {
+      worldTransform: getComputedStyle(world).transform,
+      centeredFlag: (f.left + f.width / 2 - w.left) / w.width,
+      flagWidth: f.width,
+      orangutanWidth: element.querySelector('.ornament-orangutan')!.getBoundingClientRect().width
+    };
+  });
+  expect(composition.worldTransform).not.toContain('matrix3d');
+  expect(composition.centeredFlag).toBeGreaterThan(.43);
+  expect(composition.centeredFlag).toBeLessThan(.58);
+  expect(composition.flagWidth).toBeGreaterThan(composition.orangutanWidth * 1.6);
+});
+
+test('hero stays static under reduced motion without loading an animation timeline', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  const stage = page.locator('.anatomy-stage');
+  await expect(stage).toHaveAttribute('data-motion', 'still');
+  const animation = await stage.locator('.stack-top').first()
+    .evaluate(element => getComputedStyle(element).animationName);
+  expect(animation).toBe('none');
+});
+
+test('hero animation is deferred until the page has loaded and the browser is idle', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded = '';
+    document.addEventListener('DOMContentLoaded', () => {
+      (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded =
+        document.querySelector<HTMLElement>('.anatomy-stage')?.dataset.motion ?? 'missing';
+    }, { once: true });
+  });
+  await page.goto('/');
+  const initial = await page.evaluate(() =>
+    (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded
+  );
+  expect(initial).toBe('still');
+  await expect(page.locator('.anatomy-stage')).toHaveAttribute('data-motion', 'playing');
 });
