@@ -202,6 +202,7 @@ function merge(wiki, recipes, seed, regional) {
     item.provinceCodes=[...new Set([...item.provinceCodes,...r.provinceCodes])].sort();
     if(item.originStatus==='unmapped') item.originStatus='regional-sourced';
     item.regionalSummary=r.summary;
+    item.regionalReviewStatus=r.reviewStatus ?? 'needs-source-review';
     item.regionalGroup=r.group;
     if(!item.sources.some(source=>source.url===r.sourceUrl))
       item.sources.push({url:r.sourceUrl,role:'regional-cuisine-reference'});
@@ -247,6 +248,7 @@ async function assemble(records) {
     const dish=assembleDish({item,cookpad,wikipedia});
     if(item.regionalSummary && !dish.summary) { dish.summary=item.regionalSummary; dish.summaryLanguage='id'; }
     if(item.regionalGroup && dish.group==='other') dish.group=item.regionalGroup;
+    if(item.regionalReviewStatus==='needs-source-review') dish.sources.push({url:item.sources.find(s=>s.role==='regional-cuisine-reference')?.url ?? 'https://www.indonesia.travel/id/id',role:'association-pending-review'});
     if(!isCuisineDish(dish)) { console.warn('Dropping invalid dish record',item.id); continue; }
     dishes.push(dish);
   }
