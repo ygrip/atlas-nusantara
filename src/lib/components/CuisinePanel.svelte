@@ -114,7 +114,7 @@
     if (recipeCount(dish) > 0) chipLabel = m.cuisine_recipe_count({ count: recipeCount(dish) });
     const request: ShareDish = {
       id: dish.id, name: dish.name, subtitle, kindLabel: heading, chipLabel,
-      chipColor: cuisineGroupColor(dish.group), chipTextColor: '#1a1a1a',
+      chipColor: cuisineGroupColor(dish.group),
       description: dish.summary,
       placeholderUrl: assetUrl(CUISINE_PLACEHOLDER_PATH), placeholderBackground: PLACEHOLDER_BACKGROUND
     };
