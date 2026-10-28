@@ -403,5 +403,22 @@
   "population_source_provinces": "BPS ပြည်နယ်ဇယား",
   "population_source_pyramid": "BPS အသက်နှင့်ကျား/မ ဇယား",
   "tab_overview": "အကျဉ်းချုပ်",
-  "tab_province_detail": "ပြည်နယ် အသေးစိတ်"
+  "tab_province_detail": "ပြည်နယ် အသေးစိတ်",
+  "layer_cuisine": "အစားအစာ",
+  "cuisine_heading": "အင်ဒိုနီးရှားတစ်ဝန်းမှ ဟင်းချက်နည်းများ",
+  "cuisine_description": "ဒေသအစားအစာများ၊ ပါဝင်ပစ္စည်းများ၊ ချက်ပြုတ်နည်းများနှင့် ဓာတ်ပုံအရင်းအမြစ်များကို ကြည့်ရှုပါ။",
+  "cuisine_search": "အစားအစာ ရှာဖွေရန်",
+  "cuisine_choose_province": "အခြားအစားအစာများအတွက် မြေပုံပေါ်ရှိ ပြည်နယ်တစ်ခုကို ရွေးပါ။",
+  "cuisine_empty": "ကိုက်ညီသော အစားအစာ မရှိပါ။",
+  "cuisine_no_image": "ဓာတ်ပုံ မရှိသေးပါ",
+  "cuisine_minutes": "မိနစ်",
+  "cuisine_recipe": "ဟင်းချက်နည်း ကြည့်ရန်",
+  "cuisine_no_recipe": "ဟင်းချက်နည်း မရှိသေးပါ",
+  "cuisine_id_fallback": "ဤဟင်းချက်နည်းကို အင်ဒိုနီးရှားဘာသာဖြင့်သာ ရရှိနိုင်ပါသည်။",
+  "cuisine_machine_notice": "စက်ဘာသာပြန်ဆိုမှုကို မစစ်ဆေးရသေးပါ။",
+  "cuisine_ingredients": "ပါဝင်ပစ္စည်းများ",
+  "cuisine_steps": "ချက်ပြုတ်နည်း",
+  "cuisine_recipe_source": "ဟင်းချက်နည်း အရင်းအမြစ်",
+  "cuisine_more": "ပိုမိုပြရန်",
+  "cuisine_scope_notice": "ဒေတာ မပြည့်စုံသေးပါ။ ပြည်နယ်ဆက်စပ်မှုသည် ကိုးကားထားသော စာရင်းပေါ် အခြေခံပြီး ဟင်းချက်နည်းနှင့် ဓာတ်ပုံအားလုံး မရှိနိုင်ပါ။"
 }
