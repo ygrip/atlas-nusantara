@@ -403,5 +403,22 @@
   "population_source_provinces": "Tabel provinsi BPS",
   "population_source_pyramid": "Tabel umur dan jenis kelamin BPS",
   "tab_overview": "Ringkasan",
-  "tab_province_detail": "Detail provinsi"
+  "tab_province_detail": "Detail provinsi",
+  "layer_cuisine": "Kuliner",
+  "cuisine_heading": "Resep dari seluruh Indonesia",
+  "cuisine_description": "Jelajahi hidangan daerah, bahan, cara memasak, dan kredit foto.",
+  "cuisine_search": "Cari masakan",
+  "cuisine_choose_province": "Pilih provinsi pada peta untuk melihat masakan lainnya.",
+  "cuisine_empty": "Tidak ada masakan yang cocok.",
+  "cuisine_no_image": "Foto belum tersedia",
+  "cuisine_minutes": "menit",
+  "cuisine_recipe": "Lihat resep",
+  "cuisine_no_recipe": "Resep belum tersedia",
+  "cuisine_id_fallback": "Resep ini baru tersedia dalam bahasa Indonesia.",
+  "cuisine_machine_notice": "Terjemahan mesin belum ditinjau.",
+  "cuisine_ingredients": "Bahan",
+  "cuisine_steps": "Cara memasak",
+  "cuisine_recipe_source": "Latar belakang resep",
+  "cuisine_more": "Tampilkan lainnya",
+  "cuisine_scope_notice": "Cakupan belum lengkap. Hubungan provinsi mengikuti daftar sumber; tidak semua masakan memiliki resep atau foto."
 }
