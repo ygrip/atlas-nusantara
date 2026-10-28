@@ -274,7 +274,7 @@ async function publish(dishes) {
   const index={
     schemaVersion:2,fetchedAt,
     scope:'Indonesian dishes from the Wikipedia regional list and separately sourced provincial culinary references, with recipes where available from Cookpad and LorthGyu. Associations do not prove exclusive origin. A missing recipe, image or dish is not evidence of absence.',
-    license:'Dish names and summaries: Wikipedia, CC BY-SA 4.0. Recipes: written by their authors; each links to its source page and is shown with the author name. Photos are linked, never copied, with their credit and licence.',
+    license:'Wikipedia summaries: CC BY-SA 4.0; regional dish associations are linked to their original reference pages. Recipes retain their author attribution and source links. Photos are linked, never copied, with per-file credit and licence.',
     attribution:'Indonesian Wikipedia contributors; regional culinary publications (linked per dish); Cookpad Indonesia recipe authors; LorthGyu (MIT); Wikimedia Commons photographers (per file).',
     national:'/data/cuisine/national.json',
     sources:SOURCES,
