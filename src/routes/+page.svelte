@@ -9,10 +9,12 @@
   import { startAtlasStory } from '$lib/motion/atlas-story';
   import type { ShareRegion, ShareSummary } from '$lib/share/card';
   import type { GeometryPackage } from '$lib/geo/types';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m, type MessageKey } from '$lib/i18n/messages';
   import Preferences from '$lib/components/Preferences.svelte';
+  import { pathFor } from '$lib/i18n/links';
   import PwaManager from '$lib/components/PwaManager.svelte';
   import PopulationPanel from '$lib/components/PopulationPanel.svelte';
+  import LanguagePanel from '$lib/components/LanguagePanel.svelte';
   import LayerPicker from '$lib/components/LayerPicker.svelte';
   import RegionAtlas from '$lib/components/RegionAtlas.svelte';
   import ProvinceExplorer from '$lib/components/ProvinceExplorer.svelte';
@@ -22,7 +24,7 @@
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin, Users } from 'lucide-svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint } from 'lucide-svelte';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
 
   let selectedRegion: ShareRegion | undefined;
@@ -33,12 +35,12 @@
   let atlas: RegionAtlas | undefined;
   let activeSection = 'atlas';
   let showTop = false;
-  const allSections = [
-    { id: 'atlas', label: m.nav_atlas },
-    { id: 'provinces', label: m.nav_provinces },
-    { id: 'summary', label: m.nav_data },
-    { id: 'locations', label: m.nav_locations },
-    { id: 'support', label: m.nav_support }
+  const allSections: { id: string; label: MessageKey }[] = [
+    { id: 'atlas', label: 'nav_atlas' },
+    { id: 'provinces', label: 'nav_provinces' },
+    { id: 'summary', label: 'nav_data' },
+    { id: 'locations', label: 'nav_locations' },
+    { id: 'support', label: 'nav_support' }
   ];
   /** The observatory section only exists for layers that have collected observations. */
   $: sections = allSections.filter(section => section.id !== 'summary' || observatoryKind(activeLayer));
@@ -51,7 +53,6 @@
     stopSections = observeSections();
   }
   onMount(() => {
-    document.title = m.site_title();
     activeLayer = layerFromUrl();
     mounted = true;
     const stopStory = startAtlasStory(shell);
@@ -84,7 +85,7 @@
   let activeLayer = DEFAULT_LAYER;
   /** Shared by the population panel and the map heat colours so both always show the same year. */
   let populationYear: number | undefined;
-  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users };
+  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users, language: Languages, flora: Leaf, fauna: PawPrint };
   const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
 
   /** A shared link may carry ?layer=<id>; unknown ids fall back to the weather layer. */
@@ -103,16 +104,17 @@
   }
 </script>
 
+<svelte:head><title>{m.site_title()} — {m.og_headline()}</title></svelte:head>
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
 <div class="shell" bind:this={shell}>
   <header class="masthead">
-    <a href="/" data-sveltekit-reload class="brand" aria-label="Nusantara">
+    <a href={pathFor('/')} data-sveltekit-reload class="brand" aria-label="Nusantara">
       <img class="brand-logo" src="/brand/indonesia-clay.webp" alt="" width="44" height="44" />
       <span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span>
     </a>
     <nav class="section-nav" aria-label={m.nav_label()}>
       {#each sections as section (section.id)}
-        <a href={'#' + section.id} class:active={activeSection === section.id} aria-current={currentFor(section.id)}>{section.label()}</a>
+        <a href={'#' + section.id} class:active={activeSection === section.id} aria-current={currentFor(section.id)}>{m[section.label]()}</a>
       {/each}
     </nav>
     <div class="header-actions"><HeaderControls onshare={() => sharePanel?.openPreview()} /></div>
@@ -160,7 +162,9 @@
         {:else if activeLayer === 'hazard'}
           <HazardPanel kind="warnings" />
         {:else if activeLayer === 'population'}
-          <PopulationPanel provinceCode={selectedRegion?.code.split('.')[0]} bind:year={populationYear} />
+          <PopulationPanel provinceCode={selectedRegion?.code.split('.')[0]} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} bind:year={populationYear} />
+        {:else if activeLayer === 'language'}
+          <LanguagePanel provinceCode={selectedRegion?.code.split('.')[0]} />
         {:else if activeLayer === 'warning'}
           <SnapshotPanel kind="warning" regionCode={selectedRegion?.code} />
         {/if}

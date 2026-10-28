@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
+  import { pathFor } from '$lib/i18n/links';
   import { errorPresentation, type ErrorGroup } from '$lib/errors';
 
   interface ErrorCopy { eyebrow: string; title: string; description: string; }
@@ -28,7 +29,7 @@
 
 <div class="shell error-shell">
   <header class="error-header">
-    <a class="brand" href="/" aria-label={m.site_title()}><img src="/brand/indonesia-clay.webp" alt="" width="40" height="40" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></a>
+    <a class="brand" href={pathFor('/')} aria-label={m.site_title()}><img src="/brand/indonesia-clay.webp" alt="" width="40" height="40" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></a>
   </header>
   <main id="main-content" class="error-bento" aria-labelledby="error-title">
     <section class="clay-card error-copy">
@@ -38,7 +39,7 @@
       <p class="error-description">{copy.description}</p>
       <div class="error-actions">
         {#if presentation.retry}<button class="clay-button primary" type="button" onclick={() => window.location.reload()}>{m.error_try()}</button>{/if}
-        <a class="clay-button" class:primary={!presentation.retry} href="/">{m.error_back()}</a>
+        <a class="clay-button" class:primary={!presentation.retry} href={pathFor('/')}>{m.error_back()}</a>
       </div>
       {#if incidentId}<p class="error-reference">{m.error_reference()} <code>{incidentId}</code></p>{/if}
       <a class="error-report" href="https://github.com/ygrip/nusantara/issues" target="_blank" rel="noopener noreferrer">{m.error_report()} ↗</a>

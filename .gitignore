@@ -29,3 +29,11 @@ tmp/directory-crawl/
 tmp/sisparnas-crawl/
 tmp/destination-image-candidates.json
 tmp/commons-discovery/
+.agents/
+research/
+skills-lock.json
+tmp/languages-cache/
+tmp/species-cache/
+tmp/species-out/
+tmp/sc/
+tmp/research/

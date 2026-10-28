@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Braces, Code, Download, Table } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { exportFileName, serializeDataset, type ExportDataset, type ExportFormat } from '$lib/export/map-export';
   import MapDialog from './MapDialog.svelte';
 

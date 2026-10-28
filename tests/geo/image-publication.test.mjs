@@ -109,3 +109,34 @@ test('an absent registry does not overwrite index or shard data', () => {
   assert.deepEqual(index, originalIndex);
   assert.deepEqual(shards, originalShards);
 });
+
+test('publishes two independently licensed photos as an ordered gallery while preserving legacy image', () => {
+  const { index, shards, destination } = catalog();
+  const first = registryEntry();
+  const second = registryEntry();
+  second.image = { ...second.image, url: 'https://upload.wikimedia.org/second.jpg',
+    descriptionUrl: 'https://commons.wikimedia.org/wiki/File:Second.jpg', credit: 'Another photographer' };
+  second.subject.imageTitle = 'File:Second.jpg';
+  second.licenseEvidence = { ...second.licenseEvidence, fileTitle: 'File:Second.jpg',
+    requestedTitle: 'File:Second.jpg', creator: 'Another photographer' };
+  const entry = { ...first, photos: [first, second] };
+  const result = applyImageRegistry(index, shards, registry([entry]));
+  assert.deepEqual(result, { published: 1, rejected: 0, missingDestinations: 0 });
+  assert.deepEqual(destination.image, image);
+  assert.deepEqual(destination.images, [image, second.image]);
+  assert.equal(index.coverage.licensedImages, 1);
+  assert.equal(index.coverage.licensedPhotos, 2);
+  assert.equal(index.imageEnrichment.publishedPhotos, 2);
+});
+
+test('rejects a gallery atomically when another image is unlicensed, stale or duplicate', () => {
+  const { index, shards, destination } = catalog();
+  const first = registryEntry();
+  const tampered = registryEntry();
+  tampered.image = { ...image, credit: 'Wrong credit' };
+  const entry = { ...first, photos: [first, tampered] };
+  const result = applyImageRegistry(index, shards, registry([entry]));
+  assert.deepEqual(result, { published: 0, rejected: 1, missingDestinations: 0 });
+  assert.equal(destination.image, undefined);
+  assert.equal(destination.images, undefined);
+});

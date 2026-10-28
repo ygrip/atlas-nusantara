@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { Box, ChevronDown, ChevronUp, CloudRain, Compass, Layers, LocateFixed, Map as MapIcon, Minus, Pause, Play, Plus, Rotate3d, Waves, Wind } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
+  import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUPS, ISLAND_GROUP_COLORS, ISLAND_GROUP_NAMES } from '$lib/atlas/islands';
   import { GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
@@ -45,6 +46,8 @@
   const TRANSITION_MS = 1700;
   /** The flat map and the 3D scene only cross-fade for this long, at the flat end of the transition. */
   const CROSSFADE_MS = 280;
+  /** The legend melts shut in about half a second; the view change waits for it so the two animations never overlap. */
+  const LEGEND_COLLAPSE_MS = 560;
 
   let mode = $state<ViewMode>('3d');
   // The 3D scene and the SVG map are both mounted while one transitions into the other.
@@ -63,6 +66,10 @@
   let loading = $state(false);
   let mapVisible = $state(false);
   let legendOpen = $state(false);
+  /** The legend was open when the view change began, so it can reopen once the new view has settled. */
+  let reopenLegend = false;
+  /** True while the legend is folding away ahead of a view change. */
+  let switching = false;
   let documentVisible = $state(true);
   let zoomLevel = $state(1);
   /** Zoom of the flat map, reported by SvgMap. */
@@ -329,6 +336,10 @@
     transition = undefined;
     sceneRevealed = false;
     settleStage();
+    if (reopenLegend && mode === '3d') {
+      reopenLegend = false;
+      legendOpen = true;
+    }
   }
 
   function fallbackTo2d() {
@@ -343,8 +354,27 @@
     requestAnimationFrame(() => { if (stageElement) stageElement.style.height = height + 'px'; });
   }
 
+  /** Closes the map key and waits for it to finish folding away. Resolves at once when it is already closed. */
+  async function collapseLegend() {
+    if (!legendOpen) return;
+    reopenLegend = true;
+    legendOpen = false;
+    if (reducedMotion) return;
+    await new Promise(resolve => setTimeout(resolve, LEGEND_COLLAPSE_MS));
+  }
+
   async function switchMode(next: ViewMode) {
-    if (next === mode || (next === '3d' && webglFailed)) return;
+    if (next === mode || (next === '3d' && webglFailed) || switching) return;
+    switching = true;
+    try {
+      await collapseLegend();
+      await startModeChange(next);
+    } finally {
+      switching = false;
+    }
+  }
+
+  async function startModeChange(next: ViewMode) {
     mode = next;
     clearTimeout(transitionTimer);
     if (reducedMotion || !stageElement) {
@@ -455,7 +485,7 @@
     {#if !overlay}<p class="mountain-notice" role="status">{m.source_not_connected_details()}</p>{/if}
   {/if}
 
-  <div class="view-stage" class:animating={Boolean(transition)} style={`--morph-ms: ${TRANSITION_MS}ms; --crossfade-ms: ${CROSSFADE_MS}ms`} bind:this={stageElement}>
+  <div class="view-stage" data-map-zoom class:animating={Boolean(transition)} style={`--morph-ms: ${TRANSITION_MS}ms; --crossfade-ms: ${CROSSFADE_MS}ms`} bind:this={stageElement}>
     {#if show3d}
       <div class="view-pane pane-3d" bind:this={pane3dElement}>
       <div class="atlas-map atlas-3d" bind:this={host} data-ready={Boolean(scene && !loading)} role="application" aria-label={label + ' — ' + m.map_help_3d()}>
@@ -488,7 +518,7 @@
             <ul class="heat-legend">
               {#each heatmap.legend as step (step.color)}<li><span class="swatch" style={`--swatch: ${step.color}`} aria-hidden="true"></span>{step.label}</li>{/each}
             </ul>
-            <p class="heat-note">{m.population_no_data_note()}</p>
+            <p class="heat-note">{heatmap.note ?? m.population_no_data_note()}</p>
           {/if}
           <p class="legend-title">{m.map_relief()}</p>
           <div class="relief-ramp" aria-hidden="true"></div>
@@ -511,7 +541,7 @@
           <ul class="heat-legend">
             {#each heatmap.legend as step (step.color)}<li><span class="swatch" style={`--swatch: ${step.color}`} aria-hidden="true"></span>{step.label}</li>{/each}
           </ul>
-          <small>{m.population_no_data_note()}</small>
+          <small>{heatmap.note ?? m.population_no_data_note()}</small>
         </div>
       {/if}
       </div>
@@ -519,7 +549,7 @@
     {/if}
   </div>
 
-  <PinDialog pin={openedPin} {overlay} {layerLabel} onclose={() => { openedPin = undefined; }} onprovince={activeLayer === 'destinations' ? onprovince : undefined} />
+  <PinDialog pin={openedPin} {overlay} {layerLabel} onclose={() => { openedPin = undefined; }} onprovince={isProvinceCatalogLayer(activeLayer) ? onprovince : undefined} />
 
   {#if mode === '3d' && forecast && times.length > 0 && activeLayer === 'warning'}
     <div class="weather-bar">

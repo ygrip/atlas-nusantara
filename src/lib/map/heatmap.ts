@@ -8,6 +8,8 @@ export interface RegionHeatmap {
   /** Province code to a short formatted value for tooltips. */
   valueText: Record<string, string>;
   legend: HeatLegendStep[];
+  /** Explains how to read the colours; the map falls back to the population note when absent. */
+  note?: string;
 }
 
 /** Light (few people) to dark (many people). */

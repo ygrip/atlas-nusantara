@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { DatasetRecord } from '$lib/data/ingestion/schema';
   import { officialWarningUrl } from '$lib/pwa/notification-payload';

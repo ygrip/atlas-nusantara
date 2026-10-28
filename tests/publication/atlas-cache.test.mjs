@@ -8,6 +8,7 @@ for (const [path, deferred] of [
   ['/data/destinations/national.json', true],
   ['/data/destinations/image-metadata.json', true],
   ['/data/observations/mountains.json', true],
+  ['/data/observations/population-regions/35.json', true],
   ['/data/destinations/index.json', false],
   ['/icon-192.png', false]
 ]) {

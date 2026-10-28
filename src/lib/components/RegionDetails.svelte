@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Check, Cloud, CloudLightning, CloudRain, CloudSun, Copy, Droplets, ExternalLink, MapPin, Sun, Wind } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';
   import type { WeatherSummary } from '$lib/map/weather-summary';
 

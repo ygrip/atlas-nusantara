@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { dev } from '$app/environment';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { watchUpdates } from '$lib/pwa/updates';
 
   interface InstallPrompt extends Event {

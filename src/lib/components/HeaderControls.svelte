@@ -2,9 +2,12 @@
   import { onMount, tick } from 'svelte';
   import { Languages, Moon, Sun, Share2, SlidersHorizontal, X, Check, Search } from 'lucide-svelte';
   import { changeTheme } from '$lib/pwa/theme';
-  import { getLocale, locales, setLocale } from '$lib/paraglide/runtime.js';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/state';
+  import { getLocale, locales } from '$lib/paraglide/runtime.js';
+  import { localizedPath } from '$lib/i18n/paths.js';
   import { localeNames, localeEnglishNames } from '$lib/i18n/locales';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
 
   let { onshare }: { onshare: () => void } = $props();
   const flags: Record<string, string> = { en: '🇬🇧', id: '🇮🇩', ms: '🇲🇾', fil: '🇵🇭', th: '🇹🇭', vi: '🇻🇳', my: '🇲🇲', km: '🇰🇭', lo: '🇱🇦', 'zh-SG': '🇸🇬', ta: '🇸🇬', tet: '🇹🇱', 'pt-TL': '🇹🇱' };
@@ -123,7 +126,10 @@
 
   function select(locale: (typeof locales)[number]) {
     languageDialog?.close();
-    setLocale(locale);
+    if (locale === getLocale()) return;
+    // The language is part of the URL: navigate in place, no reload, keep the query and hash.
+    const target = localizedPath(page.url.pathname, locale) + page.url.search + page.url.hash;
+    void goto(target, { noScroll: true, keepFocus: true });
   }
 
   async function toggleTheme(event: MouseEvent) {

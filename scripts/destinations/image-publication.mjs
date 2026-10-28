@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { isReusablePhotoMetadata } from '../../src/lib/data/photo-license.js';
-import { buildSubjectIndex, matchDestination } from './image-matching.mjs';
+import { buildSubjectIndex, matchDestination, matchCommonsFileToDestination, matchWikipediaArticleToDestination } from './image-matching.mjs';
 import { canonicalLicenseUrl, creatorCredit } from './image-license.mjs';
 
 export const IMAGE_REVIEW_POLICY = 'commons-wikidata-exact-name-250m-v1';
@@ -32,6 +32,28 @@ function verifiedEntry(place, entry) {
   try { descriptionTitle = decodeURIComponent(new URL(entry.image.descriptionUrl).pathname.slice('/wiki/'.length)).replace(/_/g, ' '); }
   catch { return false; }
   if (descriptionTitle !== license.fileTitle) return false;
+  if (evidence.method === 'commons-file-title-and-nearby-geotag') {
+    if (license.requestedTitle !== license.fileTitle || evidence.fileTitle !== license.fileTitle) return false;
+    const match = matchCommonsFileToDestination(place, evidence.fileTitle, {
+      lat: evidence.photoLat, lon: evidence.photoLon
+    });
+    if (!match || Math.abs(match.distanceMeters - evidence.distanceMeters) >= 0.01) return false;
+    const fields = ['method', 'verification', 'fileTitle', 'matchedLabel', 'photoLat', 'photoLon', 'sourceUrl'];
+    return fields.every(field => evidence[field] === match[field]);
+  }
+  if (evidence.method === 'wikipedia-exact-article-and-coordinate') {
+    if (license.requestedTitle !== license.fileTitle
+      || evidence.articleFileTitle !== license.fileTitle) return false;
+    const verified = matchWikipediaArticleToDestination(place, {
+      ns: 0, pageid: evidence.articleId, title: evidence.articleTitle,
+      coordinates: [{ lat: evidence.articleLat, lon: evidence.articleLon }]
+    }, evidence.articleLanguage);
+    if (!verified || !Number.isFinite(evidence.distanceMeters)
+      || Math.abs(verified.distanceMeters - evidence.distanceMeters) >= 0.01) return false;
+    const fields = ['method', 'verification', 'articleLanguage', 'articleId',
+      'articleTitle', 'matchedLabel', 'articleLat', 'articleLon', 'sourceUrl'];
+    return fields.every(field => evidence[field] === verified[field]);
+  }
   if (!entry.subject || entry.subject.imageTitle !== license.requestedTitle
     || entry.subject.id !== evidence.subjectId || evidence.method !== 'exact-name-and-subject-coordinate') return false;
   const match = matchDestination(place, buildSubjectIndex([entry.subject]));
@@ -53,23 +75,35 @@ export function applyImageRegistry(index, shards, registry) {
     entries.set(entry.destinationId, entry);
   }
   let published = 0;
+  let photoCount = 0;
   let rejected = 0;
   const reviewedIds = new Set();
   for (const shard of Object.values(shards)) {
     for (const place of shard.landmarks) {
       delete place.image;
+      delete place.images;
       const entry = entries.get(place.id);
       if (!entry) continue;
       reviewedIds.add(place.id);
-      if (!verifiedEntry(place, entry)) { rejected++; continue; }
-      place.image = { ...entry.image };
+      const photos = entry.photos ?? [entry];
+      const validGallery = Array.isArray(photos) && photos.length >= 1 && photos.length <= 8
+        && (entry.photos === undefined || JSON.stringify(entry.image) === JSON.stringify(photos[0]?.image))
+        && photos.every(photo => verifiedEntry(place, { ...entry, ...photo }))
+        && new Set(photos.map(photo => photo.licenseEvidence.fileTitle)).size === photos.length
+        && new Set(photos.map(photo => photo.image.descriptionUrl)).size === photos.length;
+      if (!validGallery) { rejected++; continue; }
+      place.image = { ...photos[0].image };
+      if (photos.length > 1) place.images = photos.map(photo => ({ ...photo.image }));
       published++;
+      photoCount += photos.length;
     }
   }
   const missingDestinations = entries.size - reviewedIds.size;
   index.coverage.licensedImages = published;
+  index.coverage.licensedPhotos = photoCount;
   index.imageEnrichment = { policy: registry.policy, discoveredAt: registry.discoveredAt,
     evaluatedDestinations: registry.coverage?.evaluatedDestinations, publishedImages: published,
+    publishedPhotos: photoCount,
     rejectedOrStaleEntries: rejected, missingDestinations,
     registry: '/data/destinations/image-metadata.json',
     verification: 'Automated exact distinctive name and subject coordinate within 250 metres; Commons file license metadata checked. Not a claim of human visual review.' };
