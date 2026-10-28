@@ -107,8 +107,7 @@
   }
 
   function shareDish(dish: CuisineDish) {
-    const lead = dish.images?.[0];
-    const photo = lead && isShareableCuisinePhoto(lead) ? lead : undefined;
+    const photo = dish.images?.find(isShareableCuisinePhoto);
     const subtitle = [cuisineGroupLabel(dish.group), region?.name].filter(Boolean).join(' · ');
     let chipLabel = cuisineGroupLabel(dish.group);
     if (recipeCount(dish) > 0) chipLabel = m.cuisine_recipe_count({ count: recipeCount(dish) });

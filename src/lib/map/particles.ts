@@ -88,13 +88,13 @@ export class WindParticles {
     this.view = view ?? FULL_VIEW;
   }
 
-  setFields(a: WeatherField, b: WeatherField, mix: number, prime = false): void {
+  setFields(a: WeatherField, b: WeatherField, mix: number): void {
     const first = this.fieldA === undefined;
     this.fieldA = a;
     this.fieldB = b;
     this.mix = mix;
     // Pre-roll so reduced-motion and first frames already show trails.
-    if (first || prime) for (let step = 0; step < 24; step++) this.step(1 / 30);
+    if (first) for (let step = 0; step < 24; step++) this.step(1 / 30);
   }
 
   private wind(x: number, y: number): [number, number] {

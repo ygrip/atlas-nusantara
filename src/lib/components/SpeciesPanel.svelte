@@ -104,8 +104,7 @@
   }
 
   function shareSpecies(record: SpeciesRecord) {
-    const lead = record.images?.[0];
-    const photo = lead && isShareablePhoto(lead) ? lead : undefined;
+    const photo = record.images?.find(isShareablePhoto);
     const provinceName = region?.name;
     const subtitle = [speciesGroupLabel(record.group), provinceName].filter(Boolean).join(' · ');
     const request: ShareSpecies = {

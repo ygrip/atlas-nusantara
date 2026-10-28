@@ -301,8 +301,7 @@
     scene.setOverlay(renderedOverlay, national.projection);
   });
   $effect(() => {
-    void timeIndex; void focusedForecast;
-    scene?.setPlayback(playing);
+    void timeIndex; void focusedForecast; void scene; void playing;
     pushWeather();
   });
 

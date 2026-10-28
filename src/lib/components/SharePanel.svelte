@@ -18,6 +18,7 @@
   let status = '';
   let error = '';
   let disposed = false;
+  let renderRequest = 0;
   let returnFocus: HTMLElement | undefined;
 
   /** Set while a destination card is open, so the link and text describe that place, not the selected province. */
@@ -35,6 +36,7 @@
   });
 
   export async function openPreview() {
+    if (busy) return;
     destinationShare = undefined;
     await present(renderRegionCard);
   }
@@ -97,25 +99,25 @@
   async function present(render: () => Promise<Blob>) {
     if (busy) return;
     returnFocus = document.activeElement as HTMLElement;
+    const request = ++renderRequest;
     busy = true;
     error = '';
     status = '';
     png = undefined;
     if (imageUrl) URL.revokeObjectURL(imageUrl);
     imageUrl = '';
+    dialog.showModal();
     try {
       const blob = await render();
-      if (disposed) return;
+      if (disposed || request !== renderRequest || !dialog.open) return;
       png = blob;
       imageUrl = URL.createObjectURL(blob);
-      dialog.showModal();
       requestAnimationFrame(() => preview?.focus());
     } catch {
-      if (disposed) return;
+      if (disposed || request !== renderRequest || !dialog.open) return;
       error = m.share_image_failed();
-      dialog.showModal();
     } finally {
-      busy = false;
+      if (request === renderRequest) busy = false;
     }
   }
 
@@ -124,6 +126,8 @@
   }
 
   function restoreFocus() {
+    renderRequest += 1;
+    busy = false;
     if (imageUrl) URL.revokeObjectURL(imageUrl);
     imageUrl = '';
     png = undefined;
@@ -155,7 +159,8 @@
     try {
       const files = [new File([png], downloadName, { type: 'image/png' })];
       const shareData: ShareData = { title: shareTitle, text: shareText, url };
-      if (navigator.canShare?.({ files })) shareData.files = files;
+      const canShareFile = navigator.canShare?.({ files }) ?? false;
+      if (canShareFile) shareData.files = files;
       if (!navigator.share) {
         await copyLink();
         return;
@@ -171,20 +176,21 @@
 </script>
 
 <section class="share-panel" aria-label={m.share_heading()}>
-  <dialog bind:this={dialog} aria-labelledby={titleId} onclose={restoreFocus}>
+  <dialog bind:this={dialog} aria-labelledby={titleId} aria-busy={busy} onclose={restoreFocus}>
     <div class="share-dialog">
       <div class="share-header">
         <h2 id={titleId}>{#if destinationShare}{destinationShare.heading ?? m.share_place_heading()}{:else}{m.share_heading()}{/if}</h2>
         <button type="button" class="share-close" onclick={closePreview} aria-label={m.share_close()}>×</button>
       </div>
-      {#if imageUrl}<img bind:this={preview} src={imageUrl} alt={m.share_preview_alt()} tabindex="-1" />{/if}
+      {#if busy}
+        <p class="share-loading" role="status" aria-live="polite"><span class="share-spinner" aria-hidden="true"></span>{m.loading_data()}</p>
+      {:else if imageUrl}<img bind:this={preview} src={imageUrl} alt={m.share_preview_alt()} tabindex="-1" />{/if}
       <p>{#if destinationShare}{destinationShare.destination.name} · {destinationShare.destination.location}{:else}{m.share_card_caveat()}{/if}</p>
       {#if error}<p class="share-error" role="alert">{error}</p>{/if}
       <p class="share-status" role="status" aria-live="polite">{status}</p>
       <div class="share-actions">
-        <button type="button" onclick={share} disabled={!png}>{m.share_action()}</button>
-        <button type="button" onclick={copyLink}>{m.share_copy_link()}</button>
-        <button type="button" onclick={downloadPng} disabled={!png}>{m.share_download_png()}</button>
+        <button type="button" onclick={share} disabled={!png || busy}>{m.share_action()}</button>
+        <button type="button" onclick={downloadPng} disabled={!png || busy}>{m.share_download_png()}</button>
       </div>
     </div>
   </dialog>
@@ -200,14 +206,19 @@
   dialog { width: min(680px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow: auto; border: 1px solid var(--border); border-radius: 22px; padding: 0; color: var(--text); background: var(--surface); }
   dialog::backdrop { background: #211f25aa; }
   .share-dialog { padding: clamp(16px, 4vw, 28px); }
-  .share-header, .share-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .share-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .share-actions { align-items: center; gap: 10px; }
   .share-header h2 { margin: 0; font-size: 1.2rem; }
   .share-close { display: grid; place-items: center; flex: none; width: 44px; padding: 0; border-radius: 50%; font-size: 1.5rem; }
   img { display: block; width: 100%; height: auto; margin: 18px auto; border-radius: 12px; }
   p { color: var(--muted); font-size: .85rem; line-height: 1.5; }
   .share-error { color: var(--danger); }
   .share-status:empty { display: none; }
-  .share-actions { justify-content: flex-start; }
+  .share-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .share-actions button { min-width: 0; width: 100%; min-height: 48px; font-weight: 800; }
+  .share-loading { display: flex; align-items: center; justify-content: center; gap: 12px; aspect-ratio: 1; margin: 18px 0; }
+  .share-spinner { width: 24px; height: 24px; flex: none; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: share-spin 800ms linear infinite; }
+  @keyframes share-spin { to { transform: rotate(360deg); } }
   .share-actions button:disabled { opacity: .55; cursor: not-allowed; box-shadow: 0 2px 0 -1px var(--border), inset 0 1px 1px var(--clay-highlight); transform: none; filter: none; }
-  @media (prefers-reduced-motion: reduce) { .share-actions button, .share-close { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .share-actions button, .share-close { transition: none; } .share-spinner { animation: none; border-top-color: var(--border); } }
 </style>

@@ -277,7 +277,8 @@
   .expanded .quick-option:nth-child(3) { transform: translateY(174px); transition-delay: 200ms, 120ms, 0s; }
   .quick-option:active { box-shadow: inset 0 2px 5px var(--shadow); }
   .quick-option:disabled { opacity: .55; }
-  .language-dialog { width: min(580px, calc(100vw - 28px)); max-height: calc(100dvh - 32px); overflow: auto; border: 1px solid var(--border); border-radius: 28px; padding: 24px; background: var(--surface); color: var(--text); box-shadow: 0 8px 0 -3px var(--border), 0 24px 70px #0003; }
+  .language-dialog[open] { display: grid; }
+  .language-dialog { grid-template-rows: auto auto minmax(0, 1fr); width: min(580px, calc(100vw - 28px)); height: min(620px, calc(100dvh - 32px)); max-height: calc(100dvh - 32px); overflow: hidden; border: 1px solid var(--border); border-radius: 28px; padding: 24px; background: var(--surface); color: var(--text); box-shadow: 0 8px 0 -3px var(--border), 0 24px 70px #0003; }
   .language-dialog::backdrop { background: #19151a88; backdrop-filter: blur(4px); }
   .language-dialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
   .language-dialog h2 { margin: 8px 0 0; font-size: 1.6rem; letter-spacing: -.035em; }
@@ -286,7 +287,7 @@
   .language-search input { width: 100%; min-width: 0; min-height: 48px; padding: 10px 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--text); font: inherit; }
   .language-search:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
   .language-search input:focus-visible { outline: none; }
-  .language-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; max-height: min(440px, 52dvh); overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
+  .language-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 9px; min-height: 0; overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
   .language-name { display: grid; gap: 3px; }
   .language-name small { color: var(--muted); font-size: .7rem; font-weight: 650; }
   .language-empty { grid-column: 1 / -1; padding: 24px 12px; color: var(--muted); text-align: center; }

@@ -35,7 +35,16 @@ test('layer picker filters by name or source and defaults to weather', async ({ 
   await expect(page.locator('.layer-picker-trigger')).toContainText('Weather');
   await page.locator('.layer-picker-trigger').click();
   const dialog = page.locator('dialog.map-dialog[open]');
-  await dialog.getByRole('searchbox').fill('bnpb');
+  await page.setViewportSize({ width: 390, height: 620 });
+  const search = dialog.getByRole('searchbox');
+  const options = dialog.locator('.layer-options');
+  const searchBefore = await search.boundingBox();
+  await options.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  const searchAfter = await search.boundingBox();
+  expect(searchBefore?.y).toBe(searchAfter?.y);
+  await expect(dialog.locator('.dialog-body')).toHaveCSS('overflow', 'hidden');
+  await expect(options).toHaveCSS('overflow-y', 'auto');
+  await search.fill('bnpb');
   await expect(dialog.locator('.layer-option')).toHaveCount(1);
   await expect(dialog.locator('.layer-option')).toContainText('Disaster reports');
   await dialog.getByRole('searchbox').fill('zzz');

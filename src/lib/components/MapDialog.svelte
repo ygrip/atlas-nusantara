@@ -3,12 +3,13 @@
   import { X } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
 
-  let { open, title, onclose, children, wide = false }: {
+  let { open, title, onclose, children, wide = false, searchable = false }: {
     open: boolean;
     title: string;
     onclose: () => void;
     children: Snippet;
     wide?: boolean;
+    searchable?: boolean;
   } = $props();
 
   let dialog = $state<HTMLDialogElement>();
@@ -44,7 +45,7 @@
         <h2 id={titleId}>{title}</h2>
         <button type="button" class="dialog-close" onclick={onclose} aria-label={m.dialog_close()}><X size={20} aria-hidden="true" /></button>
       </header>
-      <div class="dialog-body">{@render children()}</div>
+      <div class="dialog-body" class:searchable>{@render children()}</div>
     </div>
   {/if}
 </dialog>
@@ -60,6 +61,8 @@
   .dialog-close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 15px; color: var(--text); background: linear-gradient(165deg, var(--surface), var(--panel)); cursor: pointer; box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight); }
   .dialog-close:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border); }
   .dialog-body { min-height: 0; overflow: auto; padding: 4px 22px 22px; overscroll-behavior: contain; }
+  .dialog-body.searchable { display: flex; flex-direction: column; overflow: hidden; }
+  .dialog-body.searchable > :global(ul), .dialog-body.searchable > :global(.place-list) { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
   @keyframes dialog-in { from { opacity: 0; transform: translateY(18px) scale(.94); } to { opacity: 1; transform: none; } }
   @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { .map-dialog[open], .map-dialog::backdrop { animation: none; } }

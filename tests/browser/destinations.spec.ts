@@ -104,6 +104,39 @@ test('table composes search and filters and supports accessible sorting without 
   await expect(rows).toHaveCount(2);
 });
 
+test('destination share cards use the destination photo when available', async ({ page }) => {
+  await page.route('**/upload.wikimedia.org/**', route => route.fulfill({
+    status: 200,
+    contentType: 'image/svg+xml',
+    headers: { 'access-control-allow-origin': '*' },
+    body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect width="640" height="400" fill="#18a6c2"/></svg>'
+  }));
+  await page.route('**/data/destinations/provinces/32.json?*', route => {
+    const landmarks = provinceFixture('32');
+    landmarks[0].image = { url: 'https://upload.wikimedia.org/wikipedia/commons/a/ab/Fixture.svg',
+      descriptionUrl: 'https://commons.wikimedia.org/wiki/File:Fixture.svg', credit: 'Fixture credit',
+      license: 'CC-BY-SA-4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', reviewedAt: '2026-10-27T00:00:00Z' };
+    landmarks[0].images = [landmarks[0].image];
+    return route.fulfill({ json: { ...starter, landmarks } });
+  });
+  await page.goto('/?layer=destinations&region=32');
+  await page.locator('.destination-table tbody tr').filter({ hasText: provinceFixture('32')[0].name }).getByRole('button', { name: /Share/ }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('img')).toBeVisible();
+  const color = await dialog.getByRole('img').evaluate(async node => {
+    const image = node as HTMLImageElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas is unavailable');
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return [...context.getImageData(540, 400, 1, 1).data].slice(0, 3);
+  });
+  expect(color).toEqual([24, 166, 194]);
+});
+
 test('stored Commons photos show full creator credits and license links without runtime searches', async ({ page }) => {
   const creator = 'Commons Photographer — full creator credit remains visible';
   await page.route('**/upload.wikimedia.org/**', route => route.fulfill({

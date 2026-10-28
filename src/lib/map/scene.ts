@@ -152,7 +152,6 @@ export class AtlasScene {
   private fieldB: WeatherField = emptyField();
   private weatherMix = 0;
   private weatherMotion = { cloud: false, rain: false, wind: false };
-  private effectsPlaying = false;
   private provinces: RegionEntry[] = [];
   private cities: RegionEntry[] = [];
   private byId = new Map<number, RegionEntry>();
@@ -336,21 +335,14 @@ export class AtlasScene {
     this.dirty = true;
   }
 
-  setPlayback(playing: boolean): void {
-    if (playing === this.effectsPlaying) return;
-    this.effectsPlaying = playing;
-    this.invalidate();
-  }
-
   setWeather(current: WeatherField, next: WeatherField | undefined, mix: number): void {
     const following = next ?? current;
-    const changed = current !== this.fieldA || following !== this.fieldB || mix !== this.weatherMix;
     if (current !== this.fieldA) { this.fieldA = current; this.replaceWeatherTexture('A', current); }
     if (following !== this.fieldB) { this.fieldB = following; this.replaceWeatherTexture('B', following); }
     this.weatherMix = mix;
     this.weatherMotion = weatherActivity(this.fieldA, this.fieldB, mix);
     this.shared.weatherMix.value = mix;
-    this.windParticles.setFields(this.fieldA, this.fieldB, mix, changed && !this.effectsPlaying);
+    this.windParticles.setFields(this.fieldA, this.fieldB, mix);
     this.rain.setFields(this.fieldA, this.fieldB, mix);
     this.invalidate();
   }
@@ -942,7 +934,7 @@ export class AtlasScene {
   };
 
   private hasAnimatedEffects(): boolean {
-    if (!this.effectsPlaying || this.reducedMotion || this.morphValue < 1) return false;
+    if (this.reducedMotion || this.morphValue < 1) return false;
     const seaMoving = this.layers.sea && this.sea?.mesh.visible;
     const cloudMoving = this.layers.weather && this.clouds?.volume.visible && this.weatherMotion.cloud;
     const windMoving = this.layers.wind && this.windParticles.lines.visible && this.weatherMotion.wind;

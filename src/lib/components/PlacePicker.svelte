@@ -88,7 +88,7 @@
   <ChevronDown size={18} aria-hidden="true" />
 </button>
 
-<MapDialog {open} title={heading} onclose={closePicker}>
+<MapDialog {open} title={heading} searchable onclose={closePicker}>
   <div class="search-box">
     <Search size={18} aria-hidden="true" />
     <input

@@ -53,13 +53,40 @@ test('persists light and dark themes and honors reduced motion', async ({ page }
 test('previews and downloads a local PNG card with a public URL that excludes device coordinates', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('nusantara:pins:v1', JSON.stringify([{ id: 'geo:-6.209,106.846', type: 'coordinates', lat: -6.209, lng: 106.846, name: '-6.209, 106.846', addedAt: new Date().toISOString() }]));
-    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (value: string) => { (window as Window & { sharedUrl?: string }).sharedUrl = value; } } });
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async (data: ShareData) => {
+      (window as Window & { sharedData?: { url: string; fileTypes: string[] } }).sharedData = {
+        url: data.url ?? '', fileTypes: (data.files ?? []).map(file => file.type)
+      };
+    } });
+    const original = HTMLCanvasElement.prototype.toBlob;
+    const releases: Array<() => void> = [];
+    const state = window as Window & { releaseShareCard?: () => void; shareCardPending?: boolean };
+    state.releaseShareCard = () => {
+      releases.shift()?.();
+      state.shareCardPending = false;
+    };
+    state.shareCardPending = false;
+    HTMLCanvasElement.prototype.toBlob = function (callback, type, quality) {
+      if (this.width < 1080 || this.height < 1080) return original.call(this, callback, type, quality);
+      releases.push(() => original.call(this, callback, type, quality));
+      state.shareCardPending = true;
+    };
   });
   await openAtlas(page);
   await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Share this atlas' });
   await expect(dialog).toBeVisible();
+  await expect(dialog.locator('.share-loading')).toBeVisible();
+  const actionButtons = dialog.locator('.share-actions button');
+  await expect(actionButtons).toHaveCount(2);
+  await expect(actionButtons.nth(0)).toBeDisabled();
+  await expect.poll(() => page.evaluate(() => (window as Window & { shareCardPending?: boolean }).shareCardPending)).toBe(true);
+  await page.evaluate(() => (window as Window & { releaseShareCard?: () => void }).releaseShareCard?.());
   await expect(dialog.getByRole('img', { name: 'Nusantara public atlas share card' })).toBeVisible();
+  await expect(dialog.locator('.share-loading')).toBeHidden();
+  expect(await actionButtons.nth(0).evaluate(element => element.getBoundingClientRect().width)).toBeCloseTo(await actionButtons.nth(1).evaluate(element => element.getBoundingClientRect().width), 0);
+  await expect(dialog.getByRole('button', { name: 'Copy public link' })).toHaveCount(0);
   const image = await dialog.getByRole('img').evaluate(async node => {
     const response = await fetch((node as HTMLImageElement).src);
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -68,6 +95,8 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   expect(image.type).toBe('image/png');
   expect([1080, 2160]).toContain(image.width);
   expect([1080, 2160]).toContain(image.height);
+  await dialog.getByRole('button', { name: 'Share', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as Window & { sharedData?: { url: string; fileTypes: string[] } }).sharedData)).toEqual({ url: 'https://nusantara.readynaz.com/', fileTypes: ['image/png'] });
   const downloadPromise = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Download PNG' }).click();
   const download = await downloadPromise;
@@ -79,12 +108,14 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   const downloaded = Buffer.concat(chunks);
   expect(downloaded.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
   expect(downloaded.readUInt32BE(16)).toBe(image.width);
-  await dialog.getByRole('button', { name: 'Copy public link' }).click();
-  await expect.poll(() => page.evaluate(() => (window as Window & { sharedUrl?: string }).sharedUrl)).toMatch(/^https:\/\/nusantara\.readynaz\.com\//);
-  const sharedUrl = await page.evaluate(() => (window as Window & { sharedUrl?: string }).sharedUrl ?? '');
-  expect(sharedUrl).toBe('https://nusantara.readynaz.com/');
-  expect(sharedUrl).not.toMatch(/(?:lat|lng|latitude|longitude|coordinates|geo)\s*[=:/,]/i);
   await dialog.getByRole('button', { name: 'Close share preview' }).click();
+  await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
+  await expect(dialog.locator('.share-loading')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => (window as Window & { shareCardPending?: boolean }).shareCardPending)).toBe(true);
+  await dialog.getByRole('button', { name: 'Close share preview' }).click();
+  await page.evaluate(() => (window as Window & { releaseShareCard?: () => void }).releaseShareCard?.());
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Share this atlas', exact: true })).toBeFocused();
 });
 
 test('keeps the directory usable when geometry cannot be fetched', async ({ page }) => {
@@ -95,14 +126,15 @@ test('keeps the directory usable when geometry cannot be fetched', async ({ page
   await expect(page.locator('.region-table tbody tr')).toHaveCount(1);
 });
 
-test('shows source and support links and leaves optional advertising disabled', async ({ page }) => {
+test('shows source and support links with one automatic advertising slot', async ({ page }) => {
   await openAtlas(page);
   await expect(page.getByRole('link', { name: /Source code/ })).toHaveAttribute('href', 'https://github.com/ygrip/nusantara');
   const support = page.locator('#support');
   for (const [name, href] of [['Trakteer', 'https://trakteer.id/yunaz_gilang'], ['Ko-fi', 'https://ko-fi.com/ygrip'], ['Patreon', 'https://www.patreon.com/c/ygrip']]) {
     await expect(support.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('href', href);
   }
-  await expect(page.locator('.ad-slot')).toHaveCount(0);
+  await expect(support.getByText('Made with care', { exact: true })).toBeVisible();
+  await expect(page.locator('ins[data-ad-slot="5292790825"]')).toHaveCount(1);
 });
 
 test('serves production-root canonical and OG metadata plus a local PNG image', async ({ page, request }) => {

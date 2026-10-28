@@ -45,7 +45,7 @@
   </button>
 {/if}
 
-<MapDialog {open} title={m.layer_picker_title()} onclose={() => { open = false; }}>
+<MapDialog {open} title={m.layer_picker_title()} searchable onclose={() => { open = false; }}>
   <label class="layer-search"><Search size={17} aria-hidden="true" />
     <input bind:this={search} type="search" bind:value={query} placeholder={m.layer_picker_search()} aria-label={m.layer_picker_search()} autocomplete="off" />
   </label>
