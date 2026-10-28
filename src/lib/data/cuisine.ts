@@ -28,6 +28,24 @@ export interface CuisineTranslation {
 }
 export interface CuisineTranslations { locale: string; items: Record<string, CuisineTranslation> }
 
+/** Photos are hotlinked directly to Wikimedia Commons; never accept a local asset or storage copy. */
+export function isExternalCuisinePhoto(value: unknown): value is CuisinePhoto {
+  if (!value || typeof value !== 'object') return false;
+  const photo = value as CuisinePhoto;
+  try {
+    const image = new URL(photo.url);
+    const description = new URL(photo.descriptionUrl);
+    const imageHost = image.hostname.toLowerCase();
+    const directCommons = imageHost === 'commons.wikimedia.org' && image.pathname.startsWith('/wiki/Special:FilePath/');
+    const wikimediaCdn = imageHost === 'upload.wikimedia.org' || imageHost === 'thumb.wikimedia.org';
+    return image.protocol === 'https:' && !image.username && !image.password && (directCommons || wikimediaCdn)
+      && description.protocol === 'https:' && description.hostname === 'commons.wikimedia.org'
+      && description.pathname.startsWith('/wiki/File:')
+      && typeof photo.credit === 'string' && photo.credit.trim().length > 0
+      && typeof photo.license === 'string' && photo.license.trim().length > 0;
+  } catch { return false; }
+}
+
 export function isCuisineItem(value: unknown): value is CuisineItem {
   if (!value || typeof value !== 'object') return false;
   const x = value as CuisineItem;
@@ -36,9 +54,7 @@ export function isCuisineItem(value: unknown): value is CuisineItem {
     && Array.isArray(x.sources)
     && (!x.recipe || (Array.isArray(x.recipe.ingredients) && Array.isArray(x.recipe.steps)
       && x.recipe.ingredients.every(v=>typeof v === 'string') && x.recipe.steps.every(v=>typeof v === 'string')))
-    && (!x.image || (x.image.url.startsWith('https://commons.wikimedia.org/wiki/Special:FilePath/')
-      || x.image.url.startsWith('https://upload.wikimedia.org/')
-      || x.image.url.startsWith('https://thumb.wikimedia.org/')));
+    && (!x.image || isExternalCuisinePhoto(x.image));
 }
 export function validateCuisineIndex(value: unknown): value is CuisineIndex {
   if (!value || typeof value !== 'object') return false;
