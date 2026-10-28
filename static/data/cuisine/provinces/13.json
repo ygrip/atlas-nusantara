@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "provinceCode": "13",
+  "items": [
+    {
+      "id": "rendang",
+      "name": "Rendang",
+      "provinceCodes": [
+        "13"
+      ],
+      "articleUrl": "https://id.wikipedia.org/wiki/Rendang",
+      "image": {
+        "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Nasi%20Rendang.JPG?width=640",
+        "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Nasi_Rendang.JPG",
+        "credit": "Gunawan Kartapranata",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "reviewedAt": "2026-10-28T00:00:00Z",
+        "source": "Wikimedia Commons"
+      },
+      "recipe": {
+        "language": "id",
+        "status": "original-adaptation",
+        "sourceUrl": "https://id.wikipedia.org/wiki/Rendang",
+        "category": "makanan_utama",
+        "difficulty": "sulit",
+        "timeMinutes": 210,
+        "ingredients": [
+          "750 g daging sapi, potong besar",
+          "800 ml santan",
+          "8 bawang merah",
+          "5 siung bawang putih",
+          "8 cabai merah",
+          "3 cm jahe dan 3 cm lengkuas",
+          "2 batang serai, memarkan",
+          "3 lembar daun jeruk",
+          "2 lembar daun kunyit",
+          "Garam secukupnya"
+        ],
+        "steps": [
+          "Haluskan bawang merah, bawang putih, cabai, jahe, dan lengkuas.",
+          "Didihkan santan bersama bumbu halus, serai, daun jeruk, dan daun kunyit sambil terus diaduk agar tidak pecah.",
+          "Masukkan daging, kecilkan api, lalu masak perlahan sambil sesekali diaduk sampai daging lunak.",
+          "Teruskan memasak sampai santan menyusut dan bumbu mengering, berwarna cokelat tua. Aduk lebih sering menjelang akhir agar tidak gosong."
+        ]
+      },
+      "originStatus": "seed-reviewed",
+      "sources": [
+        {
+          "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+          "role": "regional-cuisine-list"
+        }
+      ]
+    }
+  ]
+}
