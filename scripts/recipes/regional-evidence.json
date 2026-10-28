@@ -40,6 +40,22 @@
         "Gence Ruan",
         "Amplang"
       ]
+    },
+    {
+      "source": "https://rri.co.id/samarinda/kuliner/639526/makanan-khas-kalimantan-timur",
+      "dishes": [
+        "Gangan Manok",
+        "Sayur Gangan Asam Kutai",
+        "Rabo Ruan",
+        "Daging Masak Bumbu Hangus",
+        "Sate Payau",
+        "Pulut Nasi",
+        "Sambal Raja",
+        "Kue Gegicak",
+        "Kue Bingka Kentang",
+        "Pisang Gapit",
+        "Lempok Durian"
+      ]
     }
   ],
   "92": [
@@ -124,13 +140,9 @@
         "Keladi Tumbuk",
         "Papeda",
         "Sagu Lempeng",
-        "Petatas"
-      ]
-    },
-    {
-      "source": "https://www.indonesia.travel/id/id/travel-ideas/culture/bakar-batu-tradition",
-      "dishes": [
-        "Petatas Bakar Batu"
+        "Petatas",
+        "Ikan Kuah Kuning",
+        "Sate Ulat Sagu"
       ]
     }
   ],
