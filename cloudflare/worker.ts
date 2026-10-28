@@ -2,8 +2,9 @@ import { adaptBmkgCap, InactiveCapWarningError } from '../src/lib/data/ingestion
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { createExportResponse, exportFitsBudget } from './export.ts';
 import { verifyArchiveRequest, type ColdDownloadEnv } from './cold-download.ts';
-import { publishHot, serveHot, cleanPublications } from './publication.ts';
+import { publishHot, serveHot, servePublication, cleanPublications } from './publication.ts';
 import { runHazardSchedule } from './hazards.ts';
+import { cleanupRateLimits } from './rate-limit.ts';
 import { adaptBmkgEarthquakes } from '../src/lib/data/ingestion/adapters.ts';
 import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetRecord, type DatasetType, type Snapshot } from '../src/lib/data/ingestion/schema.ts';
 
@@ -340,15 +341,16 @@ export async function runScheduled(db: D1Database, env: Env, now = Date.now()): 
     const response = await fetchSnapshot(source.id, db, env, now);
     if (response.ok) snapshots[source.type] = await response.json() as Snapshot;
   }
-  await publishHot(env.HOT_DATA, summary, snapshots, now);
-  await cleanPublications(env.HOT_DATA, now);
+  await publishHot(db, summary, snapshots, now);
+  await cleanPublications(db, now);
   await db.prepare('DELETE FROM archive_download_budget WHERE day < ?').bind(new Date(now - 30 * DAY_MS).toISOString().slice(0, 10)).run();
+  await cleanupRateLimits(db, now);
   return { due: dueSources.map(source => source.id), deleted };
 }
 
 type RuntimeEnv = Env & Pick<ColdDownloadEnv, 'TURNSTILE_SECRET'>;
 
-async function coldDownload(request: Request, env: RuntimeEnv, now: number): Promise<Response> {
+export async function coldDownload(request: Request, env: RuntimeEnv, now: number): Promise<Response> {
   const verified = await verifyArchiveRequest(request, env);
   if (verified instanceof Response) return verified;
   const definitions = enabledSources(env).filter(source => source.type === verified.kind);
@@ -380,8 +382,11 @@ export default {
       if (path === '/api/export') return await coldDownload(request, env, Date.now());
       if (path.startsWith('/api/')) return json({ error: 'Not found. Hot data is published as static JSON.' }, 404);
       if (path.startsWith('/data/published/')) {
-        if (env.LOCAL_HOT_DATA_FALLBACK !== 'true') return json({ error: 'Production hot data is served directly by the public R2 CDN.' }, 404);
-        return await serveHot(request, env.HOT_DATA);
+        return await serveHot(request, env.DB);
+      }
+      if (path === '/data/live/hazards.json') {
+        if (!env.HAZARD_SOURCE_IDS?.trim()) return json({ status: 'unavailable' }, 503);
+        return await servePublication(request, env.DB, 'data/observations/hazards.json');
       }
       return await env.ASSETS.fetch(request);
     } catch (error) {

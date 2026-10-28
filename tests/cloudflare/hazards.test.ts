@@ -11,6 +11,7 @@ function createDatabase(): D1Database {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(readFileSync('cloudflare/migrations/0001_initial.sql', 'utf8'));
   sqlite.exec(readFileSync('cloudflare/migrations/0004_hazard_events.sql', 'utf8'));
+  sqlite.exec(readFileSync('cloudflare/migrations/0005_publications.sql', 'utf8'));
   function statement(sql: string, values: unknown[] = []) {
     return {
       bind(...bound: unknown[]) { return statement(sql, bound); },
@@ -26,9 +27,10 @@ function createDatabase(): D1Database {
   } as unknown as D1Database;
 }
 
-function createBucket() {
-  const objects = new Map<string, string>();
-  return { objects, bucket: { async put(key: string, value: string) { objects.set(key, value); } } as unknown as R2Bucket };
+async function publishedHazards(db: D1Database) {
+  const row = await db.prepare('SELECT payload_json FROM publications WHERE key = ?').bind('data/observations/hazards.json').first<{ payload_json: string }>();
+  assert.ok(row);
+  return JSON.parse(row.payload_json);
 }
 
 function event(id: string, source: string, hoursAgo: number) {
@@ -50,25 +52,25 @@ function fakeSources(calls: string[]): ScheduledHazardSource[] {
 
 test('nothing runs and nothing is published until an operator enables hazard sources', async () => {
   const calls: string[] = [];
-  const { bucket, objects } = createBucket();
-  const result = await runHazardSchedule({ DB: createDatabase(), HOT_DATA: bucket }, now, fakeSources(calls));
+  const db = createDatabase();
+  const result = await runHazardSchedule({ DB: db }, now, fakeSources(calls));
   assert.deepEqual(result, { ran: [], failed: [], published: false, events: 0, warnings: 0 });
   assert.equal(calls.length, 0);
-  assert.equal(objects.size, 0);
+  const count = await db.prepare('SELECT COUNT(*) AS count FROM publications').first<{ count: number }>();
+  assert.equal(count?.count, 0);
   assert.deepEqual([...enabledHazardIds({ HAZARD_SOURCE_IDS: ' bnpb, ,petabencana ' })], ['bnpb', 'petabencana']);
 });
 
 test('each source runs on its own interval and the stored data is re-aggregated', async () => {
   const db = createDatabase();
-  const { bucket, objects } = createBucket();
-  const env = { DB: db, HOT_DATA: bucket, HAZARD_SOURCE_IDS: 'bnpb,petabencana,bmkg-cap' };
+  const env = { DB: db, HAZARD_SOURCE_IDS: 'bnpb,petabencana,bmkg-cap' };
   const calls: string[] = [];
   const sources = fakeSources(calls);
 
   const first = await runHazardSchedule(env, now, sources);
   assert.deepEqual(first.ran.sort(), ['bmkg-cap', 'bnpb', 'petabencana']);
   assert.equal(first.published, true);
-  const published = JSON.parse(objects.get('data/observations/hazards.json') as string);
+  const published = await publishedHazards(db);
   assert.equal(published.schemaVersion, 2);
   assert.deepEqual(published.events.items.map((item: { id: string }) => item.id), ['petabencana:1', 'bnpb:1']);
   assert.deepEqual(published.warnings.items.map((item: { id: string }) => item.id), ['cap:live']);
@@ -87,10 +89,28 @@ test('each source runs on its own interval and the stored data is re-aggregated'
   assert.ok(calls.includes('bnpb'));
 });
 
+test('a slow source keeps its publication available between collections without changing source freshness', async () => {
+  const db = createDatabase();
+  const env = { DB: db, HAZARD_SOURCE_IDS: 'bnpb' };
+  const calls: string[] = [];
+  const sources = fakeSources(calls);
+  await runHazardSchedule(env, now, sources);
+  calls.length = 0;
+  const later = now + 20 * 60_000;
+  const result = await runHazardSchedule(env, later, sources);
+  assert.deepEqual(calls, []);
+  assert.equal(result.published, true);
+  const row = await db.prepare('SELECT valid_until FROM publications WHERE key = ?').bind('data/observations/hazards.json').first<{ valid_until: string }>();
+  assert.equal(row?.valid_until, new Date(later + 15 * 60_000).toISOString());
+  const published = await publishedHazards(db);
+  const source = published.pipeline.sources.find((item: { id: string }) => item.id === 'bnpb');
+  assert.equal(source.lastSuccessAt, new Date(now).toISOString());
+  assert.equal(published.fetchedAt, new Date(now).toISOString());
+});
+
 test('a failing source keeps its stored events, is retried within ten minutes and is reported', async () => {
   const db = createDatabase();
-  const { bucket, objects } = createBucket();
-  const env = { DB: db, HOT_DATA: bucket, HAZARD_SOURCE_IDS: 'bnpb,petabencana' };
+  const env = { DB: db, HAZARD_SOURCE_IDS: 'bnpb,petabencana' };
   const sources = fakeSources([]);
   await runHazardSchedule(env, now, sources);
   let broken = true;
@@ -99,21 +119,23 @@ test('a failing source keeps its stored events, is retried within ten minutes an
   assert.deepEqual(failed.failed, ['bnpb']);
   assert.deepEqual(failed.ran, ['petabencana']);
   const stored = await buildStoredSnapshot(db, sources.filter(source => source.kind === 'event'), now + 181 * 60_000);
+  assert.ok(stored);
   const snapshot = JSON.parse(stored.text);
   assert.ok(snapshot.events.items.some((item: { id: string }) => item.id === 'bnpb:1'));
   assert.equal(snapshot.pipeline.sources.find((item: { id: string }) => item.id === 'bnpb').status, 'failed');
   broken = false;
   const retried = await runHazardSchedule(env, now + 192 * 60_000, sources);
   assert.deepEqual(retried.ran.sort(), ['bnpb', 'petabencana']);
-  assert.ok(objects.size > 0);
+  const published = await publishedHazards(db);
+  assert.equal(published.schemaVersion, 2);
 });
 
 test('events outside their source retention are dropped from storage and from the snapshot', async () => {
   const db = createDatabase();
-  const { bucket, objects } = createBucket();
-  const env = { DB: db, HOT_DATA: bucket, HAZARD_SOURCE_IDS: 'bnpb' };
+  const env = { DB: db, HAZARD_SOURCE_IDS: 'bnpb' };
   await runHazardSchedule(env, now, fakeSources([]));
-  const ids = JSON.parse(objects.get('data/observations/hazards.json') as string).events.items.map((item: { id: string }) => item.id);
+  const published = await publishedHazards(db);
+  const ids = published.events.items.map((item: { id: string }) => item.id);
   assert.ok(ids.includes('bnpb:1'));
   assert.ok(!ids.includes('bnpb:old'));
   const row = await db.prepare("SELECT COUNT(*) AS count FROM hazard_events WHERE id = 'bnpb:old'").first<{ count: number }>();

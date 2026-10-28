@@ -33,7 +33,7 @@ let occupied = false;
 try { await fetch(base, { signal: AbortSignal.timeout(1000) }); occupied = true; }
 catch (error) { if (error.name === 'TimeoutError') throw Error('Local port is occupied or unresponsive. Choose a different NUSANTARA_LOCAL_URL.'); }
 if (occupied) throw Error('Local port is occupied. Stop that server or choose a different NUSANTARA_LOCAL_URL.');
-const args = [wrangler, 'dev', '--local', '--test-scheduled', '--var', 'LOCAL_HOT_DATA_FALLBACK:true', '--port', base.port || '80'];
+const args = [wrangler, 'dev', '--local', '--test-scheduled', '--port', base.port || '80'];
 const dev = spawn(process.execPath, args, { stdio: 'inherit' });
 const exited = new Promise(resolvePromise => dev.once('exit', resolvePromise));
 let startError;

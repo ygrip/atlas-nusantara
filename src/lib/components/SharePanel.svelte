@@ -191,17 +191,23 @@
 </section>
 
 <style>
-  .share-actions button, .share-close { min-height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); padding: 9px 14px; }
+  .share-actions button, .share-close { min-height: 44px; border: 1px solid var(--border); border-radius: 15px; background: linear-gradient(160deg, var(--surface), var(--panel)); color: var(--text); padding: 9px 14px; box-shadow: 0 4px 0 -1px var(--border), 0 7px 14px -8px var(--shadow), inset 0 2px 1px var(--clay-highlight), inset 0 -2px 4px var(--shadow); cursor: pointer; transition: transform 140ms ease-out, box-shadow 140ms ease-out, color 140ms ease-out; }
+  .share-actions button:hover, .share-close:hover { color: var(--accent); transform: translateY(-1px); }
+  .share-actions button:active, .share-close:active { transform: translateY(2px); box-shadow: 0 1px 0 -1px var(--border), inset 0 2px 5px var(--shadow); }
+  .share-actions button:first-child { border-color: color-mix(in srgb, var(--accent) 60%, var(--border)); background: linear-gradient(155deg, color-mix(in srgb, var(--accent) 90%, white), var(--accent) 55%, var(--accent-strong)); color: var(--on-accent); box-shadow: 0 4px 0 -1px var(--accent-strong), 0 7px 14px -8px var(--shadow), inset 0 2px 2px #ffffff55; font-weight: 800; }
+  .share-actions button:first-child:hover { color: var(--on-accent); filter: brightness(1.04); }
+  .share-actions button:focus-visible, .share-close:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 3px; }
   dialog { width: min(680px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow: auto; border: 1px solid var(--border); border-radius: 22px; padding: 0; color: var(--text); background: var(--surface); }
   dialog::backdrop { background: #211f25aa; }
   .share-dialog { padding: clamp(16px, 4vw, 28px); }
   .share-header, .share-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
   .share-header h2 { margin: 0; font-size: 1.2rem; }
-  .share-close { width: 44px; padding: 0; font-size: 1.5rem; }
+  .share-close { display: grid; place-items: center; flex: none; width: 44px; padding: 0; border-radius: 50%; font-size: 1.5rem; }
   img { display: block; width: 100%; height: auto; margin: 18px auto; border-radius: 12px; }
   p { color: var(--muted); font-size: .85rem; line-height: 1.5; }
   .share-error { color: var(--danger); }
   .share-status:empty { display: none; }
   .share-actions { justify-content: flex-start; }
-  .share-actions button:disabled { opacity: .55; }
+  .share-actions button:disabled { opacity: .55; cursor: not-allowed; box-shadow: 0 2px 0 -1px var(--border), inset 0 1px 1px var(--clay-highlight); transform: none; filter: none; }
+  @media (prefers-reduced-motion: reduce) { .share-actions button, .share-close { transition: none; } }
 </style>

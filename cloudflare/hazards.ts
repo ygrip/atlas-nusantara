@@ -1,7 +1,8 @@
 // Per-source hazard schedule. Each source runs when its own interval is due (scripts/pipeline/sources/registry.mjs),
-// stores cleaned events in D1, then everything stored is re-aggregated into one hazards.json published to R2.
+// stores cleaned events in D1, then re-aggregates them into a bounded D1 JSON publication.
 // Disabled unless HAZARD_SOURCE_IDS lists the sources an operator has reviewed (PetaBencana is CC BY-NC).
 import regionRecords from './generated/regions.json' with { type: 'json' };
+import { storePublication } from './publication.ts';
 import { createGazetteer } from '../scripts/pipeline/lib/gazetteer-core.mjs';
 import { buildSnapshot, fitSnapshot } from '../scripts/pipeline/lib/aggregate.mjs';
 import { reaggregate, retentionMap } from '../scripts/pipeline/lib/schedule.mjs';
@@ -16,7 +17,6 @@ const STATE_PREFIX = 'hazard:';
 
 export interface HazardEnv {
   DB: D1Database;
-  HOT_DATA: R2Bucket;
   HAZARD_SOURCE_IDS?: string;
 }
 
@@ -115,7 +115,7 @@ interface StoredRow { source_id: string; kind: string; payload_json: string }
 interface StateRow { source_id: string; last_success_at: string | null; last_error: string | null; last_record_count: number }
 
 /** Re-aggregates everything stored (today's data included) into one snapshot, newest first, within each source's retention. */
-export async function buildStoredSnapshot(db: D1Database, sources: ScheduledHazardSource[], now: number): Promise<{ text: string; eventCount: number; warningCount: number }> {
+export async function buildStoredSnapshot(db: D1Database, sources: ScheduledHazardSource[], now: number): Promise<{ text: string; eventCount: number; warningCount: number } | undefined> {
   const rows = await db.prepare('SELECT source_id, kind, payload_json FROM hazard_events ORDER BY occurred_at DESC LIMIT ?').bind(MAX_STORED_ROWS).all<StoredRow>();
   const states = await db.prepare("SELECT source_id, last_success_at, last_error, last_record_count FROM source_state WHERE source_id LIKE 'hazard:%'").all<StateRow>();
   const storedEvents = rows.results.filter(row => row.kind === 'event').map(row => JSON.parse(row.payload_json) as StoredEvent);
@@ -131,7 +131,13 @@ export async function buildStoredSnapshot(db: D1Database, sources: ScheduledHaza
     if (state?.last_error) status = 'failed';
     return { id: source.id, name: source.sourceName, status, fetched: 0, kept: state?.last_record_count ?? 0, rejected: {}, lastSuccessAt: state?.last_success_at ?? undefined, ...(state?.last_error ? { error: state.last_error } : {}) };
   });
-  const fetchedAt = new Date(now).toISOString();
+  const enabledStateIds = new Set(sources.map(source => STATE_PREFIX + source.id));
+  const successfulTimes = states.results
+    .filter(state => enabledStateIds.has(state.source_id))
+    .map(state => Date.parse(state.last_success_at ?? ''))
+    .filter(timestamp => Number.isFinite(timestamp) && timestamp <= now);
+  if (successfulTimes.length === 0) return undefined;
+  const fetchedAt = new Date(Math.max(...successfulTimes)).toISOString();
   const snapshot = buildSnapshot({
     fetchedAt,
     warnings: { source: BMKG_CAP.name, sourceUrl: BMKG_CAP.url, termsUrl: BMKG_CAP.termsUrl, attribution: BMKG_CAP.attribution, coverage: warnings.length + ' active.', items: warnings },
@@ -141,13 +147,15 @@ export async function buildStoredSnapshot(db: D1Database, sources: ScheduledHaza
   return { text: fitted.text, eventCount: fitted.snapshot.events.items.length, warningCount: warnings.length };
 }
 
-async function publish(bucket: R2Bucket, text: string): Promise<void> {
-  await bucket.put(SNAPSHOT_KEY, text, { httpMetadata: { contentType: 'application/json; charset=utf-8', cacheControl: 'public, max-age=300' } });
+async function publish(db: D1Database, text: string, now: number): Promise<void> {
+  const generatedAt = new Date(now).toISOString();
+  const validUntil = new Date(now + 15 * MINUTE_MS).toISOString();
+  await storePublication(db, SNAPSHOT_KEY, text, generatedAt, validUntil);
 }
 
 export interface HazardRunResult { ran: string[]; failed: string[]; published: boolean; events: number; warnings: number }
 
-/** Runs every enabled hazard source that is due, then re-aggregates and publishes when at least one succeeded. */
+/** Collect due sources, then refresh the stored projection without changing collection timestamps. */
 export async function runHazardSchedule(env: HazardEnv, now = Date.now(), sources: ScheduledHazardSource[] = defaultHazardSources()): Promise<HazardRunResult> {
   const enabledIds = enabledHazardIds(env);
   const enabled = sources.filter(source => enabledIds.has(source.id));
@@ -160,9 +168,9 @@ export async function runHazardSchedule(env: HazardEnv, now = Date.now(), source
     if (outcome === 'ok') result.ran.push(source.id);
     else result.failed.push(source.id);
   }
-  if (result.ran.length === 0) return result;
   const built = await buildStoredSnapshot(env.DB, enabled, now);
-  await publish(env.HOT_DATA, built.text);
+  if (!built) return result;
+  await publish(env.DB, built.text, now);
   result.published = true;
   result.events = built.eventCount;
   result.warnings = built.warningCount;

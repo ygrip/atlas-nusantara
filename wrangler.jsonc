@@ -1,32 +1,35 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nusantara-atlas",
+  "name": "nusantara-atlas-scheduler",
+  "account_id": "8aa0f0683594656f7a2f25b9e5c10dd7",
+  "workers_dev": false,
+  "preview_urls": false,
   "main": "cloudflare/worker.ts",
   "compatibility_date": "2026-10-26",
   "assets": {
     "directory": "./build",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*", "/data/published/*"]
+    "run_worker_first": ["/api/*", "/data/published/*", "/data/live/hazards.json"]
   },
-  "routes": [{ "pattern": "nusantara.readynaz.com", "custom_domain": true }],
+
   "triggers": { "crons": ["*/5 * * * *"] },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "nusantara-atlas",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "7201f155-d487-4550-8078-7c2e120c85b7",
       "migrations_dir": "cloudflare/migrations"
     }
   ],
-  "r2_buckets": [{ "binding": "HOT_DATA", "bucket_name": "nusantara-hot-data" }],
+
   "ratelimits": [
     { "name": "COLD_REQUEST_LIMITER", "namespace_id": "73001", "simple": { "limit": 10, "period": 60 } },
     { "name": "COLD_EXPORT_LIMITER", "namespace_id": "73002", "simple": { "limit": 2, "period": 60 } },
     { "name": "COLD_BUDGET_LIMITER", "namespace_id": "73003", "simple": { "limit": 20, "period": 60 } }
   ],
   "vars": {
-    "LOCAL_HOT_DATA_FALLBACK": "false",
+
     "TURNSTILE_HOSTNAMES": "nusantara.readynaz.com",
     "COLD_DAILY_DOWNLOAD_LIMIT": "20",
     "APPROVED_SOURCE_IDS": "",

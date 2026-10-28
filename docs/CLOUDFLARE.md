@@ -1,15 +1,15 @@
-# Cloudflare: static hot data, protected cold downloads
+# Cloudflare Pages + D1 deployment
 
-**Visitors need no account or login.** Cloudflare account authorization is needed only by the operator when provisioning or deploying infrastructure. Turnstile is bot verification, not visitor identity.
+**Visitors need no account or login.** Cloudflare authorization is needed only by the operator provisioning or deploying infrastructure. Turnstile is bot verification, not visitor identity.
 
 ## Read/write paths
 
-1. **Website:** SvelteKit Static Assets serves the shell, versioned JS/CSS, historical codes and offline-generated geometry at `nusantara.readynaz.com`.
-2. **Hot data:** scheduled Worker → D1 → versioned JSON in `HOT_DATA` R2 → manifest promoted last. Normal browser views read this publication, never D1.
-3. **Hot delivery:** production must point `VITE_PUBLIC_DATA_ORIGIN` at a **public R2 custom domain**, for example a separately confirmed `https://nusantara-data.readynaz.com`. Configure JSON cache eligibility, origin Cache-Control compliance and CORS for the website; ignore unused query strings in the hot-domain cache key to avoid cache-busting amplification. Verify `CF-Cache-Status: HIT` on repeated production reads. Requests then bypass the application Worker entirely. Do not use rate-limited `r2.dev` as the production CDN.
-4. **Cold data:** a visitor explicitly requests an archive, solves Turnstile and submits `POST /api/export`. The Worker verifies the proof and budgets before D1 access, then streams an attributed JSON/CSV file. There are no public record-write APIs.
+1. **Website:** Cloudflare Pages serves the SvelteKit static build at `nusantara.readynaz.com`.
+2. **Published data:** a separate scheduled Worker collects only approved sources into D1 and writes versioned JSON publications to the `publications` D1 table. A Pages Function serves `/data/published/*` from D1 on the same hostname. No separate public data hostname or R2 bucket is required.
+3. **Cache and cost:** JSON responses use public cache headers capped at 60 seconds and at publication expiry. Pages explicitly caches successful public JSON in `caches.default`, ignoring unused query strings and rejecting expired cache entries. Cache hits can avoid D1 reads but do not avoid Function invocations. Monitor Pages Function and D1 usage; application controls do not impose a hard incoming invocation-cost cap.
+4. **Archive downloads:** Pages exposes `POST /api/export` through the existing server-side Turnstile verifier. D1-backed fixed-window request/download limits and an atomic daily export budget protect the handler. The production widget is `0x4AAAAAAFpTFqEhiXanSRaa`; its secret belongs only in Pages `TURNSTILE_SECRET`. Verification requires action `archive_download` and exact hostname `nusantara.readynaz.com`. Other methods return 405. No approved source means no archive is available, even after successful verification. There are no public record-write APIs.
 
-An empty `VITE_PUBLIC_DATA_ORIGIN` uses the same-origin `/data/published/*` R2-reader fallback **only on loopback hosts**. Production refuses a missing CDN origin, and its application Worker does not serve hot objects (`LOCAL_HOT_DATA_FALLBACK=false`). Local commands explicitly enable that fallback because Wrangler can rewrite request hostnames. This prevents silently deploying a per-view Worker/R2 read path instead of direct CDN delivery. Neither `caches.default` nor a native Worker rate limiter prevents the Worker invocation itself.
+The application reads same-origin `/data/published/*`. When no valid publication is available, it shows the unavailable state or dated bundled snapshots; bundled data is not live collection.
 
 ## Static publication contract
 
@@ -30,9 +30,7 @@ The dates above illustrate the schema, not live data. Snapshot pointers use the 
 
 The initial hot window is **30 days**, with up to 50 summary observations and 200 snapshot records. Summary counts/facts describe that recent collected sample, not a national total. Current warning publication requires a complete, healthy collection; a collection exceeding its supported publication budget is withheld rather than silently truncated. Cold archives retain up to **365 days**.
 
-Payloads upload before the manifest. R2 conditional ETags and publication timestamps prevent an older overlapping run from rolling back the active pointer. Public JSON has a 2 MB materialization budget. HTTP freshness is at most 60 seconds and bounded by publication validity; warning validity is also bounded by CAP expiry and last successful crawl +15 minutes. Source timestamps are preserved, never made fresh by republication.
-
-**Public R2 cannot enforce hard access expiry.** `Expires` is not access control, and deleting an object does not purge an already cached response. Clients enforce absolute validity. Cron removes expired release objects; configure a short R2 lifecycle safety net (one day for these disposable hot projections), appropriate CDN expiry and purge procedures. Hot projections contain recent data, not the full year archive. Withdrawal of reuse approval requires republishing, removal and any necessary CDN purge; do not promise instant revocation of previously downloaded public files.
+The scheduled publisher writes versioned payloads and promotes the manifest in one D1 batch. A conditional timestamp update prevents an older overlapping run from rolling back the active pointer. Public JSON has a 2 MB materialization budget. HTTP freshness is at most 60 seconds and bounded by publication validity; warning validity is also bounded by CAP expiry and last successful crawl +15 minutes. Source timestamps are preserved, never made fresh by republication. D1 cleanup removes expired versioned publications; the stable manifest is updated on each successful schedule.
 
 ## Protected cold export
 
@@ -42,8 +40,8 @@ The server requires same-origin POST, a bounded body, valid dataset/date inputs,
 
 Cost controls:
 
-- Native request limiter: **10/minute per hashed IP**, before Siteverify; download limiter: **2/minute per hashed IP** after verification.
-- Native shared budget: **20 verified requests/minute per Cloudflare location**, after successful Siteverify and the per-IP download check. Invalid proofs cannot exhaust this download pool. Native counters are approximate/eventually consistent per location, not a strict global quota.
+- Pages D1 fixed-window request limiter: **10/minute per hashed IP**, before Siteverify; download limiter: **2/minute per hashed IP** after verification. These security-counter queries run before archive-record reads. The scheduler removes expired counters. The local Worker retains its native rate-limit bindings.
+- Pages D1 shared budget: **20 verified requests/minute globally**, after successful Siteverify and the per-IP download check. Atomic conditional updates prevent concurrent over-consumption. Invalid proofs cannot exhaust this download pool. Fixed windows permit bursts across a boundary; they are not sliding-window limits.
 - D1 atomic global daily budget: **20 verified archive attempts/day** by default (`COLD_DAILY_DOWNLOAD_LIMIT`), including requests rejected by the size preflight. This bounds expensive archive work across locations.
 - Each request covers at most **31 UTC days**, at most **20,000 records / 10 MB of stored normalized payload**, with 500-row indexed keyset pages. Oversized requests return 413, never a silently truncated file. A conservative encoded-size preflight and a 32 MB stream guard also bound CSV quoting, attribution and JSON wrapper overhead; an unexpected mid-stream overflow aborts the download rather than silently completing a truncated file.
 - Production edge WAF/rate-limit rules should reject disallowed `/api/*` methods/routes and abusive export traffic **before Worker execution**. Account/plan availability and thresholds need operator confirmation; in-Worker controls alone cannot cap incoming invocation charges.
@@ -58,7 +56,7 @@ Checked-in weather and earthquake snapshots are a separate, explicitly dated rel
 
 ## Scheduled sources and retention
 
-Cron runs every five minutes; persisted per-source due times determine actual acquisition. Application policies: BMKG CAP 5 minutes, earthquake M5+ list 15 minutes. BNPB/InaRISK/FIRMS/WorldPop remain disabled pending verified schemas, editions, credentials where relevant and reuse rights. These intervals are not provider update guarantees. BMKG's earthquake portal publishes an attribution requirement and 60 requests/minute/IP ceiling; it does not itself grant a blanket dataset redistribution license.
+The separate scheduler Worker cron runs every five minutes; persisted per-source due times determine actual acquisition. Application policies: BMKG CAP 5 minutes, earthquake M5+ list 15 minutes. BNPB/InaRISK/FIRMS/WorldPop remain disabled pending verified schemas, editions, credentials where relevant and reuse rights. These intervals are not provider update guarantees. BMKG's earthquake portal publishes an attribution requirement and 60 requests/minute/IP ceiling; it does not itself grant a blanket dataset redistribution license.
 
 Before activation, record dataset-specific `LICENSE`, `LICENSE_URL`, `REVIEWED_BY`, `REVIEWED_AT` in the matching `BMKG_EARTHQUAKES_*`/`BMKG_NOWCAST_*` vars and add the source to `APPROVED_SOURCE_IDS`. These operator records do not prove or grant rights. CAP area names are never guessed into historical administrative codes.
 
@@ -71,26 +69,26 @@ npm run data:bootstrap
 npm run worker:dev
 ```
 
-Bootstrap builds, applies **local-only** migrations, seeds 552 current hierarchy rows, invokes the scheduler once, writes a local R2 manifest and prints summary/source status. Empty approvals collect no provider records. The bootstrap stops its local server before returning. Plain `npm run dev` is UI development; the built Worker provides the complete local D1/R2 stack. Do not add `--remote` to bootstrap or integration commands.
+Bootstrap builds, applies **local-only** migrations, seeds 552 current hierarchy rows, invokes the scheduler once, writes the local D1 publication manifest and prints summary/source status. Empty approvals collect no provider records. The bootstrap stops its local server before returning. Plain `npm run dev` is UI development; `npm run worker:dev` serves the local scheduled Worker and D1 stack. `npm run pages:dev` exercises the Pages Functions adapter. Do not add `--remote` to bootstrap or integration commands.
 
-## Production gates — not executed
+## Production setup and activation gates
 
-Confirm the intended account and resource names before any remote changes. Create/confirm D1 and the dedicated hot R2 bucket, replace the placeholder D1 ID, apply migrations/seeds, and confirm custom domains. Public R2 access, CORS, JSON caching, lifecycle/purge policy and edge protections require explicit setup. Set `VITE_PUBLIC_DATA_ORIGIN` and the real public `VITE_TURNSTILE_SITE_KEY` before the production build.
+The Pages project is configured in `pages/wrangler.jsonc`; the scheduled Worker remains in the root `wrangler.jsonc` as `nusantara-atlas-scheduler`. Both must bind the same D1 database. Confirm the account and resource names, create/confirm the Pages project and `nusantara.readynaz.com` custom domain, create the `nusantara-atlas` D1 database, verify the database ID in both configs, apply migrations including `0005_publications.sql`, and seed the reviewed hierarchy before deploying. Pages build output and function routing are produced by `npm run pages:build`; deploy only after its build and dry-run checks pass. No remote resource, DNS record or deployment is created by local checks.
 
-Create or select a managed Turnstile widget for the confirmed website hostname, store its secret through the intended Worker's secret store and keep production `TURNSTILE_HOSTNAMES` free of localhost. Never paste secrets into chat. Confirm unique rate-limit namespaces for the account. Validate a fresh successful protected download and rejection of token replay against the actual deployed handler before calling the integration production-verified. No widget, secret, bucket, database, DNS record or deployment was created by local checks.
+Keep `APPROVED_SOURCE_IDS` and `HAZARD_SOURCE_IDS` empty until dataset-specific reuse and attribution have been reviewed. Scheduled sources remain disabled by default. Apply `0006_request_rate_limits.sql` before deploying the protected Pages handler. Set the public `VITE_TURNSTILE_SITE_KEY` before building; keep the secret in the Pages secret store. The static site still works with dated bundled snapshots. A real successful download and replay-rejection check remains a production activation gate; local mocks and a dummy-token secret check are not end-to-end verification.
 
-Official references: [R2 public custom domains](https://developers.cloudflare.com/r2/buckets/public-buckets/), [R2 caching consistency](https://developers.cloudflare.com/r2/reference/consistency/#caching), [Turnstile Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Worker rate limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/), [BMKG earthquakes](https://data.bmkg.go.id/gempabumi/), [BMKG CAP](https://data.bmkg.go.id/peringatan-dini-cuaca/).
+Official references: [Pages Functions configuration](https://developers.cloudflare.com/pages/functions/wrangler-configuration/), [Pages Functions advanced mode](https://developers.cloudflare.com/pages/functions/advanced-mode/), [D1 Wrangler commands](https://developers.cloudflare.com/d1/wrangler-commands/), [Turnstile Siteverify](https://developers.cloudflare.com/turnstile/get-started/server-side-validation/), [Worker rate limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/), [BMKG earthquakes](https://data.bmkg.go.id/gempabumi/), [BMKG CAP](https://data.bmkg.go.id/peringatan-dini-cuaca/).
 
 ## Hazard schedule
 
-`cloudflare/hazards.ts` runs inside the same `*/5` cron after the approved-source crawl. Each hazard source has its own interval, stores events in D1 table `hazard_events` (migration `0004_hazard_events.sql`) and the Worker publishes the re-aggregated `data/observations/hazards.json` to R2. It does nothing until the `HAZARD_SOURCE_IDS` variable lists sources, so deploying is safe. A tick where every source is due can exceed 50 subrequests (up to 60 BMKG CAP detail pages plus the feeds and D1/R2 calls), so use the Workers Paid plan or enable fewer sources. See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md).
+`cloudflare/hazards.ts` runs inside the same `*/5` cron after the approved-source crawl. Each hazard source has its own interval, stores events in D1 table `hazard_events` (migration `0004_hazard_events.sql`) and the Worker publishes the re-aggregated `data/observations/hazards.json` to the D1 `publications` table (`0005_publications.sql`). Pages serves this snapshot at `/data/live/hazards.json`, leaving the bundled `/data/observations/hazards.json` available as a dated fallback. Each enabled cron tick refreshes the projection's 15-minute validity without changing collection timestamps, even when no source is due. Set matching `HAZARD_SOURCE_IDS` values in both Wrangler configs after review. It does nothing until the `HAZARD_SOURCE_IDS` variable lists sources, so deploying is safe. A tick where every source is due can exceed 50 subrequests (up to 60 BMKG CAP detail pages plus the feeds and D1 calls), so use the Workers Paid plan or enable fewer sources. See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md).
 
 ## Why the Observatory can be empty, and how to fill it
 
-The Observatory reads `/data/published/manifest.json`. Only the scheduled Worker writes it (sources → D1 → R2 → manifest), so a plain static host (`vite dev`, `serve-built.mjs`, a bare Pages deploy) has no manifest and the section shows its unavailable state. When that happens the page falls back to the checked-in snapshots (earthquakes, hazards, forecast) and labels them with their saved date; these are not live collection counts.
+The Observatory reads `/data/published/manifest.json`. Only the scheduled Worker writes it (sources → D1 → D1 publications); Pages Functions serve it from the same hostname. Local plain static hosting without the Pages Function or Worker has no manifest, so the section shows its unavailable state. The page still falls back to checked-in snapshots (earthquakes, hazards, forecast) and labels them with their saved date; these are not live collection counts.
 
 To fill it for real:
 
-1. Local: `npm run data:bootstrap` applies migrations, seeds regions, runs one scheduled collection and prints the published summary. Then `npm run worker:dev` serves the site with `/data/published/*` on loopback.
-2. Production: deploy the Worker with its cron trigger and R2 `HOT_DATA` bucket, enable the sources you have approved, and set `VITE_PUBLIC_DATA_ORIGIN` to the public R2 custom domain at build time.
+1. Local: `npm run data:bootstrap` applies migrations, seeds regions, runs one scheduled collection and prints the published summary. `npm run worker:dev` serves the Worker locally; `npm run pages:dev` runs the Pages Function adapter.
+2. Production: provision Pages and the separate cron Worker, bind both to the same migrated D1 database, and deploy the Pages build. No public data origin is needed. Keep sources disabled until approved.
 3. Counts grow only after collection runs: each run stores new observations, and the summary covers the last 30 days. Right after the first run most counts are small.

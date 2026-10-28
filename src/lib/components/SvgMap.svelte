@@ -20,6 +20,7 @@
   let scale = $state(1);
   let panX = $state(0);
   let panY = $state(0);
+  let svgElement = $state<SVGSVGElement>();
   let previousGeometry: GeometryPackage | undefined;
   $effect(() => { if (geometry !== previousGeometry) { previousGeometry = geometry; reset(); } });
 
@@ -74,11 +75,60 @@
     let touchCode: string | undefined;
     let touchPin: string | undefined;
     let suppressClickUntil = 0;
+    let multiTouch = false;
+    let tapTimer: ReturnType<typeof setTimeout> | undefined;
+    let lastTap: { x: number; y: number; time: number } | undefined;
+    function clearTap() { clearTimeout(tapTimer); tapTimer = undefined; lastTap = undefined; }
     function coordinates(event: PointerEvent) { return { x: event.clientX, y: event.clientY }; }
+    function mapPoint(point: { x: number; y: number }) {
+      const matrix = svgElement?.getScreenCTM();
+      if (!matrix) return undefined;
+      return new DOMPoint(point.x, point.y).matrixTransform(matrix.inverse());
+    }
+    function midpoint(points: Array<{ x: number; y: number }>) {
+      return { x: (points[0].x + points[1].x) / 2, y: (points[0].y + points[1].y) / 2 };
+    }
+    function pinch(before: Array<{ x: number; y: number }>, after: Array<{ x: number; y: number }>) {
+      const oldDistance = Math.hypot(before[0].x - before[1].x, before[0].y - before[1].y);
+      if (oldDistance <= 0) return;
+      const newDistance = Math.hypot(after[0].x - after[1].x, after[0].y - after[1].y);
+      const oldCenter = mapPoint(midpoint(before));
+      const newCenter = mapPoint(midpoint(after));
+      if (!oldCenter || !newCenter) return;
+      zoomAt(newDistance / oldDistance, oldCenter, newCenter);
+    }
+    function zoomAt(factor: number, oldCenter: { x: number; y: number }, newCenter = oldCenter) {
+      const oldScale = scale;
+      scale = Math.min(MAX_SCALE, Math.max(1, scale * factor));
+      const ratio = scale / oldScale;
+      panX = newCenter.x - centerX - (oldCenter.x - centerX - panX) * ratio;
+      panY = newCenter.y - centerY - (oldCenter.y - centerY - panY) * ratio;
+    }
+    function tap(event: PointerEvent) {
+      const now = performance.now();
+      if (lastTap && now - lastTap.time <= 280 && Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) < 24) {
+        clearTap();
+        const focus = mapPoint(coordinates(event));
+        if (focus) zoomAt(1.5, focus);
+        return;
+      }
+      clearTimeout(tapTimer);
+      const code = touchCode;
+      const pinId = touchPin;
+      lastTap = { ...coordinates(event), time: now };
+      tapTimer = setTimeout(() => {
+        lastTap = undefined;
+        if (pinId) { const pin = overlay?.pins.find(item => item.id === pinId); if (pin) onpin?.(pin); }
+        else if (code) onselect(code);
+      }, 280);
+    }
     function down(event: PointerEvent) {
       if ((event.target as Element).closest('button')) return;
-      pointers.set(event.pointerId, coordinates(event)); moved = 0;
+      if (pointers.size === 0) { moved = 0; multiTouch = false; }
+      pointers.set(event.pointerId, coordinates(event));
+      if (pointers.size > 1) { multiTouch = true; clearTap(); }
       if (event.pointerType === 'touch') {
+        node.setPointerCapture(event.pointerId);
         touchCode = (event.target as Element).closest('[data-code]')?.getAttribute('data-code') ?? undefined;
         touchPin = (event.target as Element).closest('[data-pin-id]')?.getAttribute('data-pin-id') ?? undefined;
       }
@@ -91,30 +141,36 @@
       pointers.set(event.pointerId, point);
       moved += Math.abs(point.x - previous.x) + Math.abs(point.y - previous.y);
       if (moved < 5) return;
+      clearTap();
       node.setPointerCapture(event.pointerId);
-      const bounds = node.getBoundingClientRect();
-      const ratio = box[2] / bounds.width;
       if (pointers.size === 2) {
-        const after = [...pointers.values()];
-        const oldDistance = Math.hypot(before[0].x - before[1].x, before[0].y - before[1].y);
-        const newDistance = Math.hypot(after[0].x - after[1].x, after[0].y - after[1].y);
-        if (oldDistance > 0) zoom(newDistance / oldDistance);
+        pinch(before, [...pointers.values()]);
+      } else if (pointers.size === 1) {
+        const oldPoint = mapPoint(previous);
+        const newPoint = mapPoint(point);
+        if (!oldPoint || !newPoint) return;
+        panX += newPoint.x - oldPoint.x;
+        panY += newPoint.y - oldPoint.y;
       }
-      panX = Math.max(-box[2] * scale, Math.min(box[2] * scale, panX + (point.x - previous.x) * ratio));
-      panY = Math.max(-box[3] * scale, Math.min(box[3] * scale, panY + (point.y - previous.y) * ratio));
+      panX = Math.max(-box[2] * scale, Math.min(box[2] * scale, panX));
+      panY = Math.max(-box[3] * scale, Math.min(box[3] * scale, panY));
     }
     function up(event: PointerEvent) {
       if (!pointers.has(event.pointerId)) return;
       if (moved > 5 || event.pointerType === 'touch') suppressClickUntil = performance.now() + 300;
-      if (event.pointerType === 'touch' && moved < 5 && pointers.size === 1) {
-        if (touchPin) { const hit = overlay?.pins.find(pin => pin.id === touchPin); if (hit) onpin?.(hit); }
-        else if (touchCode) onselect(touchCode);
-      }
+      if (event.pointerType === 'touch' && !multiTouch && moved < 5 && pointers.size === 1) tap(event);
       touchPin = undefined;
       pointers.delete(event.pointerId);
+      if (pointers.size === 0) multiTouch = false;
       if (node.hasPointerCapture(event.pointerId)) node.releasePointerCapture(event.pointerId);
     }
-    function cancel(event: PointerEvent) { pointers.delete(event.pointerId); touchCode = undefined; touchPin = undefined; }
+    function cancel(event: PointerEvent) {
+      clearTap();
+      pointers.delete(event.pointerId);
+      touchCode = undefined;
+      touchPin = undefined;
+      if (pointers.size === 0) multiTouch = false;
+    }
     function click(event: MouseEvent) { if (performance.now() < suppressClickUntil) { event.stopPropagation(); event.preventDefault(); } }
     function wheel(event: WheelEvent) {
       event.preventDefault();
@@ -127,6 +183,7 @@
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', cancel);
     return { destroy() {
+      clearTap();
       node.removeEventListener('wheel', wheel); node.removeEventListener('pointerdown', down);
       node.removeEventListener('pointermove', move); node.removeEventListener('click', click, true);
       window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', cancel);
@@ -135,7 +192,7 @@
 </script>
 
 <div class="atlas-map interactive" use:interaction>
-  <svg viewBox={geometry.viewBox} aria-label={label} role="group">
+  <svg bind:this={svgElement} viewBox={geometry.viewBox} preserveAspectRatio="xMidYMid meet" aria-label={label} role="group">
     <g transform={`translate(${centerX + panX} ${centerY + panY}) scale(${scale}) translate(${-centerX} ${-centerY})`}>
       <g class="region-depth" transform={`translate(0 ${box[3] * 0.012})`} aria-hidden="true">
         {#each geometry.regions as region (region.id)}<path d={region.path} />{/each}
@@ -174,10 +231,10 @@
 <p class="map-help">{m.map_help()}</p>
 
 <style>
-  .atlas-map { min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; background: linear-gradient(180deg, var(--green-wash), var(--map-bg)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
+  .atlas-map { height: var(--map-viewport-height, clamp(280px, 52svh, 520px)); min-width: 0; display: block; background: linear-gradient(180deg, var(--green-wash), var(--map-bg)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
   .interactive { touch-action: none; cursor: grab; }
   .interactive:active { cursor: grabbing; }
-  svg { width: 100%; height: auto; }
+  svg { display: block; width: 100%; height: 100%; }
   path { fill: var(--fill-light, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
   .region-depth { pointer-events: none; }
   .region-depth path { fill: #00000030; stroke: none; cursor: default; }

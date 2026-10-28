@@ -57,10 +57,7 @@ function validateManifest(value: unknown): PublicationManifest {
 
 function publicUrl(path: string): string {
   const origin = import.meta.env?.VITE_PUBLIC_DATA_ORIGIN;
-  if (!origin) {
-    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '[::1]') return path;
-    throw new PublicationUnavailableError('Production hot data requires a direct public CDN origin');
-  }
+  if (!origin) return path;
   const url = new URL(origin);
   if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new PublicationUnavailableError('Invalid public data origin');
   return new URL(path, url.origin).href;
@@ -88,7 +85,7 @@ async function fetchPayload<T>(url: string, signal?: AbortSignal): Promise<T> {
   return await response.json() as T;
 }
 
-/** The browser reads only the signed-off static publication; D1 remains server-side. */
+/** The browser reads approved publications through Pages Functions; D1 remains server-side. */
 export async function loadPublished<T = unknown>(name: PublicationName, signal?: AbortSignal): Promise<PublishedData<T>> {
   const manifest = await fetchManifest();
   if (signal?.aborted) throw new DOMException('The request was aborted', 'AbortError');

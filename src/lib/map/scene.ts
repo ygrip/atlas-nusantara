@@ -13,6 +13,7 @@ import type { MapPin, PointOverlay } from './overlay-contract';
 import { projectLonLat } from './geometry';
 import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
 import { MAP_CENTER, parseRings } from './geometry';
+import { MapTouchGestures } from './touch-gestures';
 import { TerrainModel } from './terrain';
 import { FIELD_HEIGHT, FIELD_WIDTH, packField, PLANE_HEIGHT, PLANE_WIDTH, sampleChannel, type WeatherField } from './weather';
 import { CLOUD_BASE_HEIGHT, CLOUD_TOP_HEIGHT } from './layout';
@@ -123,6 +124,7 @@ export class AtlasScene {
   private disposed = false;
   private rendering = false;
   private homeDistance = 1;
+  private homeFramed = false;
   private flight: { from: Vector3; to: Vector3; fromTarget: Vector3; toTarget: Vector3; start: number; duration: number } | undefined;
 
   private terrain: TerrainModel | undefined;
@@ -173,6 +175,9 @@ export class AtlasScene {
   private pointerDown: { x: number; y: number } | undefined;
   private activePointers = new Set<number>();
   private pendingHover: { x: number; y: number } | undefined;
+  private readonly touchGestures: MapTouchGestures;
+  private lastTouchTap: { x: number; y: number; time: number } | undefined;
+  private touchTapTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly container: HTMLElement, private readonly callbacks: SceneCallbacks, private readonly reducedMotion: boolean) {
     this.compact = window.innerWidth < 700;
@@ -193,6 +198,7 @@ export class AtlasScene {
     this.controls.maxDistance = CAMERA_LIMITS.maxDistance;
     this.controls.maxPolarAngle = MAX_TILT;
     this.controls.addEventListener('change', () => { this.invalidate(); this.emitZoom(); });
+    this.controls.addEventListener('start', () => { this.homeFramed = false; this.flight = undefined; });
 
     this.paletteTexture = new DataTexture(this.paletteData, 256, 1, RGBAFormat);
     this.paletteTexture.magFilter = NearestFilter;
@@ -209,6 +215,11 @@ export class AtlasScene {
     this.scene.add(this.windParticles.lines, this.rain.lines);
 
     this.applyTheme('light');
+    this.touchGestures = new MapTouchGestures({
+      element: this.renderer.domElement, camera: this.camera, controls: this.controls,
+      onInteraction: () => { this.homeFramed = false; this.flight = undefined; },
+      onGesture: () => { this.pointerDown = undefined; this.cancelTouchTap(); }
+    });
     this.bindPointer();
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
@@ -448,8 +459,11 @@ export class AtlasScene {
   }
 
   home(animate = true): void {
-    this.homeDistance = this.fitDistance([20, 30, 980, 470], 1);
-    this.flyToBox([20, 30, 980, 470], animate, 1);
+    let homePadding = 1;
+    if (this.container.clientWidth < 700) homePadding = 0.94;
+    this.homeDistance = this.fitDistance([20, 30, 980, 470], homePadding);
+    this.flyToBox([20, 30, 980, 470], animate, homePadding);
+    this.homeFramed = true;
     this.updateFogRange();
     this.emitZoom();
   }
@@ -466,6 +480,8 @@ export class AtlasScene {
     this.resizeObserver.disconnect();
     this.visibilityObserver.disconnect();
     document.removeEventListener('visibilitychange', this.onVisibility);
+    this.touchGestures.destroy();
+    this.cancelTouchTap();
     this.controls.dispose();
     this.scene.traverse(object => {
       const mesh = object as Mesh;
@@ -591,6 +607,7 @@ export class AtlasScene {
   }
 
   private flyToBox(box: [number, number, number, number], animate: boolean, padding = 1.15): void {
+    this.homeFramed = false;
     const center = world((box[0] + box[2]) / 2, (box[1] + box[3]) / 2, 0);
     if (this.terrain) center.y = Math.max(0, this.terrain.surfaceAt((box[0] + box[2]) / 2, (box[1] + box[3]) / 2) * 0.5);
     const offset = this.camera.position.clone().sub(this.controls.target);
@@ -613,6 +630,7 @@ export class AtlasScene {
   }
 
   private flyTo(position: Vector3, target: Vector3, duration: number): void {
+    this.homeFramed = false;
     if (this.reducedMotion) duration = 0;
     this.flight = { from: this.camera.position.clone(), to: position, fromTarget: this.controls.target.clone(), toTarget: target, start: performance.now(), duration };
     this.start();
@@ -638,6 +656,32 @@ export class AtlasScene {
   }
 
   // --- interaction --------------------------------------------------------------------------
+
+  private cancelTouchTap(): void {
+    clearTimeout(this.touchTapTimer);
+    this.lastTouchTap = undefined;
+  }
+
+  private touchTap(event: PointerEvent): void {
+    const now = performance.now();
+    const previous = this.lastTouchTap;
+    if (previous && now - previous.time <= 280 && Math.hypot(event.clientX - previous.x, event.clientY - previous.y) < 28) {
+      this.cancelTouchTap();
+      this.zoomBy(1.5);
+      return;
+    }
+    this.cancelTouchTap();
+    const { clientX, clientY } = event;
+    this.lastTouchTap = { x: clientX, y: clientY, time: now };
+    this.touchTapTimer = setTimeout(() => { this.lastTouchTap = undefined; this.selectAt(clientX, clientY); }, 280);
+  }
+
+  private selectAt(clientX: number, clientY: number): void {
+    const pin = this.pickPin(clientX, clientY);
+    if (pin) { this.callbacks.onpinclick?.(pin); return; }
+    const region = this.pick(clientX, clientY);
+    if (region) this.callbacks.onselect(region.code);
+  }
 
   private bindPointer(): void {
     const canvas = this.renderer.domElement;
@@ -667,13 +711,14 @@ export class AtlasScene {
       const start = this.pointerDown;
       this.pointerDown = undefined;
       if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) > 6) return;
-      const pin = this.pickPin(event.clientX, event.clientY);
-      if (pin) { this.callbacks.onpinclick?.(pin); return; }
-      const region = this.pick(event.clientX, event.clientY);
-      if (region) this.callbacks.onselect(region.code);
+      if (event.pointerType === 'touch') { this.touchTap(event); return; }
+      this.selectAt(event.clientX, event.clientY);
     });
     canvas.addEventListener('pointermove', event => {
-      if (this.pointerDown && Math.hypot(event.clientX - this.pointerDown.x, event.clientY - this.pointerDown.y) > 6) this.pointerDown = undefined;
+      if (this.pointerDown && Math.hypot(event.clientX - this.pointerDown.x, event.clientY - this.pointerDown.y) > 6) {
+        this.pointerDown = undefined;
+        this.cancelTouchTap();
+      }
       if (event.buttons !== 0 || event.pointerType === 'touch') return;
       this.pendingHover = { x: event.clientX, y: event.clientY };
       this.start();
@@ -869,6 +914,7 @@ export class AtlasScene {
     this.viewportHeight.value = Math.max(1, this.renderer.domElement.height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    if (this.homeFramed) this.home(false);
     this.dirty = true;
     this.start();
   }

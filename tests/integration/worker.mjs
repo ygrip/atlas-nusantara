@@ -24,11 +24,11 @@ async function triggerPublication() {
   assert.match(manifestResponse.headers.get('cache-control'), /public, max-age=/);
   return await manifestResponse.json();
 }
-async function withWorker(variables, verify) {
+async function withServer(args, verify) {
   let occupied = false;
   try { await fetch(base, { signal: AbortSignal.timeout(500) }); occupied = true; } catch (error) { if (error.name === 'TimeoutError') throw Error('Integration port is occupied or unresponsive.'); }
   if (occupied) throw Error('Integration test port is already occupied.');
-  const child = spawn(process.execPath, [cli, 'dev', '--local', '--test-scheduled', '--var', 'LOCAL_HOT_DATA_FALLBACK:true', '--persist-to', state, '--port', '8788', '--inspector-port', '9238', ...variables.flatMap(value => ['--var', value])], { env: environment });
+  const child = spawn(process.execPath, [cli, ...args], { env: environment });
   let logs = '';
   child.stdout.on('data', data => logs = (logs + data).slice(-8000));
   child.stderr.on('data', data => logs = (logs + data).slice(-8000));
@@ -48,6 +48,10 @@ async function withWorker(variables, verify) {
     child.kill('SIGINT'); await Promise.race([ended, sleep(3000)]);
     if (child.exitCode === null) child.kill('SIGKILL');
   }
+}
+function withWorker(variables, verify) {
+  const args = ['dev', '--local', '--test-scheduled', '--persist-to', state, '--port', '8788', '--inspector-port', '9238', ...variables.flatMap(value => ['--var', value])];
+  return withServer(args, verify);
 }
 const quote = value => "'" + String(value).replaceAll("'", "''") + "'";
 const now = new Date().toISOString();
@@ -97,6 +101,34 @@ try {
     assert.equal(summary.activeWarningCount, null);
     assert.deepEqual(manifest.snapshots, {});
   });
+  // Pages shares the local D1 database, but never invokes the scheduler or requires R2.
+  await withServer(['pages', 'dev', '--cwd', 'pages', '--persist-to', state, '--port', '8788', '--inspector-port', '9238'], async () => {
+    const manifestResponse = await fetch(base + '/data/published/manifest.json');
+    assert.equal(manifestResponse.status, 200, await manifestResponse.clone().text());
+    assert.equal(manifestResponse.headers.get('x-content-type-options'), 'nosniff');
+    assert.match(manifestResponse.headers.get('content-security-policy'), /default-src 'none'/);
+    const manifest = await manifestResponse.json();
+    const summary = await (await fetch(base + manifest.summary)).json();
+    assert.equal(summary.counts.earthquake, 0);
+    const head = await fetch(base + manifest.summary, { method: 'HEAD' });
+    assert.equal(head.status, 200);
+    assert.equal(await head.text(), '');
+    for (const path of ['/', '/id/', '/terms/', '/privacy/', '/data/observations/hazards.json']) {
+      assert.equal((await fetch(base + path)).status, 200, path);
+    }
+    assert.equal((await fetch(base + '/does-not-exist', { headers: { accept: 'text/html' } })).status, 404);
+    assert.equal((await fetch(base + '/api/summary')).status, 404);
+    assert.equal((await fetch(base + '/data/live/hazards.json')).status, 503);
+    assert.equal((await fetch(base + '/api/export')).status, 405);
+    const archive = await fetch(base + '/api/export', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: '{}' });
+    assert.equal(archive.status, 503);
+    assert.equal(archive.headers.get('cache-control'), 'no-store');
+    assert.equal(archive.headers.get('x-frame-options'), 'DENY');
+    assert.equal((await fetch(base + '/data/published/manifest.json', { headers: { 'sec-fetch-site': 'cross-site' } })).status, 403);
+    const shell = await fetch(base + '/');
+    assert.match(shell.headers.get('content-security-policy'), /sha256-/);
+    assert.equal((await fetch(base + '/data/published/not-a-publication')).status, 404);
+  });
   assert.equal(query("SELECT COUNT(*) AS count FROM observations WHERE id IN ('fixture-old-event','fixture-old-first-seen')")[0].results[0].count, 0);
   assert.equal(query("SELECT COUNT(*) AS count FROM observations WHERE id = 'fixture-cold'")[0].results[0].count, 1);
   const budgetDay = now.slice(0, 10);
@@ -107,5 +139,5 @@ try {
   const newer = new Date(Date.now() - 59 * 86400000).toISOString();
   const selected = query(`SELECT id FROM observations WHERE kind = 'earthquake' AND source_id IN ('bmkg-earthquakes') AND COALESCE(observed_at,first_seen_at) >= ${quote(older)} AND COALESCE(observed_at,first_seen_at) < ${quote(newer)} AND (COALESCE(observed_at,first_seen_at),id) > ('','') ORDER BY COALESCE(observed_at,first_seen_at),id LIMIT 500`);
   assert.deepEqual(selected[0].results.map(row => row.id), ['fixture-cold']);
-  console.log('Local workerd/D1/R2 integration passed: static hot publication, source filtering, retention deletion, protected cold export, static hierarchy, known routes and HTTP 404 routing. No remote resources, provider calls or live Siteverify calls.');
+  console.log('Local Worker/Pages/D1 integration passed: D1 hot publications, source filtering, retention deletion, protected cold export, static hierarchy, known routes and HTTP 404 routing. No remote resources, provider calls or live Siteverify calls.');
 } finally { await rm(state, { recursive: true, force: true }); }

@@ -64,7 +64,7 @@ async function readArchiveRequest(request: Request): Promise<ArchiveRequest & { 
   return { kind: input.kind as ArchiveRequest['kind'], format: input.format, token, ...archiveWindow(input) };
 }
 
-/** Bot verification, not visitor identity. No D1 call occurs before this succeeds. */
+/** Bot verification, not visitor identity. Archive records are read only after this succeeds. */
 export async function verifyArchiveRequest(request: Request, env: ColdDownloadEnv, fetcher: typeof fetch = fetch): Promise<ArchiveRequest | Response> {
   if (request.method !== 'POST') return reject(405, 'Use a verified POST to download the cold archive.');
   const url = new URL(request.url);

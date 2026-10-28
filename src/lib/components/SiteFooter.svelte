@@ -25,9 +25,9 @@
     <nav class="footer-col" aria-label={m.legal_label()}>
       <h2>{m.legal_label()}</h2>
       <ul>
-        <li><a href={pathFor('/privacy')}><LockKeyhole size={17} aria-hidden="true" />{m.legal_privacy_link()}</a></li>
-        <li><a href={pathFor('/terms')}><ShieldCheck size={17} aria-hidden="true" />{m.legal_terms_link()}</a></li>
-        <li><a href={pathFor('/terms#sources')}><Database size={17} aria-hidden="true" />{m.source_details()}</a></li>
+        <li><a href={pathFor('/privacy')} data-sveltekit-reload><LockKeyhole size={17} aria-hidden="true" />{m.legal_privacy_link()}</a></li>
+        <li><a href={pathFor('/terms')} data-sveltekit-reload><ShieldCheck size={17} aria-hidden="true" />{m.legal_terms_link()}</a></li>
+        <li><a href={pathFor('/terms#sources')} data-sveltekit-reload><Database size={17} aria-hidden="true" />{m.source_details()}</a></li>
       </ul>
     </nav>
   </div>

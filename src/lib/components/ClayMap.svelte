@@ -577,7 +577,7 @@
 </div>
 
 <style>
-  .clay-map { display: grid; gap: 12px; min-width: 0; }
+  .clay-map { --map-viewport-height: clamp(420px, 68vh, 760px); display: grid; gap: 12px; min-width: 0; }
   .mountain-filters { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
   .mountain-filters button { min-height:38px; border:1px solid var(--border); border-radius:13px; padding:6px 12px; color:inherit; background:var(--surface); font-size:.73rem; font-weight:800; cursor:pointer; box-shadow:0 2px 0 var(--border); }
   .mountain-filters button[aria-pressed='true'] { background:var(--panel); box-shadow:inset 0 2px 5px var(--shadow); }
@@ -600,7 +600,7 @@
   .tool.reset { padding: 0 14px; }
   .map-controls output { min-width: 4ch; text-align: center; font: 800 .75rem ui-monospace, monospace; color: var(--muted); }
   .atlas-map { position: relative; min-height: 360px; display: grid; grid-template-columns: minmax(0, 1fr); border-radius: 24px; overflow: hidden; border: 1px solid var(--border, #e2d6c6); background: var(--map-bg, #dce8dd); }
-  .atlas-3d { height: clamp(420px, 68vh, 760px); touch-action: none; box-shadow: inset 0 2px 0 #ffffff80, 0 18px 40px -22px #5e4a3466; }
+  .atlas-3d { height: var(--map-viewport-height); touch-action: none; box-shadow: inset 0 2px 0 #ffffff80, 0 18px 40px -22px #5e4a3466; }
   .atlas-3d :global(canvas.atlas-canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
   .map-loading { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; font-weight: 800; color: var(--muted, #6c6057); z-index: 2; }
   .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #ffffff90; border-top-color: var(--accent, #b5532c); animation: spin 900ms linear infinite; }
@@ -664,7 +664,8 @@
   }
   /* Phones: icon-only controls. The text stays in the accessibility tree through the aria-labels and clipped labels. */
   @media (max-width: 700px) {
-    .atlas-3d { height: 440px; min-height: 360px; border-radius: 20px; }
+    .clay-map { --map-viewport-height: clamp(280px, 52svh, 420px); }
+    .atlas-3d { min-height: 0; border-radius: 20px; }
     .group-legend { grid-template-columns: 1fr 1fr; font-size: .65rem; }
     .map-toolbar { flex-direction: column; align-items: stretch; gap: 8px; padding: 8px; border-radius: 20px; }
     .segmented { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }

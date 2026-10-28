@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "client": "ca-pub-5501931731194817",
+  "testMode": false,
+  "placements": {
+    "home": "5292790825"
+  },
+  "frameOrigins": [
+    "https://googleads.g.doubleclick.net",
+    "https://tpc.googlesyndication.com",
+    "https://*.safeframe.googlesyndication.com",
+    "https://ep2.adtrafficquality.google",
+    "https://www.google.com"
+  ]
+}

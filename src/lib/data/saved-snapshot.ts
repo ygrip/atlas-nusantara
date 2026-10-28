@@ -10,7 +10,10 @@ export function isBmkgSource(value: unknown): value is string {
 /** Build safe CDN/local candidates without ever sending a visitor's coordinates to a provider. */
 export function snapshotCandidates(path: string, origin?: string): string[] {
   if (!path.startsWith('/data/') || path.startsWith('//')) throw Error('Snapshot path must be a local data asset');
-  if (!origin) return [path];
+  if (!origin) {
+    if (path.split('?')[0] === '/data/observations/hazards.json') return ['/data/live/hazards.json', path];
+    return [path];
+  }
   const base = new URL(origin);
   if (base.protocol !== 'https:' || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw Error('Snapshot CDN must be an HTTPS origin');
   const pathname = path.split('?')[0];

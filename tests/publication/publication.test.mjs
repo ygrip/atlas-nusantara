@@ -20,6 +20,23 @@ function stubFetch(responses) {
   return calls;
 }
 
+test('production uses same-origin Pages publications without a separate CDN', async () => {
+  clearPublicationCache();
+  globalThis.location = new URL('https://nusantara.readynaz.com/');
+  const calls = stubFetch(new Map([
+    ['/data/published/manifest.json', manifest()],
+    [`/data/published/${revision}/summary.json`, { counts: {} }]
+  ]));
+  try {
+    const result = await loadPublished('summary');
+    assert.deepEqual(result.data, { counts: {} });
+    assert.deepEqual(calls.map(call => call.url), ['/data/published/manifest.json', `/data/published/${revision}/summary.json`]);
+  } finally {
+    globalThis.location = new URL('http://127.0.0.1/');
+    clearPublicationCache();
+  }
+});
+
 test('loads only versioned static publication pointers and rejects an expired manifest', async () => {
   clearPublicationCache();
   const root = ''

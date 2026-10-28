@@ -1,0 +1,8 @@
+# Keep the code graph focused on source, tests, and configuration.
+# Exclude bulk datasets and generated data, not their source/build scripts.
+/static/data/
+/cloudflare/generated/
+/cloudflare/seeds/
+
+# Local crawls, downloaded pages, scratch scripts, and temporary worktrees.
+/tmp/

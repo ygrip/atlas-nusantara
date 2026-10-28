@@ -11,7 +11,7 @@ npm run snapshot:hazards                                                  # same
 
 Two schedulers run the same collectors:
 
-1. **Cloudflare Worker (primary)**: `cloudflare/hazards.ts` runs from the existing `*/5 * * * *` cron. Every source has its own interval, claims itself in D1 (`source_state`, id `hazard:<source>`) so overlapping runs cannot double-fetch, stores cleaned events in `hazard_events`, then **re-aggregates everything stored** into one `hazards.json` published to R2 at `data/observations/hazards.json`. Off until `HAZARD_SOURCE_IDS` lists the reviewed sources (comma separated, e.g. `bmkg-cap,bnpb,antara,gdelt`; add `petabencana` only after reviewing its CC BY-NC licence).
+1. **Cloudflare scheduler Worker (primary)**: `cloudflare/hazards.ts` runs from the separate scheduler Worker's existing `*/5 * * * *` cron. Every source has its own interval, claims itself in D1 (`source_state`, id `hazard:<source>`) so overlapping runs cannot double-fetch, stores cleaned events in `hazard_events`, then **re-aggregates everything stored** into one `hazards.json` publication in D1 table `publications` at `data/observations/hazards.json`. Pages Functions serve this publication at `/data/live/hazards.json`; the browser falls back to the separate dated `/data/observations/hazards.json` asset when live data is unavailable. Off until `HAZARD_SOURCE_IDS` lists reviewed sources (comma separated, e.g. `bmkg-cap,bnpb,antara,gdelt`; add `petabencana` only after reviewing its CC BY-NC licence).
 2. **CI / local CLI (fallback)**: the `hazard` job in `.github/workflows/refresh-snapshots.yml` runs `run.mjs --due`. It merges into the previous file instead of rebuilding it.
 
 ### Per-source schedule
@@ -24,7 +24,7 @@ Two schedulers run the same collectors:
 | `gdelt` | 30 min | 14 days | Rate limited (429), four paced queries per run |
 | `bnpb` | 3 h | 60 days | Preliminary table updated through the day |
 
-Intervals live in `scripts/pipeline/sources/registry.mjs`. A failing source is retried after at most 10 minutes and keeps serving its stored events (the snapshot marks it `failed`). Run `npm run build:gazetteer` after the administrative directory or geometry changes; it refreshes `cloudflare/generated/regions.json`, the place data the Worker geocodes with.
+Intervals live in `scripts/pipeline/sources/registry.mjs`. A failing source is retried after at most 10 minutes and keeps serving its stored events (the snapshot marks it `failed`). The stored publication has a bounded 15-minute validity, refreshed on each enabled cron tick even between collections. Collection timestamps stay unchanged; Pages serves the publication only until expiry. Configure the same reviewed `HAZARD_SOURCE_IDS` in both Wrangler configs. Run `npm run build:gazetteer` after the administrative directory or geometry changes; it refreshes `cloudflare/generated/regions.json`, the place data the Worker geocodes with.
 
 ### Re-aggregation of existing data
 

@@ -1,0 +1,29 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "nusantara-atlas",
+
+  "pages_build_output_dir": "../build",
+  "compatibility_date": "2026-10-26",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nusantara-atlas",
+      "database_id": "7201f155-d487-4550-8078-7c2e120c85b7",
+      "migrations_dir": "../cloudflare/migrations"
+    }
+  ],
+  "vars": {
+    "TURNSTILE_HOSTNAMES": "nusantara.readynaz.com",
+    "COLD_DAILY_DOWNLOAD_LIMIT": "20",
+    "APPROVED_SOURCE_IDS": "",
+    "HAZARD_SOURCE_IDS": "",
+    "BMKG_EARTHQUAKES_LICENSE": "",
+    "BMKG_EARTHQUAKES_LICENSE_URL": "",
+    "BMKG_EARTHQUAKES_REVIEWED_BY": "",
+    "BMKG_EARTHQUAKES_REVIEWED_AT": "",
+    "BMKG_NOWCAST_LICENSE": "",
+    "BMKG_NOWCAST_LICENSE_URL": "",
+    "BMKG_NOWCAST_REVIEWED_BY": "",
+    "BMKG_NOWCAST_REVIEWED_AT": ""
+  }
+}

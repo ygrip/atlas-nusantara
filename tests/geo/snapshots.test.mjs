@@ -31,6 +31,20 @@ test('invalid CDN data falls back to the dated release snapshot without credenti
   assert.deepEqual(requests, [['https://snapshots.example/data/weather/forecast.json', 'omit'], ['/data/weather/forecast.json?v=release', 'omit']]);
 });
 
+test('unavailable live hazards fall back to the separate dated asset', async t => {
+  const original = globalThis.fetch;
+  t.after(() => { globalThis.fetch = original; });
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(String(url));
+    if (url === '/data/live/hazards.json') return Response.json({ status: 'unavailable' }, { status: 503 });
+    return Response.json({ saved: true });
+  };
+  const data = await loadSavedSnapshot('/data/observations/hazards.json?v=release', value => value?.saved === true);
+  assert.deepEqual(data, { saved: true });
+  assert.deepEqual(requests, ['/data/live/hazards.json', '/data/observations/hazards.json?v=release']);
+});
+
 test('both shipped snapshot schemas pass validation', async () => {
   const forecast = JSON.parse(await readFile('static/data/weather/forecast.json', 'utf8'));
   const quakes = JSON.parse(await readFile('static/data/observations/earthquakes.json', 'utf8'));

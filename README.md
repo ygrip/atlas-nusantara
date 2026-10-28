@@ -1,6 +1,6 @@
 # Atlas Nusantara
 
-Atlas Nusantara brings information about Indonesia together—from provinces and cities to landscapes, destinations, culture and changing conditions. Explore the map, browse source-backed data layers and compare what different sources tell us. Prepared for **https://nusantara.readynaz.com** on Cloudflare Workers.
+Atlas Nusantara brings information about Indonesia together—from provinces and cities to landscapes, destinations, culture and changing conditions. Explore the map, browse source-backed data layers and compare what different sources tell us. Prepared for **https://nusantara.readynaz.com** on Cloudflare Pages with a separate scheduled Worker.
 
 **Not an emergency alert service.** Forecasts and earthquake records are dated snapshots. Missing data never means an all-clear.
 
@@ -42,7 +42,7 @@ npm run test:worker
 npm run worker:dry-run
 ```
 
-The Worker integration uses isolated **local** workerd/D1/R2 resources and synthetic fixtures. It does not call providers, activate live push or modify remote resources.
+The Worker integration uses isolated **local** workerd/D1 resources and synthetic fixtures. It does not call providers, activate live push or modify remote resources. Pages Functions serve hot publications from D1; archive requests require server-side Turnstile verification, D1 request limits and an atomic daily budget. Sources remain disabled until approved.
 
 Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the supported fixes require framework/adapter major upgrades. Compatible tooling updates cleared the high/moderate findings. Review the remaining chain before enabling server-rendered routes.
 
@@ -67,7 +67,7 @@ Administrative codes follow the pinned 2025 transcription. See [DATA_SOURCES.md]
 
 ## Cloudflare and extensions
 
-`npm run data:bootstrap` builds and seeds the local 552-row hierarchy. Source approval gates for the scheduled D1/R2 publication pipeline remain separate from the checked-in snapshots. Review [CLOUDFLARE.md](docs/CLOUDFLARE.md) before deployment; remote resources and source approvals are not configured by a commit.
+`npm run data:bootstrap` builds and seeds the local 552-row hierarchy. Source approval gates for the scheduled D1 publication pipeline remain separate from the checked-in snapshots. Review [CLOUDFLARE.md](docs/CLOUDFLARE.md) before deployment; remote resources and source approvals are not configured by a commit. Pages commands: `npm run pages:build`, `npm run pages:dev`, `npm run pages:deploy`.
 
 Add mountain, volcano or landmark points through the typed [overlay contract](docs/OVERLAYS.md), not by editing the base-map renderer.
 

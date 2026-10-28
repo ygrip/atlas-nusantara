@@ -12,5 +12,5 @@
     "allowJs": true,
     "resolveJsonModule": true
   },
-  "include": ["./**/*.ts", "../src/lib/data/ingestion/**/*.ts", "../src/lib/atlas/code-upgrades.ts", "../tests/cloudflare/**/*.ts"]
+  "include": ["./**/*.ts", "../pages/functions/**/*.ts", "../src/lib/data/ingestion/**/*.ts", "../src/lib/atlas/code-upgrades.ts", "../tests/cloudflare/**/*.ts"]
 }

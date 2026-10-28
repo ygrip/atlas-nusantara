@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/api/*", "/data/published/*", "/data/live/hazards.json"],
+  "exclude": []
+}

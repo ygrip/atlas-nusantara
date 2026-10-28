@@ -1,39 +1,54 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { publishHot, serveHot } from '../../cloudflare/publication.ts';
-import worker from '../../cloudflare/worker.ts';
+import { cleanPublications, publishHot, serveHot, servePublication, storePublication } from '../../cloudflare/publication.ts';
 
-function bucketStub() {
-  const files = new Map();
-  const events = [];
-  let sequence = 0;
-  let failPayload = false;
-  let concurrentWinner;
-  return {
-    files, events,
-    setFailPayload() { failPayload = true; },
-    setConcurrentWinner(generatedAt) { concurrentWinner = generatedAt; },
-    async put(key, value, options = {}) {
-      events.push(key);
-      if (failPayload && key !== 'data/published/manifest.json') throw Error('synthetic payload failure');
-      if (options.onlyIf && concurrentWinner && key === 'data/published/manifest.json') {
-        const previous = files.get(key);
-        files.set(key, { ...previous, etag: 'concurrent-etag', customMetadata: { ...previous.customMetadata, generatedAt: concurrentWinner } });
-        concurrentWinner = undefined;
+function databaseStub() {
+  const rows = new Map();
+  let failBatch = false;
+  function prepared(sql, values = []) {
+    return {
+      sql,
+      values,
+      bind(...bindings) { return prepared(sql, bindings); },
+      async run() { return execute(sql, values); },
+      async first() { return rows.get(values[0]) ?? null; }
+    };
+  }
+  function execute(sql, values) {
+    if (sql.startsWith('INSERT INTO publications')) {
+      const [key, payload_json, generated_at, valid_until] = values;
+      const current = rows.get(key);
+      if (!current || generated_at > current.generated_at) rows.set(key, { key, payload_json, generated_at, valid_until });
+      let changes = 1;
+      if (current) changes = Number(generated_at > current.generated_at);
+      return { meta: { changes } };
+    }
+    if (sql.startsWith('DELETE FROM publications')) {
+      let changes = 0;
+      for (const [key, row] of rows) {
+        if (key.startsWith(values[0].slice(0, -1)) && row.valid_until <= values[1]) {
+          rows.delete(key);
+          changes += 1;
+        }
       }
-      const previous = files.get(key);
-      if (options.onlyIf?.etagDoesNotMatch === '*' && previous) return null;
-      if (options.onlyIf?.etagMatches && previous?.etag !== options.onlyIf.etagMatches) return null;
-      const record = { key, value, customMetadata: options.customMetadata ?? {}, etag: 'etag-' + (++sequence) };
-      files.set(key, record);
-      return record;
-    },
-    async head(key) { return files.get(key) ?? null; },
-    async get(key) {
-      const record = files.get(key);
-      if (!record) return null;
-      return { body: new Response(record.value).body, httpEtag: record.etag, customMetadata: record.customMetadata,
-        writeHttpMetadata(headers) { headers.set('content-type', 'application/json'); } };
+      return { meta: { changes } };
+    }
+    throw Error('Unexpected SQL: ' + sql);
+  }
+  return {
+    rows,
+    failNextBatch() { failBatch = true; },
+    prepare(sql) { return prepared(sql); },
+    async batch(statements) {
+      if (failBatch) { failBatch = false; throw Error('synthetic batch failure'); }
+      const original = new Map(rows);
+      try {
+        return statements.map(statement => execute(statement.sql, statement.values));
+      } catch (error) {
+        rows.clear();
+        for (const [key, value] of original) rows.set(key, value);
+        throw error;
+      }
     }
   };
 }
@@ -44,63 +59,82 @@ function snapshot(fetchedAt, validUntil = null) {
   } };
 }
 
-test('hot publication writes payloads first and promotes the manifest last', async () => {
-  const bucket = bucketStub();
+test('hot publication stores versioned payloads before the manifest in one batch', async () => {
+  const db = databaseStub();
   const now = Date.now();
-  const result = await publishHot(bucket, { counts: {} }, { warning: snapshot(new Date(now).toISOString()) }, now);
-  assert.equal(bucket.events[0].endsWith('/summary.json'), true);
-  assert.equal(bucket.events[1].endsWith('/warning.json'), true);
-  assert.equal(bucket.events.at(-1), 'data/published/manifest.json');
-  assert.equal(JSON.parse(bucket.files.get('data/published/manifest.json').value).revision, result.revision);
+  const result = await publishHot(db, { counts: {} }, { warning: snapshot(new Date(now).toISOString()) }, now);
+  const keys = [...db.rows.keys()];
+  assert.equal(keys.length, 3);
+  assert.equal(keys.at(-1), 'data/published/manifest.json');
+  assert.equal(JSON.parse(db.rows.get('data/published/manifest.json').payload_json).revision, result.revision);
+  assert.ok(db.rows.has(result.summary.slice(1)));
+  assert.ok(db.rows.has(result.snapshots.warning.slice(1)));
 });
 
-test('payload failures and concurrent publishers never overwrite the committed newer manifest', async () => {
-  for (const scenario of ['payload-failure', 'concurrent-winner']) {
-    const bucket = bucketStub();
-    const now = Date.now();
-    await publishHot(bucket, { initial: true }, {}, now);
-    const previous = bucket.files.get('data/published/manifest.json').value;
-    if (scenario === 'payload-failure') {
-      bucket.setFailPayload();
-      await assert.rejects(publishHot(bucket, {}, {}, now + 1000), /synthetic payload failure/);
-    } else {
-      const newerAt = new Date(now + 2000).toISOString();
-      bucket.setConcurrentWinner(newerAt);
-      await publishHot(bucket, {}, {}, now + 1000);
-      assert.equal(bucket.files.get('data/published/manifest.json').customMetadata.generatedAt, newerAt);
-    }
-    assert.equal(bucket.files.get('data/published/manifest.json').value, previous);
+test('batch failures leave no partial publication and older runs cannot roll back manifest', async () => {
+  const db = databaseStub();
+  const now = Date.now();
+  db.failNextBatch();
+  await assert.rejects(publishHot(db, { failed: true }, {}, now), /synthetic batch failure/);
+  assert.equal(db.rows.size, 0);
+  await publishHot(db, { newer: true }, {}, now + 2000);
+  const manifestBefore = db.rows.get('data/published/manifest.json');
+  await publishHot(db, { older: true }, {}, now + 1000);
+  assert.deepEqual(db.rows.get('data/published/manifest.json'), manifestBefore);
+});
+
+test('warning publication expires at CAP expiry and does not extend source freshness', async () => {
+  const now = Date.now();
+  for (const expiry of [now + 60_000, now + 3_600_000]) {
+    const result = await publishHot(databaseStub(), {}, { warning: snapshot(new Date(now).toISOString(), new Date(expiry).toISOString()) }, now);
+    assert.equal(Date.parse(result.validUntil), Math.min(expiry, now + 15 * 60_000));
   }
 });
 
-test('warning publication expires at CAP expiry and never extends source freshness', async () => {
+test('publication JSON stays within the size budget and fails closed after expiry', async () => {
+  const db = databaseStub();
   const now = Date.now();
-  for (const expiry of [now + 60000, now + 3600000]) {
-    const result = await publishHot(bucketStub(), {}, { warning: snapshot(new Date(now).toISOString(), new Date(expiry).toISOString()) }, now);
-    assert.equal(Date.parse(result.validUntil), Math.min(expiry, now + 15 * 60000));
-  }
-});
-
-test('expired hot objects are unavailable rather than served stale', async () => {
-  const bucket = bucketStub();
+  await assert.rejects(storePublication(db, 'data/observations/hazards.json', JSON.stringify({ body: 'x'.repeat(2_000_001) }), new Date(now).toISOString(), new Date(now + 60_000).toISOString()), /publication budget/);
   const key = 'data/published/123e4567-e89b-42d3-a456-426614174000/summary.json';
-  await bucket.put(key, '{}', { customMetadata: { validUntil: new Date(Date.now() - 1).toISOString() } });
-  const response = await serveHot(new Request('https://nusantara.readynaz.com/' + key), bucket);
+  await storePublication(db, key, '{}', new Date(now - 120_000).toISOString(), new Date(now - 60_000).toISOString());
+  const response = await serveHot(new Request('https://nusantara.readynaz.com/' + key), db);
   assert.equal(response.status, 503);
   assert.equal(response.headers.get('cache-control'), 'no-store');
 });
 
-test('hot reads and removed legacy APIs never access D1', async () => {
-  let d1Calls = 0;
-  let objectReads = 0;
-  const env = { LOCAL_HOT_DATA_FALLBACK: 'true', DB: { prepare() { d1Calls += 1; throw Error('Unexpected D1 read'); } }, HOT_DATA: { async get() {
-    objectReads += 1;
-    return { body: new Response('{}').body, httpEtag: 'fixture', customMetadata: { validUntil: new Date(Date.now() + 60000).toISOString() }, writeHttpMetadata() {} };
-  } } };
-  for (const path of ['/api/summary', '/api/sources', '/api/regions', '/api/snapshots/earthquake.json']) assert.equal((await worker.fetch(new Request('https://nusantara.readynaz.com' + path), env)).status, 404);
-  assert.equal((await worker.fetch(new Request('https://nusantara.readynaz.com/data/published/manifest.json'), { ...env, LOCAL_HOT_DATA_FALLBACK: 'false' })).status, 404);
-  assert.equal(objectReads, 0);
-  assert.equal((await worker.fetch(new Request('http://127.0.0.1/data/published/manifest.json'), env)).status, 200);
-  assert.equal(objectReads, 1);
-  assert.equal(d1Calls, 0);
+test('serves GET and HEAD with bounded cache headers and restricts hot routes', async () => {
+  const db = databaseStub();
+  const key = 'data/published/123e4567-e89b-42d3-a456-426614174000/summary.json';
+  const validUntil = new Date(Date.now() + 60_000).toISOString();
+  await storePublication(db, key, '{"ok":true}', new Date().toISOString(), validUntil);
+  const get = await serveHot(new Request('https://nusantara.readynaz.com/' + key), db);
+  assert.equal(get.status, 200);
+  assert.deepEqual(await get.json(), { ok: true });
+  assert.match(get.headers.get('cache-control'), /public, max-age=\d+, must-revalidate/);
+  assert.match(get.headers.get('etag'), /^"[0-9a-f]{64}"$/);
+  const head = await serveHot(new Request('https://nusantara.readynaz.com/' + key, { method: 'HEAD' }), db);
+  assert.equal(head.status, 200);
+  assert.equal(await head.text(), '');
+  assert.equal((await serveHot(new Request('https://nusantara.readynaz.com/data/published/../secret'), db)).status, 404);
+  assert.equal((await serveHot(new Request('https://nusantara.readynaz.com/' + key, { method: 'POST' }), db)).status, 405);
+});
+
+test('hazard publication helper protects newer records and serves its allowlisted key', async () => {
+  const db = databaseStub();
+  const key = 'data/observations/hazards.json';
+  const now = Date.now();
+  await storePublication(db, key, '{"version":2}', new Date(now + 1000).toISOString(), new Date(now + 60_000).toISOString());
+  await storePublication(db, key, '{"version":1}', new Date(now).toISOString(), new Date(now + 60_000).toISOString());
+  const response = await servePublication(new Request('https://nusantara.readynaz.com/data/observations/hazards.json'), db, key);
+  assert.deepEqual(await response.json(), { version: 2 });
+});
+
+test('cleanup removes only expired versioned publication records', async () => {
+  const db = databaseStub();
+  const now = Date.now();
+  await storePublication(db, 'data/published/old/summary.json', '{}', new Date(now - 20).toISOString(), new Date(now - 10).toISOString());
+  await storePublication(db, 'data/published/manifest.json', '{}', new Date(now).toISOString(), new Date(now + 10_000).toISOString());
+  await storePublication(db, 'data/observations/hazards.json', '{}', new Date(now - 20).toISOString(), new Date(now - 10).toISOString());
+  await cleanPublications(db, now);
+  assert.deepEqual([...db.rows.keys()], ['data/published/manifest.json', 'data/observations/hazards.json']);
 });
