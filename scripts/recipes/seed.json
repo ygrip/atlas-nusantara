@@ -1,0 +1,196 @@
+[
+  {
+    "id": "rendang",
+    "name": "Rendang",
+    "provinceCodes": [
+      "13"
+    ],
+    "articleUrl": "https://id.wikipedia.org/wiki/Rendang",
+    "image": {
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Nasi%20Rendang.JPG?width=640",
+      "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Nasi_Rendang.JPG",
+      "credit": "Gunawan Kartapranata",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "reviewedAt": "2026-10-28T00:00:00Z",
+      "source": "Wikimedia Commons"
+    },
+    "recipe": {
+      "language": "id",
+      "status": "original-adaptation",
+      "sourceUrl": "https://id.wikipedia.org/wiki/Rendang",
+      "category": "makanan_utama",
+      "difficulty": "sulit",
+      "timeMinutes": 210,
+      "ingredients": [
+        "750 g daging sapi, potong besar",
+        "800 ml santan",
+        "8 bawang merah",
+        "5 siung bawang putih",
+        "8 cabai merah",
+        "3 cm jahe dan 3 cm lengkuas",
+        "2 batang serai, memarkan",
+        "3 lembar daun jeruk",
+        "2 lembar daun kunyit",
+        "Garam secukupnya"
+      ],
+      "steps": [
+        "Haluskan bawang merah, bawang putih, cabai, jahe, dan lengkuas.",
+        "Didihkan santan bersama bumbu halus, serai, daun jeruk, dan daun kunyit sambil terus diaduk agar tidak pecah.",
+        "Masukkan daging, kecilkan api, lalu masak perlahan sambil sesekali diaduk sampai daging lunak.",
+        "Teruskan memasak sampai santan menyusut dan bumbu mengering, berwarna cokelat tua. Aduk lebih sering menjelang akhir agar tidak gosong."
+      ]
+    },
+    "originStatus": "seed-reviewed",
+    "sources": [
+      {
+        "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+        "role": "regional-cuisine-list"
+      }
+    ]
+  },
+  {
+    "id": "pempek",
+    "name": "Pempek",
+    "provinceCodes": [
+      "16"
+    ],
+    "articleUrl": "https://id.wikipedia.org/wiki/Pempek",
+    "image": {
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Pempek%20palembang.jpg?width=640",
+      "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Pempek_palembang.jpg",
+      "credit": "Arvinefriani",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "reviewedAt": "2026-10-28T00:00:00Z",
+      "source": "Wikimedia Commons"
+    },
+    "recipe": {
+      "language": "id",
+      "status": "original-adaptation",
+      "sourceUrl": "https://id.wikipedia.org/wiki/Pempek",
+      "category": "makanan_utama",
+      "difficulty": "sedang",
+      "timeMinutes": 70,
+      "ingredients": [
+        "400 g daging ikan tenggiri giling",
+        "250 g tepung tapioka",
+        "250 ml air dingin",
+        "2 siung bawang putih, haluskan",
+        "1 sdt garam",
+        "Air untuk merebus",
+        "150 g gula aren untuk cuko",
+        "150 ml air dan 2 sdm cuka",
+        "Cabai dan bawang putih secukupnya untuk cuko"
+      ],
+      "steps": [
+        "Campur ikan, air dingin, garam, dan bawang putih sampai rata.",
+        "Masukkan tapioka sedikit demi sedikit dan aduk ringan hingga adonan bisa dibentuk; jangan diuleni terlalu lama.",
+        "Bentuk adonan menjadi lonjong atau bulat, lalu rebus dalam air mendidih hingga matang dan mengapung.",
+        "Untuk cuko, didihkan gula aren bersama air, cabai, bawang putih, dan cuka. Saring lalu sajikan bersama pempek yang digoreng sebentar bila disukai."
+      ]
+    },
+    "originStatus": "seed-reviewed",
+    "sources": [
+      {
+        "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+        "role": "regional-cuisine-list"
+      }
+    ]
+  },
+  {
+    "id": "soto-banjar",
+    "name": "Soto Banjar",
+    "provinceCodes": [
+      "63"
+    ],
+    "articleUrl": "https://id.wikipedia.org/wiki/Soto_Banjar",
+    "image": {
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Soto%20Banjar.JPG?width=640",
+      "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Soto_Banjar.JPG",
+      "credit": "Gunawan Kartapranata",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "reviewedAt": "2026-10-28T00:00:00Z",
+      "source": "Wikimedia Commons"
+    },
+    "recipe": {
+      "language": "id",
+      "status": "original-adaptation",
+      "sourceUrl": "https://id.wikipedia.org/wiki/Soto_Banjar",
+      "category": "makanan_utama",
+      "difficulty": "sedang",
+      "timeMinutes": 90,
+      "ingredients": [
+        "600 g ayam",
+        "1,5 liter air",
+        "5 bawang merah",
+        "3 siung bawang putih",
+        "2 cm jahe",
+        "3 butir kapulaga",
+        "2 butir cengkeh",
+        "1 batang kayu manis",
+        "Bihun matang dan telur rebus untuk penyajian",
+        "Garam serta merica secukupnya"
+      ],
+      "steps": [
+        "Rebus ayam dalam air sampai empuk dan simpan kaldunya. Suwir ayam setelah matang.",
+        "Haluskan bawang merah, bawang putih, dan jahe; tumis bersama kapulaga, cengkeh, dan kayu manis sampai harum.",
+        "Masukkan tumisan ke dalam kaldu ayam, bumbui dengan garam dan merica, lalu didihkan perlahan agar rempah meresap.",
+        "Sajikan kuah dan ayam suwir bersama bihun, telur rebus, serta pelengkap sesuai selera."
+      ]
+    },
+    "originStatus": "seed-reviewed",
+    "sources": [
+      {
+        "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+        "role": "regional-cuisine-list"
+      }
+    ]
+  },
+  {
+    "id": "papeda",
+    "name": "Papeda",
+    "provinceCodes": [
+      "81",
+      "91"
+    ],
+    "articleUrl": "https://id.wikipedia.org/wiki/Papeda",
+    "image": {
+      "url": "https://commons.wikimedia.org/wiki/Special:FilePath/Papeda%20dari%20Indonesia%20bagian%20timur.jpg?width=640",
+      "descriptionUrl": "https://commons.wikimedia.org/wiki/File:Papeda_dari_Indonesia_bagian_timur.jpg",
+      "credit": "Tumanisme",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "reviewedAt": "2026-10-28T00:00:00Z",
+      "source": "Wikimedia Commons"
+    },
+    "recipe": {
+      "language": "id",
+      "status": "original-adaptation",
+      "sourceUrl": "https://id.wikipedia.org/wiki/Papeda",
+      "category": "makanan_utama",
+      "difficulty": "mudah",
+      "timeMinutes": 20,
+      "ingredients": [
+        "150 g tepung sagu",
+        "500 ml air",
+        "Sejumput garam",
+        "Ikan kuah kuning atau lauk berkuah untuk menyajikan"
+      ],
+      "steps": [
+        "Larutkan tepung sagu dengan sedikit air suhu ruang dalam wadah tahan panas hingga tidak bergumpal.",
+        "Didihkan sisa air, lalu tuang perlahan ke dalam larutan sagu sambil diaduk kuat.",
+        "Aduk terus hingga sagu bening, mengental, dan bertekstur elastis.",
+        "Sajikan hangat bersama ikan kuah kuning atau lauk berkuah khas Indonesia timur."
+      ]
+    },
+    "originStatus": "seed-reviewed",
+    "sources": [
+      {
+        "url": "https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia",
+        "role": "regional-cuisine-list"
+      }
+    ]
+  }
+]
