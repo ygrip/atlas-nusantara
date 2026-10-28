@@ -74,3 +74,44 @@ It is a developer step only (the browser never calls a model), validates line co
 - **Summaries** are the opening of the Wikipedia article the list links to. Some links are redirects, so a name and its summary can describe a close variant.
 - **Recipes are written by Cookpad users and keep their copyright.** The atlas shows each recipe with the author and a link to the original page, but republishing the national file commercially needs its own review of Cookpad's terms. Recipes are informational: food safety, allergies and quantities still need a human check.
 - **Type** and **photos** are not curated. The interface strings for the new keys were machine-translated; Khmer, Lao, Burmese, Tamil and Tetum need native review.
+
+## Regional supplementary sources
+
+The Wikipedia cuisine list omits dishes from several provinces. The curated `scripts/recipes/regional-supplements.json` adds documented associations for Bangka Belitung (19), East Kalimantan (64), West Papua (92), South Papua (93), Central Papua (94), Highland Papua (95), and Southwest Papua (96). Each row includes a named food, province code, short Indonesian description and supporting regional-tourism URL. A province association is **not** evidence of exclusive origin, especially after the 2022 Papuan province split.
+
+The offline builder merges these entries after Wikipedia, recipes and seeds; normalized dish names are deduplicated so papeda stays one national dish with multiple province associations. A documented regional entry without a recipe/photo remains valid, and the UI uses the existing placeholder. No synthetic recipes, unauthorized photo copies or unverified origin claims are introduced. The builder retains these associations on subsequent rebuilds.
+
+After editing the supplement, regenerate snapshots with `npm run build:cuisine` (internet required), run `npm test`, and commit `static/data/cuisine/index.json`, `national.json` and all affected province shards together. Until a regeneration is committed, existing published province counts remain unchanged.
+
+### Local regional enrichment
+
+The supplement contains **32 distinct dish names and 43 province associations**. The `reviewStatus` field distinguishes `source-backed` from `needs-source-review`. Some shared Papuan dishes require more specific location evidence; the marker is preserved in published dish sources as `association-pending-review`, not misrepresented as a verified origin.
+
+From the repository root (Node 22+):
+
+```bash
+# 1. Optional: enrich just the 32 new/updated names before rebuilding.
+node scripts/recipes/crawl-cookpad.mjs --regional-only --concurrency=2 --delay-ms=1200
+node scripts/recipes/fetch-wikipedia.mjs --regional-only --concurrency=2 --delay-ms=800
+
+# 2. Build all published JSON from source and caches.
+npm run build:cuisine
+
+# 3. Validate schema, counts and project checks.
+npm test
+npm run check
+```
+
+The Cookpad stage extracts recipe JSON-LD from public results, caches author attribution and ingredient/step fields, and stops after repeated blocks. The Wikipedia stage only processes supplemental entries with a known `articleUrl`; it accepts only Commons image metadata with compatible open licences. Neither script fabricates recipes or fetches images from Google Images. Review URLs, spelling and local attribution before treating `needs-source-review` records as verified. Re-running is resumable from `tmp/recipes-cache`.
+
+### Cookpad-first images
+
+For regional dishes, the Cookpad crawl fetches each matching recipe page and reads its schema.org `Recipe` JSON-LD, including the recipe author's photo URL. `assembleDish` places photos sourced from accepted Cookpad recipes before any Wikimedia fallback, retaining the recipe author's credit and a link to the original recipe. The image reference is stored in the dataset; **Cookpad photos are not downloaded or copied into the repository**. Cookpad images are used only for display, never canvas share-card rendering, because they are not assumed openly licensed and the image origin lacks the necessary CORS headers. Recipes similarly retain original author and page attribution.
+
+```bash
+node scripts/recipes/crawl-cookpad.mjs --regional-only --concurrency=2 --delay-ms=1200
+npm run build:cuisine
+npm run check:cuisine-coverage
+```
+
+If Cookpad blocks a request or returns no matching recipe, no recipe/image is invented; the existing illustration fallback remains. The crawler can resume from its on-disk cache. Verify that hotlinking complies with Cookpad terms before deploying at scale.

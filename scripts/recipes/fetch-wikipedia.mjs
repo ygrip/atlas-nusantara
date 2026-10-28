@@ -26,9 +26,10 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const exists = file => access(file).then(() => true, () => false);
 
 function parseOptions(args) {
-  const options = { limit: Infinity, concurrency: 4, delayMs: 250 };
+  const options = { limit: Infinity, concurrency: 4, delayMs: 250, regionalOnly: false };
   for (const arg of args) {
     const [name, value] = arg.replace(/^--/, '').split('=');
+    if (name === 'regional-only') options.regionalOnly = true;
     if (name === 'limit') options.limit = Number(value);
     if (name === 'concurrency') options.concurrency = Number(value);
     if (name === 'delay-ms') options.delayMs = Number(value);
@@ -96,8 +97,9 @@ async function main() {
   const options = parseOptions(process.argv.slice(2));
   await mkdir(path.join(CACHE, 'summary'), { recursive: true });
   await mkdir(path.join(CACHE, 'file'), { recursive: true });
-  const national = JSON.parse(await readFile(NATIONAL, 'utf8'));
-  const dishes = (national.dishes ?? national.items).filter(item => item.articleUrl);
+  const national = options.regionalOnly ? {dishes: []} : JSON.parse(await readFile(NATIONAL, 'utf8'));
+  const regional = options.regionalOnly ? JSON.parse(await readFile(path.join(ROOT, 'scripts/recipes/regional-supplements.json'), 'utf8')) : [];
+  const dishes = (options.regionalOnly ? regional : (national.dishes ?? national.items)).filter(item => item.articleUrl);
   const queue = [];
   for (const dish of dishes) {
     const cached = await readCached(path.join(CACHE, 'summary', dish.id + '.json'));

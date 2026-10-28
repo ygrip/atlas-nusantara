@@ -25,7 +25,8 @@ export function titleNamesDish(title, dishName) {
 export function parseSearchResults(html) {
   const results = [];
   const seen = new Set();
-  const anchor = /<a\b[^>]*class="[^"]*block-link__main[^"]*"[^>]*href="\/id\/resep\/(\d+)"[^>]*>([\s\S]*?)<\/a>/g;
+  // Match links regardless of CSS class or HTML attribute ordering.
+  const anchor = /<a\b(?=[^>]*href=["'](?:https:\/\/cookpad\.com)?\/id\/resep\/(\d+)(?:[?\/#][^"']*)?["'])[^>]*>([\s\S]*?)<\/a>/gi;
   for (const match of html.matchAll(anchor)) {
     const id = match[1];
     if (seen.has(id)) continue;

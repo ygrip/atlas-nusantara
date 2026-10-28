@@ -18,6 +18,7 @@
     "build:languages": "node scripts/languages/build-language-counts.mjs",
     "build:destinations": "node scripts/destinations/catalog-output.mjs static/data/destinations",
     "build:cuisine": "node scripts/recipes/build.mjs",
+    "check:cuisine-coverage": "node scripts/recipes/verify-coverage.mjs",
     "translate:cuisine": "node scripts/recipes/translate.mjs",
     "destinations:images:wikidata": "node scripts/destinations/discover-images.mjs",
     "destinations:images:wikipedia": "node scripts/destinations/search-wikipedia-images.mjs",
