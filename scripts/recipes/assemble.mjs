@@ -2,7 +2,7 @@
  * Turns one merged Wikipedia list entry plus the cached stages into a schema 2 dish record. Pure, so tests can call it.
  *
  * Recipe order: reviewed Atlas recipes, then Cookpad recipes by popularity, then the MIT LorthGyu corpus.
- * Photo order: the openly licensed Commons lead photo, then the photos of the first Cookpad recipes.
+ * Photo order: Cookpad recipe author photos first, then licensed Commons as fallback.
  */
 import { classifyDish } from './classify.mjs';
 import { isCuisineRecipe, MAX_CUISINE_IMAGES, MAX_CUISINE_RECIPES } from '../../src/lib/data/cuisine-validation.js';
@@ -105,17 +105,19 @@ export function assembleDish({ item, cookpad = [], wikipedia }) {
   });
 
   const images = [];
-  const lead = seedImage(item.image, wikipedia) ?? commonsImage(wikipedia?.image);
-  if (lead) images.push(lead);
   for (const crawled of cookpad) {
     const image = cookpadImage(crawled);
-    if (image && images.length < MAX_CUISINE_IMAGES) images.push(image);
+    if (image && !images.some(existing => existing.ref === image.ref) && images.length < MAX_CUISINE_IMAGES) images.push(image);
   }
+  const lead = seedImage(item.image, wikipedia) ?? commonsImage(wikipedia?.image);
+  if (lead && images.length < MAX_CUISINE_IMAGES) images.push(lead);
 
   const summary = wikipedia?.summary ?? '';
   const sources = [...item.sources];
   if (item.articleUrl && summary) sources.push({ url: item.articleUrl, role: 'summary', license: 'CC BY-SA 4.0' });
-  if (cookpad.length > 0) sources.push({ url: 'https://cookpad.com/id', role: 'recipe' });
+  for (const crawled of cookpad) {
+    if (crawled.url) sources.push({ url: crawled.url, role: 'recipe' });
+  }
 
   const record = withoutUndefined({
     id: item.id,
