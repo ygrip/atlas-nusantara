@@ -97,8 +97,8 @@ test('hero lays its copy over one full-bleed archipelago with centered clay figu
   await expect(stage.locator('.island-assembly')).toHaveCount(7);
   await expect(stage.locator('.stack-top use')).toHaveCount(7);
   await expect(stage.locator('.stack-base use')).toHaveCount(7);
-  await expect(stage.locator('.ornament')).toHaveCount(6);
-  await expect(stage.locator('.chip, .art-chip')).toHaveCount(0);
+  await expect(stage.locator('.ornament')).toHaveCount(7);
+  await expect(stage.locator('.ornament-tiger img')).toBeVisible();
   const layout = await card.evaluate(element => {
     const stageBox = element.querySelector('.anatomy-stage')!.getBoundingClientRect();
     const cardBox = element.getBoundingClientRect();

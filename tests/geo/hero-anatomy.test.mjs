@@ -9,7 +9,7 @@ const geometry = readFileSync(geometryPath, 'utf8');
 const hero = readFileSync(join(root, 'src/lib/components/HeroArchipelago.svelte'), 'utf8');
 const page = readFileSync(join(root, 'src/routes/+page.svelte'), 'utf8');
 const groups = ['sumatra', 'java', 'nusa-tenggara', 'kalimantan', 'sulawesi', 'maluku', 'papua'];
-const ornaments = ['flag', 'volcano', 'orangutan', 'komodo', 'pinisi', 'cendrawasih'];
+const ornaments = ['tiger', 'flag', 'volcano', 'orangutan', 'komodo', 'pinisi', 'cendrawasih'];
 
 test('archipelago silhouettes use seven shared geographic groups in one projection', () => {
   for (const group of groups) assert.ok(geometry.includes('<g id="' + group + '">'), group);
