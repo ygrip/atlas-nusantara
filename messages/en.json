@@ -403,5 +403,22 @@
   "population_source_provinces": "BPS provinces table",
   "population_source_pyramid": "BPS age and sex table",
   "tab_overview": "Overview",
-  "tab_province_detail": "Province details"
+  "tab_province_detail": "Province details",
+  "layer_cuisine": "Cuisine",
+  "cuisine_heading": "Recipes from across Indonesia",
+  "cuisine_description": "Browse regional dishes, ingredients, methods and photo credits.",
+  "cuisine_search": "Search dishes",
+  "cuisine_choose_province": "Choose a province on the map to explore more dishes.",
+  "cuisine_empty": "No dishes match this selection.",
+  "cuisine_no_image": "Photo not available",
+  "cuisine_minutes": "min",
+  "cuisine_recipe": "View recipe",
+  "cuisine_no_recipe": "Recipe not available",
+  "cuisine_id_fallback": "This recipe is available in Indonesian only.",
+  "cuisine_machine_notice": "Machine translation has not been reviewed.",
+  "cuisine_ingredients": "Ingredients",
+  "cuisine_steps": "Method",
+  "cuisine_recipe_source": "Recipe background",
+  "cuisine_more": "Show more",
+  "cuisine_scope_notice": "Coverage is partial. Provincial associations follow the cited list; not all recipes or photos are available."
 }
