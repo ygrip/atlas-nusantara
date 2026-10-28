@@ -403,5 +403,22 @@
   "population_source_provinces": "Bảng tỉnh của BPS",
   "population_source_pyramid": "Bảng tuổi và giới tính của BPS",
   "tab_overview": "Tổng quan",
-  "tab_province_detail": "Chi tiết tỉnh"
+  "tab_province_detail": "Chi tiết tỉnh",
+  "layer_cuisine": "Ẩm thực",
+  "cuisine_heading": "Công thức nấu ăn khắp Indonesia",
+  "cuisine_description": "Khám phá món ăn vùng miền, nguyên liệu, cách chế biến và nguồn ảnh.",
+  "cuisine_search": "Tìm món ăn",
+  "cuisine_choose_province": "Chọn một tỉnh trên bản đồ để xem thêm món ăn.",
+  "cuisine_empty": "Không tìm thấy món ăn phù hợp.",
+  "cuisine_no_image": "Chưa có ảnh",
+  "cuisine_minutes": "phút",
+  "cuisine_recipe": "Xem công thức",
+  "cuisine_no_recipe": "Chưa có công thức",
+  "cuisine_id_fallback": "Công thức này chỉ có bằng tiếng Indonesia.",
+  "cuisine_machine_notice": "Bản dịch máy chưa được kiểm duyệt.",
+  "cuisine_ingredients": "Nguyên liệu",
+  "cuisine_steps": "Cách chế biến",
+  "cuisine_recipe_source": "Nguồn công thức",
+  "cuisine_more": "Xem thêm",
+  "cuisine_scope_notice": "Dữ liệu chưa đầy đủ. Tỉnh liên quan dựa trên danh sách nguồn; không phải món nào cũng có công thức hoặc ảnh."
 }
