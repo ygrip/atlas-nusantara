@@ -90,17 +90,19 @@ async function fetchRecipes() {
   const recipeRows=[];
   for(const split of splits.splits??[]) {
     if (!['train','test','validation'].includes(split.split)) continue;
-    const count = Math.min(split.num_rows??0,10000);
-    for(let offset=0;offset<count;offset+=100) {
+    // /splits does not reliably include row counts. Page /rows until exhausted.
+    for(let offset=0;offset<10000;offset+=100) {
       const url = new URL(HF_API+'/rows');
-      for(const [k,v] of Object.entries({dataset:'LorthGyu/indonesian-recipes',config:split.config,split:split.split,offset:String(offset),length:String(Math.min(100,count-offset))})) url.searchParams.set(k,v);
+      for(const [k,v] of Object.entries({dataset:'LorthGyu/indonesian-recipes',config:split.config,split:split.split,offset:String(offset),length:'100'})) url.searchParams.set(k,v);
       const page=await fetchJSON(url.toString());
-      for(const entry of page.rows??[]) {
+      if (!Array.isArray(page.rows)||!page.rows.length) break;
+      for(const entry of page.rows) {
         const r=entry.row??entry;
         if (typeof r.name !== 'string'||!Array.isArray(r.ingredients)||!Array.isArray(r.steps)||!r.ingredients.length||!r.steps.length) continue;
         if (!r.ingredients.every(x=>typeof x==='string') || !r.steps.every(x=>typeof x==='string')) continue;
         recipeRows.push({name:r.name,category:r.category??null,ingredients:r.ingredients,steps:r.steps,timeMinutes:Number.isFinite(r.time_minutes)?r.time_minutes:null,difficulty:r.difficulty??null,broadRegion:r.region??null,sourceUrl:HF});
       }
+      if (page.rows.length < 100 || offset + 100 >= page.num_rows_total) break;
     }
   }
   if (recipeRows.length < 250) throw Error('Recipe source returned only '+recipeRows.length+' rows; refusing incomplete import');
