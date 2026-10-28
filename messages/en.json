@@ -1,5 +1,5 @@
 {
-  "hero_art_alt": "A stylized clay archipelago with a green volcano, rice terraces, a stilt house and a small weather balloon. A decorative illustration, not a map.",
+  "hero_art_alt": "A claymorphic illustration of Indonesia's seven geographically aligned island groups, with plants, native wildlife, a volcano, pinisi boat and red-and-white flag.",
   "edition_note": "Codes follow the latest Kemendagri edition, which BMKG forecasts also use.",
   "filter_all": "All",
   "chart_islands_heading": "Regions by island group",
@@ -260,7 +260,7 @@
   "footer_explore": "Explore",
   "footer_maker": "Made by readynaz",
   "language_search": "Search languages…",
-  "atlas_intro": "Get to know Indonesia, one place at a time. Explore its provinces, discover places to visit, and check local weather on the map.",
+  "atlas_intro": "Get to know Indonesia, one place at a time. Pick an island or province, then see its places to visit, food, wildlife and weather.",
   "source_details": "Sources & map details",
   "menu_close": "Close menu",
   "map_legend_label": "Map key",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Name, description and photo come from public sources and may be out of date or incomplete.",
   "cuisine_coverage_note": "Dishes follow the provincial list on Indonesian Wikipedia, so a province is an association, not proof of origin. Recipes are written by their authors and link to their source. A missing recipe or photo does not mean a dish does not exist.",
   "cuisine_metric_with_recipe": "Dishes with recipes",
-  "cuisine_metric_with_photo": "Dishes with photos"
+  "cuisine_metric_with_photo": "Dishes with photos",
+  "hero_cta_atlas": "Explore the map",
+  "hero_cta_provinces": "Browse provinces",
+  "hero_art_hint": "Hover to pull it apart"
 }

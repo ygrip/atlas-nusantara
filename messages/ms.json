@@ -1,5 +1,5 @@
 {
-  "hero_art_alt": "Kepulauan tanah liat bergaya dengan gunung berapi hijau, sawah padi bertingkat, rumah atas tiang dan belon cuaca kecil. Ilustrasi hiasan, bukan peta.",
+  "hero_art_alt": "Ilustrasi gaya tanah liat tujuh kumpulan kepulauan Indonesia mengikut kedudukan geografi, dihiasi tumbuhan, haiwan tempatan, gunung berapi, kapal pinisi dan bendera merah putih.",
   "edition_note": "Kod mengikut edisi Kemendagri terkini yang turut digunakan ramalan BMKG.",
   "filter_all": "Semua",
   "chart_islands_heading": "Wilayah mengikut kumpulan pulau",
@@ -260,7 +260,7 @@
   "footer_explore": "Terokai",
   "footer_maker": "Dibuat oleh readynaz",
   "language_search": "Cari bahasa…",
-  "atlas_intro": "Kenali Indonesia dengan lebih dekat. Terokai wilayah, temui tempat menarik dan semak cuaca setempat pada peta.",
+  "atlas_intro": "Kenali Indonesia dengan lebih dekat. Pilih pulau atau wilayah, kemudian lihat tempat menarik, makanan, hidupan liar dan cuacanya.",
   "source_details": "Sumber & butiran peta",
   "menu_close": "Tutup menu",
   "map_legend_label": "Petunjuk peta",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Nama, keterangan dan foto datang daripada sumber awam dan mungkin sudah lapuk atau tidak lengkap.",
   "cuisine_coverage_note": "Hidangan mengikut senarai wilayah di Wikipedia Indonesia, jadi wilayah ialah kaitan, bukan bukti asal. Resipi ditulis oleh penulisnya dan dipautkan ke sumbernya. Resipi atau foto yang tiada tidak bermakna hidangan itu tidak wujud.",
   "cuisine_metric_with_recipe": "Hidangan dengan resipi",
-  "cuisine_metric_with_photo": "Hidangan dengan foto"
+  "cuisine_metric_with_photo": "Hidangan dengan foto",
+  "hero_cta_atlas": "Teroka peta",
+  "hero_cta_provinces": "Lihat wilayah",
+  "hero_art_hint": "Halakan kursor untuk leraikan"
 }

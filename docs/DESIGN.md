@@ -37,7 +37,7 @@ Cloud opacity follows forecast coverage. The camera-crossing veil is a presentat
 
 ## Screenshots
 
-The checked-in screenshots document the earlier palette and should be regenerated after this design update.
+The home screenshots (`home-light`, `home-dark`, `mobile-home`, `mobile-home-dark`) show the full-bleed archipelago hero; other captures document the earlier palette and should be regenerated after this design update.
 
 Run `npm run build`, `node scripts/serve-built.mjs`, then `node scripts/capture-screenshots.mjs`. Images are actual production-build captures at 1440 × 1000 and 390 × 844, with reduced-motion static frames. Saved-place images use public city pins, not a private device location.
 
