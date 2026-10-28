@@ -403,5 +403,22 @@
   "population_source_provinces": "ຕາຕະລາງແຂວງຂອງ BPS",
   "population_source_pyramid": "ຕາຕະລາງອາຍຸ ແລະ ເພດຂອງ BPS",
   "tab_overview": "ພາບລວມ",
-  "tab_province_detail": "ລາຍລະອຽດແຂວງ"
+  "tab_province_detail": "ລາຍລະອຽດແຂວງ",
+  "layer_cuisine": "ອາຫານ",
+  "cuisine_heading": "ສູດອາຫານທົ່ວອິນໂດເນເຊຍ",
+  "cuisine_description": "ສຳຫຼວດອາຫານປະຈຳຖິ່ນ ສ່ວນປະກອບ ວິທີປຸງ ແລະ ແຫຼ່ງຮູບພາບ.",
+  "cuisine_search": "ຄົ້ນຫາອາຫານ",
+  "cuisine_choose_province": "ເລືອກແຂວງໃນແຜນທີ່ເພື່ອເບິ່ງອາຫານເພີ່ມ.",
+  "cuisine_empty": "ບໍ່ພົບອາຫານທີ່ກົງກັນ.",
+  "cuisine_no_image": "ຍັງບໍ່ມີຮູບພາບ",
+  "cuisine_minutes": "ນາທີ",
+  "cuisine_recipe": "ເບິ່ງສູດ",
+  "cuisine_no_recipe": "ຍັງບໍ່ມີສູດ",
+  "cuisine_id_fallback": "ສູດນີ້ມີພຽງພາສາອິນໂດເນເຊຍ.",
+  "cuisine_machine_notice": "ຄຳແປໂດຍເຄື່ອງຍັງບໍ່ໄດ້ກວດສອບ.",
+  "cuisine_ingredients": "ສ່ວນປະກອບ",
+  "cuisine_steps": "ວິທີປຸງ",
+  "cuisine_recipe_source": "ແຫຼ່ງທີ່ມາຂອງສູດ",
+  "cuisine_more": "ສະແດງເພີ່ມ",
+  "cuisine_scope_notice": "ຂໍ້ມູນຍັງບໍ່ຄົບຖ້ວນ. ການເຊື່ອມໂຍງແຂວງອີງຕາມແຫຼ່ງຂໍ້ມູນ ແລະ ບໍ່ແມ່ນທຸກອາຫານຈະມີສູດຫຼືຮູບພາບ."
 }
