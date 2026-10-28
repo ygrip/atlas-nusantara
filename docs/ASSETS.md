@@ -29,3 +29,10 @@ Notices for Nunito, Lucide, Three.js, Lenis, GSAP and the wilayah transcription 
 ## Documentation captures
 
 `scripts/capture-screenshots.mjs` captures the real production app with Playwright. It uses static reduced-motion frames for reproducibility and verifies page errors and phone width. Public city pins in those images are demonstration preferences; no real visitor location is published.
+
+## Interactive archipelago anatomy hero (fal.ai)
+
+- The eight original individual transparent WebP ornament cutouts in static/illustrations/anatomy/ were generated with fal.ai on 2026-10-28, using the model openai/gpt-image-2.5/flare/text-to-image, medium quality, square output. They depict an orangutan, Komodo dragon, cenderawasih, Rafflesia, volcano, tropical palms, Indonesian flag and traditional pinisi boat. The animals are decorative representations, **not evidence of species occurrence at particular coordinates**.
+- The projected geography in static/illustrations/atlas-anatomy.svg is NOT AI-generated. It preserves all 38 paths from static/data/geometry-2025/national.json and their shared 1000x500 geographic projection. Boundaries: BPS / OCHA ROAP via HDX COD-AB Indonesia, **CC BY 3.0 IGO**. Illustrative, not an official cadastral or navigation map.
+- The component design was informed by Anatomy (https://github.com/wheresryan22/anatomy, MIT): physical parts with separate depth, painter's order, calm movement and deliberate close-up detailing. No Anatomy code was copied. The seven groups have four terrain tones (shadow, side, rim, top).
+- HeroArchipelago.svelte pauses ornament motion offscreen and honors reduced motion; the SVG and local WebP files render without JavaScript. No external fal CDN or authentication is used at runtime.

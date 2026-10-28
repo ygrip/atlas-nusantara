@@ -7,6 +7,7 @@
   import SharePanel from '$lib/components/SharePanel.svelte';
   import HeaderControls from '$lib/components/HeaderControls.svelte';
   import { startAtlasStory } from '$lib/motion/atlas-story';
+  import HeroArchipelago from '$lib/components/HeroArchipelago.svelte';
   import type { ShareRegion, ShareSummary } from '$lib/share/card';
   import type { GeometryPackage } from '$lib/geo/types';
   import { m, type MessageKey } from '$lib/i18n/messages';
@@ -136,10 +137,7 @@
 
         </div>
         <figure class="hero-art">
-          <picture>
-            <source type="image/webp" srcset="/illustrations/hero-archipelago-768.webp 768w, /illustrations/hero-archipelago-1200.webp 1200w" sizes="(max-width: 900px) 100vw, 50vw" />
-            <img src="/illustrations/hero-archipelago-1200.webp" width="1200" height="800" alt={m.hero_art_alt()} fetchpriority="high" decoding="async" />
-          </picture>
+          <HeroArchipelago alt={m.hero_art_alt()} />
         </figure>
       </div>
       <NationalStats />

@@ -109,8 +109,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(26px, 3.
 .hero-copy h1 { font-size: clamp(2.4rem, 5.6vw, 4.6rem); line-height: 1; letter-spacing: -.065em; margin: 2px 0 0; text-wrap: balance; }
 .hero-copy > p { margin: 0; font-size: clamp(1rem, 1.7vw, 1.2rem); line-height: 1.6; color: var(--muted); max-width: 46ch; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
-.hero-art { position: relative; margin: 0; border-radius: 30px; overflow: hidden; border: 1px solid var(--border); box-shadow: 10px 14px 26px var(--shadow), inset 0 0 0 2px var(--clay-highlight); background: var(--sky); aspect-ratio: 3 / 2; }
-.hero-art img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hero-art { position: relative; margin: 0; min-width: 0; border-radius: 30px; overflow: hidden; border: 1px solid color-mix(in srgb, var(--border) 70%, white); box-shadow: 9px 15px 30px var(--shadow), inset 0 1px 0 var(--clay-highlight); background: var(--sky); aspect-ratio: 3 / 2; }
+
 .hero-art figcaption { position: absolute; left: 12px; bottom: 12px; padding: 5px 12px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 85%, transparent); backdrop-filter: blur(6px); font-size: .68rem; font-weight: 800; color: var(--muted); }
 .hero-copy .share-panel { margin-top: 4px; }
 
