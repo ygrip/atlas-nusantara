@@ -17,9 +17,9 @@
   let modalFailed = $state(false);
   let open = $state(false);
   let active = $state(0);
-  let previewButton: HTMLButtonElement;
-  let closeButton: HTMLButtonElement;
-  let modal: HTMLDivElement;
+  let previewButton = $state<HTMLButtonElement>();
+  let closeButton = $state<HTMLButtonElement>();
+  let modal = $state<HTMLDivElement>();
   const current = $derived(photos[active]);
 
   $effect(() => {
