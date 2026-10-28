@@ -8,6 +8,7 @@
   import { isProvinceCode } from '$lib/data/destination-index';
   import ClayMap from './ClayMap.svelte';
   import DestinationsPanel from './DestinationsPanel.svelte';
+  import CuisinePanel from './CuisinePanel.svelte';
   import DirectoryTable, { type DirectoryColumn, type DirectoryRow } from './DirectoryTable.svelte';
   import RegionDetails from './RegionDetails.svelte';
   import DataExport from './DataExport.svelte';
