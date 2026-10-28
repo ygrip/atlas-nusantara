@@ -71,7 +71,7 @@
 
       <div class="info">
         <div class="identity">
-          <span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span>
+          <span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)} title={cuisineGroupLabel(dish.group)}><span>{cuisineGroupLabel(dish.group)}</span></span>
           {#if recipes.length}<span class="recipe-badge">{m.cuisine_recipe_count({ count: recipes.length })}</span>{/if}
         </div>
 
@@ -157,6 +157,13 @@
     font-size: .8rem;
     font-weight: 850;
     line-height: 1.35;
+    white-space: nowrap;
+  }
+  .group-badge > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .group-badge::before {
     content: '';

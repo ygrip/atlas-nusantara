@@ -114,7 +114,7 @@
     if (recipeCount(dish) > 0) chipLabel = m.cuisine_recipe_count({ count: recipeCount(dish) });
     const request: ShareDish = {
       id: dish.id, name: dish.name, subtitle, kindLabel: heading, chipLabel,
-      chipColor: cuisineGroupColor(dish.group), chipTextColor: '#1a1a1a',
+      chipColor: cuisineGroupColor(dish.group),
       description: dish.summary,
       placeholderUrl: assetUrl(CUISINE_PLACEHOLDER_PATH), placeholderBackground: PLACEHOLDER_BACKGROUND
     };
@@ -233,7 +233,7 @@
                   <button type="button" class="open-dish" onclick={(event) => { event.stopPropagation(); selected = dish; }} aria-haspopup="dialog" aria-label={m.cuisine_open_details({ name: dish.name })}>{dish.name}</button>
                   {#if dish.provinceCodes.length > 1}<small>{m.cuisine_in_provinces({ count: dish.provinceCodes.length })}</small>{/if}
                 </th>
-                <td><span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span></td>
+                <td><span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)} title={cuisineGroupLabel(dish.group)}><span>{cuisineGroupLabel(dish.group)}</span></span></td>
                 <td class="recipe-cell">
                   {#if recipeCount(dish) > 0}
                     <span class="has-recipe"><BookOpen size={12} aria-hidden="true" /> {m.cuisine_recipe_count({ count: recipeCount(dish) })}</span>
@@ -366,6 +366,13 @@
     font-size: .72rem;
     font-weight: 850;
     line-height: 1.35;
+    white-space: nowrap;
+  }
+  .group-badge > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .group-badge::before {
     content: '';
