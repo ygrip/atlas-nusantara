@@ -71,7 +71,7 @@
 
       <div class="info">
         <div class="identity">
-          <span class="group-badge" style:background={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span>
+          <span class="group-badge" style:--group-color={cuisineGroupColor(dish.group)}>{cuisineGroupLabel(dish.group)}</span>
           {#if recipes.length}<span class="recipe-badge">{m.cuisine_recipe_count({ count: recipes.length })}</span>{/if}
         </div>
 
@@ -139,7 +139,33 @@
   .credit, .sources, .muted, .note, .attribution { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
   .credit a, section a, .attribution a { color: var(--accent); }
   .identity { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .group-badge { display: inline-block; padding: 5px 12px; border-radius: 12px; color: #1a1a1a; font-size: .8rem; font-weight: 850; }
+  .group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    max-width: 100%;
+    padding: 6px 12px;
+    border: 1px solid color-mix(in srgb, var(--group-color) 28%, var(--border));
+    border-radius: 12px;
+    background: linear-gradient(155deg,
+      color-mix(in srgb, var(--group-color) 10%, var(--surface)),
+      color-mix(in srgb, var(--group-color) 18%, var(--panel)));
+    box-shadow: 0 3px 0 -1px color-mix(in srgb, var(--group-color) 30%, var(--border)),
+      0 5px 10px -8px var(--shadow),
+      inset 0 1px 1px var(--clay-highlight);
+    color: var(--text);
+    font-size: .8rem;
+    font-weight: 850;
+    line-height: 1.35;
+  }
+  .group-badge::before {
+    content: '';
+    flex: 0 0 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--group-color);
+    box-shadow: inset 0 1px 1px #ffffff55, 0 1px 1px var(--shadow);
+  }
   .recipe-badge { padding: 4px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 16%, transparent); font-size: .74rem; font-weight: 750; }
   h3 { margin: 0 0 4px; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   h4 { margin: 12px 0 4px; font-size: .84rem; }
