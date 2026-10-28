@@ -1,13 +1,241 @@
 [
   {
+    "id": "amplang",
+    "name": "Amplang",
+    "provinceCodes": [
+      "64"
+    ],
+    "group": "snacks",
+    "summary": "Kerupuk ikan khas Kalimantan Timur.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/kalimantan/east-kalimantan",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "aunu-senebre",
+    "name": "Aunu Senebre",
+    "provinceCodes": [
+      "92",
+      "93",
+      "94"
+    ],
+    "group": "meat-fish",
+    "summary": "Olahan ikan teri nasi, daun talas, dan kelapa parut yang dikukus.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "ayam-cincane",
+    "name": "Ayam Cincane",
+    "provinceCodes": [
+      "64"
+    ],
+    "group": "meat-fish",
+    "summary": "Olahan ayam berbumbu merah untuk acara adat di Kalimantan Timur.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/kalimantan/east-kalimantan",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "cincalok",
+    "name": "Cincalok",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "condiments",
+    "summary": "Udang kecil yang difermentasi menjadi pelengkap makanan.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "dendeng-rusa",
+    "name": "Dendeng Rusa",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "meat-fish",
+    "summary": "Dendeng Rusa merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "gangan",
+    "name": "Gangan",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "soups",
+    "summary": "Hidangan ikan berkuah kuning khas Belitung.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "gence-ruan",
+    "name": "Gence Ruan",
+    "provinceCodes": [
+      "64"
+    ],
+    "group": "meat-fish",
+    "summary": "Ikan gabus bakar dengan sambal cabai khas Kalimantan Timur.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/kalimantan/east-kalimantan",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "hidangan-bakar-batu",
+    "name": "Hidangan Bakar Batu",
+    "provinceCodes": [
+      "95"
+    ],
+    "group": "snacks",
+    "summary": "Hidangan Bakar Batu merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-pegunungan",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "ikan-bakar-manokwari",
+    "name": "Ikan Bakar Manokwari",
+    "provinceCodes": [
+      "92"
+    ],
+    "group": "meat-fish",
+    "summary": "Ikan Bakar Manokwari merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "ikan-gastor-bakar",
+    "name": "Ikan Gastor Bakar",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "meat-fish",
+    "summary": "Ikan Gastor Bakar merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "ikan-kuah-kuning",
+    "name": "Ikan Kuah Kuning",
+    "provinceCodes": [
+      "92",
+      "94",
+      "96"
+    ],
+    "group": "meat-fish",
+    "summary": "Ikan Kuah Kuning merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": [
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre",
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/southwest-papua/sorong"
+    ]
+  },
+  {
+    "id": "keladi-tumbuk",
+    "name": "Keladi Tumbuk",
+    "provinceCodes": [
+      "94",
+      "95"
+    ],
+    "group": "rice",
+    "summary": "Keladi Tumbuk merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": [
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-pegunungan"
+    ]
+  },
+  {
+    "id": "kemplang",
+    "name": "Kemplang",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "snacks",
+    "summary": "Kerupuk berbahan ikan yang dipanggang atau digoreng.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "kue-lontar",
+    "name": "Kue Lontar",
+    "provinceCodes": [
+      "92"
+    ],
+    "group": "snacks",
+    "summary": "Kue Lontar merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "lakso",
+    "name": "Lakso",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "noodles",
+    "summary": "Mi beras khas Bangka dengan kuah santan berbumbu.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
     "id": "lempah-kuning",
     "name": "Lempah Kuning",
     "provinceCodes": [
       "19"
     ],
-    "group": "meat-fish",
-    "summary": "Hidangan ikan berkuah kuning khas Bangka Belitung.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/lempah-kuning"
+    "group": "soups",
+    "summary": "Masakan ikan kuah kuning asam pedas khas Bangka Belitung.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "mie-bangka",
+    "name": "Mie Bangka",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "noodles",
+    "summary": "Mi kenyal dengan lauk dan kuah atau saus berbumbu khas Bangka.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "mie-belitung",
+    "name": "Mie Belitung",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "noodles",
+    "summary": "Mi kuning berkuah kental yang biasa disajikan dengan udang dan kentang.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "mie-koba",
+    "name": "Mie Koba",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "noodles",
+    "summary": "Mie Koba merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
   },
   {
     "id": "nasi-bekepor",
@@ -17,48 +245,21 @@
     ],
     "group": "rice",
     "summary": "Nasi berbumbu tradisional masyarakat Kutai di Kalimantan Timur.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/nasi-bekepor"
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/kalimantan/east-kalimantan",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
   },
   {
-    "id": "ikan-bakar-manokwari",
-    "name": "Ikan Bakar Manokwari",
+    "id": "otak-otak-bangka",
+    "name": "Otak-Otak Bangka",
     "provinceCodes": [
-      "92"
-    ],
-    "group": "meat-fish",
-    "summary": "Ikan bakar khas Manokwari yang disajikan dengan sambal cabai dan bawang.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua"
-  },
-  {
-    "id": "sagu-sep",
-    "name": "Sagu Sep",
-    "provinceCodes": [
-      "93"
+      "19"
     ],
     "group": "snacks",
-    "summary": "Olahan sagu khas masyarakat Marind di Merauke, Papua Selatan.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep"
-  },
-  {
-    "id": "sate-ulat-sagu",
-    "name": "Sate Ulat Sagu",
-    "provinceCodes": [
-      "94",
-      "92"
-    ],
-    "group": "meat-fish",
-    "summary": "Ulat sagu yang ditusuk dan dipanggang sebagai pangan tradisional Papua.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/sate-ulat-sagu"
-  },
-  {
-    "id": "udang-selingkuh",
-    "name": "Udang Selingkuh",
-    "provinceCodes": [
-      "95"
-    ],
-    "group": "meat-fish",
-    "summary": "Olahan udang air tawar yang dikenal di Wamena dan Lembah Baliem.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/udang-selingkuh"
+    "summary": "Olahan ikan berbumbu yang dibungkus daun dan dipanggang.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
   },
   {
     "id": "papeda",
@@ -69,19 +270,140 @@
       "94",
       "96"
     ],
-    "group": "other",
-    "summary": "Olahan pati sagu yang disajikan bersama ikan berkuah di berbagai wilayah Papua.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua"
+    "group": "rice",
+    "summary": "Bubur pati sagu yang biasa disantap dengan ikan kuah.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "source-backed",
+    "additionalSources": [
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre",
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/southwest-papua/sorong"
+    ]
   },
   {
-    "id": "ikan-kuah-kuning",
-    "name": "Ikan Kuah Kuning",
+    "id": "petatas-bakar",
+    "name": "Petatas Bakar",
     "provinceCodes": [
-      "96",
-      "92"
+      "95"
     ],
-    "group": "soups",
-    "summary": "Olahan ikan berkuah kuning yang disajikan bersama papeda.",
-    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/southwest-papua/sorong"
+    "group": "rice",
+    "summary": "Petatas Bakar merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-pegunungan",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "rusip",
+    "name": "Rusip",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "condiments",
+    "summary": "Olahan ikan teri fermentasi khas Bangka Belitung.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "sagu-lempeng",
+    "name": "Sagu Lempeng",
+    "provinceCodes": [
+      "93",
+      "94"
+    ],
+    "group": "snacks",
+    "summary": "Sagu Lempeng merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": [
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre"
+    ]
+  },
+  {
+    "id": "sagu-sep",
+    "name": "Sagu Sep",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "snacks",
+    "summary": "Hidangan sagu dan kelapa suku Marind di Merauke, dipanggang dengan teknik bakar batu.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "sambal-raja",
+    "name": "Sambal Raja",
+    "provinceCodes": [
+      "64"
+    ],
+    "group": "condiments",
+    "summary": "Sambal Raja merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/kalimantan/east-kalimantan",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "sate-rusa",
+    "name": "Sate Rusa",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "meat-fish",
+    "summary": "Sate Rusa merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "sate-ulat-sagu",
+    "name": "Sate Ulat Sagu",
+    "provinceCodes": [
+      "92",
+      "93",
+      "94"
+    ],
+    "group": "meat-fish",
+    "summary": "Ulat sagu yang ditusuk lalu dipanggang sebagai pangan tradisional Papua.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/aunu-senebre",
+    "reviewStatus": "source-backed",
+    "additionalSources": [
+      "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep"
+    ]
+  },
+  {
+    "id": "sinole",
+    "name": "Sinole",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "snacks",
+    "summary": "Sinole merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
+  },
+  {
+    "id": "tumis-batang-keladi",
+    "name": "Tumis Batang Keladi",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "rice",
+    "summary": "Masakan batang keladi ditumis bersama bawang dan bumbu.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/sumatra/bangka-belitung-islands",
+    "reviewStatus": "source-backed",
+    "additionalSources": []
+  },
+  {
+    "id": "udang-selingkuh",
+    "name": "Udang Selingkuh",
+    "provinceCodes": [
+      "95"
+    ],
+    "group": "meat-fish",
+    "summary": "Udang Selingkuh merupakan hidangan yang dikenal dalam tradisi kuliner setempat; rincian bahan dan cara memasak perlu diverifikasi dari resep sumber.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-pegunungan",
+    "reviewStatus": "needs-source-review",
+    "additionalSources": []
   }
 ]
