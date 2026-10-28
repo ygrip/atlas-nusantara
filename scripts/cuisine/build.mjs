@@ -68,7 +68,7 @@ const CANON = new Map([
   ['Public-domain','https://creativecommons.org/publicdomain/mark/1.0/']
 ]);
 function normalizeLicense(value) {
-  const raw=String(value??'').replace(/-/g,' ').trim();
+  const raw=String(value??'').trim();
   return LICENSE_URLS.get(raw)||LICENSE_URLS.get(raw.toUpperCase()) || null;
 }
 export function commonsPhoto(info, reviewedAt) {
