@@ -51,7 +51,7 @@ npm run build:cuisine                           # merge, validate, write static/
 npm test
 ```
 
-`build.mjs` also fetches the Wikipedia list and the LorthGyu corpus and refuses to publish when either yields too little. It drops list entries that are not dishes (islands, regions, institutions) when their article never mentions food and no recipe was found; the last run dropped 114 of 2,278. The dish **type** (`group`) is a heuristic on the dish name, with the opening words of the summary as a second chance (`scripts/recipes/classify.mjs`): `other` means no rule matched.
+`build.mjs` also reads `scripts/recipes/regional-evidence.json`, fetches the Wikipedia list and the LorthGyu corpus and refuses to publish when either yields too little. It drops list entries that are not dishes (islands, regions, institutions) when their article never mentions food and no recipe was found; the last run dropped 114 of 2,278. The dish **type** (`group`) is a heuristic on the dish name, with the opening words of the summary as a second chance (`scripts/recipes/classify.mjs`): `other` means no rule matched.
 
 The GitHub workflow `cuisine-build.yml` runs the same steps on demand only. It must not run on push, because the build rewrites the published data.
 
@@ -69,8 +69,8 @@ It is a developer step only (the browser never calls a model), validates line co
 
 ## Limits to keep in mind
 
-- **Provinces are associations.** A dish appears where Wikipedia's list names it. A dish absent from a province may simply not be listed there. 101 dishes (from the MIT corpus) have no province and appear only in `national.json`.
-- **A missing recipe or photo does not mean a dish does not exist.** Many local dishes have no Cookpad recipe or Wikipedia article.
+- **Provinces are associations.** A dish appears where Wikipedia's list or a curated regional reference names it. A dish absent from a province may simply not be listed there. 101 dishes (from the MIT corpus) have no province and appear only in `national.json`.
+- **Curated records:** `regional-source` indicates a documented regional association, not a verified origin, photographic licence, or recipe. The direct evidence URL is kept in each dish's `sources`. New entries without recipe/photo content show the existing empty-state UI.\n- **A missing recipe or photo does not mean a dish does not exist.** Many local dishes have no Cookpad recipe or Wikipedia article.
 - **Summaries** are the opening of the Wikipedia article the list links to. Some links are redirects, so a name and its summary can describe a close variant.
 - **Recipes are written by Cookpad users and keep their copyright.** The atlas shows each recipe with the author and a link to the original page, but republishing the national file commercially needs its own review of Cookpad's terms. Recipes are informational: food safety, allergies and quantities still need a human check.
 - **Type** and **photos** are not curated. The interface strings for the new keys were machine-translated; Khmer, Lao, Burmese, Tamil and Tetum need native review.
