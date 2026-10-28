@@ -57,7 +57,12 @@
       const start = () => {
         scheduledIdle = undefined;
         scheduledTimeout = undefined;
-        if (!disposed && loaded && visible && !still.matches && !document.hidden) motionStarted = true;
+        // Decode asynchronously after load so a cutout never pops in halfway
+        // through its entrance. A missing image must not block the whole figure.
+        const images = Array.from(stage.querySelectorAll('img'));
+        void Promise.all(images.map(image => image.decode().catch(() => undefined))).then(() => {
+          if (!disposed && loaded && visible && !still.matches && !document.hidden) motionStarted = true;
+        });
       };
       // Only one small class change is scheduled; all subsequent movement is
       // CSS transform animation with no per-frame JavaScript or GSAP import.
