@@ -89,54 +89,58 @@ test('scrollable tables get the dedicated scrollbar and stay keyboard reachable'
   await expect.poll(() => scroller.evaluate(element => element.scrollTop)).toBeGreaterThan(before);
 });
 
-test('hero anatomy has correctly layered islands, no map tilt, and a centered prominent flag', async ({ page }) => {
+test('hero lays its copy over one full-bleed archipelago with centered clay figures', async ({ page }) => {
   await page.goto('/');
-  const stage = page.locator('.anatomy-stage');
+  const card = page.locator('.hero-card');
+  const stage = card.locator('.anatomy-stage');
   await expect(stage).toBeVisible();
   await expect(stage.locator('.island-assembly')).toHaveCount(7);
   await expect(stage.locator('.stack-top use')).toHaveCount(7);
   await expect(stage.locator('.stack-base use')).toHaveCount(7);
-  await expect(stage.locator('.ornament')).toHaveCount(8);
-  const composition = await stage.evaluate(element => {
+  await expect(stage.locator('.ornament')).toHaveCount(6);
+  await expect(stage.locator('.chip, .art-chip')).toHaveCount(0);
+  const layout = await card.evaluate(element => {
+    const stageBox = element.querySelector('.anatomy-stage')!.getBoundingClientRect();
+    const cardBox = element.getBoundingClientRect();
+    const copy = element.querySelector('.hero-copy')!.getBoundingClientRect();
+    const flag = element.querySelector('.ornament-flag')!.getBoundingClientRect();
     const world = element.querySelector('.world')!;
-    const flag = element.querySelector('.ornament-flag')!;
-    const w = world.getBoundingClientRect();
-    const f = flag.getBoundingClientRect();
     return {
-      worldTransform: getComputedStyle(world).transform,
-      centeredFlag: (f.left + f.width / 2 - w.left) / w.width,
-      flagWidth: f.width,
-      orangutanWidth: element.querySelector('.ornament-orangutan')!.getBoundingClientRect().width
+      fullBleed: Math.abs(stageBox.width - cardBox.width) < 6 && Math.abs(stageBox.height - cardBox.height) < 6,
+      copyLeftOfFlag: copy.right < flag.left + flag.width,
+      worldTransform: getComputedStyle(world).transform
     };
   });
-  expect(composition.worldTransform).not.toContain('matrix3d');
-  expect(composition.centeredFlag).toBeGreaterThan(.43);
-  expect(composition.centeredFlag).toBeLessThan(.58);
-  expect(composition.flagWidth).toBeGreaterThan(composition.orangutanWidth * 1.6);
+  expect(layout.fullBleed).toBe(true);
+  expect(layout.copyLeftOfFlag).toBe(true);
+  expect(layout.worldTransform).not.toContain('matrix3d');
 });
 
-test('hero stays static under reduced motion without loading an animation timeline', async ({ page }) => {
+test('hero copy keeps an unsplit accessible title and the new calls to action', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Atlas Nusantara' })).toBeVisible();
+  await expect(page.locator('.hero-tagline')).toHaveText('Indonesia, region by region.');
+  await expect(page.locator('.hero-actions .clay-button').first()).toHaveText(/Explore the map/);
+  await expect(page.locator('.hero-actions .clay-button').nth(1)).toHaveText('Browse provinces');
+});
+
+test('hero entrance is CSS-driven, and pointer hover does not take the map apart', async ({ page }) => {
+  await page.goto('/');
+  const world = page.locator('.anatomy-stage .world');
+  const entrance = await world.evaluate(element => getComputedStyle(element).animationName);
+  expect(entrance).not.toBe('none');
+  await page.waitForTimeout(3400);
+  const top = page.locator('.anatomy-stage .island-assembly .stack-top').first();
+  await page.locator('.anatomy-stage').hover({ force: true });
+  expect(await top.evaluate(element => getComputedStyle(element).translate)).toBe('none');
+  expect(await page.locator('.anatomy-stage').evaluate(element => element.querySelectorAll('canvas').length)).toBe(0);
+});
+
+test('hero stays still under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  const stage = page.locator('.anatomy-stage');
-  await expect(stage).toHaveAttribute('data-motion', 'still');
-  const animation = await stage.locator('.stack-top').first()
-    .evaluate(element => getComputedStyle(element).animationName);
-  expect(animation).toBe('none');
-});
-
-test('hero animation is deferred until the page has loaded and the browser is idle', async ({ page }) => {
-  await page.addInitScript(() => {
-    (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded = '';
-    document.addEventListener('DOMContentLoaded', () => {
-      (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded =
-        document.querySelector<HTMLElement>('.anatomy-stage')?.dataset.motion ?? 'missing';
-    }, { once: true });
-  });
-  await page.goto('/');
-  const initial = await page.evaluate(() =>
-    (window as Window & { __heroMotionAtDOMContentLoaded?: string }).__heroMotionAtDOMContentLoaded
-  );
-  expect(initial).toBe('still');
-  await expect(page.locator('.anatomy-stage')).toHaveAttribute('data-motion', 'playing');
+  for (const selector of ['.anatomy-stage .world', '.anatomy-stage .stack-top', '.anatomy-stage .ornament', '.hero-copy .rise', '.hero-copy .word']) {
+    const animation = await page.locator(selector).first().evaluate(element => getComputedStyle(element).animationName);
+    expect(animation, selector).toBe('none');
+  }
 });

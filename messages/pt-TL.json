@@ -260,7 +260,7 @@
   "footer_explore": "Explorar",
   "footer_maker": "Feito por readynaz",
   "language_search": "Pesquisar idiomas…",
-  "atlas_intro": "Conheça a Indonésia, um lugar de cada vez. Explore províncias, descubra locais para visitar e consulte o tempo local no mapa.",
+  "atlas_intro": "Conheça a Indonésia, um lugar de cada vez. Escolha uma ilha ou província e veja os locais a visitar, a comida, a vida selvagem e o tempo.",
   "source_details": "Fontes e detalhes do mapa",
   "menu_close": "Fechar menu",
   "map_legend_label": "Legenda do mapa",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "O nome, a descrição e a foto vêm de fontes públicas e podem estar desatualizados ou incompletos.",
   "cuisine_coverage_note": "Os pratos seguem a lista provincial da Wikipédia indonésia, por isso a província é uma associação e não prova de origem. As receitas são escritas pelos seus autores e ligam à fonte. A falta de receita ou de foto não significa que o prato não exista.",
   "cuisine_metric_with_recipe": "Pratos com receita",
-  "cuisine_metric_with_photo": "Pratos com foto"
+  "cuisine_metric_with_photo": "Pratos com foto",
+  "hero_cta_atlas": "Explorar o mapa",
+  "hero_cta_provinces": "Ver províncias",
+  "hero_art_hint": "Passe o rato para separar"
 }

@@ -260,7 +260,7 @@
   "footer_explore": "Tuklasin",
   "footer_maker": "Ginawa ni readynaz",
   "language_search": "Maghanap ng wika…",
-  "atlas_intro": "Kilalanin ang Indonesia. Tuklasin ang mga lalawigan, pasyalan, at lokal na panahon sa mapa.",
+  "atlas_intro": "Kilalanin ang Indonesia. Pumili ng isla o lalawigan, tapos tingnan ang mga pasyalan, pagkain, wildlife, at panahon nito.",
   "source_details": "Mga pinagmulan at detalye ng mapa",
   "menu_close": "Isara ang menu",
   "map_legend_label": "Gabay sa mapa",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Ang pangalan, paglalarawan at larawan ay mula sa mga pampublikong pinagmulan at maaaring luma o hindi kumpleto.",
   "cuisine_coverage_note": "Sinusunod ng mga putahe ang listahan ng lalawigan sa Wikipedia ng Indonesia, kaya ang lalawigan ay kaugnayan, hindi patunay ng pinagmulan. Ang mga resipe ay isinulat ng kanilang may-akda at may link sa pinagmulan. Ang kawalan ng resipe o larawan ay hindi nangangahulugang walang ganoong putahe.",
   "cuisine_metric_with_recipe": "Mga putaheng may resipe",
-  "cuisine_metric_with_photo": "Mga putaheng may larawan"
+  "cuisine_metric_with_photo": "Mga putaheng may larawan",
+  "hero_cta_atlas": "Tuklasin ang mapa",
+  "hero_cta_provinces": "Tingnan ang mga lalawigan",
+  "hero_art_hint": "I-hover para paghiwalayin"
 }

@@ -260,7 +260,7 @@
   "footer_explore": "Khám phá",
   "footer_maker": "Do readynaz tạo",
   "language_search": "Tìm ngôn ngữ…",
-  "atlas_intro": "Tìm hiểu Indonesia qua từng địa điểm. Khám phá các tỉnh, tìm nơi tham quan và xem thời tiết địa phương trên bản đồ.",
+  "atlas_intro": "Tìm hiểu Indonesia qua từng địa điểm. Chọn một đảo hoặc tỉnh để xem điểm tham quan, ẩm thực, động vật hoang dã và thời tiết.",
   "source_details": "Nguồn và chi tiết bản đồ",
   "menu_close": "Đóng menu",
   "map_legend_label": "Chú giải bản đồ",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Tên, mô tả và ảnh lấy từ nguồn công khai và có thể đã cũ hoặc chưa đầy đủ.",
   "cuisine_coverage_note": "Các món theo danh sách tỉnh trên Wikipedia tiếng Indonesia, nên tỉnh chỉ là liên hệ, không phải bằng chứng về nguồn gốc. Công thức do tác giả viết và có liên kết đến nguồn. Thiếu công thức hoặc ảnh không có nghĩa là món đó không tồn tại.",
   "cuisine_metric_with_recipe": "Món có công thức",
-  "cuisine_metric_with_photo": "Món có ảnh"
+  "cuisine_metric_with_photo": "Món có ảnh",
+  "hero_cta_atlas": "Khám phá bản đồ",
+  "hero_cta_provinces": "Xem các tỉnh",
+  "hero_art_hint": "Rê chuột để tách các lớp"
 }
