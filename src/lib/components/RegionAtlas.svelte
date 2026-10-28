@@ -464,7 +464,9 @@
       <p class="edition-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
     <div class="region-directory">
-      {#if layer === 'destinations'}
+      {#if layer === 'cuisine'}
+        <CuisinePanel provinceCode={province?.code} />
+      {:else if layer === 'destinations'}
         <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
       {:else if layer === 'mountains'}
         <label for="mountain-search">{m.mountain_search()}</label>
