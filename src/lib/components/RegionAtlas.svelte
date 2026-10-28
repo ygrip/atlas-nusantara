@@ -18,6 +18,7 @@
   import { forecastCoordinates, summariseWeather } from '$lib/map/weather-summary';
   import { loadDestinationIndex, loadDestinations, destinationOverlay, type DestinationCatalog, type DestinationIndex } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
+  import { cuisineOverlay, loadCuisineIndex, type CuisineIndex } from '$lib/data/cuisine';
   import { loadHazards, type HazardSnapshot } from '$lib/data/hazards';
   import { earthquakeOverlay, loadPointOverlay, OVERLAY_DEFINITIONS, reportsOverlay, warningsOverlay, type PointOverlay } from '$lib/map/overlays';
   import { latestYear, loadPopulation, type PopulationData } from '$lib/data/population';
@@ -34,6 +35,9 @@
   let hazardSnapshot: HazardSnapshot | undefined;
   let destinationCatalog: DestinationCatalog | undefined;
   let destinationIndex: DestinationIndex | undefined;
+  let cuisineIndex: CuisineIndex | undefined;
+  let cuisineIndexLoading = false;
+  $: void ensureCuisineIndex(layer);
   let destinationRequest: AbortController | undefined;
   let destinationLoading = false;
   let destinationFailed = false;
@@ -46,7 +50,9 @@
   let customOverlayFailed = false;
   $: activeOverlay = layer === 'destinations' && destinationIndex
     ? destinationOverlay(national, destinationIndex, province?.code)
-    : resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
+    : layer === 'cuisine' && cuisineIndex
+      ? cuisineOverlay(national, cuisineIndex, province?.code)
+      : resolveOverlay(layer, earthquakeArchive, hazardSnapshot, customOverlay);
   $: void loadCustomOverlay(layer);
   import { ADMIN_DATA_PATH, CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   export let onselection: ((region: Region | undefined, geometry: GeometryPackage | undefined) => void) | undefined = undefined;
@@ -423,6 +429,14 @@
     } finally {
       if (!request.signal.aborted) customOverlayLoading = false;
     }
+  }
+
+  async function ensureCuisineIndex(activeLayer: string) {
+    if (activeLayer !== 'cuisine' || cuisineIndex || cuisineIndexLoading) return;
+    cuisineIndexLoading = true;
+    try { cuisineIndex = await loadCuisineIndex(); }
+    catch (error) { console.warn('Cuisine index unavailable', error); }
+    finally { cuisineIndexLoading = false; }
   }
 
   async function ensurePopulation() {
