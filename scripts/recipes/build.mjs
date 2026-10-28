@@ -64,7 +64,12 @@ async function fetchWikipediaHTML() {
   if(html.length<10000)throw Error('Wikipedia HTML unexpectedly short');
   const entries=new Map();
   let provinceCode=null;
-  const tokens=html.match(/<h3\b[^>]*>[\s\S]*?<\/h3>|<li\b[^>]*>[\s\S]*?<\/li>/gi)??[];
+  // Exclude Wikipedia's navigation/sidebar/footer lists from regional dish records.
+  const start = html.indexOf('id="mw-content-text"');
+  const stop = html.indexOf('id="catlinks"', start);
+  if (start < 0 || stop <= start) throw Error('Wikipedia article content markers are missing');
+  const article = html.slice(start, stop);
+  const tokens=article.match(/<h3\\b[^>]*>[\\s\\S]*?<\\/h3>|<li\\b[^>]*>[\\s\\S]*?<\\/li>/gi)??[];
   for(const token of tokens) {
     if(/^<h3\b/i.test(token)) {
       const heading=htmlText(token).replace(/\[sunting\].*/i,'').replace(/^provinsi\s+/i,'').toLowerCase();
@@ -219,7 +224,13 @@ async function enrichImages(records) {
           credit,license,licenseUrl:stripTags(metadata?.LicenseUrl?.value)||null,reviewedAt:new Date().toISOString(),source:'Wikimedia Commons'
         };
       }
-    } catch(error) { console.warn('Image metadata batch skipped:',String(error)); }
+    } catch(error) {
+      console.warn('Image metadata batch skipped:',String(error));
+      if (/\\b503\\b/.test(String(error))) {
+        console.warn('Wikimedia API unavailable; retaining only existing external photo links and credits.');
+        break;
+      }
+    }
   }
 }
 async function publish(records) {
