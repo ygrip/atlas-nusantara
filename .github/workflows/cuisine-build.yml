@@ -1,0 +1,38 @@
+name: Build Wikipedia cuisine catalog
+
+on:
+  push:
+    branches: [feat/cuisine-recipe-catalog]
+    paths:
+      - '.github/workflows/cuisine-build.yml'
+      - 'scripts/recipes/build.mjs'
+      - 'scripts/recipes/seed.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Aggregate Wikipedia and MIT recipe dataset, enrich images
+        run: node scripts/recipes/build.mjs
+      - name: Verify generated catalog
+        run: node --test tests/geo/cuisine.test.mjs
+      - name: Commit generated province shards and national export
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add static/data/cuisine/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(cuisine): aggregate Wikipedia, recipe corpus and Commons images"
+            git push origin HEAD:feat/cuisine-recipe-catalog
+          fi
