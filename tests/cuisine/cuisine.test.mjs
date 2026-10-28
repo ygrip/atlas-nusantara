@@ -157,7 +157,8 @@ test('assembling a dish orders recipes and photos and keeps the record valid', (
   const result = assembleDish({ item, cookpad, wikipedia });
   assert.equal(isCuisineDish(result), true);
   assert.deepEqual(result.recipes.map(entry => entry.id), ['cookpad-2', 'cookpad-1', 'lorthgyu-soto-banjar']);
-  assert.deepEqual(result.images.map(entry => entry.source), ['commons', 'cookpad', 'cookpad']);
+  // The current recipe pipeline intentionally prioritizes Cookpad author photos over Commons fallback.
+  assert.deepEqual(result.images.map(entry => entry.source), ['cookpad', 'cookpad', 'commons']);
   assert.equal(result.group, 'soups');
   assert.equal(result.summaryLanguage, 'id');
 
