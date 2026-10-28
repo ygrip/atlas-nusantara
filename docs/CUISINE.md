@@ -103,3 +103,15 @@ npm run check
 ```
 
 The Cookpad stage extracts recipe JSON-LD from public results, caches author attribution and ingredient/step fields, and stops after repeated blocks. The Wikipedia stage only processes supplemental entries with a known `articleUrl`; it accepts only Commons image metadata with compatible open licences. Neither script fabricates recipes or fetches images from Google Images. Review URLs, spelling and local attribution before treating `needs-source-review` records as verified. Re-running is resumable from `tmp/recipes-cache`.
+
+### Cookpad-first images
+
+For regional dishes, the Cookpad crawl fetches each matching recipe page and reads its schema.org `Recipe` JSON-LD, including the recipe author's photo URL. `assembleDish` places photos sourced from accepted Cookpad recipes before any Wikimedia fallback, retaining the recipe author's credit and a link to the original recipe. The image reference is stored in the dataset; **Cookpad photos are not downloaded or copied into the repository**. Cookpad images are used only for display, never canvas share-card rendering, because they are not assumed openly licensed and the image origin lacks the necessary CORS headers. Recipes similarly retain original author and page attribution.
+
+```bash
+node scripts/recipes/crawl-cookpad.mjs --regional-only --concurrency=2 --delay-ms=1200
+npm run build:cuisine
+npm run check:cuisine-coverage
+```
+
+If Cookpad blocks a request or returns no matching recipe, no recipe/image is invented; the existing illustration fallback remains. The crawler can resume from its on-disk cache. Verify that hotlinking complies with Cookpad terms before deploying at scale.
