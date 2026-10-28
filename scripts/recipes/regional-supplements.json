@@ -1,0 +1,87 @@
+[
+  {
+    "id": "lempah-kuning",
+    "name": "Lempah Kuning",
+    "provinceCodes": [
+      "19"
+    ],
+    "group": "meat-fish",
+    "summary": "Hidangan ikan berkuah kuning khas Bangka Belitung.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/lempah-kuning"
+  },
+  {
+    "id": "nasi-bekepor",
+    "name": "Nasi Bekepor",
+    "provinceCodes": [
+      "64"
+    ],
+    "group": "rice",
+    "summary": "Nasi berbumbu tradisional masyarakat Kutai di Kalimantan Timur.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/nasi-bekepor"
+  },
+  {
+    "id": "ikan-bakar-manokwari",
+    "name": "Ikan Bakar Manokwari",
+    "provinceCodes": [
+      "92"
+    ],
+    "group": "meat-fish",
+    "summary": "Ikan bakar khas Manokwari yang disajikan dengan sambal cabai dan bawang.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua"
+  },
+  {
+    "id": "sagu-sep",
+    "name": "Sagu Sep",
+    "provinceCodes": [
+      "93"
+    ],
+    "group": "snacks",
+    "summary": "Olahan sagu khas masyarakat Marind di Merauke, Papua Selatan.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-selatan/sagu-sep"
+  },
+  {
+    "id": "sate-ulat-sagu",
+    "name": "Sate Ulat Sagu",
+    "provinceCodes": [
+      "94",
+      "92"
+    ],
+    "group": "meat-fish",
+    "summary": "Ulat sagu yang ditusuk dan dipanggang sebagai pangan tradisional Papua.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/papua-tengah/sate-ulat-sagu"
+  },
+  {
+    "id": "udang-selingkuh",
+    "name": "Udang Selingkuh",
+    "provinceCodes": [
+      "95"
+    ],
+    "group": "meat-fish",
+    "summary": "Olahan udang air tawar yang dikenal di Wamena dan Lembah Baliem.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/travel-ideas/gastronomy/udang-selingkuh"
+  },
+  {
+    "id": "papeda",
+    "name": "Papeda",
+    "provinceCodes": [
+      "92",
+      "93",
+      "94",
+      "96"
+    ],
+    "group": "other",
+    "summary": "Olahan pati sagu yang disajikan bersama ikan berkuah di berbagai wilayah Papua.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/west-papua"
+  },
+  {
+    "id": "ikan-kuah-kuning",
+    "name": "Ikan Kuah Kuning",
+    "provinceCodes": [
+      "96",
+      "92"
+    ],
+    "group": "soups",
+    "summary": "Olahan ikan berkuah kuning yang disajikan bersama papeda.",
+    "sourceUrl": "https://www.indonesia.travel/id/id/destination/maluku-papua/southwest-papua/sorong"
+  }
+]
