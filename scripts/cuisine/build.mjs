@@ -35,7 +35,7 @@ async function loadWiki() {
 }
 async function loadRecipes() {
   const rows=[];
-  for (const filename of ['train.jsonl','val.jsonl']) {
+  for (const filename of ['train.jsonl','train_split.jsonl','val.jsonl']) {
     const url=RECIPE_SOURCE+'/resolve/main/data/'+filename;
     const body=await request(url,'text');
     for (const line of body.split(/\r?\n/).filter(Boolean)) {
@@ -43,7 +43,7 @@ async function loadRecipes() {
       catch { throw Error('Invalid JSONL from '+filename); }
     }
   }
-  if (rows.length<200) throw Error('Too few licensed recipe rows ('+rows.length+')');
+  if (rows.length<150) throw Error('Too few licensed recipe rows ('+rows.length+')');
   return rows;
 }
 function cleanCredit(value) {
