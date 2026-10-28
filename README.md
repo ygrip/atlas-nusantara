@@ -46,7 +46,7 @@ Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the
 
 ## Refresh snapshots
 
-**Indonesian cuisine:** A static cuisine layer at `/?layer=cuisine` contains 2,278 Wikipedia/corpus-derived dish entries (159 matched recipes across 38 province shards) and 4 externally linked, credited Commons photographs. The 13-language interface shows Indonesian recipe-text fallbacks until translated content is reviewed. The source importer is manual and does not store any image files. See [CUISINE.md](docs/CUISINE.md).
+**Indonesian cuisine:** A static cuisine layer at `/?layer=cuisine`, built like flora and fauna: 2,164 dishes from the Indonesian Wikipedia list with 3,667 recipes (Cookpad Indonesia, an MIT corpus and four reviewed seeds) for 1,335 of them, Wikipedia summaries and 1,406 dishes with linked, credited photos, in 38 province shards. Search covers dish names and ingredients. Photos and recipes stay with their sources and are linked, never copied. Recipe text is Indonesian until translated. See [CUISINE.md](docs/CUISINE.md).
 
 **Destinations are static and manually maintained:** 38 province JSON files plus a complete `national.json` download. The atlas opens on the Weather layer in the national view; the Destinations layer starts national too, and `?region=` links open a province. Each province has a searchable, filterable, sortable table with client-side pagination. No destination API or scheduled worker is needed. After editing source JSON, run `npm run build:destinations` offline; see [destination maintenance](docs/DESTINATIONS.md).
 

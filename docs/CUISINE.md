@@ -1,63 +1,76 @@
-# Indonesian cuisine and recipes
+# Cuisine layer
 
-Atlas Nusantara provides a manually published, **static** cuisine layer at \`/?layer=cuisine\`. Selecting a province filters the dishes listed for it. A cuisine map marker identifies a *province count*, never a fabricated cooking location or restaurant.
+The **Cuisine** map layer lists Indonesian dishes with a short description, photos and recipes. It follows the [flora and fauna](SPECIES.md) design: static JSON only, no recipe API, no scheduled crawler. A map marker is a *province count*, never a restaurant or a cooking location.
 
-## Sources and provenance
+## Published files
 
-- [Wikipedia's provincial list of Indonesian dishes](https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia) is used for dish-name candidates and *listed-with* province associations, **not** proof of exclusive geographic origin. The list is incomplete and may have old administrative groupings or inconsistencies.
-- [LorthGyu/indonesian-recipes](https://huggingface.co/datasets/LorthGyu/indonesian-recipes) provides 320 Indonesian-language recipe entries across train/test, with an MIT license claim. Its region field is broad (Java, Sumatra, Kalimantan, etc.), and **must not** be converted into a specific province. The builder only joins on normalized names or explicitly reviewed aliases and preserves the underlying source link.
-- Wikipedia-linked dish articles provide candidate page-image references. The builder requests file metadata from Wikimedia Commons and accepts only eligible CC0/CC BY/CC BY-SA/public-domain photos with author, license and description-page links. Missing images stay missing. Per-file license terms apply; attribution is displayed in cards.
-- The four seed recipes are **original Atlas Nusantara recipe adaptations**, not text copied from Wikipedia. Background references are not presented as recipe instruction sources.
+- `static/data/cuisine/index.json`: totals, coverage, dish-type counts and one summary per province (38). Loaded when the layer opens; draws the province markers.
+- `static/data/cuisine/provinces/<code>.json`: every dish listed for one province. Loaded only when that province is selected.
+- `static/data/cuisine/national.json`: the whole aggregate, including dishes with no province. **Download only**: the browser never fetches it.
+- `static/data/cuisine/locales/<locale>.json` (optional): translations of each dish's first recipe, see [Translations](#translations).
 
-The published `static/data/cuisine` snapshot (2026-10-28) contains **2,278 dish entries, 159 matched recipes, and 4 credited external Wikimedia Commons photo URLs**, grouped into 38 province shards. Four original seed recipes are preserved: Rendang, Pempek, Soto Banjar, and Papeda. The Wikipedia list and recipe matches are not an exhaustive, independently verified census. Most image enrichment was unavailable because the Wikimedia metadata API returned HTTP 503. Missing photos remain empty rather than being copied or guessed.
+The files are Workers Static Assets. The browser validates each one with `src/lib/data/cuisine-validation.js` (shared with the build script) and checks every shard against the index totals.
 
-## Image delivery policy: external URLs only
+## Interface
 
-**Never download, store, upload, transform, cache or bundle recipe photographs.**
-Image entries only contain `url`, `descriptionUrl`, `credit`, `license`, optional `licenseUrl`, and `reviewedAt`. The client loads image URLs directly from Wikimedia Commons or Wikimedia's hosted thumbnails; no images are written under `static/`, committed to GitHub, proxied through Workers, or stored in Cloudflare R2.
+- **National view:** bento metric cards (dishes, with recipes, with photos, types, provinces) and a dish-type bar.
+- **Province table:** photo, name, type, recipe count with time and yield of the first recipe. Search matches dish names **and ingredients**; filters for type, "with recipe" and "with photo".
+- **Row click opens a popup** (`CuisineDialog.svelte`): photo gallery (up to four photos with credit), Wikipedia summary, provinces, and every recipe as a tab with ingredients, method, author and a link to the original page.
+- **Share** draws a 1080 x 1080 card (`renderDishShareCard` in `src/lib/share/card.ts`) and a link that reopens the dish (`?layer=cuisine&region=63&dish=soto-banjar`). Only Wikimedia Commons photos are drawn; the card falls back to the local illustration for Cookpad photos.
+- Markers use the clay `bowl` pin (`src/lib/map/clay-pin.ts`). A dish without a photo, or whose photo fails to load, shows `static/illustrations/cuisine/dish.svg`.
 
-A missing external image must show a local **non-photo UI fallback** (icon/text), not trigger a replacement download. Commons may change or rate-limit hotlinked assets; this should degrade gracefully. The cuisine validator rejects local, `data:`, `blob:`, and unrelated-host image paths.
+## Record
 
-## Generate the larger dataset
+`src/lib/data/cuisine-contract.ts` is the schema (version 2). Per dish: `id`, `name`, `group`, `provinceCodes`, `originStatus`, `summary` (+ `summaryLanguage`), `articleUrl`, `images` (1 to 4 compact references), `recipes` (1 to 4) and `sources`. Per recipe: `id`, `source` (`cookpad`, `lorthgyu` or `atlas`), `title`, `url` (always the attribution link), `author`, `yield`, `timeMinutes`, `ingredients` and `steps`. Recipes are ordered: reviewed Atlas recipes, then Cookpad by likes, then the MIT corpus.
 
-Run from the repository root with Node 22.12+ and network access:
+## Sources and what each contributes
 
-\`\`\`sh
-npm run build:cuisine
-# For a first pass without Commons image enrichment:
-node scripts/recipes/build.mjs --skip-images
-\`\`\`
+| Source | Used for |
+|---|---|
+| [Daftar masakan Indonesia](https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia) (Indonesian Wikipedia) | Dish names and *listed-with* province associations. **Not** proof of exclusive origin. |
+| Indonesian Wikipedia articles (REST page summary) | The short description (CC BY-SA 4.0) and the lead photo file. |
+| Wikimedia Commons file pages | Author and licence of each lead photo. Only CC0, CC BY, CC BY-SA and public domain files are kept. |
+| [Cookpad Indonesia](https://cookpad.com/id) | Recipes (ingredients, steps, yield) and their photos, found by searching each dish name. |
+| [LorthGyu/indonesian-recipes](https://huggingface.co/datasets/LorthGyu/indonesian-recipes) (MIT) | 159 more recipes, joined on normalized dish names only. Its broad region field is never turned into a province. |
+| Four reviewed seed recipes (`scripts/recipes/seed.json`) | Rendang, Pempek, Soto Banjar and Papeda, original adaptations. |
 
-The script fails closed when the Wikipedia list unexpectedly yields fewer than 200 parsed names or the Hugging Face source yields fewer than 250 complete recipes. It does not overwrite the shipped catalogue if those upstreams fail during download. The script generates:
-- \`static/data/cuisine/index.json\`: national counts, province counts, 12 featured dish cards, source links;
-- \`static/data/cuisine/national.json\`: explicit full export;
-- \`static/data/cuisine/provinces/<code>.json\`: 38 per-province browser-loadable shards.
+## Image policy: references only
 
-A dish may belong to multiple provincial lists, so total provincial appearances may exceed unique national dish count. Unmapped recipe names have empty \`provinceCodes\`, remain in the national export and do not become geographical pins. Distinct but similarly named dishes should be reviewed; name matching is deliberately conservative. Review contents and attribution before committing the regenerated assets.
+**Never download, store, upload, transform or bundle photographs.** A photo is a small reference (`commons`: the `upload.wikimedia.org` path and original width; `cookpad`: recipe id and image hash) and the URL is rebuilt in `src/lib/data/cuisine-images.ts`. Commons thumbnails are never requested wider than the original. The validator rejects anything that is not one of those two forms, so local, `data:` and unrelated-host paths cannot be published. A missing photo shows the local illustration.
 
-## Localization: 13 UI languages; recipe-content translation is a separate stage
+Commons photos are read from `upload.wikimedia.org`, which sends CORS headers (the `Special:FilePath` redirect does not), so they can be drawn onto a share card. Cookpad's image host sends none: those photos are shown with credit but never drawn.
 
-The layer's interface is translated via the existing Paraglide/inlang \`messages/{locale}.json\` catalog for all **13** configured locales: \`id\`, \`en\`, \`ms\`, \`fil\`, \`th\`, \`vi\`, \`my\`, \`km\`, \`lo\`, \`zh-SG\`, \`ta\`, \`tet\`, \`pt-TL\`.
+## Rebuild
 
-Ingredients and instructions from the source remain in **Indonesian** until that recipe has a checked localization. The viewer explicitly warns about Indonesian-only content instead of mislabeling it as translated. A **human-reviewed** translation may be kept in \`static/data/cuisine/locales/<locale>.json\`.
+Everything caches under `tmp/recipes-cache/` (ignored by Git) and the crawl stages are resumable. Run from the repository root:
 
-An optional batch translation script creates all 12 *non-Indonesian* locale files:
+```bash
+node scripts/recipes/crawl-cookpad.mjs          # about 40 minutes for ~2,200 dishes; concurrency 3 and 700 ms delay by default
+node scripts/recipes/fetch-wikipedia.mjs        # about 40 minutes: summaries, lead photos, Commons licences
+npm run build:cuisine                           # merge, validate, write static/data/cuisine
+npm test
+```
 
-\`\`\`sh
-OPENAI_API_KEY=... OPENAI_TRANSLATE_MODEL=... npm run translate:cuisine -- --all
-# or a single locale
+`build.mjs` also fetches the Wikipedia list and the LorthGyu corpus and refuses to publish when either yields too little. It drops list entries that are not dishes (islands, regions, institutions) when their article never mentions food and no recipe was found; the last run dropped 114 of 2,278. The dish **type** (`group`) is a heuristic on the dish name, with the opening words of the summary as a second chance (`scripts/recipes/classify.mjs`): `other` means no rule matched.
+
+The GitHub workflow `cuisine-build.yml` runs the same steps on demand only. It must not run on push, because the build rewrites the published data.
+
+Cookpad is crawled politely: `robots.txt` allows these pages, requests carry an honest user agent, and the crawl backs off and stops after repeated 403, 429 or 5xx answers. The Commons licence is read from the file page HTML, because the Commons API answers 503 on many networks.
+
+## Translations
+
+The 13 interface languages come from the Paraglide catalog. Recipe text stays **Indonesian** until translated; the dialog says so. An optional offline script translates each dish's first recipe:
+
+```bash
 OPENAI_API_KEY=... OPENAI_TRANSLATE_MODEL=... npm run translate:cuisine -- --locale th
-\`\`\`
+```
 
-The translation API is **only an offline developer step**. It is not needed at runtime, and the browser never sends recipes to a model. The script validates ID and ingredient/step counts, resumes from checkpoints and marks all output \`machine-unreviewed\`. A culinary editor should check ingredient units, temperatures, instructions and culturally specific vocabulary, especially for Khmer, Lao, Burmese, Tamil and Tetum. Translation files are not generated by the standard \`npm run build\` and no key is included in the repository.
+It is a developer step only (the browser never calls a model), validates line counts, resumes from checkpoints and marks output `machine-unreviewed`. It has **not** been run. With 1,300+ recipes it is a large job per locale; review ingredient units and temperatures, especially for Khmer, Lao, Burmese, Tamil and Tetum.
 
-## QA and integrity
+## Limits to keep in mind
 
-\`\`\`sh
-npm run check:locales
-npm run check
-node --test tests/geo/cuisine.test.mjs
-npm run build
-\`\`\`
-
-Do not claim missing photo or recipe means a dish does not exist. Recipe pages are informational; food-safety, allergy and ingredient advice still require human review. Every source change should be dated, and licensed files should remain directly attributable.
+- **Provinces are associations.** A dish appears where Wikipedia's list names it. A dish absent from a province may simply not be listed there. 101 dishes (from the MIT corpus) have no province and appear only in `national.json`.
+- **A missing recipe or photo does not mean a dish does not exist.** Many local dishes have no Cookpad recipe or Wikipedia article.
+- **Summaries** are the opening of the Wikipedia article the list links to. Some links are redirects, so a name and its summary can describe a close variant.
+- **Recipes are written by Cookpad users and keep their copyright.** The atlas shows each recipe with the author and a link to the original page, but republishing the national file commercially needs its own review of Cookpad's terms. Recipes are informational: food safety, allergies and quantities still need a human check.
+- **Type** and **photos** are not curated. The interface strings for the new keys were machine-translated; Khmer, Lao, Burmese, Tamil and Tetum need native review.
