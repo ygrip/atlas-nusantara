@@ -403,5 +403,22 @@
   "population_source_provinces": "Tabela provínsia BPS",
   "population_source_pyramid": "Tabela idade no seksu BPS",
   "tab_overview": "Rezumu",
-  "tab_province_detail": "Detalle provínsia"
+  "tab_province_detail": "Detalle provínsia",
+  "layer_cuisine": "Hahan",
+  "cuisine_heading": "Reseita hosi Indonézia tomak",
+  "cuisine_description": "Esplora hahan rejionál, ingrediente, maneira te'in no fonte foto.",
+  "cuisine_search": "Buka hahan",
+  "cuisine_choose_province": "Hili provínsia ida iha mapa atu haree hahan tan.",
+  "cuisine_empty": "La hetan hahan ne'ebé hanesan.",
+  "cuisine_no_image": "Foto seidauk disponivel",
+  "cuisine_minutes": "minutu",
+  "cuisine_recipe": "Haree reseita",
+  "cuisine_no_recipe": "Reseita seidauk iha",
+  "cuisine_id_fallback": "Reseita ida-ne'e disponivel de'it iha lian Indonézia.",
+  "cuisine_machine_notice": "Tradusaun máquina seidauk reviza.",
+  "cuisine_ingredients": "Ingrediente sira",
+  "cuisine_steps": "Maneira te'in",
+  "cuisine_recipe_source": "Fonte reseita",
+  "cuisine_more": "Hatudu tan",
+  "cuisine_scope_notice": "Dadus seidauk kompletu. Ligasaun provínsia tuir lista fonte; hahan balu la iha reseita ka foto."
 }
