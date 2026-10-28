@@ -31,13 +31,18 @@ test('invalid CDN data falls back to the dated release snapshot without credenti
   assert.deepEqual(requests, [['https://snapshots.example/data/weather/forecast.json', 'omit'], ['/data/weather/forecast.json?v=release', 'omit']]);
 });
 
-test('unavailable live hazards fall back to the separate dated asset', async t => {
+test('unavailable live hazards close the response before using the separate dated asset', async t => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });
   const requests = [];
+  let discarded = false;
   globalThis.fetch = async url => {
     requests.push(String(url));
-    if (url === '/data/live/hazards.json') return Response.json({ status: 'unavailable' }, { status: 503 });
+    if (url === '/data/live/hazards.json') {
+      const body = new ReadableStream({ cancel() { discarded = true; } });
+      return new Response(body, { status: 503 });
+    }
+    assert.equal(discarded, true, 'release the unfinished error body before the fallback request');
     return Response.json({ saved: true });
   };
   const data = await loadSavedSnapshot('/data/observations/hazards.json?v=release', value => value?.saved === true);

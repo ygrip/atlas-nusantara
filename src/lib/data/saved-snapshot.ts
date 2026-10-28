@@ -27,7 +27,11 @@ async function fetchCandidate(url: string, signal?: AbortSignal): Promise<unknow
   const timer = setTimeout(cancel, 10000);
   try {
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
-    if (!response.ok) return undefined;
+    if (!response.ok) {
+      // Release the discarded live response before falling back; do not leave a fetch pending.
+      await response.body?.cancel();
+      return undefined;
+    }
     if (Number(response.headers.get('content-length')) > 2_000_000) throw Error('Snapshot exceeds its size budget');
     const reader = response.body?.getReader();
     if (!reader) throw Error('Snapshot body is missing');
