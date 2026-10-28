@@ -4,6 +4,7 @@
   let { alt }: { alt: string } = $props();
   let stage: HTMLDivElement;
   let visible = $state(false);
+  let documentVisible = $state(true);
   let motionStarted = $state(false);
 
   /**
@@ -37,6 +38,7 @@
 
   onMount(() => {
     let loaded = document.readyState === 'complete';
+    documentVisible = !document.hidden;
     let disposed = false;
     let scheduledIdle: number | undefined;
     let scheduledTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -67,7 +69,11 @@
     };
 
     const onLoad = () => { loaded = true; arm(); };
-    const onVisibility = () => { if (document.hidden) cancelPending(); else arm(); };
+    const onVisibility = () => {
+      documentVisible = !document.hidden;
+      if (document.hidden) cancelPending();
+      else arm();
+    };
     const onMotionPreference = () => { if (still.matches) cancelPending(); else arm(); };
 
     // The final assembled scene is visible even if JavaScript never executes.
@@ -101,7 +107,7 @@
   role="img"
   aria-label={alt}
   data-motion={motionStarted ? 'playing' : 'still'}
-  data-visible={visible}
+  data-visible={visible && documentVisible}
   bind:this={stage}>
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
