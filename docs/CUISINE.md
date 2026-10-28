@@ -11,6 +11,13 @@ Atlas Nusantara provides a manually published, **static** cuisine layer at \`/?l
 
 The first committed \`static/data/cuisine\` snapshot intentionally contains **4 reviewed starter recipes and 4 photographs**: Rendang, Pempek, Soto Banjar, Papeda. The build script can produce a much larger catalogue, but **the full external aggregation has not been run or validated in this change**. Do not label this a complete census.
 
+## Image delivery policy: external URLs only
+
+**Never download, store, upload, transform, cache or bundle recipe photographs.**
+Image entries only contain `url`, `descriptionUrl`, `credit`, `license`, optional `licenseUrl`, and `reviewedAt`. The client loads image URLs directly from Wikimedia Commons or Wikimedia's hosted thumbnails; no images are written under `static/`, committed to GitHub, proxied through Workers, or stored in Cloudflare R2.
+
+A missing external image must show a local **non-photo UI fallback** (icon/text), not trigger a replacement download. Commons may change or rate-limit hotlinked assets; this should degrade gracefully. The cuisine validator rejects local, `data:`, `blob:`, and unrelated-host image paths.
+
 ## Generate the larger dataset
 
 Run from the repository root with Node 22.12+ and network access:
