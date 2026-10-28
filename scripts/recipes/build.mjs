@@ -17,6 +17,7 @@ import { isCuisineDish } from '../../src/lib/data/cuisine-validation.js';
 
 const ROOT = 'static/data/cuisine';
 const SEED = 'scripts/recipes/seed.json';
+const REGIONAL = 'scripts/recipes/regional-supplements.json';
 const WIKI = 'https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia';
 const HF = 'https://huggingface.co/datasets/LorthGyu/indonesian-recipes';
 const HF_API = 'https://datasets-server.huggingface.co';
@@ -162,7 +163,7 @@ async function fetchRecipes() {
   if (recipeRows.length < 250) throw Error('Recipe source returned only '+recipeRows.length+' rows; refusing incomplete import');
   return recipeRows;
 }
-function merge(wiki, recipes, seed) {
+function merge(wiki, recipes, seed, regional) {
   const byKey=new Map();
   for(const row of wiki) {
     const id=slug(row.name);
@@ -191,6 +192,21 @@ function merge(wiki, recipes, seed) {
     item.sources.push(...(r.sources??[]));
     byKey.set(normalized,item);
   }
+  // Explicit regional evidence is merged after other sources and survives rebuilds.
+  for (const r of regional) {
+    if (!r.name || !Array.isArray(r.provinceCodes) || !r.provinceCodes.length ||
+        !r.provinceCodes.every(code => PROVINCES[code]) || !r.sourceUrl?.startsWith('https://'))
+      throw Error('Invalid regional supplement: ' + JSON.stringify(r));
+    const normalized=canon(r.name);
+    const item=byKey.get(normalized)??{id:r.id??slug(r.name),name:r.name,provinceCodes:[],originStatus:'regional-sourced',articleUrl:null,recipe:null,image:null,sources:[]};
+    item.provinceCodes=[...new Set([...item.provinceCodes,...r.provinceCodes])].sort();
+    if(item.originStatus==='unmapped') item.originStatus='regional-sourced';
+    item.regionalSummary=r.summary;
+    item.regionalGroup=r.group;
+    if(!item.sources.some(source=>source.url===r.sourceUrl))
+      item.sources.push({url:r.sourceUrl,role:'regional-cuisine-reference'});
+    byKey.set(normalized,item);
+  }
   const ids=new Set();
   return [...byKey.values()].map(item=>{
     if(ids.has(item.id)) item.id=item.id+'-'+slug(item.name).slice(-12);
@@ -202,7 +218,8 @@ const SOURCES = [
   {name:'Wikipedia · Daftar masakan Indonesia',url:WIKI},
   {name:'Cookpad Indonesia',url:'https://cookpad.com/id'},
   {name:'LorthGyu/indonesian-recipes (MIT)',url:HF},
-  {name:'Wikimedia Commons',url:'https://commons.wikimedia.org/wiki/Category:Cuisine_of_Indonesia'}
+  {name:'Wikimedia Commons',url:'https://commons.wikimedia.org/wiki/Category:Cuisine_of_Indonesia'},
+  {name:'Indonesia Travel (regional documentation)',url:'https://www.indonesia.travel/id/id'}
 ];
 const CACHE=join('tmp','recipes-cache');
 async function readCache(path) {
@@ -226,8 +243,10 @@ async function assemble(records) {
     const wikipedia=await readCache(join(CACHE,'wikipedia','summary',item.id+'.json'));
     const hasRecipe=Boolean(item.recipe)||cookpad.length>0;
     const likely=isLikelyDish({description:wikipedia?.description,summary:wikipedia?.summary,hasRecipe,hasArticle:Boolean(item.articleUrl)});
-    if(!likely) { dropped.push(item.name); continue; }
+    if(!likely && !item.regionalSummary) { dropped.push(item.name); continue; }
     const dish=assembleDish({item,cookpad,wikipedia});
+    if(item.regionalSummary && !dish.summary) { dish.summary=item.regionalSummary; dish.summaryLanguage='id'; }
+    if(item.regionalGroup && dish.group==='other') dish.group=item.regionalGroup;
     if(!isCuisineDish(dish)) { console.warn('Dropping invalid dish record',item.id); continue; }
     dishes.push(dish);
   }
@@ -252,9 +271,9 @@ async function publish(dishes) {
   for(const dish of dishes) groupCounts[dish.group]=(groupCounts[dish.group]??0)+1;
   const index={
     schemaVersion:2,fetchedAt,
-    scope:'Dishes named in the Indonesian Wikipedia list of Indonesian cuisine, with recipes from Cookpad Indonesia and the LorthGyu corpus. Provinces are list associations, not proof of origin. Not an exhaustive census: a missing recipe or photo does not mean a dish does not exist.',
+    scope:'Dishes documented by Wikipedia and regional tourism references, with optional Cookpad and LorthGyu recipes. Associations are not proof of exclusive origin.',
     license:'Dish names and summaries: Wikipedia, CC BY-SA 4.0. Recipes: written by their authors; each links to its source page and is shown with the author name. Photos are linked, never copied, with their credit and licence.',
-    attribution:'Indonesian Wikipedia contributors; Cookpad Indonesia recipe authors; LorthGyu (MIT); Wikimedia Commons photographers (per file).',
+    attribution:'Indonesian Wikipedia contributors; Cookpad Indonesia recipe authors; LorthGyu (MIT); Wikimedia Commons photographers (per file); Indonesia Travel regional references.',
     national:'/data/cuisine/national.json',
     sources:SOURCES,
     coverage:{
@@ -270,6 +289,7 @@ async function publish(dishes) {
   console.log('Published '+c.totalDishes+' dishes, '+c.withRecipe+' with recipes ('+c.recipes+' recipes), '+c.withImage+' with photos, '+c.withoutProvince+' unassigned; 38 province shards.');
 }
 const seed=JSON.parse(await readFile(SEED,'utf8'));
+const regional=JSON.parse(await readFile(REGIONAL,'utf8'));
 const [wiki,recipes]=await Promise.all([fetchWikipedia(),fetchRecipes()]);
-const merged=merge(wiki,recipes,seed);
+const merged=merge(wiki,recipes,seed,regional);
 await publish(await assemble(merged));
