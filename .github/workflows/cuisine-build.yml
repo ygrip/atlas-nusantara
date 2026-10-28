@@ -23,6 +23,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Probe upstream availability
+        run: |
+          for url in \
+            'https://id.wikipedia.org/wiki/Daftar_masakan_Indonesia' \
+            'https://id.wikipedia.org/w/api.php?action=query&format=json&meta=siteinfo' \
+            'https://id.wikipedia.org/w/rest.php/v1/page/Daftar_masakan_Indonesia/html' \
+            'https://id.m.wikipedia.org/wiki/Daftar_masakan_Indonesia' \
+            'https://www.wikidata.org/w/api.php?action=query&format=json&meta=siteinfo'; do
+            printf '%s ' "$url"
+            curl --max-time 12 --silent --location --output /dev/null --write-out '%{http_code}\n' "$url" || true
+          done
       - name: Aggregate Wikipedia and MIT recipe dataset, enrich images
         run: node scripts/recipes/build.mjs
       - name: Verify generated catalog
