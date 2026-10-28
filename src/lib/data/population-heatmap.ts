@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages.js';
+import { m } from '$lib/i18n/messages';
 import { getLocale } from '$lib/paraglide/runtime.js';
 import { classIndex, HEAT_COLORS, logClassBounds, type RegionHeatmap } from '$lib/map/heatmap';
 import { provinceYear, type PopulationData } from './population-contract';

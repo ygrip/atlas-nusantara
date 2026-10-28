@@ -4,6 +4,10 @@ The destination viewer now publishes 18,596 unique factual, source-linked record
 
 See [verified endpoints, licensing conflicts, and image research](TOURISM_RESEARCH.md).
 
+## Sharing one destination
+
+Every row of the destination table has a **Share** button. It draws a 1080×1080 PNG in the browser (`renderDestinationShareCard` in `src/lib/share/card.ts`) with the place's photo, name, district and province, and links to `/?region=<province>&layer=destinations&destination=<id>`, which reopens the province list narrowed to that place. The photo is the first licensed image, else the first web image, as in the table, with its credit when licensed. The image must load with CORS (`crossOrigin=anonymous`; Wikimedia and Bing thumbnails do); if it is blocked or slower than eight seconds, the card shows the province outline instead. The link has no destination-specific preview image: the PNG is the shareable image.
+
 ## Static delivery and manual maintenance
 
 Destination browsing has **no destination API, scheduled crawler, server-side query, or backend worker**. The browser reads these published files:
@@ -262,3 +266,22 @@ The script searches Wikipedia **articles** by destination name alone, not
 Google Images. It requires a distinctive exact article title and coordinates
 within 2 km before examining Commons image files. This will have limited
 coverage for small attractions that do not have matching Wikipedia articles.
+
+
+### Google Images scrape (unverified, resumable)
+
+Fills `webImages` (up to 8 HTTPS URLs) for destinations in `research/missing-destination-images.csv`. These are **unverified, unlicensed** search results. The UI shows them only when a destination has no licensed photo, labelled "Web image · unverified".
+
+Requires a [camofox-browser](https://github.com/jo-inc/camofox-browser) server on `http://localhost:9377`.
+
+```sh
+# Scrape; rerun the same command to continue after any interruption or block
+npm run destinations:images:web -- --limit=50
+npm run destinations:images:web -- --province=34 --delay-ms=6000
+npm run destinations:images:web -- --retry-empty   # re-try destinations that returned no images
+
+# Copy progress into the province shards and rebuild national.json (idempotent)
+npm run destinations:images:web:apply
+```
+
+Progress is appended to `research/google-images-progress.jsonl`, one line per finished destination, so a crash loses at most one. Exit code 2 means Google served its unusual-traffic page; the scraper stops without recording that destination. Inline `data:` thumbnails are skipped to keep shards small. `npm run build:destinations` keeps `webImages`; a fresh SISPARNAS rebuild drops them, so rerun the apply command afterwards.

@@ -1,18 +1,27 @@
 <script lang="ts">
-  import { MapPin, Leaf, Landmark as LandmarkIcon, Search } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { MapPin, Leaf, Landmark as LandmarkIcon, Search, Share2 } from 'lucide-svelte';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Region } from '$lib/atlas/regions';
   import type { Landmark, DestinationIndex } from '$lib/data/destinations';
+  import type { GeometryPackage } from '$lib/geo/types';
+  import { shareDestinationFor } from '$lib/data/destination-share';
+  import SharePanel from './SharePanel.svelte';
   import { filterDestinations, paginateDestinations, sortDestinations, type DestinationImageFilter, type DestinationSortDirection, type DestinationSortKey } from '$lib/data/destination-table';
   import DestinationImage from './DestinationImage.svelte';
   import PlacePicker from './PlacePicker.svelte';
   import type { PlaceOption } from '$lib/atlas/place-search';
 
-  let { landmarks, index, loading = false, failed = false, provinces, provinceCode, onprovince }: {
+  let { landmarks, index, loading = false, failed = false, provinces, provinceCode, provinceGeometry, onprovince }: {
     landmarks: Landmark[]; index?: DestinationIndex; loading?: boolean; failed?: boolean;
-    provinces: Region[]; provinceCode?: string; onprovince: (code: string) => void;
+    provinces: Region[]; provinceCode?: string;
+    /** Province outline, drawn on the share card when a destination has no photo. */
+    provinceGeometry?: GeometryPackage;
+    onprovince: (code: string) => void;
   } = $props();
+  let sharePanel: SharePanel | undefined = $state();
+  /** A shared link carries ?destination=<id>; once its province loads, the list narrows to that place. */
+  let sharedDestinationId = readSharedDestinationId();
   let query = $state('');
   let category = $state('all');
   let district = $state('');
@@ -25,6 +34,27 @@
   $effect(() => { void query; void category; void district; void imageFilter; page = 0; });
   $effect(() => { void sortKey; void sortDirection; page = 0; });
   $effect(() => { void pageSize; page = 0; });
+
+  $effect(() => {
+    if (!sharedDestinationId) return;
+    const shared = landmarks.find(item => item.id === sharedDestinationId);
+    if (!shared) return;
+    sharedDestinationId = undefined;
+    query = shared.name;
+  });
+
+  function shareDestination(place: Landmark) {
+    void sharePanel?.openDestination({
+      destination: shareDestinationFor(place, region?.name),
+      provinceCode: place.provinceCode,
+      geometry: provinceGeometry
+    });
+  }
+
+  function readSharedDestinationId(): string | undefined {
+    if (typeof location === 'undefined') return undefined;
+    return new URL(location.href).searchParams.get('destination') ?? undefined;
+  }
 
   const region = $derived(provinces.find(item => item.code === provinceCode));
   const totals = $derived(new Map(index?.provinces.map(item => [item.provinceCode, item.count]) ?? []));
@@ -127,15 +157,17 @@
             <th scope="col" aria-sort={ariaSort('kind')}><button type="button" onclick={() => changeSort('kind')}>{m.destination_sort_category()} <span aria-hidden="true">{sortIndicator('kind')}</span></button></th>
             <th scope="col" aria-sort={ariaSort('district')}><button type="button" onclick={() => changeSort('district')}>{m.destination_sort_district()} <span aria-hidden="true">{sortIndicator('district')}</span></button></th>
             <th scope="col">{m.source_details()}</th>
+            <th scope="col">{m.share_action()}</th>
           </tr></thead>
           <tbody>
             {#each pageData.items as place (place.id)}
               <tr>
-                <td class="photo-cell"><DestinationImage name={place.name} image={place.image} images={place.images} /></td>
+                <td class="photo-cell"><DestinationImage name={place.name} image={place.image} images={place.images} webImages={place.webImages} /></td>
                 <th scope="row">{place.name}{#if place.officialId}<small class="official-id">{place.officialId}</small>{/if}</th>
                 <td><span class="destination-kind">{#if place.kind === 'natural'}<Leaf size={13} aria-hidden="true" />{m.destination_natural()}{:else if place.kind === 'built'}<LandmarkIcon size={13} aria-hidden="true" />{m.destination_built()}{:else}{m.mountain_other()}{/if}</span></td>
                 <td>{place.sourceDistrict ?? m.destination_no_district()}</td>
                 <td>{#if place.sourceUrl}<a href={place.sourceUrl} target="_blank" rel="noopener noreferrer">{m.source_details()} ↗</a>{:else}—{/if}</td>
+                <td><button type="button" class="share-destination" onclick={() => shareDestination(place)} aria-label={m.destination_share_named({ name: place.name })}><Share2 size={15} aria-hidden="true" />{m.share_action()}</button></td>
               </tr>
             {/each}
           </tbody>
@@ -159,6 +191,7 @@
       {#if provinceCode}<p><a href={'/data/destinations/provinces/' + provinceCode + '.json'} download>{m.download_data()} · {region?.name}</a></p>{/if}
     </details>
   {/if}
+  <SharePanel bind:this={sharePanel} titleId="destination-share-title" />
 </section>
 
 <style>
@@ -183,7 +216,7 @@
   .table-toolbar, .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .destination-table-scroll { min-width: 0; max-width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
   .destination-table-scroll:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-  .destination-table { width: 100%; min-width: 740px; border-collapse: collapse; font-size: .78rem; }
+  .destination-table { width: 100%; min-width: 840px; border-collapse: collapse; font-size: .78rem; }
   .destination-table th, .destination-table td { padding: 9px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
   .destination-table thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); white-space: nowrap; }
   .destination-table thead button { min-height: 44px; border: 0; padding: 5px 0; background: transparent; color: inherit; font: inherit; font-weight: 800; cursor: pointer; }
@@ -193,6 +226,9 @@
   .photo-cell { width: 150px; min-width: 150px; }
   .photo-cell :global(.destination-image) { width: 132px; aspect-ratio: 16 / 9; border-radius: 9px; }
   .photo-cell :global(.photo-credit) { max-width: 132px; padding: 4px 2px 0; font-size: .65rem; }
+  .share-destination { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: var(--text); font: inherit; font-weight: 750; cursor: pointer; box-shadow: 0 2px 0 var(--border); }
+  .share-destination:hover { background: var(--panel); }
+  .share-destination:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .destination-kind { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .official-id { display: block; margin-top: 3px; color: var(--muted); font-weight: 500; }
   .pagination button { min-height: 44px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); color: inherit; font: inherit; font-weight: 750; }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { ISLAND_GROUPS, ISLAND_GROUP_NAMES, type IslandGroup } from '$lib/atlas/islands';
   import { groupStyle } from '$lib/directory/group-style';

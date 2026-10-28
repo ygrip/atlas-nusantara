@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages.js';
+import { m } from '$lib/i18n/messages';
 import { assetUrl } from '$lib/pwa/assets';
 import type { GeometryPackage } from '$lib/geo/types';
 import type { PointOverlay } from '$lib/map/overlay-contract';

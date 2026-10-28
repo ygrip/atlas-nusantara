@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { MapPin, Navigation, Bell } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
-  import { getLocale } from '$lib/paraglide/runtime.js';
+  import { m } from '$lib/i18n/messages';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import { ADMIN_DATA_PATH } from '$lib/atlas/edition';
   import { loadForecast, type ForecastSnapshot } from '$lib/map/weather';
@@ -33,7 +32,6 @@
   $effect(() => { if (selectedRegion && !manuallySelected) selected = selectedRegion.code; });
 
   onMount(() => {
-    document.documentElement.lang = getLocale();
     let disposed = false;
     const controller = new AbortController();
     readSavedPlaces();

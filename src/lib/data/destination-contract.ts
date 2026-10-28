@@ -31,6 +31,8 @@ export interface Landmark {
   image?: DestinationPhoto;
   /** One to eight independently credited, verified Commons photos. */
   images?: DestinationPhoto[];
+  /** Unverified Google Images result URLs (1-8). Used only when no licensed photo exists. */
+  webImages?: string[];
   sourceUrl?: string;
 }
 export interface DestinationCatalog {

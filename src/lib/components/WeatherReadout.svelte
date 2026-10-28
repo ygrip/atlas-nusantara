@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { CloudSun } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';
   import type { ForecastSnapshot } from '$lib/map/weather';
   import { summariseWeather } from '$lib/map/weather-summary';

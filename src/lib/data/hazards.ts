@@ -1,4 +1,4 @@
-import { m } from '$lib/paraglide/messages.js';
+import { m } from '$lib/i18n/messages';
 import { isBmkgSource, loadSavedSnapshot } from './saved-snapshot.ts';
 
 /** Disaster types: PetaBencana's six plus the BNPB/news categories (landslide, drought, tide, tsunami). */

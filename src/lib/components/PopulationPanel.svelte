@@ -1,18 +1,22 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { latestYear, loadPopulation, provinceSeries, pyramidRows, yearTotals, type PopulationData } from '$lib/data/population';
+  import { latestYear, loadPopulation, loadRegionPyramids, provinceSeries, pyramidRows, yearTotals, type PopulationData, type RegionPyramidData } from '$lib/data/population';
   import { niceScale } from '$lib/data/chart-scale';
   import TabList from './TabList.svelte';
 
-  /** provinceCode is the atlas province (two digits); without it the panel describes Indonesia as a whole. */
-  let { provinceCode, year = $bindable() }: { provinceCode?: string; year?: number } = $props();
+  /**
+   * provinceCode is the atlas province (two digits); without it the panel describes Indonesia as a whole.
+   * regionCode is the selected province or regency/city; its age pyramid replaces the national one when BPS data exists.
+   */
+  let { provinceCode, regionCode, regionName, year = $bindable() }: { provinceCode?: string; regionCode?: string; regionName?: string; year?: number } = $props();
 
   let data = $state<PopulationData>();
   let tab = $state('trend');
   let loading = $state(true);
   let failed = $state(false);
+  let regional = $state<RegionPyramidData>();
   const chartGradient = $props.id();
 
   const province = $derived(data?.provinces.find(item => item.code === provinceCode));
@@ -23,13 +27,33 @@
   const series = $derived(data && province ? provinceSeries(data, province.code) : []);
   const provinceSelected = $derived(series.find(item => item.year === selectedYear));
   const firstComparableYear = $derived(province?.comparableFrom);
+  const regionalCounts = $derived(regional?.regions[regionCode ?? provinceCode ?? '']);
+  const pyramidScope = $derived.by(() => {
+    if (regionalCounts && regionName) return regionName;
+    return m.level_national();
+  });
+  const pyramidYear = $derived.by(() => {
+    if (regionalCounts && regional) return regional.year;
+    return selectedYear;
+  });
+  /** Regional rows are head counts, the national table is in thousands. */
+  const pyramidDigits = $derived(regionalCounts ? 0 : 1);
+  const pyramidUnit = $derived(regionalCounts ? m.population_unit_persons() : m.population_unit());
   const pyramid = $derived.by(() => {
     if (!data) return [];
+    if (regionalCounts && regional) {
+      return regional.ageGroups.map((ageGroup, index) => ({ ageGroup, male: regionalCounts.male[index], female: regionalCounts.female[index] })).reverse();
+    }
     /** Oldest group on top, as in a conventional pyramid. */
     return [...pyramidRows(data, selectedYear)].reverse();
   });
   /** One scale for every year, so switching year shows real change instead of a re-fitted shape. */
-  const widest = $derived(data ? Math.max(1, ...data.years.flatMap(entry => [...entry.male, ...entry.female])) : 1);
+  const nationalWidest = $derived(data ? Math.max(1, ...data.years.flatMap(entry => [...entry.male, ...entry.female])) : 1);
+  /** A regional pyramid is scaled to its own largest bar so small regencies stay readable. */
+  const widest = $derived.by(() => {
+    if (regionalCounts) return Math.max(1, ...regionalCounts.male, ...regionalCounts.female);
+    return nationalWidest;
+  });
 
   interface TrendPoint { year: number; value: number; change?: number }
   const trend = $derived.by((): TrendPoint[] => {
@@ -46,6 +70,17 @@
     { id: 'pyramid', label: m.population_tab_pyramid() }
   ]);
 
+  $effect(() => {
+    const code = provinceCode;
+    regional = undefined;
+    if (!code) return;
+    let active = true;
+    loadRegionPyramids(code)
+      .then(value => { if (active) regional = value; })
+      .catch(error => console.warn('Regional population data unavailable', error));
+    return () => { active = false; };
+  });
+
   onMount(() => {
     let active = true;
     loadPopulation()
@@ -61,6 +96,12 @@
 
   function number(value: number, digits = 1): string {
     return new Intl.NumberFormat(getLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+  }
+
+  /** Bar labels use a short form for head counts (3.2M); tables keep the full number. */
+  function barLabel(value: number): string {
+    if (!regionalCounts) return number(value, pyramidDigits);
+    return new Intl.NumberFormat(getLocale(), { notation: 'compact', maximumFractionDigits: 1 }).format(value);
   }
 
   function signed(value: number, digits = 1): string {
@@ -210,8 +251,9 @@
     </div>
 
     <div role="tabpanel" id="population-panel-pyramid" aria-labelledby="population-tab-pyramid" hidden={tab !== 'pyramid'}>
-      <h4>{m.population_pyramid()} · {m.level_national()} · {selectedYear}</h4>
-      {#if province}<p class="notice" role="note">{m.population_pyramid_national_note({ province: province.name })}</p>{/if}
+      <h4>{m.population_pyramid()} · {pyramidScope} · {pyramidYear}</h4>
+      {#if regionalCounts && regional}<p class="notice" role="note">{m.population_pyramid_region_note({ year: regional.year })}</p>
+      {:else if province}<p class="notice" role="note">{m.population_pyramid_national_note({ province: province.name })}</p>{/if}
       <ul class="legend" aria-hidden="true">
         <li><span class="swatch male"></span>{m.population_male()}</li>
         <li><span class="swatch female"></span>{m.population_female()}</li>
@@ -219,19 +261,19 @@
       <ol class="pyramid" aria-hidden="true">
         {#each pyramid as row (row.ageGroup)}
           <li>
-            <span class="side male-side"><span class="value">{number(row.male)}</span><span class="bar male" style={`width: ${barWidth(row.male)}`}></span></span>
+            <span class="side male-side"><span class="value">{barLabel(row.male)}</span><span class="bar male" style={`width: ${barWidth(row.male)}`}></span></span>
             <span class="age">{row.ageGroup}</span>
-            <span class="side female-side"><span class="bar female" style={`width: ${barWidth(row.female)}`}></span><span class="value">{number(row.female)}</span></span>
+            <span class="side female-side"><span class="bar female" style={`width: ${barWidth(row.female)}`}></span><span class="value">{barLabel(row.female)}</span></span>
           </li>
         {/each}
       </ol>
       <div class="visually-hidden">
         <table>
-          <caption>{m.population_pyramid()} · {m.level_national()} · {selectedYear} · {m.population_unit()}</caption>
+          <caption>{m.population_pyramid()} · {pyramidScope} · {pyramidYear} · {pyramidUnit}</caption>
           <thead><tr><th scope="col">{m.population_age_group()}</th><th scope="col">{m.population_male()}</th><th scope="col">{m.population_female()}</th></tr></thead>
           <tbody>
             {#each pyramid as row (row.ageGroup)}
-              <tr><th scope="row">{row.ageGroup}</th><td>{number(row.male)}</td><td>{number(row.female)}</td></tr>
+              <tr><th scope="row">{row.ageGroup}</th><td>{number(row.male, pyramidDigits)}</td><td>{number(row.female, pyramidDigits)}</td></tr>
             {/each}
           </tbody>
         </table>

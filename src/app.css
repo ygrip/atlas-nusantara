@@ -43,6 +43,8 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+/* Page zoom is off; the map (touch-action: none) handles its own pinch and wheel zoom. */
+html, body { touch-action: pan-x pan-y; }
 html.lenis, html.lenis body { height: auto; }
 html.lenis { scroll-behavior: auto !important; }
 body { margin: 0; background: radial-gradient(1100px 610px at 0% -12%, var(--red-wash), transparent 62%), radial-gradient(820px 520px at 100% 6%, var(--green-wash), transparent 60%), radial-gradient(650px 450px at 82% 95%, var(--gold-wash), transparent 68%), var(--page); background-attachment: fixed; color: var(--text); }

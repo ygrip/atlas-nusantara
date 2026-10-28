@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { makeShareUrl, isPublicRegionCode, validShareSummary, validGeometryInput, geometryForShare, summaryForShare } from '../../src/lib/share/card.ts';
+import { makeShareUrl, makeDestinationShareUrl, isPublicDestinationId, isPublicRegionCode, validShareSummary, validGeometryInput, geometryForShare, summaryForShare } from '../../src/lib/share/card.ts';
 
 const counts = { warning: 1, earthquake: 2, incident: 3, hazard: 4 };
 
@@ -51,4 +51,16 @@ test('regional share maps fit only the selected city, never its whole province',
   assert.notEqual(geometryForShare(geometry, { code: '32.01', name: 'Selected city' }).viewBox, geometry.viewBox);
   assert.equal(geometryForShare(geometry, { code: '32', name: 'Province' }).regions.length, 2);
   assert.equal(geometryForShare(geometry, { code: '33.01', name: 'Other city' }), undefined);
+});
+
+test('destination links reopen the destinations list and reject unsafe ids', () => {
+  assert.equal(
+    makeDestinationShareUrl('35', 'sisparnas-77723'),
+    'https://nusantara.readynaz.com/?region=35&layer=destinations&destination=sisparnas-77723'
+  );
+  assert.equal(makeDestinationShareUrl('35', 'x&next=https://evil.test'), 'https://nusantara.readynaz.com/?region=35');
+  assert.equal(makeDestinationShareUrl('bad', 'sisparnas-1'), 'https://nusantara.readynaz.com/');
+  assert.equal(isPublicDestinationId('commons-1_a'), true);
+  assert.equal(isPublicDestinationId('a b'), false);
+  assert.equal(isPublicDestinationId(''), false);
 });

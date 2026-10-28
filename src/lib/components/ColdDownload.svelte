@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { loadTurnstile, type TurnstileApi } from '$lib/pwa/turnstile';
 
   export let kind: 'warning' | 'earthquake' | 'incident' | 'hazard';
