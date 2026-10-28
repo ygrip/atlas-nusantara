@@ -19,10 +19,11 @@
   import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
   import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
   import HazardPanel from '$lib/components/HazardPanel.svelte';
+  import CuisinePanel from '$lib/components/CuisinePanel.svelte';
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin, Users } from 'lucide-svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, UtensilsCrossed } from 'lucide-svelte';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
 
   let selectedRegion: ShareRegion | undefined;
@@ -84,7 +85,7 @@
   let activeLayer = DEFAULT_LAYER;
   /** Shared by the population panel and the map heat colours so both always show the same year. */
   let populationYear: number | undefined;
-  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users };
+  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users, food: UtensilsCrossed };
   const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
 
   /** A shared link may carry ?layer=<id>; unknown ids fall back to the weather layer. */
@@ -153,7 +154,9 @@
       </div>
       <div class="clay-card atlas-stage">
         <RegionAtlas bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
-        {#if activeLayer === 'earthquake'}
+        {#if activeLayer === 'cuisine'}
+          <CuisinePanel provinceCode={selectedRegion?.code.split('.')[0]} />
+        {:else if activeLayer === 'earthquake'}
           <EarthquakePanel />
         {:else if activeLayer === 'incident'}
           <HazardPanel kind="reports" />
