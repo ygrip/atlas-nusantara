@@ -19,7 +19,7 @@ const sample=String.raw`== Makanan ==
 `;
 test('parses provincial headings and shared foods without inventing coordinates', () => {
   const records=parseWikiIndex(sample);
-  assert.equal(records.length,3);
+  assert.equal(records.length,4);
   assert.deepEqual(records.find(x=>x.name==='Sate Padang')?.provinceCodes,['11','13']);
   assert.deepEqual(records.find(x=>x.name==='Papeda')?.provinceCodes,['93']);
   assert.equal(records.some(x=>x.name.includes('not a dish')),false);
