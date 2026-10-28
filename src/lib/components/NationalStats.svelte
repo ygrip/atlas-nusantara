@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
   import { Pause, Play } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { EDITION_COUNTS } from '$lib/atlas/edition';
   import { NATIONAL_FACTS } from '$lib/atlas/national-facts';
@@ -15,9 +15,9 @@
     decimals: number;
     label: () => string;
     /** Spelled-out unit for screen readers, e.g. "million km²". */
-    unit: string;
+    unit: () => string;
     /** Short unit shown beside the big number, e.g. "M km²". */
-    suffix: string;
+    suffix: () => string;
     /** Administrative counts link to the province table. */
     href?: string;
   }
@@ -47,11 +47,11 @@
   }
 
   const metrics: Metric[] = [
-    { id: 'provinces', value: EDITION_COUNTS.provinces, decimals: 0, label: m.stat_provinces, unit: '', suffix: '', href: '#provinces' },
-    { id: 'regencies', value: EDITION_COUNTS.regencies, decimals: 0, label: m.stat_regencies, unit: '', suffix: '', href: '#provinces' },
-    { id: 'cities', value: EDITION_COUNTS.municipalities, decimals: 0, label: m.stat_cities, unit: '', suffix: '', href: '#provinces' },
+    { id: 'provinces', value: EDITION_COUNTS.provinces, decimals: 0, label: m.stat_provinces, unit: () => '', suffix: () => '', href: '#provinces' },
+    { id: 'regencies', value: EDITION_COUNTS.regencies, decimals: 0, label: m.stat_regencies, unit: () => '', suffix: () => '', href: '#provinces' },
+    { id: 'cities', value: EDITION_COUNTS.municipalities, decimals: 0, label: m.stat_cities, unit: () => '', suffix: () => '', href: '#provinces' },
     ...NATIONAL_FACTS.map(fact => ({
-      id: fact.id as StatIconKind, value: fact.value, decimals: fact.decimals, label: factLabels[fact.id], unit: factUnit(fact.unit), suffix: factSuffix(fact.unit)
+      id: fact.id as StatIconKind, value: fact.value, decimals: fact.decimals, label: factLabels[fact.id], unit: () => factUnit(fact.unit), suffix: () => factSuffix(fact.unit)
     }))
   ];
 
@@ -93,7 +93,7 @@
 
   function fullValue(metric: Metric): string {
     const number = new Intl.NumberFormat(getLocale(), { minimumFractionDigits: metric.decimals, maximumFractionDigits: metric.decimals }).format(metric.value);
-    return (number + ' ' + metric.unit).trim();
+    return (number + ' ' + metric.unit()).trim();
   }
 </script>
 
@@ -109,7 +109,7 @@
           </span>
         {/key}
       </div>
-      <AnimatedNumber value={metric.value} decimals={metric.decimals} suffix={metric.suffix} duration={reducedMotion ? 0 : 1100} />
+      <AnimatedNumber value={metric.value} decimals={metric.decimals} suffix={metric.suffix()} duration={reducedMotion ? 0 : 1100} />
       <div class="stat-swap">
         {#key metric.id}
           <span class="stat-label" in:fly={{ y: 10, duration: swapMs, delay: swapMs / 3 }} out:fly={{ y: -10, duration: swapMs / 1.5 }}>

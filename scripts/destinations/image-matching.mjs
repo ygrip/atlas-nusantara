@@ -53,7 +53,9 @@ function validSubject(subject) {
   return subject && typeof subject === 'object'
     && typeof subject.id === 'string' && ENTITY_ID_PATTERN.test(subject.id)
     && Array.isArray(subject.labels) && hasValidCoordinates(subject.lat, subject.lon)
-    && isSafeFileTitle(subject.imageTitle);
+    && (isSafeFileTitle(subject.imageTitle)
+      || Array.isArray(subject.commonsCategories)
+        && subject.commonsCategories.some(category => typeof category === 'string' && category.trim()));
 }
 
 /** Build an exact normalized-name index over geolocated Wikidata image subjects. */
@@ -71,7 +73,8 @@ export function buildSubjectIndex(subjects) {
       labels: [...new Set(subject.labels.filter(label => typeof label === 'string' && label.trim()))],
       lat: subject.lat,
       lon: subject.lon,
-      imageTitle: subject.imageTitle
+      imageTitle: subject.imageTitle,
+      commonsCategories: subject.commonsCategories ?? []
     };
     byId.set(indexedSubject.id, indexedSubject);
 
@@ -118,5 +121,87 @@ export function matchDestination(place, index) {
       subjectLon: subject.lon,
       sourceUrl: 'https://www.wikidata.org/wiki/' + subject.id
     }
+  };
+}
+
+
+const CAMERA_RADIUS_METERS = 350;
+
+/**
+ * An exact distinctive place-name phrase inside the Commons FILE name, and the
+ * file page's geotagged point of view near the destination. The image's geotag
+ * is not automatically assumed to be its subject: both checks are required.
+ */
+export function matchCommonsFileToDestination(place, fileTitle, camera) {
+  if (!place || typeof place.name !== 'string'
+    || !hasValidCoordinates(place.lat, place.lon)
+    || !hasValidCoordinates(camera?.lat, camera?.lon)
+    || !isSafeFileTitle(fileTitle)) return undefined;
+  const placeName = normalizeName(place.name);
+  const filename = normalizeName(fileTitle.slice('File:'.length).replace(/\.[^.]+$/, ''));
+  const distinctive = placeName.split(' ').some(word =>
+    word.length >= 3 && /\p{L}/u.test(word) && !GENERIC_WORDS.has(word));
+  if (!distinctive || placeName.length < 8 || GENERIC_NAMES.has(placeName)) return undefined;
+  // Preserve token boundaries: "Sari" must not match "Sarimukti".
+  const phraseMatch = (' ' + filename + ' ').includes(' ' + placeName + ' ');
+  const placeTokens = placeName.split(' ');
+  const fileTokens = filename.split(' ');
+  const sharedPrefix = placeTokens.slice(0, fileTokens.length).join(' ') === filename
+    && fileTokens.length >= 2 && fileTokens.length >= placeTokens.length - 1
+    && fileTokens.some(word => word.length >= 4 && !GENERIC_WORDS.has(word));
+  if (!phraseMatch && !sharedPrefix) return undefined;
+  const distance = distanceMeters(place.lat, place.lon, camera.lat, camera.lon);
+  if (distance > CAMERA_RADIUS_METERS) return undefined;
+  return {
+    method: 'commons-file-title-and-nearby-geotag',
+    verification: 'automated',
+    fileTitle,
+    matchedLabel: place.name,
+    photoLat: camera.lat,
+    photoLon: camera.lon,
+    distanceMeters: distance,
+    sourceUrl: 'https://commons.wikimedia.org/wiki/' + encodeURIComponent(fileTitle.replace(/ /g, '_'))
+  };
+}
+
+
+const WIKIPEDIA_RADIUS_METERS = 2000;
+
+/**
+ * A Wikipedia page is a publication candidate only when its subject is the
+ * same distinctly named, geolocated destination. Search rank is never proof.
+ * Parenthetical disambiguators must identify the place's own region.
+ */
+export function matchWikipediaArticleToDestination(place, page, language) {
+  if (!place || typeof place.name !== 'string'
+    || !hasValidCoordinates(place.lat, place.lon)
+    || !['id', 'en'].includes(language)
+    || !page || page.ns !== 0 || !Number.isSafeInteger(page.pageid)
+    || typeof page.title !== 'string') return undefined;
+  const name = normalizeName(place.name);
+  if (!name || name.length < 8 || GENERIC_NAMES.has(name)
+    || !name.split(' ').some(word => word.length >= 3
+      && /\p{L}/u.test(word) && !GENERIC_WORDS.has(word))) return undefined;
+  const match = page.title.match(/^(.*?)\s+\(([^()]+)\)$/);
+  const title = match ? match[1] : page.title;
+  if (normalizeName(title) !== name) return undefined;
+  if (match) {
+    const region = normalizeName([place.sourceDistrict, place.sourceProvince].filter(Boolean).join(' '));
+    const qualifier = normalizeName(match[2]);
+    if (!qualifier || !(' ' + region + ' ').includes(' ' + qualifier + ' ')) return undefined;
+  }
+  const coordinates = (page.coordinates ?? []).filter(point =>
+    hasValidCoordinates(point.lat, point.lon));
+  if (coordinates.length !== 1) return undefined;
+  const point = coordinates[0];
+  const distance = distanceMeters(place.lat, place.lon, point.lat, point.lon);
+  if (distance > WIKIPEDIA_RADIUS_METERS) return undefined;
+  return {
+    method: 'wikipedia-exact-article-and-coordinate', verification: 'automated',
+    articleLanguage: language, articleId: page.pageid, articleTitle: page.title,
+    matchedLabel: place.name, articleLat: point.lat, articleLon: point.lon,
+    distanceMeters: distance,
+    sourceUrl: 'https://' + language + '.wikipedia.org/wiki/'
+      + encodeURIComponent(page.title.replace(/ /g, '_'))
   };
 }

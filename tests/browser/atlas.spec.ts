@@ -2,10 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { choosePlace, openProvinceDetails } from './layers';
 
 const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
-const localeStorageKey = 'PARAGLIDE_LOCALE';
 
 async function useEnglish(page: Page) {
-  await page.addInitScript(key => localStorage.setItem(key, 'en'), localeStorageKey);
 }
 
 async function openAtlas(page: Page) {
@@ -180,16 +178,55 @@ test.describe('2025 atlas and locations', () => {
     await expect(page.getByText('Notification permission is not an active alert subscription.')).toBeVisible();
   });
 
-  test('switches and persists each supported locale', async ({ page }) => {
-    for (const locale of locales) {
-      await page.goto('/');
+  test('gives each locale its own path and switches every text in place, without reloading', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => { (window as unknown as { __kept: boolean }).__kept = true; });
+    const hero = page.locator('.hero-copy p');
+    const english = await hero.textContent();
+    const seen = new Set([english]);
+    for (const locale of ['id', 'th', 'zh-SG']) {
       await page.locator('.language-trigger').click();
       await page.locator(`.language-grid button[lang="${locale}"]`).click();
+      await expect(page).toHaveURL(new RegExp('/' + locale + '/?$'));
       await expect(page.locator('html')).toHaveAttribute('lang', locale);
-      await expect.poll(() => page.evaluate(key => localStorage.getItem(key), localeStorageKey)).toBe(locale);
-      await page.reload();
-      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      // Hero, skip link, section nav and table headers all use messages that must follow the URL.
+      await expect(hero).not.toHaveText(english ?? '');
+      seen.add(await hero.textContent());
+      await expect(page.locator('.section-nav a').nth(1)).not.toHaveText('Provinces');
     }
+    expect(seen.size).toBe(4);
+    // The window object survives only if no full page load happened.
+    expect(await page.evaluate(() => (window as unknown as { __kept?: boolean }).__kept)).toBe(true);
+    await page.locator('.language-trigger').click();
+    await page.locator('.language-grid button[lang="en"]').click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(hero).toHaveText(english ?? '');
+  });
+
+  test('opens a locale path directly and keeps legal pages in that language', async ({ page }) => {
+    await page.goto('/id/terms');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'id');
+    await expect(page.locator('.legal-links a').first()).toHaveAttribute('href', '/id/terms');
+    await page.goto('/zh-SG/');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'zh-SG');
+  });
+
+  test('blocks page zoom but leaves zoom gestures to the map', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('[data-map-zoom]').first().waitFor({ state: 'attached' });
+    const result = await page.evaluate(() => {
+      const pageTarget = document.querySelector('.masthead') as Element;
+      const mapTarget = document.querySelector('[data-map-zoom]') as Element;
+      const ctrlWheel = (target: Element) => {
+        const event = new WheelEvent('wheel', { ctrlKey: true, cancelable: true, bubbles: true });
+        target.dispatchEvent(event);
+        return event.defaultPrevented;
+      };
+      const ctrlPlus = new KeyboardEvent('keydown', { key: '+', ctrlKey: true, cancelable: true, bubbles: true });
+      document.body.dispatchEvent(ctrlPlus);
+      return { pageWheel: ctrlWheel(pageTarget), mapWheel: ctrlWheel(mapTarget), keyboard: ctrlPlus.defaultPrevented };
+    });
+    expect(result).toEqual({ pageWheel: true, mapWheel: false, keyboard: true });
   });
 
   test('keeps the layout within 375px and uses a static map with reduced motion', async ({ page }) => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import IslandChart from './IslandChart.svelte';
   import RegionSplit from './RegionSplit.svelte';
   import ProvinceTable from './ProvinceTable.svelte';

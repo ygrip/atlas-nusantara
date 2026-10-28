@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Plant illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e3f1d9"/><stop offset="1" stop-color="#f5efdc"/></linearGradient>
+    <radialGradient id="leaf" cx="32%" cy="26%" r="85%"><stop stop-color="#bfe59a"/><stop offset=".5" stop-color="#6fb061"/><stop offset="1" stop-color="#3f7d47"/></radialGradient>
+    <radialGradient id="leaf2" cx="32%" cy="26%" r="85%"><stop stop-color="#d4eeb0"/><stop offset=".5" stop-color="#86c06c"/><stop offset="1" stop-color="#4f9455"/></radialGradient>
+    <radialGradient id="pot" cx="34%" cy="24%" r="85%"><stop stop-color="#f3c8a2"/><stop offset=".55" stop-color="#d98c5f"/><stop offset="1" stop-color="#a95b36"/></radialGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#bg)"/>
+  <circle cx="500" cy="96" r="46" fill="#fbe8b4" opacity=".85"/>
+  <ellipse cx="320" cy="410" rx="150" ry="22" fill="#2b1d1a" opacity=".16"/>
+  <path d="M320 380V250" stroke="#3f7d47" stroke-width="22" stroke-linecap="round"/>
+  <path d="M320 262C250 262 196 214 190 150 262 150 318 196 320 262Z" fill="#2e6a3a" transform="translate(0 7)" stroke="#2e6a3a" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M320 262C250 262 196 214 190 150 262 150 318 196 320 262Z" fill="url(#leaf)" stroke="url(#leaf)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M322 232C378 224 430 178 438 108 372 112 326 160 322 232Z" fill="#3a7a44" transform="translate(0 7)" stroke="#3a7a44" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M322 232C378 224 430 178 438 108 372 112 326 160 322 232Z" fill="url(#leaf2)" stroke="url(#leaf2)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M312 252C268 224 232 190 214 160M326 218C364 188 400 150 420 124" stroke="#e6f6cf" stroke-width="7" stroke-linecap="round" fill="none" opacity=".75"/>
+  <ellipse cx="238" cy="178" rx="26" ry="10" fill="#fff" opacity=".45" transform="rotate(-40 238 178)"/>
+  <path d="M250 372h140l-18 56a14 14 0 0 1-13 10H281a14 14 0 0 1-13-10Z" fill="#8f4a2b" transform="translate(0 6)" stroke="#8f4a2b" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M250 372h140l-18 56a14 14 0 0 1-13 10H281a14 14 0 0 1-13-10Z" fill="url(#pot)" stroke="url(#pot)" stroke-width="8" stroke-linejoin="round"/>
+  <ellipse cx="288" cy="392" rx="22" ry="7" fill="#fff" opacity=".4" transform="rotate(-8 288 392)"/>
+</svg>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import SnapshotRecords from './SnapshotRecords.svelte';
   import { onMount } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Snapshot } from '$lib/data/ingestion/schema';
   import { loadPublished, publicationExpired } from '$lib/data/publication';

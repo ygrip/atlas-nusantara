@@ -26,7 +26,14 @@ test('all published photos have runtime-safe metadata, creator credits, and reva
   assert.equal(images.length, index.coverage.licensedImages);
   assert.equal(images.length, registry.entries.length);
   assert.equal(registry.coverage.evaluatedDestinations, places.length);
-  for (const place of images) assert.equal(validateDestinationPhoto(place.image), true, place.id);
+  for (const place of images) {
+    assert.equal(validateDestinationPhoto(place.image), true, place.id);
+    if (place.images) {
+      assert.ok(place.images.length > 1 && place.images.length <= 8, place.id);
+      assert.deepEqual(place.images[0], place.image, place.id);
+      for (const photo of place.images) assert.equal(validateDestinationPhoto(photo), true, place.id);
+    }
+  }
   const result = applyImageRegistry(structuredClone(index), structuredClone(shards), registry);
   assert.deepEqual(result, { published: images.length, rejected: 0, missingDestinations: 0 });
 });

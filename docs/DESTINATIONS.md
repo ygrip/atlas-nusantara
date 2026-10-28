@@ -4,6 +4,10 @@ The destination viewer now publishes 18,596 unique factual, source-linked record
 
 See [verified endpoints, licensing conflicts, and image research](TOURISM_RESEARCH.md).
 
+## Sharing one destination
+
+Every row of the destination table has a **Share** button. It draws a 1080×1080 PNG in the browser (`renderDestinationShareCard` in `src/lib/share/card.ts`) with the place's photo, name, district and province, and links to `/?region=<province>&layer=destinations&destination=<id>`, which reopens the province list narrowed to that place. The photo is the first licensed image, else the first web image, as in the table, with its credit when licensed. The image must load with CORS (`crossOrigin=anonymous`; Wikimedia and Bing thumbnails do); if it is blocked or slower than eight seconds, the card shows the province outline instead. The link has no destination-specific preview image: the PNG is the shareable image.
+
 ## Static delivery and manual maintenance
 
 Destination browsing has **no destination API, scheduled crawler, server-side query, or backend worker**. The browser reads these published files:
@@ -118,3 +122,166 @@ The full run evaluated **18,596** records: **684** had exact-name candidates, **
 `image-metadata.json` is the public audit/refresh registry. Images remain hosted by Wikimedia; only URLs, proof and credits are stored. Creator credits and file/license links are visible below each image without truncation. Thumbnails are resized without CSS cropping, loaded lazily, and sent no referrer. The national overview does not fetch province destination data or photographs; startup location selection fetches only the selected province's destination data. Reuse conditions such as CC BY-SA continue to apply to downstream adaptations.
 
 Successful HTTP responses are cached and transient Commons maxlag/rate-limit responses are backed off and retried. Interrupted runs resume from cache. Cached metadata retains its actual retrieval time rather than pretending to be newly reviewed; use a new cache directory for a fresh upstream review. Rerunning with the same catalog and cache is deterministic. Government photo-license approval is not required for these separately licensed Commons images.
+
+## Multiple verified images and full-catalog review
+
+The `image` field remains the backwards-compatible featured photograph. Destinations with multiple verified photographs also have an `images` array, with the same featured photo at index zero. Each entry has its **own** Commons file URL, attribution, copyright license, license link and review time. Gallery size is bounded to eight photos and duplicate Commons files are rejected. The image preview opens a keyboard-accessible gallery, adapted from Raksara's gallery lightbox, with left/right arrow keys, Escape, buttons and per-photo attribution.
+
+The offline Wikidata/Commons discovery command now collects **up to eight** separately licensed P18 images for each location-verified subject rather than silently choosing only the first. Existing single-image registries remain valid. To rerun (a live internet connection is required):
+
+```sh
+node scripts/destinations/discover-images.mjs /path/to/research-cache --publish
+npm run build:destinations
+npm test
+npm run check
+```
+
+**All-record image research queue**: use `node scripts/destinations/image-review-queue.mjs /tmp/atlas-image-review.jsonl` to generate one review item for each of the 18,596 records (or `--missing-only` to focus on gaps). Supports `--province=34` and `--limit=100` for bounded batches. Each item retains the stable destination ID, official name, province/district, verified coordinates if present, number of published photos, and human-facing Google Images and Wikimedia Commons discovery links. Research links are deliberately **not image data** and never become published photographs automatically.
+
+Google's Custom Search JSON API stopped accepting new customers in January 2026 and existing access is scheduled to end January 2027. The review queue links to Google Images for human research, without screen scraping, bypassing bot protections, or embedding unlicensed image results. Do not replace missing photos with visually similar beaches or temples: require a verifiable destination identity, appropriate location evidence, creator credit, and reusable file license before adding a registry entry. Zero-verified-image records must continue to display the placeholder.
+
+### Additional licensed Commons photo filling
+
+There are **two** complementary offline enrichment passes. Neither requires GitHub Actions or a deployed image backend. They rewrite the province shards, national aggregate, index and audit registry only after evidence validation; records are never populated with guessed image links.
+
+```sh
+# Wikidata exact-name/location subjects, P18 photos, and Commons P373 categories.
+npm run destinations:images:wikidata -- /tmp/atlas-photo-cache --publish
+
+# Commons file pages with a distinctive destination name and geotag within 350m.
+npm run destinations:images:commons -- /tmp/atlas-photo-cache --publish
+
+# Optional: process a bounded province batch before searching the whole set.
+npm run destinations:images:commons -- /tmp/atlas-photo-cache --province=34 --limit=100 --publish
+
+# Generate a research queue for remaining gaps with Google and Commons links.
+npm run destinations:images:queue -- /tmp/atlas-photo-review.jsonl --missing-only
+```
+
+The Wikimedia-only automatic pass cannot guarantee complete coverage: some source markers lack verified coordinates, Commons may not have a licensed photograph, and files may lack trustworthy subject evidence. Those destinations must retain placeholders until independently reviewed. Google Images pages are included for researcher navigation, not harvested or treated as image licensing evidence. The local passes use persistent request caches, throttling, and license/creator evidence. Existing verified photos remain intact if new discovery is incomplete.
+
+### Recovery from Wikidata TimeoutError
+
+If `npm run destinations:images:wikidata` fails inside `loadSubjectRegistry` with a Node/undici `TimeoutError`, update to the current PR branch and rerun the **same command with the same cache directory**. The crawler retries transient timeouts with backoff and increasingly generous client deadlines. Wikidata subject discovery now scans P18 and P373 separately in smaller pages instead of evaluating an expensive combined optional-property query. Successfully retrieved pages are cached by request URL and reused on later runs. Do not delete the cache directory to recover.
+
+```sh
+git pull --ff-only origin feat/destination-galleries-verification-20261027
+npm run destinations:images:wikidata -- /tmp/atlas-photo-cache --publish
+```
+
+If the Wikidata Query Service continues timing out server-side, rerun or use the independent Commons filename-and-geotag pass instead; the latter does not depend on SPARQL. It is still not guaranteed to find valid images for every record.
+
+These changes are committed with `[skip ci]` because automated actions are not necessary for local research and the project currently has a limited GitHub Actions quota.
+
+
+### Destination-first Wikipedia photo lookup
+
+Use this path **before** the nationwide Wikidata scan when enriching existing
+SISPARNAS destinations. This script reads missing images from the existing
+province shards, searches Indonesian Wikipedia first, then English Wikipedia,
+and inspects each article's free lead image plus directly included files.
+
+It does **not** paginate every Indonesian Wikidata item or require SerpApi.
+
+```sh
+# Dry run: 100 missing destinations; no production data changes
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=100
+
+# Publish only when matching article coordinates and Commons licenses are verified
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 --publish
+
+# Review one province without publishing images
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 \
+  --output=/tmp/atlas-wikipedia-yogyakarta.jsonl
+
+# Continue a batch after the last destination ID from the previous review output
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache \
+  --after=sisparnas-24702 --limit=100 --output=/tmp/atlas-next-100.jsonl
+```
+
+- **Article identity:** Requires exact distinctive normalized destination/article
+  name, a Wikipedia article coordinate within 2 km of the independently
+  verified SISPARNAS coordinate, and exactly one valid article match. This is
+  intentionally stricter than Wikipedia search rank. The article is searched
+  first in Indonesian, then English.
+- **Image validity:** Image filenames must appear on that Wikipedia article.
+  For publication, the image must have an acceptable Commons bitmap file,
+  reusable license, credited creator, and independently checked metadata.
+  Up to 8 independently attributed images may be stored for a destination.
+  No Wikipedia thumbnail or arbitrary search result is published by itself.
+- **Uncertain cases:** Destinations without coordinates, ambiguous Wikipedia
+  titles, missing articles, or images failing metadata checks retain
+  placeholders. Every scanned destination appears in the JSONL review report,
+  with candidate article URLs even if it was not auto-published.
+- **Cache:** Queries persist in subdirectories of the supplied cache directory;
+  rerunning a failed province pass reuses successful cached results. The
+  default report is \`/tmp/atlas-photo-cache/wikipedia-review.jsonl\`.
+  Supply distinct \`--output\` paths for multiple runs, since reports replace
+  the file.
+- **Publication:** \`--publish\` updates \`image-metadata.json\`, the national
+  aggregate, index and relevant province shards. Without this flag, the script
+  writes **only** its review JSONL and HTTP cache. Previously approved photos
+  remain in the registry. Commit and push from your machine only after review.
+- **Batching:** \`--limit=N\` limits *processed* missing-image destinations, not
+  Wikipedia result pages. \`--after=sisparnas-ID\` resumes scanning after a
+  stable catalog destination ID, including IDs already processed on previous
+  runs. \`--province=NN\` constrains the scan to one province.
+
+Research-ready CSV of originally missing photos:
+\`research/missing-destination-images.csv\` (18,355 records at export time).
+It includes an appropriate name + district + province search query for each
+destination. Image coverage after later publication may differ.
+
+
+### Wikipedia crawl progress and diagnostics
+
+The crawler now logs startup and **each destination**: name, ID, district, each
+language request, result counts, coordinate-verified matches, duration,
+and why the selected article produced no eligible photos.
+
+- Ungeocoded destinations enter the review report as
+  `skipped-no-verified-destination-coordinates` without an API request.
+- The review JSONL adds `searchResults` and `imageChecks` arrays, which give
+  per-file reasons such as unrelated illustration, missing Commons metadata,
+  unsupported license/credit/format, or redirected file title.
+- The summary includes `apiQueries`, `noCoordinates`, and `elapsedSeconds`.
+- Use `--language=id` or `--language=en` for one-language scans; the default
+  is `--language=both` (Indonesian then English if not matched).
+- Cached HTTP responses persist. Reuse the same cache directory on retries.
+
+```bash
+git pull --ff-only origin feat/destination-galleries-verification-20261027
+
+# Small diagnostic pass
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=10 --language=id
+
+# Inspect 100 places, no publication
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --limit=100
+
+# Search a province, publishing verified licensed images
+npm run destinations:images:wikipedia -- /tmp/atlas-photo-cache --province=34 --language=id --publish
+```
+
+The script searches Wikipedia **articles** by destination name alone, not
+Google Images. It requires a distinctive exact article title and coordinates
+within 2 km before examining Commons image files. This will have limited
+coverage for small attractions that do not have matching Wikipedia articles.
+
+
+### Google Images scrape (unverified, resumable)
+
+Fills `webImages` (up to 8 HTTPS URLs) for destinations in `research/missing-destination-images.csv`. These are **unverified, unlicensed** search results. The UI shows them only when a destination has no licensed photo, labelled "Web image · unverified".
+
+Requires a [camofox-browser](https://github.com/jo-inc/camofox-browser) server on `http://localhost:9377`.
+
+```sh
+# Scrape; rerun the same command to continue after any interruption or block
+npm run destinations:images:web -- --limit=50
+npm run destinations:images:web -- --province=34 --delay-ms=6000
+npm run destinations:images:web -- --retry-empty   # re-try destinations that returned no images
+
+# Copy progress into the province shards and rebuild national.json (idempotent)
+npm run destinations:images:web:apply
+```
+
+Progress is appended to `research/google-images-progress.jsonl`, one line per finished destination, so a crash loses at most one. Exit code 2 means Google served its unusual-traffic page; the scraper stops without recording that destination. Inline `data:` thumbnails are skipped to keep shards small. `npm run build:destinations` keeps `webImages`; a fresh SISPARNAS rebuild drops them, so rerun the apply command afterwards.

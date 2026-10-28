@@ -25,6 +25,34 @@ export function makeShareUrl(region?: ShareRegion): string {
   return url.toString();
 }
 
+const DESTINATION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/;
+
+export function isPublicDestinationId(id: string): boolean {
+  return DESTINATION_ID_PATTERN.test(id);
+}
+
+/** A link that reopens the destination list of the province with the shared place found by its id. */
+export function makeDestinationShareUrl(provinceCode: string, destinationId: string): string {
+  const url = new URL('/', PUBLIC_ORIGIN);
+  if (!isPublicRegionCode(provinceCode)) return url.toString();
+  url.searchParams.set('region', provinceCode);
+  if (!isPublicDestinationId(destinationId)) return url.toString();
+  url.searchParams.set('layer', 'destinations');
+  url.searchParams.set('destination', destinationId);
+  return url.toString();
+}
+
+const SPECIES_ID_PATTERN = /^\d{1,12}$/;
+
+/** A link that reopens the flora or fauna list of the province with the shared species open. */
+export function makeSpeciesShareUrl(kind: 'flora' | 'fauna', provinceCode: string | undefined, speciesId: string): string {
+  const url = new URL('/', PUBLIC_ORIGIN);
+  if (provinceCode && isPublicRegionCode(provinceCode)) url.searchParams.set('region', provinceCode);
+  url.searchParams.set('layer', kind);
+  if (SPECIES_ID_PATTERN.test(speciesId)) url.searchParams.set('species', speciesId);
+  return url.toString();
+}
+
 export function validShareSummary(summary: ShareSummary | undefined): summary is ShareSummary {
   if (!summary || !Number.isFinite(Date.parse(summary.generatedAt))) return false;
   for (const kind of SHARE_KINDS) {
@@ -84,6 +112,45 @@ export interface ShareCardContent {
   unavailable: string;
 }
 
+/** One shared place: its name, where it is, and (when available) a photo that may be drawn on the card. */
+export interface ShareDestination {
+  id: string;
+  name: string;
+  /** Human readable place, for example "Kabupaten Bondowoso, Jawa Timur". */
+  location: string;
+  kindLabel: string;
+  imageUrl?: string;
+  /** Photo credit and license, drawn under the photo when the photo is licensed. */
+  credit?: string;
+}
+
+export interface DestinationCardContent {
+  destination: ShareDestination;
+  /** Province outline, drawn instead of a photo when no photo can be loaded. */
+  geometry?: GeometryPackage;
+  provinceCode: string;
+  caveat: string;
+  noPhoto: string;
+}
+
+interface ShareColors { page: string; card: string; text: string; muted: string; accent: string; border: string }
+
+function shareColors(dark: boolean): ShareColors {
+  if (dark) return { page: '#211f25', card: '#2e2a31', text: '#f3e9de', muted: '#c5b6aa', accent: '#f2b58c', border: '#574b50' };
+  return { page: '#f6f0e7', card: '#fffaf2', text: '#392f2b', muted: '#6c6057', accent: '#a74f29', border: '#d9cbb9' };
+}
+
+function drawCardFrame(context: CanvasRenderingContext2D, colors: ShareColors) {
+  context.fillStyle = colors.page;
+  context.fillRect(0, 0, 1080, 1080);
+  context.fillStyle = colors.card;
+  roundedRect(context, 42, 42, 996, 996, 36);
+  context.fill();
+  context.strokeStyle = colors.border;
+  context.lineWidth = 2;
+  context.stroke();
+}
+
 function roundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
   context.beginPath();
   context.roundRect(x, y, width, height, radius);
@@ -118,14 +185,15 @@ function wrapText(context: CanvasRenderingContext2D, text: string, x: number, y:
   return lineCount;
 }
 
-function drawGeometry(context: CanvasRenderingContext2D, geometry: GeometryPackage | undefined, dark: boolean) {
+const DEFAULT_MAP_BOX = { left: 96, top: 300, width: 888, height: 385 };
+
+function drawGeometry(context: CanvasRenderingContext2D, geometry: GeometryPackage | undefined, dark: boolean, box = DEFAULT_MAP_BOX) {
   if (!geometry) return;
   const viewBox = geometry.viewBox.trim().split(/\s+/).map(Number);
   const [minX, minY, width, height] = viewBox;
-  const left = 96;
-  const top = 300;
-  const canvasWidth = 888;
-  const canvasHeight = 385;
+  const { left, top } = box;
+  const canvasWidth = box.width;
+  const canvasHeight = box.height;
   context.save();
   context.beginPath();
   context.roundRect(left, top, canvasWidth, canvasHeight, 30);
@@ -161,16 +229,8 @@ export async function renderShareCard(content: ShareCardContent): Promise<Blob> 
   await document.fonts.ready;
   context.scale(ratio, ratio);
   const dark = document.documentElement.dataset.theme === 'dark';
-  let colors = { page: '#f6f0e7', card: '#fffaf2', text: '#392f2b', muted: '#6c6057', accent: '#a74f29', border: '#d9cbb9' };
-  if (dark) colors = { page: '#211f25', card: '#2e2a31', text: '#f3e9de', muted: '#c5b6aa', accent: '#f2b58c', border: '#574b50' };
-  context.fillStyle = colors.page;
-  context.fillRect(0, 0, 1080, 1080);
-  context.fillStyle = colors.card;
-  roundedRect(context, 42, 42, 996, 996, 36);
-  context.fill();
-  context.strokeStyle = colors.border;
-  context.lineWidth = 2;
-  context.stroke();
+  const colors = shareColors(dark);
+  drawCardFrame(context, colors);
   context.fillStyle = colors.accent;
   context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
   context.fillText('NUSANTARA', 96, 126);
@@ -227,6 +287,210 @@ export async function renderShareCard(content: ShareCardContent): Promise<Blob> 
   context.fillStyle = colors.muted;
   context.font = '600 20px "Nunito Variable", system-ui, sans-serif';
   wrapText(context, content.caveat, 96, 940, 888, 25, 3);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error('PNG generation failed'));
+    }, 'image/png');
+  });
+}
+
+const PHOTO_TIMEOUT_MS = 8000;
+const PHOTO_BOX = { left: 96, top: 156, width: 888, height: 520 };
+
+/** Loads a photo for the canvas. Resolves to undefined when it is blocked, missing or slow, so the card still renders. */
+export function loadSharePhoto(url: string): Promise<HTMLImageElement | undefined> {
+  return new Promise(resolve => {
+    const image = new Image();
+    const timer = window.setTimeout(() => resolve(undefined), PHOTO_TIMEOUT_MS);
+    image.crossOrigin = 'anonymous';
+    image.referrerPolicy = 'no-referrer';
+    image.onload = () => { window.clearTimeout(timer); resolve(image); };
+    image.onerror = () => { window.clearTimeout(timer); resolve(undefined); };
+    image.src = url;
+  });
+}
+
+/** Draws the photo scaled to cover the box, centred, like CSS object-fit: cover. */
+function drawPhotoCover(context: CanvasRenderingContext2D, image: HTMLImageElement) {
+  const { left, top, width, height } = PHOTO_BOX;
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  context.save();
+  roundedRect(context, left, top, width, height, 30);
+  context.clip();
+  context.drawImage(image, left + (width - drawWidth) / 2, top + (height - drawHeight) / 2, drawWidth, drawHeight);
+  context.restore();
+}
+
+function drawProvinceFallback(context: CanvasRenderingContext2D, content: DestinationCardContent, colors: ShareColors, dark: boolean) {
+  const region = { code: content.provinceCode, name: '' };
+  const geometry = geometryForShare(content.geometry, region);
+  drawGeometry(context, geometry, dark, PHOTO_BOX);
+  if (geometry) return;
+  context.fillStyle = colors.border;
+  roundedRect(context, PHOTO_BOX.left, PHOTO_BOX.top, PHOTO_BOX.width, PHOTO_BOX.height, 30);
+  context.fill();
+  context.fillStyle = colors.muted;
+  context.font = '700 28px "Nunito Variable", system-ui, sans-serif';
+  context.textAlign = 'center';
+  context.fillText(content.noPhoto, 540, 430, 760);
+  context.textAlign = 'start';
+}
+
+/** A square card for one destination: its photo (or province outline), name, location and the photo credit. */
+export async function renderDestinationShareCard(content: DestinationCardContent): Promise<Blob> {
+  const canvas = document.createElement('canvas');
+  const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  canvas.width = 1080 * ratio;
+  canvas.height = 1080 * ratio;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas is not available');
+  const photoRequest = content.destination.imageUrl ? loadSharePhoto(content.destination.imageUrl) : Promise.resolve(undefined);
+  await document.fonts.ready;
+  const photo = await photoRequest;
+  context.scale(ratio, ratio);
+  const dark = document.documentElement.dataset.theme === 'dark';
+  const colors = shareColors(dark);
+  drawCardFrame(context, colors);
+  context.fillStyle = colors.accent;
+  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
+  context.fillText('NUSANTARA · ' + content.destination.kindLabel.toUpperCase(), 96, 126, 888);
+  if (photo) drawPhotoCover(context, photo);
+  else drawProvinceFallback(context, content, colors, dark);
+  context.fillStyle = colors.text;
+  context.font = '800 56px "Nunito Variable", system-ui, sans-serif';
+  const nameLines = wrapText(context, content.destination.name, 96, 750, 888, 64, 2);
+  const locationTop = 750 + nameLines * 64 + 4;
+  context.fillStyle = colors.accent;
+  context.font = '700 30px "Nunito Variable", system-ui, sans-serif';
+  const locationLines = wrapText(context, content.destination.location, 96, locationTop, 888, 38, 2);
+  const footerTop = Math.max(locationTop + locationLines * 38 + 18, 930);
+  context.fillStyle = colors.muted;
+  context.font = '600 18px "Nunito Variable", system-ui, sans-serif';
+  if (photo && content.destination.credit) wrapText(context, content.destination.credit, 96, footerTop - 28, 888, 22, 1);
+  let caveatLines = 3;
+  if (footerTop > 950) caveatLines = 2;
+  wrapText(context, content.caveat, 96, footerTop, 888, 24, caveatLines);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error('PNG generation failed'));
+    }, 'image/png');
+  });
+}
+
+/** One shared species: names, IUCN status, a short description and, when openly licensed, a photo. */
+export interface ShareSpecies {
+  id: string;
+  kind: 'flora' | 'fauna';
+  name: string;
+  scientificName: string;
+  /** For example "Mammals · Aceh". */
+  subtitle: string;
+  kindLabel: string;
+  statusCode: string;
+  statusLabel: string;
+  statusColor: string;
+  statusTextColor: string;
+  description: string;
+  /** Openly licensed photo that the canvas may read; omitted for all-rights-reserved photos. */
+  imageUrl?: string;
+  credit?: string;
+  /** Same-origin illustration drawn when there is no usable photo. */
+  placeholderUrl: string;
+  /** Colour behind the illustration, which is shown whole instead of cropped like a photo. */
+  placeholderBackground: string;
+}
+
+export interface SpeciesCardContent {
+  species: ShareSpecies;
+  caveat: string;
+}
+
+const SPECIES_PHOTO_BOX = { left: 96, top: 150, width: 888, height: 400 };
+
+/** Draws a photo cropped to fill the box, or (with `background`) an illustration shown whole and centred on that colour. */
+function drawSpeciesPhoto(context: CanvasRenderingContext2D, image: HTMLImageElement | undefined, colors: ShareColors, background?: string) {
+  const { left, top, width, height } = SPECIES_PHOTO_BOX;
+  roundedRect(context, left, top, width, height, 30);
+  if (!image) {
+    context.fillStyle = colors.border;
+    context.fill();
+    return;
+  }
+  let scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  if (background) {
+    scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    context.fillStyle = background;
+    context.fill();
+  }
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  context.save();
+  context.clip();
+  context.drawImage(image, left + (width - drawWidth) / 2, top + (height - drawHeight) / 2, drawWidth, drawHeight);
+  context.restore();
+}
+
+function drawStatusChip(context: CanvasRenderingContext2D, species: ShareSpecies, x: number, y: number): number {
+  context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
+  const text = species.statusCode + ' · ' + species.statusLabel;
+  const width = Math.min(888, context.measureText(text).width + 36);
+  context.fillStyle = species.statusColor;
+  roundedRect(context, x, y, width, 42, 21);
+  context.fill();
+  context.fillStyle = species.statusTextColor;
+  context.fillText(text, x + 18, y + 29, 852);
+  return y + 42;
+}
+
+/** A square card for one species: photo (or illustration), name, Latin name, IUCN status, description and photo credit. */
+export async function renderSpeciesShareCard(content: SpeciesCardContent): Promise<Blob> {
+  const { species } = content;
+  const canvas = document.createElement('canvas');
+  const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  canvas.width = 1080 * ratio;
+  canvas.height = 1080 * ratio;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas is not available');
+  const photoRequest = species.imageUrl ? loadSharePhoto(species.imageUrl) : Promise.resolve(undefined);
+  const placeholderRequest = loadSharePhoto(species.placeholderUrl);
+  await document.fonts.ready;
+  const photo = await photoRequest;
+  const picture = photo ?? await placeholderRequest;
+  context.scale(ratio, ratio);
+  const colors = shareColors(document.documentElement.dataset.theme === 'dark');
+  drawCardFrame(context, colors);
+  context.fillStyle = colors.accent;
+  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
+  context.fillText('NUSANTARA · ' + species.kindLabel.toUpperCase(), 96, 126, 888);
+  if (photo) drawSpeciesPhoto(context, photo, colors);
+  else drawSpeciesPhoto(context, picture, colors, species.placeholderBackground);
+
+  context.fillStyle = colors.text;
+  context.font = '800 54px "Nunito Variable", system-ui, sans-serif';
+  const nameLines = wrapText(context, species.name, 96, 622, 888, 60, 2);
+  let cursor = 622 + (nameLines - 1) * 60 + 40;
+  context.fillStyle = colors.accent;
+  context.font = 'italic 700 30px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(species.scientificName, 96, cursor, 888);
+  cursor += 34;
+  context.fillStyle = colors.muted;
+  context.font = '600 22px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(species.subtitle, 96, cursor, 888);
+  cursor = drawStatusChip(context, species, 96, cursor + 18) + 40;
+
+  context.fillStyle = colors.text;
+  context.font = '600 25px "Nunito Variable", system-ui, sans-serif';
+  const descriptionLines = 4 - (nameLines - 1);
+  if (species.description) wrapText(context, species.description, 96, cursor, 888, 33, descriptionLines);
+
+  context.fillStyle = colors.muted;
+  context.font = '600 18px "Nunito Variable", system-ui, sans-serif';
+  if (photo && species.credit) context.fillText(species.credit, 96, 958, 888);
+  wrapText(context, content.caveat, 96, 988, 888, 23, 2);
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
       if (blob) resolve(blob);
