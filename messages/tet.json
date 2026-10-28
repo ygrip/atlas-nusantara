@@ -260,7 +260,7 @@
   "footer_explore": "Esplora",
   "footer_maker": "Halo husi readynaz",
   "language_search": "Buka lian…",
-  "atlas_intro": "Koñese Indonézia, fatin ida-idak. Esplora provínsia sira, deskobre fatin atu vizita no haree tempu lokál iha mapa.",
+  "atlas_intro": "Koñese Indonézia, fatin ida-idak. Hili illa ida ka provínsia ida, hodi haree fatin atu vizita, han-hemu, animál no tempu.",
   "source_details": "Fonte no detallu mapa",
   "menu_close": "Taka menu",
   "map_legend_label": "Lejenda mapa",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Naran, deskrisaun no foto mai husi fonte públiku no bele antigu ka la kompletu.",
   "cuisine_coverage_note": "Hahán sira tuir lista provínsia iha Wikipedia Indonézia, tanba ne'e provínsia mak asosiasaun de'it, la'ós prova orijen. Resseta sira hakerek husi sira-nia autór no iha link ba fonte. La iha resseta ka foto la signifika hahán ne'e la existe.",
   "cuisine_metric_with_recipe": "Hahán ho resseta",
-  "cuisine_metric_with_photo": "Hahán ho foto"
+  "cuisine_metric_with_photo": "Hahán ho foto",
+  "hero_cta_atlas": "Esplora mapa",
+  "hero_cta_provinces": "Haree provínsia",
+  "hero_art_hint": "Hili ho mouse atu fahe"
 }

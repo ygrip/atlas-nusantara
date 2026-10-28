@@ -105,6 +105,10 @@
   }
 </script>
 
+{#snippet words(text: string)}
+  {#each text.split(' ') as word, index (index)}<span class="word-mask"><span class="word" style={'--w:' + (index + 1)}>{word}</span></span>{' '}{/each}
+{/snippet}
+
 <svelte:head><title>{m.site_title()} — {m.og_headline()}</title></svelte:head>
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
 <div class="shell" bind:this={shell}>
@@ -125,20 +129,18 @@
   <main>
     <section id="top" class="hero" aria-labelledby="site-title">
       <div class="clay-card hero-card">
+        <HeroArchipelago alt={m.hero_art_alt()} />
         <div class="hero-copy">
-          <span class="eyebrow">INDONESIA</span>
-          <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
-          <p>{m.atlas_intro()}</p>
+          <span class="eyebrow rise" style="--i:0">INDONESIA</span>
+          <h1 id="site-title"><span class="brand-desktop">{@render words(m.site_title())}</span><span class="brand-mobile">{@render words('Nusantara')}</span></h1>
+          <span class="hero-tagline rise" style="--i:3">{m.og_headline()}</span>
+          <p class="rise" style="--i:4">{m.atlas_intro()}</p>
 
-          <div class="hero-actions">
-            <a class="clay-button primary" href="#atlas">{m.nav_atlas()} <span aria-hidden="true">↓</span></a>
-            <a class="clay-button" href="#provinces">{m.nav_provinces()}</a>
+          <div class="hero-actions rise" style="--i:5">
+            <a class="clay-button primary" href="#atlas">{m.hero_cta_atlas()} <span aria-hidden="true">↓</span></a>
+            <a class="clay-button" href="#provinces">{m.hero_cta_provinces()}</a>
           </div>
-
         </div>
-        <figure class="hero-art">
-          <HeroArchipelago alt={m.hero_art_alt()} />
-        </figure>
       </div>
       <NationalStats />
     </section>

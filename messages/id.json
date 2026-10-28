@@ -260,7 +260,7 @@
   "footer_explore": "Jelajahi",
   "footer_maker": "Dibuat oleh readynaz",
   "language_search": "Cari bahasa…",
-  "atlas_intro": "Kenali Indonesia lebih dekat. Jelajahi provinsi, temukan tempat wisata, dan lihat cuaca setempat di peta.",
+  "atlas_intro": "Kenali Indonesia lebih dekat. Pilih pulau atau provinsi, lalu lihat tempat wisata, kuliner, satwa, dan cuacanya.",
   "source_details": "Sumber & rincian peta",
   "menu_close": "Tutup menu",
   "map_legend_label": "Legenda peta",
@@ -521,5 +521,8 @@
   "cuisine_share_caveat": "Nama, deskripsi, dan foto berasal dari sumber publik dan bisa saja usang atau belum lengkap.",
   "cuisine_coverage_note": "Hidangan mengikuti daftar provinsi di Wikipedia bahasa Indonesia, jadi provinsi hanyalah keterkaitan, bukan bukti asal. Resep ditulis oleh penulisnya dan ditautkan ke sumbernya. Resep atau foto yang belum ada tidak berarti hidangan itu tidak ada.",
   "cuisine_metric_with_recipe": "Hidangan dengan resep",
-  "cuisine_metric_with_photo": "Hidangan dengan foto"
+  "cuisine_metric_with_photo": "Hidangan dengan foto",
+  "hero_cta_atlas": "Jelajahi peta",
+  "hero_cta_provinces": "Lihat provinsi",
+  "hero_art_hint": "Arahkan kursor untuk membongkar"
 }
