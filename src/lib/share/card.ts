@@ -434,16 +434,19 @@ function drawSpeciesPhoto(context: CanvasRenderingContext2D, image: HTMLImageEle
   context.restore();
 }
 
-function drawStatusChip(context: CanvasRenderingContext2D, species: ShareSpecies, x: number, y: number): number {
+function drawChip(context: CanvasRenderingContext2D, text: string, color: string, textColor: string, x: number, y: number): number {
   context.font = '800 22px "Nunito Variable", system-ui, sans-serif';
-  const text = species.statusCode + ' · ' + species.statusLabel;
   const width = Math.min(888, context.measureText(text).width + 36);
-  context.fillStyle = species.statusColor;
+  context.fillStyle = color;
   roundedRect(context, x, y, width, 42, 21);
   context.fill();
-  context.fillStyle = species.statusTextColor;
+  context.fillStyle = textColor;
   context.fillText(text, x + 18, y + 29, 852);
   return y + 42;
+}
+
+function drawStatusChip(context: CanvasRenderingContext2D, species: ShareSpecies, x: number, y: number): number {
+  return drawChip(context, species.statusCode + ' · ' + species.statusLabel, species.statusColor, species.statusTextColor, x, y);
 }
 
 /** A square card for one species: photo (or illustration), name, Latin name, IUCN status, description and photo credit. */
@@ -490,6 +493,91 @@ export async function renderSpeciesShareCard(content: SpeciesCardContent): Promi
   context.fillStyle = colors.muted;
   context.font = '600 18px "Nunito Variable", system-ui, sans-serif';
   if (photo && species.credit) context.fillText(species.credit, 96, 958, 888);
+  wrapText(context, content.caveat, 96, 988, 888, 23, 2);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error('PNG generation failed'));
+    }, 'image/png');
+  });
+}
+
+const DISH_ID_PATTERN = /^[a-z0-9-]{1,120}$/;
+
+/** A link that reopens the cuisine list of the province with the shared dish open. */
+export function makeDishShareUrl(provinceCode: string | undefined, dishId: string): string {
+  const url = new URL('/', PUBLIC_ORIGIN);
+  if (provinceCode && isPublicRegionCode(provinceCode)) url.searchParams.set('region', provinceCode);
+  url.searchParams.set('layer', 'cuisine');
+  if (DISH_ID_PATTERN.test(dishId)) url.searchParams.set('dish', dishId);
+  return url.toString();
+}
+
+/** One shared dish: name, group, a short description and, when openly licensed, a photo. */
+export interface ShareDish {
+  id: string;
+  name: string;
+  /** For example "Soups · Kalimantan Selatan". */
+  subtitle: string;
+  kindLabel: string;
+  /** For example "3 recipes". */
+  chipLabel: string;
+  chipColor: string;
+  chipTextColor: string;
+  description: string;
+  /** Openly licensed Commons photo that the canvas may read; omitted for Cookpad photos, which send no CORS header. */
+  imageUrl?: string;
+  credit?: string;
+  /** Same-origin illustration drawn when there is no usable photo. */
+  placeholderUrl: string;
+  placeholderBackground: string;
+}
+
+export interface DishCardContent {
+  dish: ShareDish;
+  caveat: string;
+}
+
+/** A square card for one dish: photo (or illustration), name, group, recipe count, description and photo credit. */
+export async function renderDishShareCard(content: DishCardContent): Promise<Blob> {
+  const { dish } = content;
+  const canvas = document.createElement('canvas');
+  const ratio = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  canvas.width = 1080 * ratio;
+  canvas.height = 1080 * ratio;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Canvas is not available');
+  const photoRequest = dish.imageUrl ? loadSharePhoto(dish.imageUrl) : Promise.resolve(undefined);
+  const placeholderRequest = loadSharePhoto(dish.placeholderUrl);
+  await document.fonts.ready;
+  const photo = await photoRequest;
+  const picture = photo ?? await placeholderRequest;
+  context.scale(ratio, ratio);
+  const colors = shareColors(document.documentElement.dataset.theme === 'dark');
+  drawCardFrame(context, colors);
+  context.fillStyle = colors.accent;
+  context.font = '800 24px "Nunito Variable", system-ui, sans-serif';
+  context.fillText('NUSANTARA · ' + dish.kindLabel.toUpperCase(), 96, 126, 888);
+  if (photo) drawSpeciesPhoto(context, photo, colors);
+  else drawSpeciesPhoto(context, picture, colors, dish.placeholderBackground);
+
+  context.fillStyle = colors.text;
+  context.font = '800 54px "Nunito Variable", system-ui, sans-serif';
+  const nameLines = wrapText(context, dish.name, 96, 622, 888, 60, 2);
+  let cursor = 622 + (nameLines - 1) * 60 + 40;
+  context.fillStyle = colors.muted;
+  context.font = '600 24px "Nunito Variable", system-ui, sans-serif';
+  context.fillText(dish.subtitle, 96, cursor, 888);
+  cursor = drawChip(context, dish.chipLabel, dish.chipColor, dish.chipTextColor, 96, cursor + 18) + 40;
+
+  context.fillStyle = colors.text;
+  context.font = '600 25px "Nunito Variable", system-ui, sans-serif';
+  const descriptionLines = 4 - (nameLines - 1);
+  if (dish.description) wrapText(context, dish.description, 96, cursor, 888, 33, descriptionLines);
+
+  context.fillStyle = colors.muted;
+  context.font = '600 18px "Nunito Variable", system-ui, sans-serif';
+  if (photo && dish.credit) context.fillText(dish.credit, 96, 958, 888);
   wrapText(context, content.caveat, 96, 988, 888, 23, 2);
   return new Promise((resolve, reject) => {
     canvas.toBlob(blob => {

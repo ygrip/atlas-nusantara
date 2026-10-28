@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" role="img" aria-label="Bowl of food illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f8e6cf"/><stop offset="1" stop-color="#f3dcc0"/></linearGradient>
+    <radialGradient id="bowl" cx="34%" cy="24%" r="90%"><stop stop-color="#f6cfa8"/><stop offset=".55" stop-color="#d98c5f"/><stop offset="1" stop-color="#a95b36"/></radialGradient>
+    <radialGradient id="rice" cx="40%" cy="30%" r="80%"><stop stop-color="#fffdf5"/><stop offset="1" stop-color="#ead9b3"/></radialGradient>
+    <radialGradient id="chili" cx="35%" cy="30%" r="80%"><stop stop-color="#f27a5a"/><stop offset="1" stop-color="#b8342a"/></radialGradient>
+  </defs>
+  <rect width="640" height="480" fill="url(#bg)"/>
+  <circle cx="512" cy="96" r="46" fill="#fbe8b4" opacity=".85"/>
+  <ellipse cx="320" cy="396" rx="176" ry="24" fill="#2b1d1a" opacity=".16"/>
+  <path d="M150 250H490C490 340 424 392 320 392C216 392 150 340 150 250Z" fill="#8f4a2b" transform="translate(0 8)"/>
+  <ellipse cx="320" cy="250" rx="170" ry="40" fill="#8f4a2b"/>
+  <path d="M150 250H490C490 340 424 392 320 392C216 392 150 340 150 250Z" fill="url(#bowl)"/>
+  <ellipse cx="320" cy="248" rx="170" ry="40" fill="#f6d9b8"/>
+  <path d="M170 240C190 190 250 168 320 168C390 168 450 190 470 240C440 262 380 272 320 272C260 272 200 262 170 240Z" fill="url(#rice)"/>
+  <circle cx="278" cy="214" r="16" fill="url(#chili)"/>
+  <circle cx="330" cy="204" r="13" fill="#6fb061"/>
+  <circle cx="372" cy="224" r="15" fill="url(#chili)"/>
+  <circle cx="302" cy="238" r="11" fill="#e8b94a"/>
+  <path d="M226 336C250 360 290 372 320 372" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="10" stroke-linecap="round"/>
+  <path d="M270 150C252 128 288 118 270 92M326 146C308 124 344 114 326 88M382 150C364 128 400 118 382 92" fill="none" stroke="#ffffff" stroke-opacity=".75" stroke-width="9" stroke-linecap="round"/>
+</svg>

@@ -16,6 +16,7 @@ export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   // Species per province from GBIF with KSDAE, iNaturalist and other sources; province shards plus a national download. See docs/SPECIES.md.
   { id: 'flora', label: m.layer_flora, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'flora' },
   { id: 'fauna', label: m.layer_fauna, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'fauna' },
+  { id: 'cuisine', label: m.layer_cuisine, source: 'Wikipedia · Cookpad', renderer: 'points', icon: 'food' },
   // Yearly national statistics shown in a panel (pyramid and history); no map pins, no worker. See docs/OVERLAYS.md.
   { id: 'population', label: m.layer_population, source: 'BPS', renderer: 'statistics', icon: 'population' },
   // Number of local languages per province (Peta Bahasa); a heat map and a panel, no pins. See docs/OVERLAYS.md.

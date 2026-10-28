@@ -1,0 +1,50 @@
+name: Build cuisine catalog
+
+# Manual only. The crawl stages take about an hour and the build rewrites static/data/cuisine, so it must never run on a push.
+on:
+  workflow_dispatch:
+    inputs:
+      crawl:
+        description: 'Run the Cookpad and Wikipedia crawl stages (resumable, cached between runs)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Restore crawl cache
+        uses: actions/cache@v4
+        with:
+          path: tmp/recipes-cache
+          key: cuisine-crawl-${{ github.run_id }}
+          restore-keys: cuisine-crawl-
+      - name: Crawl Cookpad Indonesia (resumable)
+        if: ${{ inputs.crawl }}
+        run: node scripts/recipes/crawl-cookpad.mjs --concurrency=4 --delay-ms=500
+      - name: Fetch Wikipedia summaries and Commons photo licences (resumable)
+        if: ${{ inputs.crawl }}
+        run: node scripts/recipes/fetch-wikipedia.mjs --concurrency=4 --delay-ms=300
+      - name: Build province shards and the national export
+        run: node scripts/recipes/build.mjs
+      - name: Verify generated catalog
+        run: node --test tests/cuisine/*.test.mjs
+      - name: Commit generated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add static/data/cuisine/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(cuisine): rebuild dishes, recipes and photo references"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
