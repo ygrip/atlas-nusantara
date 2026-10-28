@@ -13,6 +13,7 @@ export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   { id: 'incident', label: m.layer_disaster_reports, source: 'BNPB · PetaBencana', renderer: 'points', icon: 'incident' },
   { id: 'hazard', label: m.layer_weather_hazards, source: 'BMKG', renderer: 'points', icon: 'hazard' },
   { id: 'destinations', label: m.layer_destinations, source: 'Tourism', renderer: 'points', icon: 'landmark' },
+  { id: 'cuisine', label: m.layer_cuisine, source: 'Wikipedia · recipes', renderer: 'points', icon: 'food' },
   // Yearly national statistics shown in a panel (pyramid and history); no map pins, no worker. See docs/OVERLAYS.md.
   { id: 'population', label: m.layer_population, source: 'BPS', renderer: 'statistics', icon: 'population' }
 ];
