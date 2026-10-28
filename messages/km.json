@@ -403,5 +403,22 @@
   "population_source_provinces": "តារាងខេត្តរបស់ BPS",
   "population_source_pyramid": "តារាងអាយុ និងភេទរបស់ BPS",
   "tab_overview": "ទិដ្ឋភាពទូទៅ",
-  "tab_province_detail": "ព័ត៌មានលម្អិតខេត្ត"
+  "tab_province_detail": "ព័ត៌មានលម្អិតខេត្ត",
+  "layer_cuisine": "ម្ហូប",
+  "cuisine_heading": "រូបមន្តម្ហូបពីទូទាំងឥណ្ឌូនេស៊ី",
+  "cuisine_description": "ស្វែងយល់ម្ហូបតាមតំបន់ គ្រឿងផ្សំ របៀបចម្អិន និងប្រភពរូបថត។",
+  "cuisine_search": "ស្វែងរកម្ហូប",
+  "cuisine_choose_province": "ជ្រើសខេត្តនៅលើផែនទី ដើម្បីមើលម្ហូបបន្ថែម។",
+  "cuisine_empty": "គ្មានម្ហូបត្រូវនឹងការស្វែងរកទេ។",
+  "cuisine_no_image": "មិនមានរូបថត",
+  "cuisine_minutes": "នាទី",
+  "cuisine_recipe": "មើលរូបមន្ត",
+  "cuisine_no_recipe": "មិនទាន់មានរូបមន្ត",
+  "cuisine_id_fallback": "រូបមន្តនេះមានតែជាភាសាឥណ្ឌូនេស៊ី។",
+  "cuisine_machine_notice": "ការបកប្រែដោយម៉ាស៊ីនមិនទាន់បានពិនិត្យ។",
+  "cuisine_ingredients": "គ្រឿងផ្សំ",
+  "cuisine_steps": "របៀបចម្អិន",
+  "cuisine_recipe_source": "ប្រភពរូបមន្ត",
+  "cuisine_more": "បង្ហាញបន្ថែម",
+  "cuisine_scope_notice": "ទិន្នន័យមិនទាន់ពេញលេញ។ ខេត្តត្រូវបានភ្ជាប់តាមបញ្ជីប្រភព ហើយមិនមែនគ្រប់ម្ហូបសុទ្ធតែមានរូបមន្ត ឬរូបថតទេ។"
 }
