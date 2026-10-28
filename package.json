@@ -25,7 +25,8 @@
     "snapshot:hazards": "node --experimental-strip-types scripts/pipeline/run.mjs",
     "build:gazetteer": "node --experimental-strip-types scripts/pipeline/build-gazetteer-data.mjs",
     "data:bootstrap": "npm run build && node scripts/bootstrap-data.mjs",
-    "push:dev": "node server/push-server.mjs"
+    "push:dev": "node server/push-server.mjs",
+    "build:cuisine": "node scripts/cuisine/build.mjs"
   },
   "devDependencies": {
     "@inlang/paraglide-js": "^2.29.1",
