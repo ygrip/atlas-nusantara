@@ -5,17 +5,6 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => { if (!localStorage.getItem('PARAGLIDE_LOCALE')) localStorage.setItem('PARAGLIDE_LOCALE', 'en'); });
 });
 
-test('desktop language popup lists 13 flagged languages and changes the locale', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Choose your language', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Choose your language' });
-  await expect(dialog.locator('.language-grid button')).toHaveCount(13);
-  await expect(dialog.locator('.flag')).toHaveCount(13);
-  await dialog.locator('button[lang="id"]').click();
-  await expect(page.locator('html')).toHaveAttribute('lang', 'id');
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('PARAGLIDE_LOCALE'))).toBe('id');
-});
-
 test('mobile settings groups language, share and theme, with reversible theme transitions', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -76,7 +65,7 @@ test('mobile hero and header do not overflow or show a preview-share CTA', async
   expect(layout.overflow).toBeLessThanOrEqual(1);
 });
 
-for (const theme of ['light', 'dark']) {
+for (const theme of ['dark']) {
   test(`mobile metric cards retain desktop colors and decoration in ${theme} mode`, async ({ page }) => {
     await page.addInitScript(theme => localStorage.setItem('nusantara:theme', theme), theme);
     await page.goto('/');

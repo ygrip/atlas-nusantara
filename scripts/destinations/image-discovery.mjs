@@ -5,7 +5,8 @@ import { CrawlClient } from './crawl-http.mjs';
 const SPARQL = 'https://query.wikidata.org/sparql';
 const LABELS = `?item (rdfs:label|skos:altLabel) ?label.
   FILTER(LANG(?label) = "id" || LANG(?label) = "en")`;
-const SUBJECTS = '?item wdt:P17 wd:Q252; wdt:P18 ?image; wdt:P625 ?coordinates.';
+// A place with a Commons category but no featured P18 image is also a candidate.
+const SUBJECTS = '?item wdt:P17 wd:Q252; wdt:P625 ?coordinates. OPTIONAL { ?item wdt:P18 ?image. } OPTIONAL { ?item wdt:P373 ?category. }';
 
 export async function saveJson(filename, value) {
   await mkdir(path.dirname(filename), { recursive: true });
@@ -32,14 +33,17 @@ export function registrySubjects(bindings) {
     const point = row.coordinates?.value?.match(/^Point\((-?[\d.]+)\s+(-?[\d.]+)\)$/);
     const title = commonsFileTitle(row.image?.value);
     const label = row.label?.value;
-    if (!id || !point || !title || typeof label !== 'string' || !label.trim()) continue;
+    const category = row.category?.value;
+    const safeCategory = typeof category === 'string' && /^[^\u0000-\u001f<>\[\]{}|"'\u0060]{1,180}$/.test(category) ? category.trim() : undefined;
+    if (!id || !point || !(title || safeCategory) || typeof label !== 'string' || !label.trim()) continue;
     const lon = Number(point[1]);
     const lat = Number(point[2]);
     if (!Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lon) > 180 || Math.abs(lat) > 90) continue;
-    const group = groups.get(id) ?? { id, labels: new Set(), points: new Map(), imageTitles: new Set() };
+    const group = groups.get(id) ?? { id, labels: new Set(), points: new Map(), imageTitles: new Set(), commonsCategories: new Set() };
     group.labels.add(label.trim());
     group.points.set(lon + ',' + lat, { lon, lat });
-    group.imageTitles.add(title);
+    if (title) group.imageTitles.add(title);
+    if (safeCategory) group.commonsCategories.add(safeCategory);
     groups.set(id, group);
   }
   const subjects = [];
@@ -49,46 +53,72 @@ export function registrySubjects(bindings) {
     const point = [...group.points.values()][0];
     const imageTitles = [...group.imageTitles].sort();
     subjects.push({ id: group.id, labels: [...group.labels].sort(), lat: point.lat, lon: point.lon,
-      imageTitle: imageTitles[0], imageTitles });
+      imageTitle: imageTitles[0], imageTitles,
+      commonsCategories: [...group.commonsCategories].sort() });
   }
   subjects.sort((left, right) => Number(left.id.slice(1)) - Number(right.id.slice(1)));
   return { subjects, ambiguousCoordinates, labeledItems: groups.size };
 }
 
-export async function loadSubjectRegistry(directory, { fetcher = fetch, pageSize = 5000, delayMs = 1000 } = {}) {
+/** Independent selective scans avoid an expensive Cartesian product of P18 and P373. */
+const SUBJECT_SOURCES = [
+  { name: 'featured-photos', claim: '?item wdt:P18 ?image.' },
+  { name: 'commons-categories', claim: '?item wdt:P373 ?category.' }
+];
+
+export async function loadSubjectRegistry(directory, {
+  fetcher = fetch, pageSize = 500, delayMs = 1000, timeoutMs = 75000, maxPages = 500, pause
+} = {}) {
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > 5000)
+    throw Error('Wikidata pageSize must be between 1 and 5000');
   const resultPath = path.join(directory, 'wikidata-subjects.json');
   try {
     const cached = JSON.parse(await readFile(resultPath, 'utf8'));
-    if (cached.schemaVersion !== 1 || !Array.isArray(cached.subjects) || cached.complete !== true) throw Error('Invalid subject registry cache');
-    return cached;
+    if (cached.schemaVersion === 3 && Array.isArray(cached.subjects) && cached.complete === true) return cached;
   } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const client = new CrawlClient({ origin: 'https://query.wikidata.org',
-    cacheDirectory: path.join(directory, 'wikidata-http'), delayMs, timeoutMs: 75000, fetcher });
+    cacheDirectory: path.join(directory, 'wikidata-http'), delayMs, timeoutMs, fetcher, pause });
   const bindings = [];
   const requests = [];
   let fetchedAt;
-  for (let page = 0; page < 100; page++) {
-    const query = `SELECT ?item ?label ?image ?coordinates WHERE { ${SUBJECTS} ${LABELS} }
-ORDER BY ?item ?label ?image ?coordinates LIMIT ${pageSize} OFFSET ${page * pageSize}`;
-    const url = SPARQL + '?' + new URLSearchParams({ query, format: 'json' });
-    const response = await client.get(url);
-    const payload = JSON.parse(response.body);
-    const rows = payload.results?.bindings;
-    if (!Array.isArray(rows)) throw Error('Invalid Wikidata subject export');
-    fetchedAt ??= response.fetchedAt;
-    requests.push({ url, fetchedAt: response.fetchedAt, rows: rows.length });
-    bindings.push(...rows);
-    console.log('Wikidata registry page', page + 1, 'rows', rows.length);
-    if (rows.length === pageSize) continue;
-    const normalized = registrySubjects(bindings);
-    const result = { schemaVersion: 1, complete: true, fetchedAt,
-      source: 'Wikidata CC0; P17 Indonesia, P18 Commons image, P625 subject coordinate, id/en labels and aliases',
-      scope: 'Candidate registry, not proof that every Indonesian destination is represented',
-      requests, ...normalized };
-    await saveJson(resultPath, result);
-    return result;
+  for (const source of SUBJECT_SOURCES) {
+    let complete = false;
+    for (let page = 0; page < maxPages; page++) {
+      // A full-Indonesia OPTIONAL + OPTIONAL query exploded the intermediate
+      // result set and timed out; this scans one indexed claim at a time.
+      const query = [
+        'SELECT ?item ?label ?image ?coordinates ?category WHERE {',
+        source.claim,
+        '?item wdt:P17 wd:Q252; wdt:P625 ?coordinates.',
+        LABELS,
+        '}'
+      ].join('\n') + ' ORDER BY ?item ?label ?image ?coordinates ?category'
+        + ' LIMIT ' + pageSize + ' OFFSET ' + (page * pageSize);
+      const url = SPARQL + '?' + new URLSearchParams({ query, format: 'json' });
+      console.log('Wikidata', source.name, 'page', page + 1, '(cached if previously downloaded)');
+      const response = await client.get(url);
+      const payload = JSON.parse(response.body);
+      if (payload.error) throw Error('Wikidata query failed: ' + (payload.error.info ?? payload.error.code));
+      const rows = payload.results?.bindings;
+      if (!Array.isArray(rows)) throw Error('Invalid Wikidata subject export');
+      fetchedAt ??= response.fetchedAt;
+      requests.push({ source: source.name, url, fetchedAt: response.fetchedAt, rows: rows.length });
+      bindings.push(...rows);
+      console.log('Wikidata', source.name, 'page', page + 1, 'rows', rows.length);
+      if (rows.length < pageSize) {
+        complete = true;
+        break;
+      }
+    }
+    if (!complete) throw Error('Wikidata ' + source.name + ' exceeded bounded pagination; completed pages are cached');
   }
-  throw Error('Wikidata registry exceeded the bounded pagination limit');
+  const normalized = registrySubjects(bindings);
+  const result = { schemaVersion: 3, complete: true, fetchedAt,
+    source: 'Wikidata CC0; separately paginated P18 featured photos and P373 Commons categories, P17 Indonesia and P625 coordinates, id/en names and aliases',
+    scope: 'Candidate registry, not proof that every Indonesian destination is represented',
+    requests, ...normalized };
+  await saveJson(resultPath, result);
+  return result;
 }
 
 async function commonsResponse(client, url) {
@@ -135,4 +165,28 @@ export async function loadCommonsPages(titles, directory, { fetcher = fetch, del
     }
   }
   return pages;
+}
+
+/**
+ * A Commons category is considered only after its Wikidata subject has passed
+ * the exact destination name + subject coordinate check.
+ * Direct File: members only; unrelated subcategory trees are NOT traversed.
+ */
+export async function loadCommonsCategoryMembers(categories, directory, {
+  fetcher = fetch, delayMs = 1000, pause, maxFiles = 80
+} = {}) {
+  const client = new CrawlClient({ origin: 'https://commons.wikimedia.org',
+    cacheDirectory: path.join(directory, 'commons-category-http'), delayMs, fetcher, pause });
+  const results = new Map();
+  for (const category of [...new Set(categories)].sort()) {
+    if (typeof category !== 'string' || !/^[^\u0000-\u001f<>\[\]{}|"'`]{1,180}$/.test(category)) continue;
+    const params = new URLSearchParams({ action: 'query', format: 'json', list: 'categorymembers',
+      cmtitle: 'Category:' + category, cmnamespace: '6', cmlimit: String(maxFiles), maxlag: '5' });
+    const { payload } = await commonsResponse(client, 'https://commons.wikimedia.org/w/api.php?' + params);
+    const files = payload.query?.categorymembers;
+    if (!Array.isArray(files)) throw Error('Invalid Commons category response: ' + category);
+    results.set(category, files.map(item => item.title)
+      .filter(title => /^File:[^\u0000-\u001f<>\[\]{}|"'`]{1,220}$/.test(title)));
+  }
+  return results;
 }

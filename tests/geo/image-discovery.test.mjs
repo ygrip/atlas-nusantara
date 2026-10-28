@@ -39,7 +39,10 @@ test('paginates the bulk registry completely and resumes without repeating netwo
     const second = await loadSubjectRegistry(directory, { fetcher, pageSize: 2, delayMs: 0 });
     assert.equal(first.subjects.length, 3);
     assert.equal(first.complete, true);
-    assert.equal(requests, 2);
+    assert.equal(requests, 4); // P18 and P373 each need two short pages.
+    assert.equal(first.schemaVersion, 3);
+    assert.deepEqual(new Set(first.requests.map(request => request.source)),
+      new Set(['featured-photos', 'commons-categories']));
     assert.deepEqual(second, first);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });
@@ -63,5 +66,40 @@ test('resolves Commons title redirects and retries maxlag instead of caching it 
     assert.deepEqual(second, first);
     assert.equal(requests, 2);
     assert.ok(pauses.includes(5000));
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+
+test('resumes completed Wikidata pages after a timeout in the second source scan', async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), 'atlas-wikidata-restart-'));
+  let imageRequests = 0;
+  let categoryRequests = 0;
+  const row = binding('Q5', 'Candi Contoh');
+  function fetcher(url) {
+    const query = new URL(url).searchParams.get('query');
+    const isCategory = query.includes('wdt:P373');
+    if (isCategory) {
+      categoryRequests++;
+      const error = new Error('Wikidata overloaded'); error.name = 'TimeoutError'; throw error;
+    }
+    imageRequests++;
+    return Response.json({ results: { bindings: [row] } });
+  }
+  try {
+    const options = { fetcher, pageSize: 2, delayMs: 0, timeoutMs: 50, pause: async () => {} };
+    await assert.rejects(loadSubjectRegistry(directory, options), /exhausted 4 attempts/);
+    assert.equal(imageRequests, 1);
+    assert.equal(categoryRequests, 4);
+    const resumed = await loadSubjectRegistry(directory, {
+      ...options,
+      fetcher: url => {
+        if (new URL(url).searchParams.get('query').includes('wdt:P373'))
+          return Response.json({ results: { bindings: [] } });
+        throw Error('Completed P18 page must be read from disk');
+      }
+    });
+    assert.equal(resumed.complete, true);
+    assert.equal(resumed.subjects.length, 1);
+    assert.equal(imageRequests, 1);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

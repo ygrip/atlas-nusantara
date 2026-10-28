@@ -1,4 +1,6 @@
-export type PinSymbol = 'circle' | 'triangle' | 'diamond';
+/** Shape of a clay marker. Leaf and paw mark the flora and fauna layers. */
+export const PIN_SYMBOLS = ['circle', 'triangle', 'diamond', 'leaf', 'paw'] as const;
+export type PinSymbol = (typeof PIN_SYMBOLS)[number];
 export interface MapPin {
   id: string;
   lon: number;
@@ -44,7 +46,7 @@ export interface OverlayDefinition {
   label: () => string;
   source: string;
   renderer: 'weather' | 'points' | 'statistics' | 'unavailable';
-  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark' | 'population';
+  icon: 'weather' | 'earthquake' | 'incident' | 'hazard' | 'mountain' | 'landmark' | 'population' | 'language' | 'flora' | 'fauna';
   snapshotUrl?: string;
 }
 
@@ -63,7 +65,7 @@ export function validatePointOverlay(value: unknown): value is PointOverlay {
   if (!value || typeof value !== 'object') return false;
   const overlay = value as PointOverlay;
   if (!/^[a-z][a-z0-9-]{0,63}$/.test(overlay.id) || !/^#[0-9a-fA-F]{6}$/.test(overlay.color)) return false;
-  if (!['circle', 'triangle', 'diamond'].includes(overlay.symbol)) return false;
+  if (!(PIN_SYMBOLS as readonly string[]).includes(overlay.symbol)) return false;
   if (!overlay.source || !Number.isFinite(Date.parse(overlay.fetchedAt)) || !Array.isArray(overlay.pins) || overlay.pins.length > 10000) return false;
   const ids = new Set<string>();
   for (const pin of overlay.pins) {
@@ -71,13 +73,13 @@ export function validatePointOverlay(value: unknown): value is PointOverlay {
     if (!Number.isFinite(pin.lon) || !Number.isFinite(pin.lat) || Math.abs(pin.lon) > 180 || Math.abs(pin.lat) > 90) return false;
     if (pin.value !== undefined && !Number.isFinite(pin.value)) return false;
     if (pin.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(pin.color)) return false;
-    if (pin.symbol !== undefined && !['circle', 'triangle', 'diamond'].includes(pin.symbol)) return false;
+    if (pin.symbol !== undefined && !(PIN_SYMBOLS as readonly string[]).includes(pin.symbol)) return false;
     if (pin.category !== undefined && !['active', 'potential', 'other'].includes(pin.category)) return false;
     if (pin.sourceUrl !== undefined && !isHttpsUrl(pin.sourceUrl)) return false;
     if (pin.provinceCode !== undefined && !/^\d{2}$/.test(pin.provinceCode)) return false;
     ids.add(pin.id);
   }
-  return Array.isArray(overlay.legend) && overlay.legend.length <= 20 && overlay.legend.every(item => typeof item.label === 'string' && /^#[0-9a-fA-F]{6}$/.test(item.color) && ['circle', 'triangle', 'diamond'].includes(item.symbol));
+  return Array.isArray(overlay.legend) && overlay.legend.length <= 20 && overlay.legend.every(item => typeof item.label === 'string' && /^#[0-9a-fA-F]{6}$/.test(item.color) && (PIN_SYMBOLS as readonly string[]).includes(item.symbol));
 }
 
 export async function loadPointOverlay(url: string, signal?: AbortSignal): Promise<PointOverlay | undefined> {

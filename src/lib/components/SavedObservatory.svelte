@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Activity, Bell, CloudSun, Flame } from 'lucide-svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { activeWarnings, type HazardSnapshot } from '$lib/data/hazards';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';

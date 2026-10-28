@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
+  import { pathFor } from '$lib/i18n/links';
 
   let { title, description, children }: { title: string; description: string; children: Snippet } = $props();
 </script>
@@ -9,8 +10,8 @@
 
 <div class="shell legal-shell">
   <nav class="legal-top" aria-label={m.legal_label()}>
-    <a class="legal-back" href="/"><img src="/brand/indonesia-clay.webp" alt="" width="32" height="32" /><span class="brand-desktop">← Atlas Nusantara</span><span class="brand-mobile">← Nusantara</span></a>
-    <span class="legal-links"><a href="/terms">{m.legal_terms_link()}</a><a href="/privacy">{m.legal_privacy_link()}</a></span>
+    <a class="legal-back" href={pathFor('/')}><img src="/brand/indonesia-clay.webp" alt="" width="32" height="32" /><span class="brand-desktop">← Atlas Nusantara</span><span class="brand-mobile">← Nusantara</span></a>
+    <span class="legal-links"><a href={pathFor('/terms')}>{m.legal_terms_link()}</a><a href={pathFor('/privacy')}>{m.legal_privacy_link()}</a></span>
   </nav>
   <main id="main-content">
     <article class="clay-card legal-card">

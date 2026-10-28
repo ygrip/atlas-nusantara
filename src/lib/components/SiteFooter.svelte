@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { m } from '$lib/paraglide/messages.js';
+  import { m } from '$lib/i18n/messages';
+  import { pathFor } from '$lib/i18n/links';
   import ClayCompass from './ClayCompass.svelte';
   import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database } from 'lucide-svelte';
 </script>
@@ -24,9 +25,9 @@
     <nav class="footer-col" aria-label={m.legal_label()}>
       <h2>{m.legal_label()}</h2>
       <ul>
-        <li><a href="/privacy"><LockKeyhole size={17} aria-hidden="true" />{m.legal_privacy_link()}</a></li>
-        <li><a href="/terms"><ShieldCheck size={17} aria-hidden="true" />{m.legal_terms_link()}</a></li>
-        <li><a href="/terms#sources"><Database size={17} aria-hidden="true" />{m.source_details()}</a></li>
+        <li><a href={pathFor('/privacy')}><LockKeyhole size={17} aria-hidden="true" />{m.legal_privacy_link()}</a></li>
+        <li><a href={pathFor('/terms')}><ShieldCheck size={17} aria-hidden="true" />{m.legal_terms_link()}</a></li>
+        <li><a href={pathFor('/terms#sources')}><Database size={17} aria-hidden="true" />{m.source_details()}</a></li>
       </ul>
     </nav>
   </div>
