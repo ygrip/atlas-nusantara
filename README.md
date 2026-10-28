@@ -46,6 +46,8 @@ Dependency audit: three low-severity SvelteKit 2 / `cookie` findings remain; the
 
 ## Refresh snapshots
 
+**Indonesian cuisine (starter):** A cuisine layer at `/?layer=cuisine` now has four source-linked recipes and credited Commons photographs, a manual Wikipedia + MIT recipe aggregation script, and a 13-language interface with honest Indonesian-content fallbacks. Full extraction and recipe-content translation are separate offline steps. See [CUISINE.md](docs/CUISINE.md).
+
 **Destinations are static and manually maintained:** 38 province JSON files plus a complete `national.json` download. The atlas opens on the Weather layer in the national view; the Destinations layer starts national too, and `?region=` links open a province. Each province has a searchable, filterable, sortable table with client-side pagination. No destination API or scheduled worker is needed. After editing source JSON, run `npm run build:destinations` offline; see [destination maintenance](docs/DESTINATIONS.md).
 
 Browsers do not call BMKG for the map or saved-place cards. These scripts fetch dated assets deliberately:
