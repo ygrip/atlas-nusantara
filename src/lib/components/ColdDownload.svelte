@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
   import { m } from '$lib/i18n/messages';
+  import { ShieldCheck, Download, Braces, FileSpreadsheet } from 'lucide-svelte';
   import { loadTurnstile, type TurnstileApi } from '$lib/pwa/turnstile';
 
   export let kind: 'warning' | 'earthquake' | 'incident' | 'hazard';
@@ -149,26 +150,36 @@
 </script>
 
 <section class="cold-download" aria-label={m.download_data()}>
-  <button class="expand-button" type="button" data-kind={kind} aria-expanded={expanded} onclick={toggleDownload}>{m.download_data()}</button>
+  <button class="expand-button gloss-button gold" type="button" data-kind={kind} aria-expanded={expanded} onclick={toggleDownload}>
+    <span class="gloss-icon"><ShieldCheck size={18} aria-hidden="true" /></span>{m.verify_download()}
+  </button>
   {#if expanded}
     <div class="download-options">
       <p class="clay-note">{m.download_protection()}</p>
-      <p class="clay-note" id={'archive-window-' + kind}>{m.archive_window()}</p>
       {#if sitekey}
         <div bind:this={widgetContainer} class="turnstile-widget" aria-label={m.verify_download()}></div>
         <form action="/api/export" method="POST" target="_blank" rel="noopener" onsubmit={submitDownload}>
           <input type="hidden" name="kind" value={kind} />
           <input type="hidden" name="cf-turnstile-response" value={token} />
-          <label for={'archive-from-' + kind}>{m.archive_from()}</label>
-          <input id={'archive-from-' + kind} type="date" name="from" bind:value={fromDate} min={minimumDate} max={today} required aria-describedby={'archive-window-' + kind} />
-          <label for={'archive-to-' + kind}>{m.archive_to()}</label>
-          <input id={'archive-to-' + kind} type="date" name="to" bind:value={toDate} min={minimumDate} max={today} required aria-describedby={'archive-window-' + kind} />
-          <label for={'archive-format-' + kind}>JSON / CSV</label>
-          <select id={'archive-format-' + kind} bind:value={format} name="format">
-            <option value="json">JSON</option>
-            <option value="csv">CSV</option>
-          </select>
-          <button type="submit" disabled={!token || !rangeValid || submitting || busy}>{m.verify_download()}</button>
+          <div class="date-row">
+            <div class="field">
+              <label for={'archive-from-' + kind}>{m.archive_from()}</label>
+              <input id={'archive-from-' + kind} type="date" name="from" bind:value={fromDate} min={minimumDate} max={today} required aria-describedby={'archive-window-' + kind} />
+            </div>
+            <div class="field">
+              <label for={'archive-to-' + kind}>{m.archive_to()}</label>
+              <input id={'archive-to-' + kind} type="date" name="to" bind:value={toDate} min={minimumDate} max={today} required aria-describedby={'archive-window-' + kind} />
+            </div>
+          </div>
+          <p class="clay-note" id={'archive-window-' + kind}>{m.archive_window()}</p>
+          <fieldset class="format-picker">
+            <legend>JSON / CSV</legend>
+            <label class:selected={format === 'json'}><input type="radio" name="format" value="json" bind:group={format} /><Braces size={16} aria-hidden="true" />JSON</label>
+            <label class:selected={format === 'csv'}><input type="radio" name="format" value="csv" bind:group={format} /><FileSpreadsheet size={16} aria-hidden="true" />CSV</label>
+          </fieldset>
+          <button type="submit" class="gloss-button red submit-button" disabled={!token || !rangeValid || submitting || busy}>
+            <span class="gloss-icon"><Download size={18} aria-hidden="true" /></span>{m.download_data()}
+          </button>
         </form>
       {:else}
         <p class="unavailable" role="status">{m.verification_unavailable()}</p>
@@ -179,17 +190,23 @@
 </section>
 
 <style>
-  .cold-download { margin-top: 10px; }
-  button, select, input[type='date'] { min-height: 44px; border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; }
-  button { cursor: pointer; }
-  button:disabled { cursor: not-allowed; opacity: .55; }
-  .expand-button { text-decoration: underline; text-underline-offset: 3px; }
-  .download-options { display: grid; gap: 12px; margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
-  p { margin: 0 0 12px; color: var(--muted); font-size: .78rem; line-height: 1.55; }
-  .unavailable, .status { margin-top: 12px; }
-  form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-  label { font-size: .8rem; }
-  input[type='date'] { max-width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; }
-  .turnstile-widget { min-height: 65px; margin: 12px 0; }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+  .cold-download { display: grid; gap: 12px; justify-items: start; }
+  .expand-button { max-width: 100%; text-align: left; }
+  .download-options { display: grid; gap: 14px; width: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 22px; background: var(--panel); box-shadow: var(--clay-pressed); }
+  p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.55; }
+  form { display: grid; gap: 14px; }
+  .date-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .field { display: grid; gap: 6px; min-width: 0; }
+  .field label, .format-picker legend { color: var(--text); font-size: .78rem; font-weight: 800; }
+  input[type='date'] { width: 100%; min-height: 46px; padding: 8px 12px; border: 2px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .85rem; box-shadow: var(--clay-pressed); }
+  .format-picker { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+  .format-picker legend { padding: 0; margin-bottom: 6px; }
+  .format-picker label { position: relative; display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); font-size: .8rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--border), inset 1px 2px 2px var(--clay-highlight); transition: transform 160ms var(--ease-bounce), box-shadow 160ms ease-out; }
+  .format-picker input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; cursor: pointer; }
+  .format-picker label.selected { transform: translateY(3px); border-color: var(--accent); background: var(--red-wash); color: var(--accent-strong); box-shadow: 0 1px 0 var(--accent), inset 2px 3px 5px var(--shadow); }
+  .format-picker label:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .submit-button { justify-self: start; max-width: 100%; }
+  .unavailable, .status { margin-top: 4px; }
+  .turnstile-widget { min-height: 65px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } .format-picker label { transition: none; } }
 </style>

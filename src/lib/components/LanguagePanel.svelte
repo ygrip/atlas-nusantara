@@ -88,8 +88,8 @@
       </ol>
       <p class="hint">{m.language_province_hint()}</p>
     {/if}
-    <p class="note">{data.note}</p>
-    <p class="source-note"><a href={data.sourceUrl} target="_blank" rel="noreferrer">{data.source} ↗</a> · {date(data.fetchedAt)}</p>
+    <p class="clay-note">{data.note}</p>
+    <p class="clay-note"><a href={data.sourceUrl} target="_blank" rel="noreferrer">{data.source} ↗</a> · {date(data.fetchedAt)}</p>
   {/if}
 </section>
 
@@ -113,7 +113,6 @@
   .top-list .name { font-weight: 800; }
   .top-list .bar { display: block; height: 16px; border-radius: 6px; background: var(--accent); }
   .top-list .value { text-align: right; font-weight: 850; font-variant-numeric: tabular-nums; }
-  .note, .hint, .source-note { font-size: .78rem; }
-  .source-note a { text-decoration: underline; }
+  .hint { font-size: .78rem; }
   @media (max-width: 520px) { .summary, .summary.two { grid-template-columns: minmax(0, 1fr); } header { flex-wrap: wrap; } .top-list li { grid-template-columns: minmax(90px, 1fr) minmax(0, 1fr) 4ch; } }
 </style>

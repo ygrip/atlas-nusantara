@@ -85,9 +85,9 @@
         <div><time datetime={step.at}>{hour(step.at)}</time><HourIcon size={20} aria-hidden="true" /><strong>{step.t}°</strong></div>
       {/each}
     </div>
-    <p class="sample-note">{m.forecast_nearby()}: <strong>{names.get(report.point.code) ?? report.point.code}</strong>{#if report.distanceKm !== undefined} · {report.distanceKm.toFixed(1)} km{/if}</p>
+    <p class="clay-note">{m.forecast_nearby()}: <strong>{names.get(report.point.code) ?? report.point.code}</strong>{#if report.distanceKm !== undefined} · {report.distanceKm.toFixed(1)} km{/if}</p>
     <footer><button class="view-place" type="button" onclick={() => onopen?.(report.point.code)}>{m.open_in_atlas()} ↗</button></footer>
-  {:else}<p class="sample-note">{m.data_unavailable()}</p>{/if}
+  {:else}<p class="clay-note">{m.data_unavailable()}</p>{/if}
 </article>
 
 <style>
@@ -130,7 +130,6 @@
   .hourly-weather > div { display: grid; gap: 8px; justify-items: center; padding: 11px 4px; border-radius: 20px; background: var(--chip); box-shadow: 0 4px 0 var(--chip-edge), inset 2px 2px 3px var(--lift), inset -2px -3px 5px var(--shade); animation: chip-rise .5s ease both; }
   .hourly-weather > div:nth-child(2) { animation-delay: .08s; } .hourly-weather > div:nth-child(3) { animation-delay: .16s; } .hourly-weather > div:nth-child(4) { animation-delay: .24s; }
   .hourly-weather time { font-size: .8rem; font-weight: 800; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-  .sample-note { position: relative; z-index: 1; margin: 6px 0 12px; font-size: .8rem; color: var(--ink-soft); line-height: 1.5; }
   footer { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; font-size: .8rem; color: var(--ink-soft); }
   .view-place { min-height: 44px; padding: 6px 14px; font-weight: 800; font-size: .8rem; }
   @keyframes chip-rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }

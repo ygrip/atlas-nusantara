@@ -104,8 +104,8 @@
               {#if recipe.timeMinutes}<span><Clock3 size={13} aria-hidden="true" /> {recipe.timeMinutes} {m.cuisine_minutes()}</span>{/if}
               {#if recipe.yield}<span><Users size={13} aria-hidden="true" /> {recipe.yield}</span>{/if}
             </p>
-            {#if locale !== 'id' && !translation}<p class="note">{m.cuisine_id_fallback()}</p>{/if}
-            {#if translation?.status === 'machine-unreviewed'}<p class="note">{m.cuisine_machine_notice()}</p>{/if}
+            {#if locale !== 'id' && !translation}<p class="clay-note">{m.cuisine_id_fallback()}</p>{/if}
+            {#if translation?.status === 'machine-unreviewed'}<p class="clay-note">{m.cuisine_machine_notice()}</p>{/if}
             <h4>{m.cuisine_ingredients()}</h4>
             <ul class="lines">{#each ingredientLines as line, index (index)}<li>{line}</li>{/each}</ul>
             <h4>{m.cuisine_steps()}</h4>
@@ -136,7 +136,7 @@
   .thumbs button { flex: none; width: 72px; height: 54px; padding: 0; overflow: hidden; border: 2px solid transparent; border-radius: 12px; cursor: pointer; background: var(--border); }
   .thumbs button.selected { border-color: var(--accent); }
   .info { display: grid; gap: 12px; min-width: 0; align-content: start; }
-  .credit, .sources, .muted, .note, .attribution { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
+  .credit, .sources, .muted, .attribution { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.5; }
   .credit a, section a, .attribution a { color: var(--accent); }
   .identity { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
   .group-badge {

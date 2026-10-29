@@ -621,9 +621,9 @@
         onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} geometryUnavailable={geometryLoaded && !national} />
       <div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>
       {#if layer === 'mountains'}
-        <p class="edition-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
+        <p class="clay-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
       {/if}
-      <p class="edition-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
+      <p class="clay-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
     <div class="region-directory">
       {#if layer === 'destinations'}

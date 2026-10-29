@@ -5,6 +5,7 @@
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Snapshot } from '$lib/data/ingestion/schema';
   import { loadPublished, publicationExpired } from '$lib/data/publication';
+  import { afterLoadIdle } from '$lib/perf/idle';
   export let kind: 'warning' | 'earthquake' | 'incident' | 'hazard';
   export let regionCode: string | undefined = undefined;
   let mounted = false;
@@ -20,7 +21,8 @@
   $: if (mounted) void load(kind);
 
   onMount(() => {
-    mounted = true;
+    // The first fetch waits for the page to go idle so it never competes with first paint.
+    const cancelInitialLoad = afterLoadIdle(() => { mounted = true; });
     const timer = setInterval(() => {
       now = Date.now();
       if (validUntil && publicationExpired(validUntil, now)) { snapshot = undefined; validUntil = ''; }
@@ -35,7 +37,7 @@
     };
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('online', resume);
-    return () => { clearInterval(timer); controller?.abort(); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
+    return () => { cancelInitialLoad(); clearInterval(timer); controller?.abort(); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
   });
 
   async function load(type: typeof kind) {
@@ -79,7 +81,7 @@
     {/if}
     <SnapshotRecords records={visibleRecords} source={snapshot.provenance.source} />
     {#if unmappedRecords.length > 0}
-      <p class="coverage-note" role="note">{m.region_mapping_unavailable()}</p>
+      <p class="clay-note" role="note">{m.region_mapping_unavailable()}</p>
       <SnapshotRecords records={unmappedRecords} source={snapshot.provenance.source} />
     {/if}
   {/if}

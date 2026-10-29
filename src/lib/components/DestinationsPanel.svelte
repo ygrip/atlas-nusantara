@@ -180,9 +180,9 @@
       </nav>
     {:else}<p role="status">{m.destination_empty()}</p>{/if}
   {/if}
-  <p class="destination-note">{m.destination_coverage_note()}</p>
+  <p class="clay-note">{m.destination_coverage_note()}</p>
   {#if index}
-    <details class="destination-note"><summary>{m.data_coverage()}</summary>
+    <details class="clay-note"><summary>{m.data_coverage()}</summary>
       <p>{index.scope}</p>
       <p>{index.attribution} · {index.license}</p>
       <p>{m.source_time()}: {index.fetchedAt}</p>

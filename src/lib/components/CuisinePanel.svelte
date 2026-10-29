@@ -253,7 +253,7 @@
   {/if}
   <CuisineDialog dish={selected} {provinces} {translations} onclose={() => { selected = undefined; }} onshare={shareDish} />
   <SharePanel bind:this={sharePanel} titleId="cuisine-share-title" />
-  <p class="cuisine-note">{m.cuisine_coverage_note()}</p>
+  <p class="clay-note">{m.cuisine_coverage_note()}</p>
   {#if index}
     <div class="downloads">
       {#if index.national}<a class="download-button" href={index.national} download><span class="download-icon"><Download size={18} aria-hidden="true" /></span><span><strong>{m.download_data()}</strong><small>{m.level_national()} · {index.coverage.totalDishes.toLocaleString()}</small></span></a>{/if}

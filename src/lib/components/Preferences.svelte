@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { MapPin, Navigation, Bell, BellOff } from 'lucide-svelte';
+  import { MapPinPlus, MapPin, LocateFixed, Bell, BellOff } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import { ADMIN_DATA_PATH } from '$lib/atlas/edition';
@@ -140,11 +140,11 @@
 
 <section id="locations" class="preferences places-section" aria-labelledby="places-heading">
   <header class="places-header"><div><span class="eyebrow"><MapPin size={15} aria-hidden="true" /> {m.nav_locations()}</span><h2 id="places-heading">{m.pins_heading()}</h2><p>{m.places_description()}</p></div>
-    <button type="button" class="location-button" onclick={useDeviceLocation} disabled={busy}><Navigation size={16} aria-hidden="true" />{m.location_button()}</button>
+    <button type="button" class="gloss-button green" onclick={useDeviceLocation} disabled={busy}><span class="gloss-icon"><LocateFixed size={18} aria-hidden="true" /></span>{m.location_button()}</button>
   </header>
   <form class="places-form" onsubmit={event => { event.preventDefault(); pinRegion(); }}>
     <span class="field-label" id="place-label">{m.pin_region_label()}</span>
-    <div><PlacePicker options={placeOptions} value={selected} disabled={provinces.length === 0} onchange={code => { selected = code; manuallySelected = true; }} /><button type="submit" disabled={provinces.length === 0}><MapPin size={16} aria-hidden="true" />{m.pin_button()}</button></div>
+    <div><PlacePicker options={placeOptions} value={selected} disabled={provinces.length === 0} onchange={code => { selected = code; manuallySelected = true; }} /><button type="submit" class="gloss-button red" disabled={provinces.length === 0}><span class="gloss-icon"><MapPinPlus size={18} aria-hidden="true" /></span>{m.pin_button()}</button></div>
   </form>
   {#if status}<p role="status" class="state">{status}</p>{/if}
   {#if current || pins.length > 0}
@@ -161,8 +161,8 @@
     <p class="clay-note" style="margin-top: 16px">{m.forecast_archive_note()} <a href="https://data.bmkg.go.id/prakiraan-cuaca/" target="_blank" rel="noreferrer">BMKG ↗</a></p>
   {:else}<p class="empty">{m.no_pins()}</p>{/if}
   <div class="notification-settings">
-    <button type="button" onclick={notifications} aria-pressed={notificationsActive} disabled={busy || !notificationsReady || notificationPermission === 'unavailable' || notificationPermission === 'denied'}>
-      {#if notificationsActive}<BellOff size={15} aria-hidden="true" />{m.notify_disable()}{:else}<Bell size={15} aria-hidden="true" />{m.notify_button()}{/if}
+    <button type="button" class="gloss-button gold" onclick={notifications} aria-pressed={notificationsActive} disabled={busy || !notificationsReady || notificationPermission === 'unavailable' || notificationPermission === 'denied'}>
+      {#if notificationsActive}<span class="gloss-icon"><BellOff size={18} aria-hidden="true" /></span>{m.notify_disable()}{:else}<span class="gloss-icon"><Bell size={18} aria-hidden="true" /></span>{m.notify_button()}{/if}
     </button>
     <small>{m.notification_setup()}</small>
   </div>
@@ -171,8 +171,8 @@
 <style>
   .places-section { padding: clamp(18px, 3vw, 30px); min-width: 0; }
   .places-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }.places-header .eyebrow { display: flex; align-items: center; gap: 6px; }.places-header h2 { margin: 8px 0; letter-spacing: -.04em; font-size: clamp(1.6rem, 3.5vw, 2.2rem); }.places-header p { margin: 0; color: var(--muted); font-size: .88rem; line-height: 1.6; }
-  button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; font-weight: 800; box-shadow: 0 3px 0 var(--border); }.location-button { background: var(--mint); } button:disabled { opacity: .55; }
-  .places-form { max-width: 680px; display: grid; gap: 7px; margin-bottom: 22px; }.places-form .field-label { font-weight: 800; font-size: .8rem; }.places-form > div { display: flex; gap: 10px; min-width: 0; }.places-form button { flex-shrink: 0; background: var(--peach); }
+  button:not(.gloss-button) { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); font: inherit; font-size: .8rem; font-weight: 800; box-shadow: 0 3px 0 var(--border); }button:disabled { opacity: .55; }
+  .places-form { max-width: 680px; display: grid; gap: 7px; margin-bottom: 22px; }.places-form .field-label { font-weight: 800; font-size: .8rem; }.places-form > div { display: flex; gap: 10px; min-width: 0; }.places-form button { flex-shrink: 0; }
   .weather-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }.empty,.state { font-size: .8rem; line-height: 1.6; color: var(--muted); }
   .notification-settings { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }.notification-settings small { color: var(--muted); font-size: .72rem; }
 </style>

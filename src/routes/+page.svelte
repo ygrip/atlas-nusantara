@@ -4,7 +4,6 @@
   import SupportPanel from '$lib/components/SupportPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
-  import AggregateSummary from '$lib/components/AggregateSummary.svelte';
   import HeaderControls from '$lib/components/HeaderControls.svelte';
 
   import HeroArchipelago from '$lib/components/HeroArchipelago.svelte';
@@ -15,7 +14,7 @@
   import { pathFor } from '$lib/i18n/links';
   import PwaManager from '$lib/components/PwaManager.svelte';
   import LayerPicker from '$lib/components/LayerPicker.svelte';
-  import RegionAtlas from '$lib/components/RegionAtlas.svelte';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import ProvinceExplorer from '$lib/components/ProvinceExplorer.svelte';
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
@@ -44,7 +43,51 @@
     sharePanel?.openPreview();
   }
 
-  let atlas: RegionAtlas | undefined;
+  /**
+   * The map, its data loaders and the observatory are the bulk of the page script. They are fetched once the
+   * hero has painted (page idle, first scroll or first touch, whichever comes first) so they stay off the
+   * critical path of first paint.
+   */
+  type AtlasComponent = typeof import('$lib/components/RegionAtlas.svelte').default;
+  type SummaryComponent = typeof import('$lib/components/AggregateSummary.svelte').default;
+  let AtlasView: AtlasComponent | undefined;
+  let SummaryView: SummaryComponent | undefined;
+  let atlas: InstanceType<AtlasComponent> | undefined;
+  let deferredLoading: Promise<void> | undefined;
+  /** Layer panels wait for the same signal so their data never races the first paint. */
+  let panelsReady = false;
+
+  function loadDeferredSections(): Promise<void> {
+    if (!deferredLoading) {
+      deferredLoading = Promise.all([
+        import('$lib/components/RegionAtlas.svelte'),
+        import('$lib/components/AggregateSummary.svelte')
+      ]).then(([atlasModule, summaryModule]) => {
+        AtlasView = atlasModule.default;
+        SummaryView = summaryModule.default;
+        panelsReady = true;
+      });
+    }
+    return deferredLoading;
+  }
+
+  /** Opens a region from outside the map, loading the map first when it is not there yet. */
+  async function openRegion(code: string) {
+    await loadDeferredSections();
+    await tick();
+    void atlas?.openRegion(code);
+  }
+
+  function startDeferredLoading(): () => void {
+    const cancelIdle = afterLoadIdle(() => { void loadDeferredSections(); }, 2500);
+    const earlyEvents = ['scroll', 'pointerdown', 'keydown', 'touchstart'] as const;
+    const onEarlyInput = () => { void loadDeferredSections(); };
+    for (const name of earlyEvents) window.addEventListener(name, onEarlyInput, { once: true, passive: true });
+    return () => {
+      cancelIdle();
+      for (const name of earlyEvents) window.removeEventListener(name, onEarlyInput);
+    };
+  }
   let activeSection = 'atlas';
   let showTop = false;
   const allSections: { id: string; label: MessageKey }[] = [
@@ -67,7 +110,8 @@
   onMount(() => {
     activeLayer = layerFromUrl();
     mounted = true;
-    return () => { stopSections?.(); stopSections = undefined; };
+    const stopDeferred = startDeferredLoading();
+    return () => { stopDeferred(); stopSections?.(); stopSections = undefined; };
   });
 
   function currentFor(id: string): 'location' | undefined {
@@ -141,7 +185,7 @@
           <span class="eyebrow rise" style="--i:0">INDONESIA</span>
           <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
           <span class="hero-tagline rise" style="--i:3">{m.og_headline()}</span>
-          <p class="rise" style="--i:4">{m.atlas_intro()}</p>
+          <p>{m.atlas_intro()}</p>
 
           <div class="hero-actions rise" style="--i:5">
             <a class="clay-button primary" href="#atlas">{m.hero_cta_atlas()} <span aria-hidden="true">↓</span></a>
@@ -160,9 +204,15 @@
         </div>
         <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
       </div>
-      <div class="clay-card atlas-stage">
-        <RegionAtlas bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
-        {#if activeLayer === 'earthquake'}
+      <div class="clay-card atlas-stage" class:pending={!AtlasView}>
+        {#if AtlasView}
+          <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
+        {:else}
+          <p class="atlas-pending" role="status">{m.loading_data()}</p>
+        {/if}
+        {#if !panelsReady}
+          <!-- Layer panels load with the map. -->
+        {:else if activeLayer === 'earthquake'}
           {#await panelModules.earthquake() then module}<svelte:component this={module.default} />{/await}
         {:else if activeLayer === 'incident'}
           {#await panelModules.hazard() then module}<svelte:component this={module.default} kind="reports" />{/await}
@@ -178,15 +228,23 @@
       </div>
     </section>
 
-    <ProvinceExplorer selectedCode={selectedRegion?.code} onopen={code => { void atlas?.openRegion(code); }} />
+    <ProvinceExplorer selectedCode={selectedRegion?.code} onopen={code => { void openRegion(code); }} />
 
-    <AggregateSummary layer={activeLayer} onsummary={summary => publicSummary = summary} />
+    {#if SummaryView}<svelte:component this={SummaryView} layer={activeLayer} onsummary={summary => publicSummary = summary} />
+    {:else if observatoryKind(activeLayer)}
+      <!-- Same section id and heading as the real component, so anchors and prerendered text exist before it loads. -->
+      <section id="summary" class="aggregate-summary details pending" aria-labelledby="summary-heading" aria-busy="true">
+        <span class="eyebrow">OBSERVATORY</span>
+        <h2 id="summary-heading">{m.summary_heading()}</h2>
+        <p class="summary-pending">{m.summary_scope()}</p>
+      </section>
+    {/if}
     <AdSlot />
-    <Preferences {selectedRegion} onopen={code => { chooseLayer('warning'); void atlas?.openRegion(code); }} />
+    <Preferences {selectedRegion} onopen={code => { chooseLayer('warning'); void openRegion(code); }} />
     <PwaManager />
 
     <SupportPanel />
   </main>
   <SiteFooter />
 </div>
-<a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}><ArrowUp size={24} strokeWidth={3} aria-hidden="true" /></a>
+<a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}><ArrowUp size={20} strokeWidth={3} aria-hidden="true" /></a>

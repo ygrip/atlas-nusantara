@@ -280,7 +280,7 @@
       </div>
     </div>
 
-    <p class="source-note"><a href={data.provinceSourceUrl} target="_blank" rel="noreferrer">{m.population_source_provinces()} ↗</a> · <a href={data.sourceUrl} target="_blank" rel="noreferrer">{m.population_source_pyramid()} ↗</a> · <a href={data.totalSourceUrl} target="_blank" rel="noreferrer">BPS ↗</a> · {date(data.fetchedAt)}</p>
+    <p class="clay-note"><a href={data.provinceSourceUrl} target="_blank" rel="noreferrer">{m.population_source_provinces()} ↗</a> · <a href={data.sourceUrl} target="_blank" rel="noreferrer">{m.population_source_pyramid()} ↗</a> · <a href={data.totalSourceUrl} target="_blank" rel="noreferrer">BPS ↗</a> · {date(data.fetchedAt)}</p>
   {/if}
 </section>
 
@@ -338,8 +338,6 @@
   .history-table tr.current { background: var(--panel); font-weight: 850; }
   .history-table small { color: var(--muted); }
 
-  .source-note { font-size: .72rem; }
-  .source-note a { text-decoration: underline; }
 
   @media (max-width: 900px) { .trend-body { grid-template-columns: minmax(0, 1fr); } .summary.five { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 520px) {

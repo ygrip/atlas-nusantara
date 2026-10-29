@@ -2,7 +2,7 @@ import { expect, test } from './fixtures';
 
 test.use({ serviceWorkers: 'block' });
 
-test('every forecast caller waits for load, even when the weather panel mounts earlier', async ({ page }) => {
+test('no forecast request is made before load, and the weather panel mounts only afterwards', async ({ page }) => {
   let releaseImage!: () => void;
   const imageGate = new Promise<void>(resolve => { releaseImage = resolve; });
   await page.route('**/illustrations/hero/pinisi*.webp', async route => {
@@ -23,13 +23,14 @@ test('every forecast caller waits for load, even when the weather panel mounts e
   });
   try {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#weather-tab-current')).toBeAttached();
     expect(await page.evaluate(() => document.readyState)).not.toBe('complete');
+    await expect(page.locator('#weather-tab-current')).toHaveCount(0);
     expect(await page.evaluate(() => (window as Window & { forecastFetches: boolean[] }).forecastFetches)).toEqual([]);
   } finally {
     releaseImage();
   }
   await page.waitForLoadState('load');
+  await expect(page.locator('#weather-tab-current')).toBeAttached();
   await expect.poll(() => page.evaluate(() => (window as Window & { forecastFetches: boolean[] }).forecastFetches.length)).toBeGreaterThan(0);
   expect(await page.evaluate(() => (window as Window & { forecastFetches: boolean[] }).forecastFetches.every(Boolean))).toBe(true);
 });

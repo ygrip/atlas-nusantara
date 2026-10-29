@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
-  import type { GeometryPackage, SvgRegion } from '$lib/geo/types';
-  import { CODE_EDITION, GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
-  import { assetUrl } from '$lib/pwa/assets';
+  import type { SvgRegion } from '$lib/geo/types';
+  import { loadProvinceShapes } from '$lib/directory/island-shapes';
+  import IslandIcon from './IslandIcon.svelte';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { ISLAND_GROUPS, ISLAND_GROUP_NAMES, type IslandGroup } from '$lib/atlas/islands';
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, type ProvinceRow } from '$lib/directory/province-directory';
   import RingChart from './RingChart.svelte';
-  import { Check } from 'lucide-svelte';
+  import { Check, Layers } from 'lucide-svelte';
 
   type SortKey = 'code' | 'name' | 'regencies' | 'municipalities' | 'total';
   type SortDirection = 'ascending' | 'descending';
@@ -62,32 +62,15 @@
 
   onMount(() => {
     let active = true;
-    const controller = new AbortController();
     loadProvinceDirectory()
       .then(loaded => { if (active) rows = loaded; })
       .catch(() => { if (active) failed = true; })
       .finally(() => { if (active) loading = false; });
-    void fetch(assetUrl(GEOMETRY_DATA_PATH + '/national.json'), { signal: controller.signal })
-      .then(response => {
-        if (!response.ok) throw new Error('Province map geometry is unavailable');
-        return response.json() as Promise<GeometryPackage>;
-      })
-      .then(geometry => {
-        if (!active) return;
-        if (geometry.schemaVersion !== 1 || geometry.codeEdition !== CODE_EDITION || !Array.isArray(geometry.regions)) throw Error('Province map geometry has an unsupported edition or format');
-        provinceShapes = Object.fromEntries(geometry.regions
-          .filter(region => /^\d{2}$/.test(region.sourceCode) && region.path && validBounds(region.bbox))
-          .map(region => [region.sourceCode, region]));
-      })
-      .catch(error => {
-        if (active && !controller.signal.aborted) console.warn('Province silhouettes unavailable', error);
-      });
-    return () => { active = false; controller.abort(); };
+    loadProvinceShapes()
+      .then(shapes => { if (active) provinceShapes = shapes.provinces; })
+      .catch(error => { if (active) console.warn('Province silhouettes unavailable', error); });
+    return () => { active = false; };
   });
-
-  function validBounds(bounds: number[]): boolean {
-    return bounds.length === 4 && bounds.every(Number.isFinite) && bounds[2] > bounds[0] && bounds[3] > bounds[1];
-  }
 
   function shapeViewBox(region: SvgRegion): string {
     const [left, top, right, bottom] = region.bbox;
@@ -179,10 +162,10 @@
 
 <div class="province-table">
   <div class="card-heading">
-    <div class="group-filter" role="group" aria-label={m.table_island()}>
-      <button type="button" class="chip all" aria-pressed={groupFilter === undefined} onclick={() => toggleGroup(undefined)}>{m.filter_all()}</button>
+    <div class="group-tabs group-filter" role="group" aria-label={m.table_island()}>
+      <button type="button" class="island-tab all" aria-pressed={groupFilter === undefined} onclick={() => toggleGroup(undefined)}><Layers size={16} aria-hidden="true" />{m.filter_all()}</button>
       {#each ISLAND_GROUPS as group (group)}
-        <button type="button" class="chip group-chip" style={groupStyle(group)} aria-pressed={groupFilter === group} onclick={() => toggleGroup(group)}>{ISLAND_GROUP_NAMES[group]}</button>
+        <button type="button" class="island-tab" style={groupStyle(group)} aria-pressed={groupFilter === group} onclick={() => toggleGroup(group)}><IslandIcon {group} size={20} />{ISLAND_GROUP_NAMES[group]}</button>
       {/each}
     </div>
   </div>
@@ -257,7 +240,7 @@
   {#if selected}
     <div class="dialog-body" style={groupStyle(selected.group)}>
       <header>
-        <span class="group-chip pill"><span class="group-dot"></span>{ISLAND_GROUP_NAMES[selected.group]}</span>
+        <span class="group-chip pill"><IslandIcon group={selected.group} size={18} />{ISLAND_GROUP_NAMES[selected.group]}</span>
         <h2 id="province-dialog-title">{selected.name}</h2>
         <p>{m.table_code()} {selected.code}</p>
       </header>
@@ -313,13 +296,15 @@
   .province-link[aria-current='location'] { color: var(--accent); }
   .city-link { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; border: 0; padding: 6px; border-radius: 10px; background: transparent; color: inherit; text-align: left; }
   .city-link:hover { background: var(--mint); }
-  .card-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-  .group-filter { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { min-height: 38px; padding: 6px 14px; border: 2px solid var(--clay-highlight); border-radius: 999px; font-size: .75rem; font-weight: 800; color: #2e2a26; background: var(--surface); box-shadow: inset 2px 2px 3px #ffffff80, inset -2px -3px 5px #0000001a, 0 3px 0 var(--shadow); transition: transform 160ms var(--ease-bounce), box-shadow 160ms ease-out; }
-  .chip.all { color: var(--text); }
-  .chip.group-chip { background: var(--group-top); box-shadow: inset 2px 2px 3px #ffffff80, inset -2px -3px 5px #0000001a, 0 3px 0 var(--group-side); }
-  .chip:hover { transform: translateY(-2px); }
-  .chip[aria-pressed='true'] { transform: translateY(2px); box-shadow: inset 3px 3px 6px #0000002e; outline: 2px solid var(--text); outline-offset: 2px; }
+  .card-heading { margin-bottom: 8px; }
+  /* Island tabs: one horizontally scrolling row, so seven groups never wrap into a tall block. */
+  .group-tabs { display: flex; flex-wrap: nowrap; gap: 8px; padding: 6px 4px 10px; margin: 0 -4px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 24px), transparent 100%); }
+  .group-tabs::-webkit-scrollbar { display: none; }
+  .island-tab { --group-top: var(--group-top-light); --group-side: var(--group-side-light); flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 16px 6px 12px; scroll-snap-align: center; border: 1px solid var(--border); border-radius: 999px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); font-size: .8rem; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 0 var(--border), inset 1px 2px 2px var(--clay-highlight); transition: transform 160ms var(--ease-bounce), box-shadow 160ms ease-out, background 160ms ease-out; }
+  :global([data-theme='dark']) .island-tab { --group-top: var(--group-top-dark); --group-side: var(--group-side-dark); }
+  .island-tab:hover { transform: translateY(-2px); }
+  .island-tab[aria-pressed='true'] { transform: translateY(2px); border-color: var(--group-side, var(--accent)); background: linear-gradient(165deg, var(--group-top, var(--red-wash)), color-mix(in srgb, var(--group-top, var(--red-wash)) 70%, var(--surface))); color: #2e2a26; box-shadow: 0 1px 0 var(--group-side, var(--accent)), inset 2px 3px 6px #0000002a; }
+  .island-tab.all[aria-pressed='true'] { background: var(--accent); border-color: var(--accent-strong); color: var(--on-accent); box-shadow: 0 1px 0 var(--accent-strong), inset 2px 3px 6px #00000040; }
   .legend { display: flex; gap: 16px; margin: 0 0 12px; padding: 0; list-style: none; font-size: .75rem; font-weight: 800; }
   .legend li { display: inline-flex; align-items: center; gap: 7px; }
   .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 5px; box-shadow: inset 1px 1px 2px #ffffff80, 0 2px 0 var(--shadow); }
@@ -385,6 +370,6 @@
   @media (max-width: 560px) { .dialog-columns { grid-template-columns: minmax(0, 1fr); } .dialog-summary { justify-content: center; } }
   @media (prefers-reduced-motion: reduce) {
     .province-dialog[open] { animation: none; }
-    tbody tr:hover th, tbody tr:hover td, .chip:hover { transform: none; }
+    tbody tr:hover th, tbody tr:hover td, .island-tab:hover { transform: none; }
   }
 </style>

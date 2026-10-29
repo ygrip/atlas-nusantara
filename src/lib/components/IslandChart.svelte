@@ -3,6 +3,7 @@
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { ISLAND_GROUP_NAMES } from '$lib/atlas/islands';
+  import IslandIcon from './IslandIcon.svelte';
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, totalsByGroup, type GroupTotals } from '$lib/directory/province-directory';
 
@@ -52,7 +53,7 @@
     <ol class="bars" aria-hidden="true">
       {#each totals as item (item.group)}
         <li style={groupStyle(item.group)}>
-          <span class="group-name"><span class="group-dot"></span>{ISLAND_GROUP_NAMES[item.group]}</span>
+          <span class="group-name"><IslandIcon group={item.group} size={26} />{ISLAND_GROUP_NAMES[item.group]}</span>
           <span class="track">
             <span class="bar" style={`width: ${barWidth(item)}`}>
               {#if item.regencies > 0}<span class="segment regency" style={`flex: ${item.regencies} 1 0`}>{#if showSegmentValue(item.regencies)}{item.regencies}{/if}</span>{/if}

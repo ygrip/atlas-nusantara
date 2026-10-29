@@ -4,6 +4,7 @@
   import { loadPublished, publicationExpired } from '$lib/data/publication';
   import type { ShareSummary } from '$lib/share/card';
   import { onMount } from 'svelte';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import { m, type MessageKey } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { Bell, Activity, Flame, Mountain, Sigma, Download, Database, ChevronDown } from 'lucide-svelte';
@@ -30,7 +31,7 @@
   $: largest = summary?.derivedFacts.find(fact => fact.id === 'max-earthquake-magnitude');
 
   onMount(() => {
-    void load();
+    const cancelInitialLoad = afterLoadIdle(() => { void load(); });
     expiryTimer = setInterval(() => {
       if (validUntil && publicationExpired(validUntil)) {
         summary = undefined;
@@ -42,7 +43,7 @@
     const resume = () => { if (!document.hidden) void load(); };
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('online', resume);
-    return () => { controller?.abort(); clearInterval(expiryTimer); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
+    return () => { cancelInitialLoad(); controller?.abort(); clearInterval(expiryTimer); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
   });
   async function load() {
     controller?.abort();
@@ -125,27 +126,33 @@
       </section>
 
       {#if shownSources.length > 0}
-        <section class="source-coverage" aria-labelledby="coverage-heading">
-          <h3 id="coverage-heading"><span class="obs-icon"><Database size={18} aria-hidden="true" /></span>{m.data_coverage()}</h3>
-          <div class="source-schedules">
+        <details class="source-coverage">
+          <summary>
+            <span class="obs-icon"><Database size={18} aria-hidden="true" /></span>
+            <span class="obs-title">{m.data_coverage()}</span>
+            <span class="obs-meta">{shownSources.length}</span>
+            <span class="obs-chevron"><ChevronDown size={18} aria-hidden="true" /></span>
+          </summary>
+          <ul class="obs-body source-list">
             {#each shownSources as source (source.id)}
               {@const collecting = !['disabled', 'not-configured'].includes(source.status)}
               {@const failing = source.status === 'error' || source.status === 'stale'}
-              <details class="source-card">
-                <summary>
-                  <span class="obs-title">{source.name}</span>
+              <li class="source-row">
+                <div class="source-head">
+                  <a class="source-name" href={safeUrl(source.sourceUrl)} target="_blank" rel="noreferrer">{source.name} ↗</a>
                   <span class="status-chip" class:on={collecting && !failing} class:warn={failing}><span class="status-dot" aria-hidden="true"></span>{collecting ? m.source_enabled() : m.source_disabled()}</span>
-                  <span class="obs-chevron"><ChevronDown size={18} aria-hidden="true" /></span>
-                </summary>
-                <div class="obs-body">
-                  {#if failing}<p class="source-warning">{m.data_unavailable()}</p>{/if}
-                  <p class="source-links"><a href={safeUrl(source.sourceUrl)} target="_blank" rel="noreferrer">{source.name} ↗</a><a href={safeUrl(source.termsUrl)} target="_blank" rel="noreferrer">{m.source_terms()} ↗</a></p>
-                  <dl><div><dt>{m.source_schedule()}</dt><dd>{source.intervalMinutes}</dd></div><div><dt>{m.source_last()}</dt><dd>{date(source.lastSuccessAt)}</dd></div><div><dt>{m.source_next()}</dt><dd>{date(source.nextDueAt)}</dd></div></dl>
                 </div>
-              </details>
+                {#if failing}<p class="source-warning">{m.data_unavailable()}</p>{/if}
+                <dl>
+                  <div><dt>{m.source_schedule()}</dt><dd>{source.intervalMinutes}</dd></div>
+                  <div><dt>{m.source_last()}</dt><dd>{date(source.lastSuccessAt)}</dd></div>
+                  <div><dt>{m.source_next()}</dt><dd>{date(source.nextDueAt)}</dd></div>
+                </dl>
+                <a class="source-terms" href={safeUrl(source.termsUrl)} target="_blank" rel="noreferrer">{m.source_terms()} ↗</a>
+              </li>
             {/each}
-          </div>
-        </section>
+          </ul>
+        </details>
       {/if}
     </div>
   {/if}
@@ -162,8 +169,8 @@
 
   /* Observability: collapsed-by-default clay cards, each one a native <details>. */
   .observability { display: grid; gap: 14px; min-width: 0; }
-  .observability :is(.derived-panel, .archive-entry, .source-card) { min-width: 0; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(165deg, var(--surface), var(--panel)); box-shadow: 0 4px 0 var(--border), inset 2px 3px 4px var(--clay-highlight); transition: box-shadow 180ms ease-out; }
-  .observability :is(.derived-panel, .archive-entry, .source-card)[open] { box-shadow: 0 2px 0 var(--border), inset 0 0 0 1px var(--border), inset 3px 4px 8px var(--shadow); }
+  .observability :is(.derived-panel, .archive-entry, .source-coverage) { min-width: 0; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(165deg, var(--surface), var(--panel)); box-shadow: 0 4px 0 var(--border), inset 2px 3px 4px var(--clay-highlight); transition: box-shadow 180ms ease-out; }
+  .observability :is(.derived-panel, .archive-entry, .source-coverage)[open] { box-shadow: 0 2px 0 var(--border), inset 0 0 0 1px var(--border), inset 3px 4px 8px var(--shadow); }
   summary { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 16px; border-radius: 22px; list-style: none; cursor: pointer; }
   summary::-webkit-details-marker { display: none; }
   .obs-icon { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 12px; background: var(--surface); color: var(--accent); box-shadow: 0 3px 0 var(--shadow), inset 1px 1px 2px var(--clay-highlight); }
@@ -174,20 +181,20 @@
   .obs-body { display: grid; gap: 12px; padding: 4px 18px 18px; }
   .obs-body p { margin: 0; color: var(--muted); line-height: 1.55; }
   .obs-body p strong { color: var(--text); }
-  .source-coverage { display: grid; gap: 12px; }
-  .source-coverage h3 { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font-size: 1rem; }
-  .source-schedules { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; align-items: start; }
-  .status-chip { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; padding: 4px 10px; border-radius: 999px; background: var(--panel); color: var(--text); font-size: .72rem; font-weight: 800; }
+  .source-list { margin: 0; padding: 4px 18px 18px; list-style: none; }
+  .source-row { display: grid; gap: 10px; padding: 14px 16px; border-radius: 18px; background: var(--panel); box-shadow: var(--clay-pressed); }
+  .source-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+  .source-name, .source-terms { color: var(--accent-strong); font-weight: 800; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+  .source-terms { justify-self: start; font-size: .8rem; }
+  .status-chip { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; padding: 4px 10px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: .72rem; font-weight: 800; box-shadow: 0 2px 0 var(--border); }
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
   .status-chip.on .status-dot { background: var(--green); }
   .status-chip.warn { background: var(--gold-wash); }
   .status-chip.warn .status-dot { background: var(--warning); }
   .source-warning { color: var(--warning); font-weight: 800; }
-  .source-links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
-  .source-links a { color: var(--accent-strong); font-size: .85rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
-  .source-card dl { display: grid; gap: 10px; margin: 0; font-size: .78rem; }
-  .source-card dt { color: var(--muted); }
-  .source-card dd { margin: 2px 0 0; font-weight: 800; }
+  .source-row dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; margin: 0; font-size: .78rem; }
+  .source-row dt { color: var(--muted); }
+  .source-row dd { margin: 2px 0 0; font-weight: 800; }
   @media (prefers-reduced-motion: reduce) { .obs-chevron { transition: none; } }
   @media (max-width: 520px) { .aggregate-summary { padding: 18px; } }
 </style>

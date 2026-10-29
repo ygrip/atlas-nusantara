@@ -200,7 +200,7 @@
         </div>
       {/if}
 
-      <p class="source-note">{m.weather_history_source()} <a href={history.sourceUrl} target="_blank" rel="noreferrer">{history.source} ↗</a> · {m.weather_fetched()} {date(history.fetchedAt)}</p>
+      <p class="clay-note">{m.weather_history_source()} <a href={history.sourceUrl} target="_blank" rel="noreferrer">{history.source} ↗</a> · {m.weather_fetched()} {date(history.fetchedAt)}</p>
     {/if}
   </div>
 </section>
@@ -243,8 +243,6 @@
   .history-table thead th:first-child, .history-table tbody th { text-align: left; }
   .history-table small { color: var(--muted); }
 
-  .source-note { font-size: .72rem; }
-  .source-note a { text-decoration: underline; }
 
   @media (max-width: 760px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

@@ -154,9 +154,10 @@ for (const [key, entry] of Object.entries(clientManifest)) {
 // Fetch these lazy UI chunks in the service worker's background install, not
 // the render path. They were previously in the route bundle and must remain
 // available offline even if their tab or a saved place has not been opened yet.
-const OFFLINE_LAZY_COMPONENTS = ['WeatherPanel', 'WeatherPlaceCard', 'ProvinceTable', 'WeatherHistoryChart'];
+const OFFLINE_LAZY_COMPONENTS = ['RegionAtlas', 'AggregateSummary', 'WeatherPanel', 'WeatherPlaceCard', 'ProvinceTable', 'WeatherHistoryChart'];
 for (const [key, entry] of Object.entries(clientManifest)) {
-  if (OFFLINE_LAZY_COMPONENTS.some(name => entry.src?.endsWith('/' + name + '.svelte'))) collectRouteEntry(key);
+  // Rollup names some lazy chunks (for example RegionAtlas) without a source path, so match either form.
+  if (OFFLINE_LAZY_COMPONENTS.some(name => entry.src?.endsWith('/' + name + '.svelte') || entry.name === name)) collectRouteEntry(key);
 }
 await writeFile('build/pwa-shell.json', JSON.stringify({ assets: [...shellAssets].sort() }));
 
