@@ -29,7 +29,7 @@
 
 <div class="shell error-shell">
   <header class="error-header">
-    <a class="brand" href={pathFor('/')} aria-label={m.site_title()}><img src="/brand/logo-256.png" alt="" width="40" height="40" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></a>
+    <a class="brand" href={pathFor('/')} aria-label={m.site_title()}><img src="/brand/logo-96.webp" alt="" width="40" height="40" /><span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span></a>
   </header>
   <main id="main-content" class="error-bento" aria-labelledby="error-title">
     <section class="clay-card error-copy">

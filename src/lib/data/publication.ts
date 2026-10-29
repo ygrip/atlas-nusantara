@@ -68,7 +68,7 @@ async function fetchManifest(): Promise<PublicationManifest> {
   if (manifestRequest) return manifestRequest;
   manifestRequest = (async () => {
     const response = await fetch(publicUrl(MANIFEST_URL), { cache: 'default', credentials: 'omit' });
-    if (!response.ok) throw new PublicationUnavailableError('Published manifest is unavailable');
+    if (!response.ok || response.status === 204) throw new PublicationUnavailableError('Published manifest is unavailable');
     const manifest = validateManifest(await response.json());
     cachedManifest = manifest;
     cachedAt = Date.now();
@@ -81,7 +81,7 @@ async function fetchManifest(): Promise<PublicationManifest> {
 async function fetchPayload<T>(url: string, signal?: AbortSignal): Promise<T> {
   if (signal?.aborted) throw new DOMException('The request was aborted', 'AbortError');
   const response = await fetch(publicUrl(url), { signal, cache: 'default', credentials: 'omit' });
-  if (!response.ok) throw new PublicationUnavailableError('Published data is unavailable');
+  if (!response.ok || response.status === 204) throw new PublicationUnavailableError('Published data is unavailable');
   return await response.json() as T;
 }
 

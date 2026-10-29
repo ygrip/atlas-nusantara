@@ -30,3 +30,13 @@ export function localizedPath(pathname, locale) {
   if (unprefixed === '/') return '/' + locale;
   return '/' + locale + unprefixed;
 }
+
+/**
+ * The language a path belongs to: its leading locale segment, otherwise English.
+ * @param {string} pathname
+ */
+export function localeFromPathname(pathname) {
+  const match = localePrefix.exec(pathname);
+  if (match) return match[1];
+  return BASE_LOCALE;
+}

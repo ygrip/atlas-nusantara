@@ -36,7 +36,8 @@ async function fetchCandidate(url: string, signal?: AbortSignal): Promise<unknow
   const timer = setTimeout(cancel, 10000);
   try {
     const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
-    if (!response.ok) {
+    // 204 means "nothing published right now": use the next candidate without a warning.
+    if (!response.ok || response.status === 204) {
       // Release the discarded live response before falling back; do not leave a fetch pending.
       await response.body?.cancel();
       return undefined;

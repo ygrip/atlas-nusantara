@@ -2,7 +2,7 @@ import { adaptBmkgCap, InactiveCapWarningError } from '../src/lib/data/ingestion
 import { XMLParser, XMLValidator } from 'fast-xml-parser';
 import { createExportResponse, exportFitsBudget } from './export.ts';
 import { verifyArchiveRequest, type ColdDownloadEnv } from './cold-download.ts';
-import { publishHot, serveHot, servePublication, cleanPublications } from './publication.ts';
+import { publishHot, serveHot, servePublication, cleanPublications, noPublication } from './publication.ts';
 import { runHazardSchedule } from './hazards.ts';
 import { runLiveSnapshots } from './snapshots.ts';
 import { liveKeyForPath } from './live-snapshots.ts';
@@ -394,7 +394,7 @@ export default {
       const liveKey = liveKeyForPath(path);
       if (liveKey) return await servePublication(request, env.DB, liveKey);
       if (path === '/data/live/hazards.json') {
-        if (!env.HAZARD_SOURCE_IDS?.trim()) return json({ status: 'unavailable' }, 503);
+        if (!env.HAZARD_SOURCE_IDS?.trim()) return noPublication();
         return await servePublication(request, env.DB, 'data/observations/hazards.json');
       }
       return await env.ASSETS.fetch(request);

@@ -92,7 +92,7 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   await page.evaluate(() => (window as Window & { releaseShareCard?: () => void }).releaseShareCard?.());
   await expect(dialog.getByRole('img', { name: 'Nusantara public atlas share card' })).toBeVisible();
   await expect(dialog.locator('.share-loading')).toBeHidden();
-  await expect(dialog.locator('.share-logo img')).toHaveAttribute('src', '/brand/logo-256.png');
+  await expect(dialog.locator('.share-logo img')).toHaveAttribute('src', '/brand/logo-96.webp');
   await expect(dialog.getByRole('link', { name: 'nusantara.readynaz.com' })).toHaveAttribute('href', 'https://nusantara.readynaz.com/');
   expect(await page.evaluate(() => (window as Window & { shareLogoDrawn?: boolean }).shareLogoDrawn)).toBe(true);
   expect(await actionButtons.nth(0).evaluate(element => element.getBoundingClientRect().width)).toBeCloseTo(await actionButtons.nth(1).evaluate(element => element.getBoundingClientRect().width), 0);
@@ -244,9 +244,12 @@ test('unmapped warnings remain visible with an explicit coverage caveat and offi
   await page.goto('/?region=11');
   const panel = page.locator('.snapshot-panel');
   await expect(panel).toContainText('These records have no verified region assignment.');
-  await expect(panel.locator('.snapshot-records li')).toHaveCount(30);
+  await expect(panel.locator('.warning-table tbody tr')).toHaveCount(30);
   await expect(panel.locator('.record-count')).toContainText('30 / 31');
-  await expect(panel.getByRole('link', { name: 'Sources · BMKG ↗' }).first()).toHaveAttribute('href', 'https://www.bmkg.go.id/alerts/nowcast/id/SYNTHETIC_alert.xml');
+  // A row opens a dialog with the full advisory and the official source link.
+  await panel.locator('.row-action').first().click();
+  await expect(page.getByRole('dialog').getByRole('link', { name: /Official alert/ })).toHaveAttribute('href', 'https://www.bmkg.go.id/alerts/nowcast/id/SYNTHETIC_alert.xml');
+  await page.keyboard.press('Escape');
   await expect(panel).not.toContainText('No records in this snapshot');
 });
 

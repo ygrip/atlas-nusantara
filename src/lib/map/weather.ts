@@ -62,8 +62,31 @@ export const PLANE_HEIGHT = 500;
 
 const THUNDER_CODES = new Set([17, 95, 97]);
 
+/** The map, saved places, the observatory and the weather panel all ask for the same 1.3 MB file; they share one download. */
+const SHARED_FORECAST_MS = 5 * 60_000;
+let sharedForecast: { url: string; startedAt: number; request: Promise<ForecastSnapshot | undefined> } | undefined;
+
+function abortError(): DOMException {
+  return new DOMException('Aborted', 'AbortError');
+}
+
 export async function loadForecast(url: string, signal?: AbortSignal): Promise<ForecastSnapshot | undefined> {
-  return loadSavedSnapshot(url, isForecastSnapshot, signal);
+  if (signal?.aborted) throw abortError();
+  const reusable = sharedForecast && sharedForecast.url === url && Date.now() - sharedForecast.startedAt < SHARED_FORECAST_MS;
+  if (!reusable) {
+    // The shared download is not tied to one caller's signal: another component may still need it.
+    const request = loadSavedSnapshot(url, isForecastSnapshot);
+    sharedForecast = { url, startedAt: Date.now(), request };
+    // An unavailable forecast is retried by the next caller instead of being remembered.
+    request.then(value => { if (!value && sharedForecast?.request === request) sharedForecast = undefined; }, () => { if (sharedForecast?.request === request) sharedForecast = undefined; });
+  }
+  const pending = sharedForecast!.request;
+  if (!signal) return pending;
+  return new Promise<ForecastSnapshot | undefined>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener('abort', onAbort, { once: true });
+    pending.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
 }
 
 function isUnavailableList(value: unknown): value is UnavailablePoint[] {

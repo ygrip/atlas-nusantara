@@ -54,15 +54,21 @@
   });
   const currentNeighbourName = $derived(current?.neighbour ? names.get(current.neighbour.code) ?? current.neighbour.code : '');
 
-  onMount(() => {
-    let active = true;
+  /** The 150 kB history file is downloaded the first time its tab is opened, not with the page. */
+  let historyRequested = false;
+  $effect(() => {
+    if (tab !== 'history' || historyRequested) return;
+    historyRequested = true;
     loadWeatherHistory()
       .then(value => {
-        if (!active) return;
         if (value) history = value; else historyFailed = true;
       })
-      .catch(error => { if (active) historyFailed = true; console.warn('Weather history unavailable', error); })
-      .finally(() => { if (active) loadingHistory = false; });
+      .catch(error => { historyFailed = true; console.warn('Weather history unavailable', error); })
+      .finally(() => { loadingHistory = false; });
+  });
+
+  onMount(() => {
+    let active = true;
     loadCurrentForecast()
       .then(value => { if (active && value) forecast = value; })
       .catch(error => console.warn('Current forecast unavailable', error));

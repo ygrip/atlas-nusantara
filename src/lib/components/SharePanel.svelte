@@ -199,7 +199,7 @@
     <div class="share-dialog">
       <div class="share-header">
         <div class="share-identity">
-          <span class="share-logo"><img src="/brand/logo-256.png" alt="" aria-hidden="true" width="44" height="44" /></span>
+          <span class="share-logo"><img src="/brand/logo-96.webp" alt="" aria-hidden="true" width="44" height="44" /></span>
           <div><p class="share-brand-name">{m.site_title()}</p><h2 id={titleId}>{#if destinationShare}{destinationShare.heading ?? m.share_place_heading()}{:else}{m.share_heading()}{/if}</h2></div>
         </div>
         <button type="button" class="share-close" onclick={closePreview} aria-label={m.share_close()}>×</button>

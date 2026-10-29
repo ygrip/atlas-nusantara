@@ -82,7 +82,7 @@ for (const [size, path] of [[64, '/brand/favicon-64.png'], [192, '/icon-192.png'
       return { width: image.naturalWidth, height: image.naturalHeight, transparentCorners: corners.every(index => pixels[index] === 0), visibleArt: pixels.some((value, index) => index % 4 === 3 && value > 0) };
     }, { size, path });
     expect(result).toEqual({ width: size, height: size, transparentCorners: true, visibleArt: true });
-    await expect(page.locator('.brand-logo')).toHaveAttribute('src', '/brand/logo-256.png');
+    await expect(page.locator('.brand-logo')).toHaveAttribute('src', '/brand/logo-96.webp');
   });
 }
 

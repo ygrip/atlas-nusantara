@@ -1,4 +1,5 @@
-import { m as catalog } from '$lib/paraglide/messages.js';
+import type { m as catalog } from '$lib/paraglide/messages.js';
+import { format, lookup } from './dictionary';
 import { getLocale } from '$lib/paraglide/runtime.js';
 
 /**
@@ -17,10 +18,27 @@ export type MessageKey = { [Key in keyof Catalog]: {} extends Parameters<Catalog
 const TRACKED_KEY = '__locale';
 
 // A plain target, because the real module namespace has non-configurable keys a Proxy may not hide.
+const functions = new Map<string, (inputs?: Record<string, unknown>) => string>();
+
+/** One stable function per message, so `label: m.some_key` can be stored and called later. */
+function messageFunction(key: string): (inputs?: Record<string, unknown>) => string {
+  const existing = functions.get(key);
+  if (existing) return existing;
+  const created = (inputs?: Record<string, unknown>) => {
+    const template = lookup(getLocale(), key);
+    // Before the language has loaded (it loads before any page renders) the key stays visible, never blank.
+    if (template === undefined) return key;
+    return format(template, inputs);
+  };
+  functions.set(key, created);
+  return created;
+}
+
 export const m = new Proxy({} as typeof catalog, {
   get(_target, key) {
     if (key === TRACKED_KEY) return getLocale();
-    return Reflect.get(catalog, key);
+    if (typeof key !== 'string') return undefined;
+    return messageFunction(key);
   },
   ownKeys() {
     return [TRACKED_KEY];

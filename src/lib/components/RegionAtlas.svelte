@@ -9,9 +9,6 @@
   import type { GeometryPackage } from '$lib/geo/types';
   import { isProvinceCode } from '$lib/data/destination-index';
   import ClayMap from './ClayMap.svelte';
-  import DestinationsPanel from './DestinationsPanel.svelte';
-  import SpeciesPanel from './SpeciesPanel.svelte';
-  import CuisinePanel from './CuisinePanel.svelte';
   import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';
   import { isSpeciesKind, loadProvinceSpecies, loadSpeciesIndex, speciesOverlay, type SpeciesCatalog, type SpeciesIndex, type SpeciesKind } from '$lib/data/species';
   import DirectoryTable, { type DirectoryColumn, type DirectoryRow } from './DirectoryTable.svelte';
@@ -32,6 +29,13 @@
   import { loadLanguages, type LanguageData } from '$lib/data/languages';
   import { languageHeatmap } from '$lib/data/language-heatmap';
   import type { RegionHeatmap } from '$lib/map/heatmap';
+
+  /** Layer panels are downloaded when their layer is chosen, so the first page load does not carry them. */
+  const panelModules = {
+    destinations: () => import('./DestinationsPanel.svelte'),
+    species: () => import('./SpeciesPanel.svelte'),
+    cuisine: () => import('./CuisinePanel.svelte')
+  };
   export let layer = 'warning';
   /** Year shown by the population heat map; the newest year when not set. */
   export let populationYear: number | undefined = undefined;
@@ -222,6 +226,15 @@
   $: mountainMatches = (customOverlay?.id === 'mountains' ? customOverlay.pins : []).filter(pin =>
     (pin.label + ' ' + (pin.description ?? '')).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
 
+  /** Earthquake and hazard files are read when their layers are shown, not for every visitor of the default weather layer. */
+  let active = false;
+  function refreshLayerData(activeLayer: string) {
+    if (!active) return;
+    if (activeLayer === 'earthquake') void loadEarthquakes().then(archive => { if (active && archive) earthquakeArchive = archive; });
+    if (activeLayer === 'incident' || activeLayer === 'hazard') void loadHazards().then(snapshot => { if (active && snapshot) hazardSnapshot = snapshot; });
+  }
+  $: if (active) refreshLayerData(layer);
+
   onMount(() => {
     const initial = new AbortController();
     void initializeSelection(initial.signal);
@@ -229,12 +242,8 @@
       .catch(error => {
         if (!initial.signal.aborted) { destinationIndexFailed = true; console.warn('Destinations unavailable', error); }
       });
-    let active = true;
-    const refreshEarthquakes = () => { void loadEarthquakes().then(archive => { if (active && archive) earthquakeArchive = archive; }); };
-    const refreshHazards = () => { void loadHazards().then(snapshot => { if (active && snapshot) hazardSnapshot = snapshot; }); };
-    refreshEarthquakes();
-    refreshHazards();
-    const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) { refreshEarthquakes(); refreshHazards(); } }, 15 * 60_000);
+    active = true;
+    const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshLayerData(layer); }, 15 * 60_000);
     return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); cuisineRequest?.abort(); generation++; };
   });
 
@@ -590,11 +599,17 @@
     </div>
     <div class="region-directory">
       {#if layer === 'destinations'}
-        <DestinationsPanel landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} provinceGeometry={geometry} onprovince={openProvince} />
+        {#await panelModules.destinations() then module}
+          <svelte:component this={module.default} landmarks={destinationCatalog?.landmarks ?? []} index={destinationIndex} loading={initializingSelection || destinationLoading || (!destinationIndex && !destinationIndexFailed)} failed={initialSelectionFailed || destinationFailed || destinationIndexFailed} {provinces} provinceCode={province?.code} provinceGeometry={geometry} onprovince={openProvince} />
+        {/await}
       {:else if isSpeciesKind(layer)}
-        <SpeciesPanel kind={layer} species={speciesCatalog?.species ?? []} index={speciesIndexes[layer]} loading={initializingSelection || speciesLoading || (!speciesIndexes[layer] && !speciesIndexFailed[layer])} failed={initialSelectionFailed || speciesFailed || Boolean(speciesIndexFailed[layer])} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+        {#await panelModules.species() then module}
+          <svelte:component this={module.default} kind={layer} species={speciesCatalog?.species ?? []} index={speciesIndexes[layer]} loading={initializingSelection || speciesLoading || (!speciesIndexes[layer] && !speciesIndexFailed[layer])} failed={initialSelectionFailed || speciesFailed || Boolean(speciesIndexFailed[layer])} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+        {/await}
       {:else if isCuisineLayer(layer)}
-        <CuisinePanel dishes={cuisineCatalog?.dishes ?? []} index={cuisineIndex} loading={initializingSelection || cuisineLoading || (!cuisineIndex && !cuisineIndexFailed)} failed={initialSelectionFailed || cuisineFailed || cuisineIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+        {#await panelModules.cuisine() then module}
+          <svelte:component this={module.default} dishes={cuisineCatalog?.dishes ?? []} index={cuisineIndex} loading={initializingSelection || cuisineLoading || (!cuisineIndex && !cuisineIndexFailed)} failed={initialSelectionFailed || cuisineFailed || cuisineIndexFailed} {provinces} provinceCode={province?.code} onprovince={openProvince} />
+        {/await}
       {:else if layer === 'mountains'}
         <label for="mountain-search">{m.mountain_search()}</label>
         <input id="mountain-search" type="search" bind:value={query} autocomplete="off" />

@@ -14,6 +14,7 @@
   import { regionCoordinatesByCode } from '$lib/atlas/region-coordinates';
   import WeatherReadout from './WeatherReadout.svelte';
   import GooeyPanel from './GooeyPanel.svelte';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import SvgMap from './SvgMap.svelte';
   import PinDialog from './PinDialog.svelte';
   import ClayPinIcon from './ClayPinIcon.svelte';
@@ -237,11 +238,13 @@
         })
         .catch(error => { if (error.name !== 'AbortError') console.warn('Forecast snapshot unavailable', error); });
     };
-    refreshForecast();
+    // The 1.3 MB forecast is fetched after the page has loaded, so it does not compete with the first paint.
+    const cancelInitialForecast = afterLoadIdle(refreshForecast);
     const forecastTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshForecast(); }, 2 * 60 * 60_000);
     const themeObserver = new MutationObserver(() => scene?.applyTheme(currentTheme()));
     themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => {
+      cancelInitialForecast();
       controller.abort();
       clearTimeout(transitionTimer);
       clearInterval(forecastTimer);
@@ -255,9 +258,22 @@
 
   $effect(() => {
     if (!host) return;
-    const observer = new IntersectionObserver(entries => { mapVisible = entries.some(entry => entry.isIntersecting); }, { rootMargin: '160px' });
+    const observer = new IntersectionObserver(entries => { mapVisible = entries.some(entry => entry.isIntersecting); }, { rootMargin: '0px' });
     observer.observe(host);
     return () => observer.disconnect();
+  });
+
+  // The 3D code (about 570 kB) is not needed until the map is on screen. It is downloaded as soon as the visitor first
+  // scrolls or interacts, so it is usually ready by the time the map comes into view, and never delays the first load.
+  $effect(() => {
+    const events = ['scroll', 'pointerdown', 'keydown', 'touchstart'] as const;
+    const warm = () => {
+      for (const name of events) removeEventListener(name, warm);
+      void import('$lib/map/scene');
+      void import('$lib/map/terrain');
+    };
+    for (const name of events) addEventListener(name, warm, { once: true, passive: true });
+    return () => { for (const name of events) removeEventListener(name, warm); };
   });
 
   // Create the 3D scene only when the map approaches the viewport.

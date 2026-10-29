@@ -38,3 +38,10 @@ test('every language has a social preview image and its own copy', () => {
     }
   }
 });
+
+test('the language of a path is its locale prefix, otherwise English', async () => {
+  const { localeFromPathname } = await import('../../src/lib/i18n/paths.js');
+  for (const [path, locale] of [['/', 'en'], ['/privacy', 'en'], ['/id', 'id'], ['/id/', 'id'], ['/km/terms', 'km'], ['/zh-SG/privacy', 'zh-SG'], ['/idx', 'en'], ['/pt-TL/', 'pt-TL']]) {
+    assert.equal(localeFromPathname(path), locale);
+  }
+});

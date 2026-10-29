@@ -26,6 +26,21 @@
   const Icon = $derived(icon);
   const toggleLabel = $derived(open ? m.map_info_hide({ label }) : m.map_info_show({ label }));
 
+  /**
+   * Follows the content's size with a ResizeObserver. Svelte's bind:offsetWidth also reads the size once at mount,
+   * which forces the browser to lay the page out in the middle of startup; the observer reports it after layout instead.
+   */
+  function measure(node: HTMLElement) {
+    const observer = new ResizeObserver(entries => {
+      const box = entries[entries.length - 1]?.borderBoxSize?.[0];
+      if (!box) return;
+      contentWidth = Math.round(box.inlineSize);
+      contentHeight = Math.round(box.blockSize);
+    });
+    observer.observe(node, { box: 'border-box' });
+    return { destroy: () => observer.disconnect() };
+  }
+
   function toggle() {
     touched = true;
     open = !open;
@@ -57,7 +72,7 @@
     <span class="blob drip two"></span>
   </div>
 
-  <div class="content" id={'panel-' + id} inert={!open} bind:offsetWidth={contentWidth} bind:offsetHeight={contentHeight}>
+  <div class="content" id={'panel-' + id} inert={!open} use:measure>
     <header class="head"><strong>{label}</strong></header>
     <div class="body">{@render children()}</div>
   </div>

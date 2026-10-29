@@ -62,6 +62,14 @@ export async function publishHot(db: D1Database, summary: unknown, snapshots: Pa
   return manifest;
 }
 
+/**
+ * "Nothing published right now" is a normal state, so it answers 204 No Content. A 4xx/5xx answer would make every
+ * visitor's browser log a red console error even though the page handles it and falls back to the dated release file.
+ */
+export function noPublication(): Response {
+  return new Response(null, { status: 204, headers: { 'cache-control': 'no-store', 'x-publication-status': 'unavailable' } });
+}
+
 interface PublicationRow { payload_json: string; generated_at: string; valid_until: string }
 
 /** Serve one unexpired D1 publication. Callers supply an allowlisted key, never a request-derived key. */
@@ -69,7 +77,7 @@ export async function servePublication(request: Request, db: D1Database, key: st
   if (request.method !== 'GET' && request.method !== 'HEAD') return new Response('Method not allowed', { status: 405, headers: { allow: 'GET, HEAD' } });
   const row = await db.prepare('SELECT payload_json, generated_at, valid_until FROM publications WHERE key = ?').bind(key).first<PublicationRow>();
   const expiry = Date.parse(row?.valid_until ?? '');
-  if (!row || !Number.isFinite(expiry) || expiry <= Date.now()) return Response.json({ status: 'unavailable' }, { status: 503, headers: { 'cache-control': 'no-store' } });
+  if (!row || !Number.isFinite(expiry) || expiry <= Date.now()) return noPublication();
   const age = Math.max(0, Math.min(60, Math.floor((expiry - Date.now()) / 1000)));
   const headers = new Headers({ ...JSON_HEADERS, etag: '"' + await digest(row.payload_json) + '"', 'cache-control': `public, max-age=${age}, must-revalidate` });
   headers.set('x-publication-valid-until', row.valid_until);

@@ -9,7 +9,7 @@
   <div class="footer-compass" aria-hidden="true"><ClayCompass /></div>
   <div class="footer-top">
     <div class="footer-about">
-      <a class="footer-brand" href="#top"><img src="/brand/logo-256.png" alt="" width="40" height="40" /><strong>Atlas Nusantara</strong></a>
+      <a class="footer-brand" href="#top"><img src="/brand/logo-96.webp" alt="" width="40" height="40" /><strong>Atlas Nusantara</strong></a>
       <p>{m.atlas_intro()}</p>
       <a class="footer-maker" href="https://readynaz.com" target="_blank" rel="noopener noreferrer">{m.footer_maker()} <ExternalLink size={14} aria-hidden="true" /></a>
     </div>

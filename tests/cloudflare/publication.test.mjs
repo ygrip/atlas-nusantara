@@ -98,8 +98,9 @@ test('publication JSON stays within the size budget and fails closed after expir
   const key = 'data/published/123e4567-e89b-42d3-a456-426614174000/summary.json';
   await storePublication(db, key, '{}', new Date(now - 120_000).toISOString(), new Date(now - 60_000).toISOString());
   const response = await serveHot(new Request('https://nusantara.readynaz.com/' + key), db);
-  assert.equal(response.status, 503);
+  assert.equal(response.status, 204);
   assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(await response.text(), '');
 });
 
 test('serves GET and HEAD with bounded cache headers and restricts hot routes', async () => {

@@ -118,7 +118,7 @@ try {
     }
     assert.equal((await fetch(base + '/does-not-exist', { headers: { accept: 'text/html' } })).status, 404);
     assert.equal((await fetch(base + '/api/summary')).status, 404);
-    assert.equal((await fetch(base + '/data/live/hazards.json')).status, 503);
+    assert.equal((await fetch(base + '/data/live/hazards.json')).status, 204);
     assert.equal((await fetch(base + '/api/export')).status, 405);
     const archive = await fetch(base + '/api/export', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: '{}' });
     assert.equal(archive.status, 503);

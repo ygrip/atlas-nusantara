@@ -4,6 +4,7 @@
   import { m } from '$lib/i18n/messages';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import { ADMIN_DATA_PATH } from '$lib/atlas/edition';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import { loadForecast, type ForecastSnapshot } from '$lib/map/weather';
   import { assetUrl } from '$lib/pwa/assets';
   import { readPins, writePins, readCurrentLocation, writeCurrentLocation, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions';
@@ -66,11 +67,11 @@
         .then(snapshot => { if (!disposed && snapshot) forecast = snapshot; })
         .catch(error => { if (error.name !== 'AbortError') console.warn('Saved-place forecast unavailable', error); });
     };
-    refreshForecast();
+    const cancelInitialForecast = afterLoadIdle(refreshForecast);
     const forecastTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshForecast(); }, 2 * 60 * 60_000);
     const sync = (event: StorageEvent) => { if (event.key?.startsWith('nusantara:')) readSavedPlaces(); };
     window.addEventListener('storage', sync);
-    return () => { disposed = true; controller.abort(); clearInterval(forecastTimer); window.removeEventListener('storage', sync); window.removeEventListener('focus', refreshNotifications); document.removeEventListener('visibilitychange', refreshNotifications); };
+    return () => { disposed = true; cancelInitialForecast(); controller.abort(); clearInterval(forecastTimer); window.removeEventListener('storage', sync); window.removeEventListener('focus', refreshNotifications); document.removeEventListener('visibilitychange', refreshNotifications); };
   });
 
   function readSavedPlaces() {

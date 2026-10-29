@@ -11,7 +11,24 @@ await copyFile('build/200.html', 'build/404.html');
 const everyLocale = ['en', ...PREFIXED_LOCALES];
 const revisionDate = execFileSync('git', ['log', '-1', '--format=%cI'], { encoding: 'utf8' }).trim();
 const ogLocales = { en: 'en_US', id: 'id_ID', ms: 'ms_MY', fil: 'fil_PH', th: 'th_TH', vi: 'vi_VN', my: 'my_MM', km: 'km_KH', lo: 'lo_LA', 'zh-SG': 'zh_SG', ta: 'ta_SG', tet: 'tet_TL', 'pt-TL': 'pt_TL' };
-const shellAssets = new Set(['/200.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/brand/logo-256.png', '/brand/favicon-64.png', '/illustrations/atlas-anatomy.svg', '/data/admin-2025/provinces.json']);
+const shellAssets = new Set(['/200.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/brand/logo-96.webp', '/brand/logo-256.png', '/brand/favicon-64.png', '/illustrations/atlas-anatomy.svg', '/data/admin-2025/provinces.json']);
+// Stylesheets of lazily imported components (layer panels, the share dialog) are listed in every page head by SvelteKit,
+// which makes the browser fetch them before the first paint. Vite's dynamic import loads them together with the component,
+// so they are dropped from the head and downloaded only when the component is. Keep this list in step with the
+// `import('...Panel.svelte')` calls in src/routes/+page.svelte and RegionAtlas.svelte.
+const LAZY_COMPONENT_STYLES = ['SharePanel', 'DestinationsPanel', 'SpeciesPanel', 'CuisinePanel', 'EarthquakePanel', 'HazardPanel', 'PopulationPanel', 'LanguagePanel', 'WeatherPanel'];
+const clientManifest = JSON.parse(await readFile('.svelte-kit/output/client/.vite/manifest.json', 'utf8'));
+function isLazyStylesheet(href) {
+  const file = href.split('/').pop() ?? '';
+  return LAZY_COMPONENT_STYLES.some(name => file.startsWith(name + '.') && file.endsWith('.css'));
+}
+function pruneLazyStylesheets(html) {
+  return html.replace(/<link\b[^>]*rel="stylesheet"[^>]*>/g, tag => {
+    const href = tag.match(/href="([^"]+)"/)?.[1];
+    if (href && isLazyStylesheet(href)) return '';
+    return tag;
+  });
+}
 const messages = {};
 for (const locale of everyLocale) messages[locale] = JSON.parse(await readFile('messages/' + locale + '.json', 'utf8'));
 
@@ -98,7 +115,7 @@ function collectShellAssets(html, pageUrl) {
 for (const locale of everyLocale) {
   for (const route of ROUTES) {
     const page = await prerenderedPage(locale, route);
-    const html = localizeShell(page.html, locale, route, messages[locale]);
+    const html = pruneLazyStylesheets(localizeShell(page.html, locale, route, messages[locale]));
     collectShellAssets(html, urlFor(locale, route));
     const segments = ['build'];
     if (locale !== 'en') segments.push(locale);
@@ -117,7 +134,6 @@ for (const file of await readdir('build/_app/immutable/assets')) {
   }
 }
 // Offline recovery also needs the catch-all and +error nodes, not only successful pages.
-const clientManifest = JSON.parse(await readFile('.svelte-kit/output/client/.vite/manifest.json', 'utf8'));
 const visitedEntries = new Set();
 function collectRouteEntry(key) {
   if (visitedEntries.has(key)) return;
@@ -130,6 +146,14 @@ function collectRouteEntry(key) {
 }
 for (const [key, entry] of Object.entries(clientManifest)) {
   if (entry.file.startsWith('_app/immutable/nodes/')) collectRouteEntry(key);
+}
+// Message dictionaries are downloaded per language; without them an installed shell could not render offline.
+for (const [key, entry] of Object.entries(clientManifest)) {
+  if (/^messages\/[^/]+\.json$/.test(key)) collectRouteEntry(key);
+}
+// The default layer's panel is loaded lazily but must still work offline right after installation.
+for (const [key, entry] of Object.entries(clientManifest)) {
+  if (entry.src?.endsWith('/WeatherPanel.svelte')) collectRouteEntry(key);
 }
 await writeFile('build/pwa-shell.json', JSON.stringify({ assets: [...shellAssets].sort() }));
 

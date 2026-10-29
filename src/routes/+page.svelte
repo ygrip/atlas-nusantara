@@ -4,7 +4,6 @@
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
   import AggregateSummary from '$lib/components/AggregateSummary.svelte';
-  import SharePanel from '$lib/components/SharePanel.svelte';
   import HeaderControls from '$lib/components/HeaderControls.svelte';
 
   import HeroArchipelago from '$lib/components/HeroArchipelago.svelte';
@@ -14,14 +13,9 @@
   import Preferences from '$lib/components/Preferences.svelte';
   import { pathFor } from '$lib/i18n/links';
   import PwaManager from '$lib/components/PwaManager.svelte';
-  import PopulationPanel from '$lib/components/PopulationPanel.svelte';
-  import LanguagePanel from '$lib/components/LanguagePanel.svelte';
   import LayerPicker from '$lib/components/LayerPicker.svelte';
   import RegionAtlas from '$lib/components/RegionAtlas.svelte';
   import ProvinceExplorer from '$lib/components/ProvinceExplorer.svelte';
-  import WeatherPanel from '$lib/components/WeatherPanel.svelte';
-  import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
-  import HazardPanel from '$lib/components/HazardPanel.svelte';
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
@@ -31,7 +25,23 @@
   let selectedRegion: ShareRegion | undefined;
   let selectedGeometry: GeometryPackage | undefined;
   let publicSummary: ShareSummary | undefined;
-  let sharePanel: SharePanel | undefined;
+  /** The share dialog and the layer panels are downloaded when first needed, not with the page. */
+  type ShareDialog = typeof import('$lib/components/SharePanel.svelte').default;
+  let ShareDialogComponent: ShareDialog | undefined;
+  let sharePanel: { openPreview: () => unknown } | undefined;
+  const panelModules = {
+    earthquake: () => import('$lib/components/EarthquakePanel.svelte'),
+    hazard: () => import('$lib/components/HazardPanel.svelte'),
+    population: () => import('$lib/components/PopulationPanel.svelte'),
+    language: () => import('$lib/components/LanguagePanel.svelte'),
+    weather: () => import('$lib/components/WeatherPanel.svelte')
+  };
+
+  async function openShare() {
+    if (!ShareDialogComponent) ShareDialogComponent = (await import('$lib/components/SharePanel.svelte')).default;
+    await tick();
+    sharePanel?.openPreview();
+  }
 
   let atlas: RegionAtlas | undefined;
   let activeSection = 'atlas';
@@ -110,7 +120,7 @@
 <div class="shell">
   <header class="masthead">
     <a href={pathFor('/')} data-sveltekit-reload class="brand" aria-label="Nusantara">
-      <img class="brand-logo" src="/brand/logo-256.png" alt="" width="44" height="44" />
+      <img class="brand-logo" src="/brand/logo-96.webp" alt="" width="44" height="44" />
       <span class="brand-desktop">Atlas Nusantara</span><span class="brand-mobile">Nusantara</span>
     </a>
     <nav class="section-nav" aria-label={m.nav_label()}>
@@ -118,9 +128,9 @@
         <a href={'#' + section.id} class:active={activeSection === section.id} aria-current={currentFor(section.id)}>{m[section.label]()}</a>
       {/each}
     </nav>
-    <div class="header-actions"><HeaderControls onshare={() => sharePanel?.openPreview()} /></div>
+    <div class="header-actions"><HeaderControls onshare={openShare} /></div>
   </header>
-  <SharePanel bind:this={sharePanel} region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />
+  {#if ShareDialogComponent}<svelte:component this={ShareDialogComponent} bind:this={sharePanel} region={selectedRegion} geometry={selectedGeometry} summary={publicSummary} />{/if}
 
   <main>
     <section id="top" class="hero" aria-labelledby="site-title">
@@ -152,17 +162,17 @@
       <div class="clay-card atlas-stage">
         <RegionAtlas bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {#if activeLayer === 'earthquake'}
-          <EarthquakePanel />
+          {#await panelModules.earthquake() then module}<svelte:component this={module.default} />{/await}
         {:else if activeLayer === 'incident'}
-          <HazardPanel kind="reports" />
+          {#await panelModules.hazard() then module}<svelte:component this={module.default} kind="reports" />{/await}
         {:else if activeLayer === 'hazard'}
-          <HazardPanel kind="warnings" />
+          {#await panelModules.hazard() then module}<svelte:component this={module.default} kind="warnings" />{/await}
         {:else if activeLayer === 'population'}
-          <PopulationPanel provinceCode={selectedRegion?.code.split('.')[0]} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} bind:year={populationYear} />
+          {#await panelModules.population() then module}<svelte:component this={module.default} provinceCode={selectedRegion?.code.split('.')[0]} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} bind:year={populationYear} />{/await}
         {:else if activeLayer === 'language'}
-          <LanguagePanel provinceCode={selectedRegion?.code.split('.')[0]} />
+          {#await panelModules.language() then module}<svelte:component this={module.default} provinceCode={selectedRegion?.code.split('.')[0]} />{/await}
         {:else if activeLayer === 'warning'}
-          <WeatherPanel regionCode={selectedRegion?.code} regionName={selectedRegion?.name} />
+          {#await panelModules.weather() then module}<svelte:component this={module.default} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} />{/await}
         {/if}
       </div>
     </section>

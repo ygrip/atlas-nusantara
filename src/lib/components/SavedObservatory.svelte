@@ -6,6 +6,7 @@
   import { activeWarnings, type HazardSnapshot } from '$lib/data/hazards';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
   import { loadHazards } from '$lib/data/hazards';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import { loadForecast, type ForecastSnapshot } from '$lib/map/weather';
   import { assetUrl } from '$lib/pwa/assets';
 
@@ -19,12 +20,15 @@
 
   onMount(() => {
     const controller = new AbortController();
-    void Promise.allSettled([
-      loadEarthquakes().then(value => { earthquakes = value; }),
-      loadHazards().then(value => { hazards = value; }),
-      loadForecast(assetUrl('/data/weather/forecast.json'), controller.signal).then(value => { forecast = value; })
-    ]).then(() => { if (!controller.signal.aborted) loaded = true; });
-    return () => controller.abort();
+    // These files feed a summary far below the first screen, so they are read once the page has loaded.
+    const cancel = afterLoadIdle(() => {
+      void Promise.allSettled([
+        loadEarthquakes().then(value => { earthquakes = value; }),
+        loadHazards().then(value => { hazards = value; }),
+        loadForecast(assetUrl('/data/weather/forecast.json'), controller.signal).then(value => { forecast = value; })
+      ]).then(() => { if (!controller.signal.aborted) loaded = true; });
+    });
+    return () => { cancel(); controller.abort(); };
   });
 
   const warningCount = $derived(hazards ? activeWarnings(hazards, Date.now()).length : 0);

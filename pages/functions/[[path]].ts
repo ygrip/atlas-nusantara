@@ -1,6 +1,6 @@
 import { coldDownload } from '../../cloudflare/worker.ts';
 import type { ColdDownloadEnv } from '../../cloudflare/cold-download.ts';
-import { serveHot, servePublication } from '../../cloudflare/publication.ts';
+import { noPublication, serveHot, servePublication } from '../../cloudflare/publication.ts';
 import { cachedPublication } from '../../cloudflare/publication-cache.ts';
 import { D1RateLimiter } from '../../cloudflare/rate-limit.ts';
 import { secureApiResponse } from '../../cloudflare/security.ts';
@@ -36,7 +36,7 @@ async function routeRequest(context: PagesContext): Promise<Response> {
   const liveKey = liveKeyForPath(path);
   if (liveKey) return cachedPublication(context, () => servePublication(request, env.DB, liveKey));
   if (path === '/data/live/hazards.json') {
-    if (!env.HAZARD_SOURCE_IDS?.trim()) return Response.json({ status: 'unavailable' }, { status: 503 });
+    if (!env.HAZARD_SOURCE_IDS?.trim()) return noPublication();
     return cachedPublication(context, () => servePublication(request, env.DB, 'data/observations/hazards.json'));
   }
   return Response.json({ error: 'Not found.' }, { status: 404 });
