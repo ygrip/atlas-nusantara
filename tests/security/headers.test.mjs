@@ -41,6 +41,7 @@ test('CSP is default-deny, allows Turnstile, test ads, external catalogue images
   assert.match(policy, /script-src[^;]*https:\/\/pagead2\.googlesyndication\.com/);
   assert.match(policy, /style-src 'self' 'unsafe-inline'/);
   assert.match(policy, /img-src 'self' data: blob: https:/);
+  assert.match(policy, /(?:^|; )media-src 'self'(?:;|$)/);
   assert.match(policy, /frame-src[^;]*https:\/\/\*\.safeframe\.googlesyndication\.com/);
   assert.match(policy, /connect-src[^;]*https:\/\/googleads\.g\.doubleclick\.net/);
   assert.match(policy, /object-src 'none'/);

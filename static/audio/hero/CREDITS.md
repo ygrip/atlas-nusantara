@@ -1,0 +1,12 @@
+# Hero ornament sound credits
+
+Sounds play only after an ornament is activated. No sound is loaded or played automatically.
+
+- **Tiger — “Tiger Mad”**, Bilberryerer (2020). [Source](https://commons.wikimedia.org/wiki/File:Tiger_Mad.ogg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Adaptation: first 3.2 seconds, fade-out, mono MP3 encoding. This adapted audio remains CC BY-SA 4.0.
+- **Orangutan — “Monkey Sounds”**, AntumDeluge. [Source and CC0 notice](https://opengameart.org/content/monkey-sounds), [original ZIP](https://opengameart.org/sites/default/files/monkey-sounds_0.zip), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Three playful human monkey imitations combined, padded to 3.6 seconds, gently faded and loudness-normalized, mono MP3. Cartoon-style sound design, not a field recording of an orangutan.
+- **Volcano — “S35-11 Volcano explosion with debris; lava. rumble; 2 versions”**, craigsmith. [Source and CC0 notice](https://freesound.org/people/craigsmith/sounds/675740/), [HQ preview source](https://cdn.freesound.org/previews/675/675740_2524442-hq.mp3), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Adaptation: 7.4–11 seconds, fades and loudness normalization, mono MP3. A cinematic effect from an effects master, not a field recording.
+- **Komodo — “Angry snake hissing. OWI.wav”**, JesterWhoo. [Source and CC0 notice](https://freesound.org/people/JesterWhoo/sounds/706977/), [HQ preview source](https://cdn.freesound.org/previews/706/706977_14781925-hq.mp3), [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Adaptation: 1–4.6 seconds, high-pass filter, fades and loudness normalization, mono MP3. A real snake hiss used as a reptile sound effect, not a komodo recording.
+- **Flag — “Indonesia Raya” instrumental**, composed by Wage Rudolf Supratman, performed by the United States Navy Band. [Source and public-domain notices](https://commons.wikimedia.org/wiki/File:Indonesia_Raya_instrumental.ogg). Adaptation: 14-second opening excerpt, fade-out, mono MP3 encoding.
+- **Pinisi waves and cendrawasih chirps** are original, stylized synthesized effects, not field recordings. Generated offline with `scripts/generate-hero-sfx.mjs`; dedicated to the public domain under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/).
+
+No endorsement by the recording authors or performers is implied. Image artwork is credited separately in the repository's `docs/ASSETS.md`.

@@ -130,7 +130,7 @@
       {#each visible as row (row.id)}
         {@const SeverityIcon = severityIcons[row.level]}
         <tr style={tone(row)}>
-          <td><span class="severity-pill"><SeverityIcon size={14} aria-hidden="true" />{severityLabels[row.level]()}</span></td>
+          <td><span class={'severity-pill severity-' + row.level}><SeverityIcon size={14} aria-hidden="true" />{severityLabels[row.level]()}</span></td>
           <th scope="row">
             <button type="button" class="row-action" onclick={() => { openId = row.id; now = Date.now(); }} aria-label={m.table_details() + ': ' + (row.headline || row.event)}>
               <strong>{row.event || row.headline}</strong>
@@ -157,7 +157,7 @@
     {@const OpenedIcon = severityIcons[opened.level]}
     <div class="detail" style={tone(opened)}>
       <div class="detail-pills">
-        <span class="severity-pill"><OpenedIcon size={14} aria-hidden="true" />{severityLabels[opened.level]()}</span>
+        <span class={'severity-pill severity-' + opened.level}><OpenedIcon size={14} aria-hidden="true" />{severityLabels[opened.level]()}</span>
         {#if opened.urgency}<span class="pill"><small>{m.warning_urgency()}</small> {labelFor(urgencyLabels, opened.urgency)}</span>{/if}
         {#if opened.certainty}<span class="pill"><small>{m.warning_certainty()}</small> {opened.certainty}</span>{/if}
       </div>
@@ -195,7 +195,8 @@
   .warning-table tbody tr > :last-child { border-radius: 0 16px 16px 0; }
   .warning-table tbody tr { filter: drop-shadow(0 3px 0 var(--border)); transition: transform .15s ease; }
   .warning-table tbody tr:hover { transform: translateY(-1px); }
-  .severity-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; color: #fff; font-size: .7rem; font-weight: 900; letter-spacing: .03em; white-space: nowrap; background: var(--tone); text-shadow: 0 1px 1px #0004; box-shadow: inset 0 1px 1px #ffffff55, inset 0 -2px 3px #0003; }
+  .severity-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 999px; color: #1c1b18; font-size: .7rem; font-weight: 900; letter-spacing: .03em; white-space: nowrap; background: var(--tone); box-shadow: inset 0 1px 1px #ffffff55, inset 0 -2px 3px #0003; }
+  .severity-pill.severity-extreme, .severity-pill.severity-severe { color: #fff; }
   .row-action { display: grid; gap: 2px; width: 100%; min-height: 40px; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
   .row-action strong { font-weight: 850; }
   .row-action small { color: var(--muted); font-weight: 600; font-size: .74rem; overflow-wrap: anywhere; }

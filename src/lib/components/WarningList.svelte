@@ -72,7 +72,7 @@
     {@const remaining = endsIn(warning)}
     <li class="warning-card" style={`--tone: ${severityColor(warning.severity)}`}>
       <div class="warning-top">
-        <span class="severity-pill"><SeverityIcon size={15} aria-hidden="true" />{severityLabels[level]()}</span>
+        <span class={'severity-pill severity-' + level}><SeverityIcon size={15} aria-hidden="true" />{severityLabels[level]()}</span>
         {#if urgencyOf(warning)}<span class="urgency-pill">{urgencyOf(warning)}</span>{/if}
         {#if remaining}<span class="ends-in">{remaining}</span>{/if}
       </div>
@@ -111,7 +111,8 @@
   .warning-card { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 14px 14px 12px 18px; position: relative; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--panel); box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight); }
   .warning-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--tone); }
   .warning-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .severity-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; color: #fff; font-size: .7rem; font-weight: 900; letter-spacing: .03em; background: var(--tone); text-shadow: 0 1px 1px #0004; }
+  .severity-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; color: #1c1b18; font-size: .7rem; font-weight: 900; letter-spacing: .03em; background: var(--tone); }
+  .severity-pill.severity-extreme, .severity-pill.severity-severe { color: #fff; }
   .urgency-pill { padding: 4px 9px; border-radius: 999px; font-size: .68rem; font-weight: 850; background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); }
   .ends-in { margin-inline-start: auto; color: var(--muted); font-size: .72rem; font-weight: 800; }
   h4 { margin: 2px 0 0; font-size: .95rem; line-height: 1.3; overflow-wrap: anywhere; }

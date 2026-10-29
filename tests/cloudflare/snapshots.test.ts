@@ -84,7 +84,9 @@ test('forecast refresh stores each point, rotates through all of them and stops 
   assert.ok(limited.attempted < POINTS_PER_TICK);
 });
 
-test('a forecast is published only when enough points are fresh, lists the missing ones and passes the page validation', async () => {
+test('a forecast is published only when enough points are fresh, lists the missing ones and passes the page validation', async t => {
+  // The collector timestamps fetchedAt with Date; keep it on the same clock as publication expiry.
+  t.mock.timers.enable({ apis: ['Date'], now });
   const points = pointList(45);
   const { db, sqlite } = createDatabase();
   const dependencies = { fetcher: fakeBmkg(points, [], new Set(['11.41'])), sleep: noSleep, points, edition: CODE_EDITION };

@@ -1,0 +1,36 @@
+/* Deferred until window.load. Rare, explicitly requested delight: no idle loops. */
+.ornament.playing { z-index: 2; }
+.ornament .cutout { transition: opacity 160ms ease; }
+.ornament .motion-viewport {
+  position: absolute; aspect-ratio: 1; overflow: hidden; opacity: 0; visibility: hidden;
+  pointer-events: none; transition: opacity 160ms ease, visibility 0s 160ms;
+}
+/* Translate the whole eight-frame strip, not background-position or clipped body parts. */
+.ornament .motion-strip { display: block; width: 800%; max-width: none; height: 100%; }
+.ornament.playing .motion-viewport { opacity: 1; visibility: visible; transition-delay: 0s; }
+.ornament.playing .motion-strip { animation: clay-poses var(--sprite-cycle) steps(8, end) var(--sprite-repeats); }
+.ornament.playing .cutout { opacity: 0; }
+@keyframes clay-poses { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* Same strip renderer; play the flag's hoist once, then cycle its four raised poses. */
+.ornament-flag.playing .motion-strip {
+  animation: flag-hoist-poses 1400ms steps(4, end), flag-wave-poses 1050ms 1400ms steps(4, end) 12;
+}
+@keyframes flag-hoist-poses { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes flag-wave-poses { from { transform: translateX(-50%); } to { transform: translateX(-100%); } }
+
+.ornament::after {
+  content: ''; position: absolute; inset: -65%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse, #fff5cfff 0%, #ffe792dd 20%, #ffcf6499 38%, #ffd97944 55%, #ffdf9900 74%);
+  opacity: 0; transition: opacity 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ornament:not(:disabled):hover { z-index: 1; }
+  .ornament:not(:disabled):hover::after { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ornament.playing * { animation: none !important; }
+  .ornament.playing { outline: 2px solid var(--text); outline-offset: 5px; }
+  .ornament.playing .motion-viewport { visibility: hidden; opacity: 0; }
+  .ornament.playing .cutout { opacity: 1; }
+}

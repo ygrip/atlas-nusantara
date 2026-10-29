@@ -104,11 +104,13 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(26px, 3.
 .hero { display: grid; gap: clamp(14px, 2vw, 22px); }
 .hero-card::before { content: ''; position: absolute; z-index: 3; inset: 0 0 auto; height: 6px; background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 45%, color-mix(in srgb, var(--accent) 22%, var(--surface)) 77%, transparent 100%); pointer-events: none; }
 .hero-card { position: relative; isolation: isolate; display: flex; align-items: center; min-height: clamp(440px, 40vw, 520px); padding: clamp(28px, 4.4vw, 64px); overflow: hidden; background: var(--surface); }
-.hero-copy { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; min-width: 0; width: min(100%, 480px); }
+.hero-copy { position: relative; z-index: 2; pointer-events: none; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; min-width: 0; width: min(100%, 480px); }
 .hero-copy h1 { font-size: clamp(2.4rem, 4.7vw, 4rem); white-space: nowrap; line-height: 1; letter-spacing: -.065em; margin: 2px 0 0; text-wrap: balance; }
 .hero-copy > p { margin: 0; font-size: clamp(1rem, 1.7vw, 1.2rem); line-height: 1.6; color: var(--muted); max-width: min(33ch, 100%); }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
 .hero-copy .share-panel { margin-top: 4px; }
+.hero-copy a, .hero-copy button { pointer-events: auto; }
+@media (min-width: 761px) { .hero-copy { top: -18px; } }
 .hero-tagline { margin: -4px 0 0; font-size: clamp(1.1rem, 2.1vw, 1.5rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; color: var(--accent); text-wrap: balance; }
 
 /* One finite copy entrance; headings use native text instead of per-word animation layers. */

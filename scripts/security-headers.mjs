@@ -67,6 +67,7 @@ export function createContentSecurityPolicy({ scriptHashes, adsConfig, dataOrigi
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
+    "media-src 'self'",
     `connect-src ${unique(connect).join(' ')}`,
     `frame-src ${unique(frames).join(' ')}`,
     "worker-src 'self'",

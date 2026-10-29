@@ -1,5 +1,53 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { m } from '$lib/i18n/messages';
+  import type { HeroInteraction } from '$lib/hero/interaction';
+  import type { HeroSprite } from '$lib/hero/sprites';
+
   let { alt }: { alt: string } = $props();
+  let interaction: HeroInteraction | undefined;
+  let ready = $state(false);
+  let sprites = $state<Record<string, HeroSprite>>({});
+  let active = $state('');
+  let soundUnavailable = $state(false);
+
+  // Keep the first render static. Effects and their stylesheet load after window.load,
+  // during idle time; audio is fetched only inside the subsequent user gesture.
+  onMount(() => {
+    let disposed = false;
+    let idle = 0;
+    let fallback = 0;
+    async function prepare() {
+      try {
+        const module = await import('$lib/hero/interaction');
+        await module.preloadHeroSprites();
+        if (disposed) return;
+        sprites = module.heroSprites;
+        interaction = module.createHeroInteraction((id) => { active = id; }, () => { soundUnavailable = true; });
+        ready = true;
+      } catch (error) {
+        console.warn('Hero interactions unavailable; keeping the static illustration.', error);
+      }
+    }
+    function schedule() {
+      if (typeof window.requestIdleCallback === 'function') idle = window.requestIdleCallback(() => { void prepare(); }, { timeout: 1500 });
+      else fallback = window.setTimeout(() => { void prepare(); }, 200);
+    }
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+    return () => {
+      disposed = true;
+      window.removeEventListener('load', schedule);
+      if (idle) window.cancelIdleCallback(idle);
+      window.clearTimeout(fallback);
+      interaction?.destroy();
+    };
+  });
+
+  function play(id: string) {
+    soundUnavailable = false;
+    interaction?.toggle(id);
+  }
 
   /**
    * Seven island families share one geography projection. Each is a three-plate clay stack
@@ -28,12 +76,17 @@
     { id: 'pinisi', x: 69.6, y: 84.5, width: 9.5 },
     { id: 'cendrawasih', x: 86.3, y: 55.7, width: 7.5 }
   ];
+  const labels: Record<string, () => string> = {
+    tiger: m.hero_tiger, orangutan: m.hero_orangutan, flag: m.hero_flag,
+    volcano: m.hero_volcano, komodo: m.hero_komodo,
+    pinisi: m.hero_pinisi, cendrawasih: m.hero_cendrawasih
+  };
   const imageSize = { tiger: [406, 420], volcano: [361, 420], orangutan: [411, 420], flag: [222, 420],
     komodo: [420, 297], pinisi: [374, 420], cendrawasih: [302, 420] } as Record<string, number[]>;
 
 </script>
 
-<div class="anatomy-stage" role="img" aria-label={alt}>
+<div class="anatomy-stage" role="group" aria-label={alt}>
   <div class="world">
     <svg class="island-scene" xmlns="http://www.w3.org/2000/svg" viewBox="-10 40 1020 440"
       aria-hidden="true" focusable="false">
@@ -59,15 +112,33 @@
     </svg>
 
     {#each ornaments as ornament (ornament.id)}
-      <span class={'ornament ornament-' + ornament.id}
+      <button type="button" class={'ornament ornament-' + ornament.id}
+        class:playing={active === ornament.id} disabled={!ready}
         style={'--x:' + ornament.x + '%;--y:' + ornament.y + '%;--w:' + ornament.width + '%'}
-        aria-hidden="true">
-        <img src={'/illustrations/hero/' + ornament.id + '.webp'} alt=""
-          width={imageSize[ornament.id][0]} height={imageSize[ornament.id][1]}
-          decoding="async" fetchpriority={ornament.id === 'flag' ? 'high' : 'low'}/>
-      </span>
+        aria-label={labels[ornament.id]()} aria-pressed={active === ornament.id}
+        title={labels[ornament.id]() + ' · ' + m.hero_ornament_stop()} onclick={() => play(ornament.id)}>
+        <span class="ornament-body" aria-hidden="true">
+          <img class="cutout" src={'/illustrations/hero/' + ornament.id + '.webp'} alt=""
+            width={imageSize[ornament.id][0]} height={imageSize[ornament.id][1]}
+            decoding="async" fetchpriority="low"/>
+          {#if ready}
+            {#if sprites[ornament.id]}
+              {@const sprite = sprites[ornament.id]}
+              <span class="motion-viewport"
+                style={'width:' + sprite.width + '%;left:' + sprite.left + '%;bottom:' + sprite.bottom + '%;--sprite-cycle:' + sprite.cycle + 'ms;--sprite-repeats:' + sprite.repeats}>
+                <img class="motion-strip" src={'/illustrations/hero/motion/' + ornament.id + '.webp'}
+                  alt="" width="2048" height="256" decoding="async"/>
+              </span>
+            {/if}
+          {/if}
+        </span>
+      </button>
     {/each}
   </div>
+  {#if ready}
+    <div class="ornament-hint">{m.hero_ornament_hint()} <a href="/audio/hero/CREDITS.md" aria-label={m.hero_sound_credits()}>♫</a></div>
+  {/if}
+  <span class="sound-status" role="status">{#if soundUnavailable}{m.hero_sound_unavailable()}{/if}</span>
 </div>
 
 <style>
@@ -99,11 +170,11 @@
 
   .world {
     position: absolute;
-    top: 0;
+    top: 28px;
     bottom: 0;
-    right: 0;
+    right: -2.5%;
     margin-block: auto;
-    width: 73%;
+    width: 69%;
     aspect-ratio: 1020 / 440;
     transform-origin: 72% 50%;
   }
@@ -118,10 +189,24 @@
     position: absolute;
     left: var(--x);
     top: var(--y);
-    width: var(--w);
+    width: max(44px, var(--w));
+    min-height: 44px;
     transform: translate(-50%, -100%);
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 12px;
+    pointer-events: auto;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
-  .ornament img { position: relative; display: block; width: 100%; height: auto; }
+  .ornament:disabled { cursor: default; }
+  .ornament:focus-visible { outline: 3px solid var(--text); outline-offset: 5px; }
+  .ornament-body { position: relative; display: block; pointer-events: none; }
+  .ornament-hint { position: absolute; right: 16px; bottom: 10px; z-index: 3; font-size: .65rem; color: var(--text); background: var(--surface); padding: 4px 8px; border-radius: 10px; }
+  .ornament-hint a { pointer-events: auto; padding: 4px; color: inherit; }
+  .sound-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .cutout { display: block; width: 100%; height: auto; }
   /* A gradient ellipse is a contact shadow without a per-frame blur filter. */
   .ornament::before {
     content: '';
@@ -133,11 +218,13 @@
     background: radial-gradient(closest-side, #2d5f5266, transparent);
   }
 
-  /* One short entrance for the entire solid stack; no separated plates or perpetual idle loops. */
-  .world { animation: world-glide 650ms cubic-bezier(.22, .8, .2, 1) backwards; }
-  @keyframes world-glide { from { translate: -2% 0; } }
+  /* Interactive motion is in a separate stylesheet, loaded only after page load. */
 
-  @media (max-width: 720px) {
+  /* Keep the text column clear just above the shared mobile breakpoint. */
+  @media (min-width: 761px) and (max-width: 900px) {
+    .world { width: 64%; right: -2.2%; }
+  }
+  @media (max-width: 760px) {
     .anatomy-stage::after {
       background: linear-gradient(180deg,
         color-mix(in srgb, var(--surface) 96%, transparent) 0%,
