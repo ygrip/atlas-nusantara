@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Check, Cloud, CloudLightning, CloudRain, CloudSun, Copy, Droplets, ExternalLink, MapPin, Sun, Wind } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
+  import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';
   import type { WeatherSummary } from '$lib/map/weather-summary';
 
@@ -73,7 +74,7 @@
         <span class="condition-icon"><Condition size={34} aria-hidden="true" /></span>
         <div class="condition-text">
           <strong class="temperature"><span class="visually-hidden">{m.weather_temperature()}: </span>{weather.temperature}<span aria-hidden="true">°C</span></strong>
-          <span class="weather-line">{weather.description}</span>
+          <span class="weather-line">{m[weatherConditionKey(weather.description)]()}</span>
         </div>
       </div>
       <dl class="metrics">

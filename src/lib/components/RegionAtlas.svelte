@@ -2,6 +2,7 @@
   import { assetUrl } from '$lib/pwa/assets';
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
+  import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { page } from '$app/stores';
   import { getLocaleForUrl } from '$lib/paraglide/runtime.js';
   import { upgradeRegionCode } from '$lib/atlas/code-upgrades';
@@ -158,7 +159,7 @@
       const row: DirectoryRow = { id: region.code, code: region.code, name: region.name, ariaLabel: region.name + ' ' + region.code, selected: selectedCode === region.code, cells: {} };
       if (!withWeather || !snapshot) return row;
       const summary = summariseWeather(snapshot, region.code, time);
-      if (summary) row.cells.weather = summary.description + ' · ' + summary.temperature + '°C' + (summary.neighbour ? ' ≈' : '');
+      if (summary) row.cells.weather = m[weatherConditionKey(summary.description)]() + ' · ' + summary.temperature + '°C' + (summary.neighbour ? ' ≈' : '');
       const coordinates = coordinatesOf(region.code);
       if (coordinates) {
         row.cells.lat = formatDegrees(coordinates.lat);

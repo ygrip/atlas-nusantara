@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Cloud, CloudMoon, CloudRain, CloudLightning, CloudSun, Moon, Sun, Wind, Droplets, MapPin, X, Navigation } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
+  import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { ForecastSnapshot } from '$lib/map/weather';
   import type { Pin } from '$lib/pwa/permissions';
@@ -76,7 +77,7 @@
   {#if report && forecast}
     <p class="local-clock"><span class="clock-chip">{#if night}<Moon size={15} aria-hidden="true" />{:else}<Sun size={15} aria-hidden="true" />{/if}<span class="visually-hidden">{m.weather_local_time()}, {phaseLabel}: </span><time datetime={new Date(now).toISOString()}>{clock}</time> <abbr title={zone.id}>{zone.abbreviation}</abbr><span class="phase" aria-hidden="true">{phaseLabel}</span></span></p>
     {@const WeatherIcon = icon(report.step.weather, night)}
-    <div class="current-weather"><div class="temperature"><strong>{report.step.t}<span>°</span></strong><p lang="en"><WeatherIcon size={15} aria-hidden="true" /> {report.step.desc}</p></div><WeatherScene {scene} {night} paused={!visible} /></div>
+    <div class="current-weather"><div class="temperature"><strong>{report.step.t}<span>°</span></strong><p><WeatherIcon size={15} aria-hidden="true" /> {m[weatherConditionKey(report.step.desc)]()}</p></div><WeatherScene {scene} {night} paused={!visible} /></div>
     <div class="weather-measures"><span><Wind size={15} aria-hidden="true" />{report.step.ws} km/h</span><span><Droplets size={15} aria-hidden="true" />{report.step.hu}%</span><span>{m.weather_rain()} {report.step.tp} mm</span></div>
     <div class="hourly-weather">
       {#each report.upcoming as step (step.at)}

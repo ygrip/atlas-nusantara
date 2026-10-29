@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Cloud, CloudRain, Droplets, Thermometer, Wind } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
+  import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { loadCurrentForecast, loadWeatherHistory, MAX_NEIGHBOUR_KM, regionHistory, type DailyValues, type WeatherHistory } from '$lib/data/weather-history';
   import { METRIC_DEFINITIONS } from '$lib/data/weather-history-chart';
@@ -110,7 +111,7 @@
       <p class="hint">{m.weather_current_hint()}</p>
     {:else if current}
       <dl class="summary">
-        <div><dt>{m.weather_temperature()}</dt><dd>{current.temperature}°C</dd><small>{current.description}</small></div>
+        <div><dt>{m.weather_temperature()}</dt><dd>{current.temperature}°C</dd><small>{m[weatherConditionKey(current.description)]()}</small></div>
         <div><dt>{m.weather_wind()}</dt><dd>{current.speed} km/h</dd><small>{current.from}</small></div>
         <div><dt>{m.weather_humidity()}</dt><dd>{current.humidity}%</dd></div>
         <div><dt>{m.weather_clouds()}</dt><dd>{current.clouds}%</dd></div>

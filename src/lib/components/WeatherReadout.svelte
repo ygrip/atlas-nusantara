@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { CloudSun } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
+  import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';
   import type { ForecastSnapshot } from '$lib/map/weather';
   import { summariseWeather } from '$lib/map/weather-summary';
@@ -12,8 +13,10 @@
   /** The city itself, or every city of a province averaged. */
   const summary = $derived(summariseWeather(forecast, code, time));
   const readoutText = $derived.by(() => {
-    if (!summary || !coordinates) return summary?.description ?? '';
-    return summary.description + ' · ' + formatDegrees(coordinates.lat) + '°, ' + formatDegrees(coordinates.lon) + '°';
+    if (!summary) return '';
+    const condition = m[weatherConditionKey(summary.description)]();
+    if (!coordinates) return condition;
+    return condition + ' · ' + formatDegrees(coordinates.lat) + '°, ' + formatDegrees(coordinates.lon) + '°';
   });
   // Phones start collapsed so the readout does not cover the map.
   let open = $state(false);
