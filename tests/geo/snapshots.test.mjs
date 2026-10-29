@@ -16,6 +16,14 @@ test('CDN snapshot keys are stable while the local release fallback keeps its ve
   assert.throws(() => snapshotCandidates('//example.com/private'));
 });
 
+test('data the Worker keeps fresh is read from its live path first, with the release file as the fallback', () => {
+  assert.deepEqual(snapshotCandidates('/data/weather/forecast.json?v=release'), ['/data/live/weather/forecast.json', '/data/weather/forecast.json?v=release']);
+  assert.deepEqual(snapshotCandidates('/data/weather/history.json'), ['/data/live/weather/history.json', '/data/weather/history.json']);
+  assert.deepEqual(snapshotCandidates('/data/observations/earthquakes.json'), ['/data/live/observations/earthquakes.json', '/data/observations/earthquakes.json']);
+  assert.deepEqual(snapshotCandidates('/data/observations/hazards.json'), ['/data/live/hazards.json', '/data/observations/hazards.json']);
+  assert.deepEqual(snapshotCandidates('/data/observations/population.json'), ['/data/observations/population.json']);
+});
+
 test('invalid CDN data falls back to the dated release snapshot without credentials', async t => {
   const original = globalThis.fetch;
   t.after(() => { globalThis.fetch = original; });

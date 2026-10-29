@@ -17,13 +17,13 @@
     "COLD_DAILY_DOWNLOAD_LIMIT": "20",
     "APPROVED_SOURCE_IDS": "bmkg-earthquakes,bmkg-nowcast",
     "HAZARD_SOURCE_IDS": "bmkg-cap,bnpb,antara,gdelt,petabencana",
-    "BMKG_EARTHQUAKES_LICENSE": "",
-    "BMKG_EARTHQUAKES_LICENSE_URL": "",
-    "BMKG_EARTHQUAKES_REVIEWED_BY": "",
+    "BMKG_EARTHQUAKES_LICENSE": "Public-Domain",
+    "BMKG_EARTHQUAKES_LICENSE_URL": "https://data.bmkg.go.id/gempabumi/",
+    "BMKG_EARTHQUAKES_REVIEWED_BY": "yunaz.gilang@gmail.com",
     "BMKG_EARTHQUAKES_REVIEWED_AT": "",
-    "BMKG_NOWCAST_LICENSE": "",
-    "BMKG_NOWCAST_LICENSE_URL": "",
-    "BMKG_NOWCAST_REVIEWED_BY": "",
+    "BMKG_NOWCAST_LICENSE": "Public-Domain",
+    "BMKG_NOWCAST_LICENSE_URL": "https://data.bmkg.go.id/peringatan-dini-cuaca/",
+    "BMKG_NOWCAST_REVIEWED_BY": "yunaz.gilang@gmail.com",
     "BMKG_NOWCAST_REVIEWED_AT": ""
   }
 }

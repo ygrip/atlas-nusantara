@@ -7,11 +7,20 @@ export function isBmkgSource(value: unknown): value is string {
   } catch { return false; }
 }
 
+/** Data the scheduled Worker keeps fresh: tried first, with the dated release file as the fallback. */
+const LIVE_PATHS: Record<string, string> = {
+  '/data/observations/hazards.json': '/data/live/hazards.json',
+  '/data/weather/forecast.json': '/data/live/weather/forecast.json',
+  '/data/weather/history.json': '/data/live/weather/history.json',
+  '/data/observations/earthquakes.json': '/data/live/observations/earthquakes.json'
+};
+
 /** Build safe CDN/local candidates without ever sending a visitor's coordinates to a provider. */
 export function snapshotCandidates(path: string, origin?: string): string[] {
   if (!path.startsWith('/data/') || path.startsWith('//')) throw Error('Snapshot path must be a local data asset');
   if (!origin) {
-    if (path.split('?')[0] === '/data/observations/hazards.json') return ['/data/live/hazards.json', path];
+    const live = LIVE_PATHS[path.split('?')[0]];
+    if (live) return [live, path];
     return [path];
   }
   const base = new URL(origin);

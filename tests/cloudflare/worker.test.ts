@@ -16,6 +16,18 @@ test('source registry assigns independent schedules and never configures unverif
   assert.equal(SOURCE_REGISTRY.find(source => source.id === 'bnpb-incidents')?.enabled, false);
 });
 
+test('an empty REVIEWED_AT is stamped with the run time, but a reviewer and licence are still required', () => {
+  const base = {
+    APPROVED_SOURCE_IDS: 'bmkg-nowcast',
+    BMKG_NOWCAST_LICENSE: 'Public-Domain',
+    BMKG_NOWCAST_LICENSE_URL: 'https://data.bmkg.go.id/peringatan-dini-cuaca/',
+    BMKG_NOWCAST_REVIEWED_BY: 'yunaz.gilang@gmail.com',
+    BMKG_NOWCAST_REVIEWED_AT: ''
+  } as Partial<Env>;
+  assert.deepEqual(enabledSources(base).map(source => source.id), ['bmkg-nowcast']);
+  assert.equal(enabledSources({ ...base, BMKG_NOWCAST_REVIEWED_BY: '' } as Partial<Env>).length, 0);
+});
+
 test('explicit redistribution review and activation are both required', () => {
   const unreviewed = { APPROVED_SOURCE_IDS: 'bmkg-earthquakes' } as Partial<Env>;
   assert.deepEqual(enabledSources(unreviewed), []);

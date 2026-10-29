@@ -4,10 +4,17 @@ import { createExportResponse, exportFitsBudget } from './export.ts';
 import { verifyArchiveRequest, type ColdDownloadEnv } from './cold-download.ts';
 import { publishHot, serveHot, servePublication, cleanPublications } from './publication.ts';
 import { runHazardSchedule } from './hazards.ts';
+import { runLiveSnapshots } from './snapshots.ts';
+import { liveKeyForPath } from './live-snapshots.ts';
 import { cleanupRateLimits } from './rate-limit.ts';
 import { adaptBmkgEarthquakes } from '../src/lib/data/ingestion/adapters.ts';
 import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetRecord, type DatasetType, type Snapshot } from '../src/lib/data/ingestion/schema.ts';
 
+/** Must match the second entry of `triggers.crons` in wrangler.jsonc. */
+const LIVE_SNAPSHOT_CRON = '2-57/5 * * * *';
+/** Hazard sources run in their own invocation so their subrequests do not share the crawl's 50-subrequest free-plan budget. */
+const HAZARD_CRON = '4-59/5 * * * *';
+const CRAWL_CRON = '*/5 * * * *';
 const DAY_MS = 86_400_000;
 const MAX_BODY_BYTES = 2_000_000;
 const FETCH_TIMEOUT_MS = 8_000;
@@ -78,7 +85,9 @@ function sourceApproval(source: SourceDefinition, env: Partial<Env>): { license:
     reviewer = env.BMKG_NOWCAST_REVIEWED_BY;
     reviewedAt = env.BMKG_NOWCAST_REVIEWED_AT;
   }
-  if (!license || !licenseUrl || !reviewer || !reviewedAt) return undefined;
+  // An empty REVIEWED_AT means "stamp the run time": the operator names who reviewed the terms, the Worker records when it last ran under them.
+  if (!reviewedAt?.trim()) reviewedAt = new Date().toISOString();
+  if (!license || !licenseUrl || !reviewer) return undefined;
   try {
     validateProvenance({ source: source.name, sourceUrl: source.url, sourcePublishedAt: null, fetchedAt: new Date().toISOString(), validUntil: null, license, licenseUrl, reviewedBy: reviewer, reviewedAt, coverage: [], edition: null });
   } catch { return undefined; }
@@ -145,11 +154,12 @@ function provenanceFor(source: SourceDefinition, approval: NonNullable<ReturnTyp
     license: approval.license, licenseUrl: approval.licenseUrl, reviewedBy: approval.reviewer, reviewedAt: approval.reviewedAt, coverage: [], edition: null };
 }
 
+/** Workers cannot use redirect: 'error'; 'manual' returns the 3xx answer itself, which `response.ok` then rejects. */
 export async function fetchSource(source: SourceDefinition, approval: NonNullable<ReturnType<typeof sourceApproval>>, now = Date.now(), fetcher: typeof fetch = fetch): Promise<Snapshot> {
   const deadline = Date.now() + CRAWL_DEADLINE_MS;
   const url = new URL(source.url);
   if (url.protocol !== 'https:' || url.port || url.username || url.password || !ALLOWED_HOSTS.has(url.hostname)) throw Error('Unapproved ingestion origin');
-  const response = await fetcher(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { accept: 'application/json, application/rss+xml, application/xml, text/xml' }, redirect: 'error' });
+  const response = await fetcher(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { accept: 'application/json, application/rss+xml, application/xml, text/xml' }, redirect: 'manual' });
   if (!response.ok) throw Error('Provider HTTP ' + response.status);
   const fetchedAt = new Date(now).toISOString();
   const provenance = provenanceFor(source, approval, now);
@@ -176,7 +186,7 @@ export async function fetchSource(source: SourceDefinition, approval: NonNullabl
       if (detail.protocol !== 'https:' || detail.hostname !== 'www.bmkg.go.id' || detail.port || detail.username || detail.password || detail.search || detail.hash || !/^\/alerts\/nowcast\/id\/[A-Za-z0-9_-]+_alert\.xml$/.test(detail.pathname)) throw Error('BMKG warning detail URL is invalid');
       const remaining = deadline - Date.now();
       if (remaining <= 0) throw Error('BMKG warning collection exceeded its bounded run time');
-      const alertResponse = await fetcher(detail.href, { signal: AbortSignal.timeout(Math.min(FETCH_TIMEOUT_MS, remaining)), headers: { accept: 'application/xml, text/xml' }, redirect: 'error' });
+      const alertResponse = await fetcher(detail.href, { signal: AbortSignal.timeout(Math.min(FETCH_TIMEOUT_MS, remaining)), headers: { accept: 'application/xml, text/xml' }, redirect: 'manual' });
       if (!alertResponse.ok) throw Error('BMKG warning detail fetch failed with HTTP ' + alertResponse.status);
       const capProvenance = { ...provenance, sourceUrl: detail.href };
       const capXml = await boundedText(alertResponse);
@@ -384,6 +394,8 @@ export default {
       if (path.startsWith('/data/published/')) {
         return await serveHot(request, env.DB);
       }
+      const liveKey = liveKeyForPath(path);
+      if (liveKey) return await servePublication(request, env.DB, liveKey);
       if (path === '/data/live/hazards.json') {
         if (!env.HAZARD_SOURCE_IDS?.trim()) return json({ status: 'unavailable' }, 503);
         return await servePublication(request, env.DB, 'data/observations/hazards.json');
@@ -394,9 +406,23 @@ export default {
       return json({ status: 'unavailable', reason: 'The requested data is temporarily unavailable.' }, 503);
     }
   },
-  async scheduled(_controller: ScheduledController, env: RuntimeEnv): Promise<void> {
-    const result = await runScheduled(env.DB, env);
-    console.log(JSON.stringify({ message: 'scheduled-crawl-complete', ...result }));
+  async scheduled(controller: ScheduledController, env: RuntimeEnv): Promise<void> {
+    // The second cron (see wrangler.jsonc) is its own invocation with its own subrequest budget.
+    if (controller.cron === LIVE_SNAPSHOT_CRON) {
+      try {
+        const live = await runLiveSnapshots(env.DB);
+        console.log(JSON.stringify({ message: 'live-snapshots-complete', ...live }));
+      } catch (error) {
+        console.error(JSON.stringify({ message: 'live-snapshots-failed', error: errorText(error) }));
+      }
+      return;
+    }
+    // Each cron is its own invocation with its own subrequest budget. A local `--test-scheduled` call has no cron and runs everything.
+    if (controller.cron !== HAZARD_CRON) {
+      const result = await runScheduled(env.DB, env);
+      console.log(JSON.stringify({ message: 'scheduled-crawl-complete', ...result }));
+    }
+    if (controller.cron === CRAWL_CRON) return;
     try {
       const hazards = await runHazardSchedule(env);
       console.log(JSON.stringify({ message: 'hazard-schedule-complete', ...hazards }));

@@ -4,6 +4,7 @@ import { serveHot, servePublication } from '../../cloudflare/publication.ts';
 import { cachedPublication } from '../../cloudflare/publication-cache.ts';
 import { D1RateLimiter } from '../../cloudflare/rate-limit.ts';
 import { secureApiResponse } from '../../cloudflare/security.ts';
+import { liveKeyForPath } from '../../cloudflare/live-snapshots.ts';
 
 type LimiterBinding = 'COLD_REQUEST_LIMITER' | 'COLD_EXPORT_LIMITER' | 'COLD_BUDGET_LIMITER';
 type PagesEnv = Omit<Env, LimiterBinding> & Pick<ColdDownloadEnv, 'TURNSTILE_SECRET'>;
@@ -32,6 +33,8 @@ async function routeRequest(context: PagesContext): Promise<Response> {
   if (path.startsWith('/data/published/')) {
     return cachedPublication(context, () => serveHot(request, env.DB));
   }
+  const liveKey = liveKeyForPath(path);
+  if (liveKey) return cachedPublication(context, () => servePublication(request, env.DB, liveKey));
   if (path === '/data/live/hazards.json') {
     if (!env.HAZARD_SOURCE_IDS?.trim()) return Response.json({ status: 'unavailable' }, { status: 503 });
     return cachedPublication(context, () => servePublication(request, env.DB, 'data/observations/hazards.json'));
