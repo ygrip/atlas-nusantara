@@ -66,7 +66,7 @@
 
 {#if loaded && hasAny && savedAt}
   <div class="saved-observatory" data-testid="saved-observatory">
-    <p class="saved-note">{m.observatory_saved_note({ date: date(savedAt) })}</p>
+    <p class="clay-note">{m.observatory_saved_note({ date: date(savedAt) })}</p>
     <div class="summary-counts">
       {#each cards as card (card.id)}
         <article><span class="count-label"><span class="count-icon"><card.icon size={18} aria-hidden="true" /></span>{card.label}</span><strong>{new Intl.NumberFormat(getLocale()).format(card.value)}</strong></article>
@@ -83,7 +83,6 @@
 
 <style>
   .saved-observatory { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
-  .saved-note { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--sky); font-size: .82rem; font-weight: 700; line-height: 1.5; }
   .saved-largest { margin: 0; color: var(--muted); }
   .saved-sources { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: .74rem; line-height: 1.5; }
   .saved-sources a { text-decoration: underline; }

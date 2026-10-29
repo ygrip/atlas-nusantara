@@ -221,6 +221,7 @@ test('renders hot summary counts and cold archive-download controls from a local
   await expect(summary.locator('.summary-counts article')).toContainText('Weather warnings');
   await expect(summary.locator('.summary-counts article')).toContainText('3');
   await expect(summary.locator('.archive-entry')).toHaveCount(1);
+  await summary.locator('.archive-entry summary').first().click();
   await expect(summary.locator('.archive-entry button').first()).toBeVisible();
   await chooseLayer(page, 'Earthquakes');
   await expect(summary.locator('.summary-counts article')).toHaveCount(1);

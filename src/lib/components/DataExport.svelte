@@ -90,7 +90,7 @@
       {/each}
     </ul>
     {#if failed}<p class="export-error" role="alert">{m.data_unavailable()}</p>{/if}
-    <p class="export-note">{m.export_note()}</p>
+    <p class="clay-note" style="margin-top: 14px">{m.export_note()}</p>
   {/if}
 </MapDialog>
 
@@ -108,7 +108,6 @@
   .format-text { display: grid; flex: 1; min-width: 0; gap: 2px; }
   .format-text strong { font-size: .95rem; letter-spacing: .02em; }
   .format-text small { color: var(--muted); font-size: .76rem; line-height: 1.35; }
-  .export-note { margin: 14px 0 0; color: var(--muted); font-size: .74rem; line-height: 1.5; }
   .export-empty, .export-error { margin: 8px 0; line-height: 1.55; }
   .export-error { color: var(--accent-strong); font-weight: 800; }
   @media (prefers-reduced-motion: reduce) { .export-trigger, .export-format { transition: none; } }

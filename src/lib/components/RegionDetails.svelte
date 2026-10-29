@@ -97,7 +97,7 @@
         </div>
       </dl>
       {#if weather.neighbour}
-        <p class="neighbour-note" role="note">{m.weather_neighbour_note({ name, nearest: neighbourName ?? weather.neighbour.code, distance: Math.max(1, Math.round(weather.neighbour.distanceKm)) })}</p>
+        <p class="clay-note" role="note">{m.weather_neighbour_note({ name, nearest: neighbourName ?? weather.neighbour.code, distance: Math.max(1, Math.round(weather.neighbour.distanceKm)) })}</p>
       {/if}
     </div>
   {/if}
@@ -130,7 +130,6 @@
   .region-meta { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--muted); font-size: .78rem; }
   .region-code { font: 800 .76rem ui-monospace, SFMono-Regular, monospace; font-variant-numeric: tabular-nums; }
 
-  .neighbour-note { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--sky); color: var(--text); font-size: .78rem; font-weight: 700; line-height: 1.5; }
   .weather-block { display: grid; gap: 12px; padding-top: 14px; border-top: 1px dashed var(--border); }
   .condition { display: flex; align-items: center; gap: 12px; }
   .condition-icon { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 18px; color: var(--accent-strong); background: var(--sky); box-shadow: inset 0 2px 1px var(--clay-highlight), 0 3px 0 var(--border); }

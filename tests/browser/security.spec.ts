@@ -74,7 +74,9 @@ test('Turnstile loads on demand with the configured sitekey and archive action',
     await route.fulfill({ response, headers: { ...response.headers(), 'content-security-policy': policy } });
   });
   await page.goto('/');
-  const download = page.locator('button[data-kind="warning"]');
+  const archive = page.locator('details.archive-entry[data-kind="warning"]');
+  await archive.locator('summary').click();
+  const download = archive.locator('button.expand-button');
   await expect(download).toBeVisible();
   expect(challengeRequests).toBe(0);
   await download.click();

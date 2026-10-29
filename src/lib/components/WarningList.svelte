@@ -102,8 +102,9 @@
 <style>
   .severity-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .severity-filter button { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: 999px; color: var(--text); font: inherit; font-size: .78rem; font-weight: 800; background: var(--surface); cursor: pointer; box-shadow: 0 2px 0 var(--border); }
-  .severity-filter button b { font-variant-numeric: tabular-nums; opacity: .75; }
+  .severity-filter button b { min-width: 24px; padding: 1px 8px; border-radius: 999px; background: var(--panel); color: var(--text); font-variant-numeric: tabular-nums; text-align: center; }
   .severity-filter button[aria-pressed='true'] { color: var(--on-accent); border-color: var(--accent); background: var(--accent); }
+  .severity-filter button[aria-pressed='true'] b { background: var(--surface); color: var(--accent-strong); }
   .severity-filter button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--tone); box-shadow: 0 0 0 2px var(--surface); }
 

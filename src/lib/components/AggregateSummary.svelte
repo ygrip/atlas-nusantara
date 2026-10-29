@@ -6,7 +6,7 @@
   import { onMount } from 'svelte';
   import { m, type MessageKey } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { Bell, Activity, Flame, Mountain } from 'lucide-svelte';
+  import { Bell, Activity, Flame, Mountain, Sigma, Download, Database, ChevronDown } from 'lucide-svelte';
   import { observatoryKind, type ObservatoryKind } from '$lib/data/observatory';
   type Kind = ObservatoryKind;
   interface Source { id: string; name: string; type?: Kind | null; status: string; intervalMinutes: number; lastSuccessAt?: string; nextDueAt?: string; sourceUrl: string; termsUrl: string }
@@ -93,27 +93,60 @@
         </article>
       {/each}
     </div>
-    <section class="archive-downloads" aria-label={m.download_data()}>
-      {#each shownKinds as kind (kind.id)}
-        {#if canDownload(kind.id)}<div class="archive-entry" data-kind={kind.id}><strong>{m[kind.label]()}</strong><ColdDownload kind={kind.id} /></div>{/if}
-      {/each}
-    </section>
-    <div class="derived-panel">
-      <h3>{m.derived_observations()}</h3>
-      {#if activeKind === 'earthquake' && largest && typeof largest.value === 'number'}<p>{m.largest_observed()}: <strong>M {largest.value.toFixed(1)}</strong></p>
-      {:else if activeKind === 'earthquake'}<p>{m.no_observations()}</p>{/if}
-      <p>{m.retention_note()}</p>
-    </div>
-    {#if shownSources.length > 0}<h3>{m.data_coverage()}</h3>{/if}
-    <div class="source-schedules">
-      {#each shownSources as source (source.id)}
-        <article>
-          <div><a href={safeUrl(source.sourceUrl)} target="_blank" rel="noreferrer">{source.name} ↗</a>
-            <small>{#if !['disabled', 'not-configured'].includes(source.status)}{m.source_enabled()}{:else}{m.source_disabled()}{/if} · <a href={safeUrl(source.termsUrl)} target="_blank" rel="noreferrer">{m.source_terms()} ↗</a></small></div>
-          {#if source.status === 'error' || source.status === 'stale'}<p>{m.data_unavailable()}</p>{/if}
-          <dl><div><dt>{m.source_schedule()}</dt><dd>{source.intervalMinutes}</dd></div><div><dt>{m.source_last()}</dt><dd>{date(source.lastSuccessAt)}</dd></div><div><dt>{m.source_next()}</dt><dd>{date(source.nextDueAt)}</dd></div></dl>
-        </article>
-      {/each}
+    <div class="observability">
+      <details class="derived-panel">
+        <summary>
+          <span class="obs-icon"><Sigma size={18} aria-hidden="true" /></span>
+          <span class="obs-title">{m.derived_observations()}</span>
+          {#if activeKind === 'earthquake' && largest && typeof largest.value === 'number'}<span class="obs-meta">M {largest.value.toFixed(1)}</span>{/if}
+          <span class="obs-chevron"><ChevronDown size={18} aria-hidden="true" /></span>
+        </summary>
+        <div class="obs-body">
+          {#if activeKind === 'earthquake' && largest && typeof largest.value === 'number'}<p>{m.largest_observed()}: <strong>M {largest.value.toFixed(1)}</strong></p>
+          {:else if activeKind === 'earthquake'}<p>{m.no_observations()}</p>{/if}
+          <p class="clay-note">{m.retention_note()}</p>
+        </div>
+      </details>
+
+      <section class="archive-downloads" aria-label={m.download_data()}>
+        {#each shownKinds as kind (kind.id)}
+          {#if canDownload(kind.id)}
+            <details class="archive-entry" data-kind={kind.id}>
+              <summary>
+                <span class="obs-icon"><Download size={18} aria-hidden="true" /></span>
+                <span class="obs-title">{m.download_data()}</span>
+                <span class="obs-meta">{m[kind.label]()}</span>
+                <span class="obs-chevron"><ChevronDown size={18} aria-hidden="true" /></span>
+              </summary>
+              <div class="obs-body"><ColdDownload kind={kind.id} /></div>
+            </details>
+          {/if}
+        {/each}
+      </section>
+
+      {#if shownSources.length > 0}
+        <section class="source-coverage" aria-labelledby="coverage-heading">
+          <h3 id="coverage-heading"><span class="obs-icon"><Database size={18} aria-hidden="true" /></span>{m.data_coverage()}</h3>
+          <div class="source-schedules">
+            {#each shownSources as source (source.id)}
+              {@const collecting = !['disabled', 'not-configured'].includes(source.status)}
+              {@const failing = source.status === 'error' || source.status === 'stale'}
+              <details class="source-card">
+                <summary>
+                  <span class="obs-title">{source.name}</span>
+                  <span class="status-chip" class:on={collecting && !failing} class:warn={failing}><span class="status-dot" aria-hidden="true"></span>{collecting ? m.source_enabled() : m.source_disabled()}</span>
+                  <span class="obs-chevron"><ChevronDown size={18} aria-hidden="true" /></span>
+                </summary>
+                <div class="obs-body">
+                  {#if failing}<p class="source-warning">{m.data_unavailable()}</p>{/if}
+                  <p class="source-links"><a href={safeUrl(source.sourceUrl)} target="_blank" rel="noreferrer">{source.name} ↗</a><a href={safeUrl(source.termsUrl)} target="_blank" rel="noreferrer">{m.source_terms()} ↗</a></p>
+                  <dl><div><dt>{m.source_schedule()}</dt><dd>{source.intervalMinutes}</dd></div><div><dt>{m.source_last()}</dt><dd>{date(source.lastSuccessAt)}</dd></div><div><dt>{m.source_next()}</dt><dd>{date(source.nextDueAt)}</dd></div></dl>
+                </div>
+              </details>
+            {/each}
+          </div>
+        </section>
+      {/if}
     </div>
   {/if}
 </section>
@@ -126,5 +159,35 @@
   .summary-empty { display: grid; gap: 8px; margin: 0; padding: clamp(18px, 3vw, 28px); border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(160deg, var(--surface), var(--panel)); box-shadow: inset 0 1px 0 var(--clay-highlight), 0 4px 0 var(--border); }
   .summary-empty strong { font-size: 1.1rem; }
   .summary-empty p { margin: 0; color: var(--muted); line-height: 1.55; }
+
+  /* Observability: collapsed-by-default clay cards, each one a native <details>. */
+  .observability { display: grid; gap: 14px; min-width: 0; }
+  .observability :is(.derived-panel, .archive-entry, .source-card) { min-width: 0; border: 1px solid var(--border); border-radius: 22px; background: linear-gradient(165deg, var(--surface), var(--panel)); box-shadow: 0 4px 0 var(--border), inset 2px 3px 4px var(--clay-highlight); transition: box-shadow 180ms ease-out; }
+  .observability :is(.derived-panel, .archive-entry, .source-card)[open] { box-shadow: 0 2px 0 var(--border), inset 0 0 0 1px var(--border), inset 3px 4px 8px var(--shadow); }
+  summary { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 16px; border-radius: 22px; list-style: none; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+  .obs-icon { display: grid; place-items: center; flex: 0 0 auto; width: 34px; height: 34px; border-radius: 12px; background: var(--surface); color: var(--accent); box-shadow: 0 3px 0 var(--shadow), inset 1px 1px 2px var(--clay-highlight); }
+  .obs-title { flex: 1 1 auto; min-width: 0; font-weight: 850; overflow-wrap: anywhere; }
+  .obs-meta { flex: 0 1 auto; padding: 4px 12px; border-radius: 999px; background: var(--red-wash); color: var(--text); font-size: .78rem; font-weight: 800; }
+  .obs-chevron { display: grid; place-items: center; flex: 0 0 auto; color: var(--muted); transition: transform 220ms var(--ease-bounce); }
+  details[open] > summary .obs-chevron { transform: rotate(180deg); }
+  .obs-body { display: grid; gap: 12px; padding: 4px 18px 18px; }
+  .obs-body p { margin: 0; color: var(--muted); line-height: 1.55; }
+  .obs-body p strong { color: var(--text); }
+  .source-coverage { display: grid; gap: 12px; }
+  .source-coverage h3 { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; font-size: 1rem; }
+  .source-schedules { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; align-items: start; }
+  .status-chip { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; padding: 4px 10px; border-radius: 999px; background: var(--panel); color: var(--text); font-size: .72rem; font-weight: 800; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .status-chip.on .status-dot { background: var(--green); }
+  .status-chip.warn { background: var(--gold-wash); }
+  .status-chip.warn .status-dot { background: var(--warning); }
+  .source-warning { color: var(--warning); font-weight: 800; }
+  .source-links { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+  .source-links a { color: var(--accent-strong); font-size: .85rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; }
+  .source-card dl { display: grid; gap: 10px; margin: 0; font-size: .78rem; }
+  .source-card dt { color: var(--muted); }
+  .source-card dd { margin: 2px 0 0; font-weight: 800; }
+  @media (prefers-reduced-motion: reduce) { .obs-chevron { transition: none; } }
   @media (max-width: 520px) { .aggregate-summary { padding: 18px; } }
 </style>

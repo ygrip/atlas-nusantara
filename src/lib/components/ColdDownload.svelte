@@ -152,8 +152,8 @@
   <button class="expand-button" type="button" data-kind={kind} aria-expanded={expanded} onclick={toggleDownload}>{m.download_data()}</button>
   {#if expanded}
     <div class="download-options">
-      <p>{m.download_protection()}</p>
-      <p class="window-note" id={'archive-window-' + kind}>{m.archive_window()}</p>
+      <p class="clay-note">{m.download_protection()}</p>
+      <p class="clay-note" id={'archive-window-' + kind}>{m.archive_window()}</p>
       {#if sitekey}
         <div bind:this={widgetContainer} class="turnstile-widget" aria-label={m.verify_download()}></div>
         <form action="/api/export" method="POST" target="_blank" rel="noopener" onsubmit={submitDownload}>
@@ -184,7 +184,7 @@
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; opacity: .55; }
   .expand-button { text-decoration: underline; text-underline-offset: 3px; }
-  .download-options { margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .download-options { display: grid; gap: 12px; margin-top: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
   p { margin: 0 0 12px; color: var(--muted); font-size: .78rem; line-height: 1.55; }
   .unavailable, .status { margin-top: 12px; }
   form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

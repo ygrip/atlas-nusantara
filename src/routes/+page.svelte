@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { ArrowUp } from 'lucide-svelte';
   import SupportPanel from '$lib/components/SupportPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
@@ -188,4 +189,4 @@
   </main>
   <SiteFooter />
 </div>
-<a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}>↑</a>
+<a class="to-top" class:visible={showTop} href="#top" aria-label={m.nav_top()} inert={!showTop}><ArrowUp size={24} strokeWidth={3} aria-hidden="true" /></a>
