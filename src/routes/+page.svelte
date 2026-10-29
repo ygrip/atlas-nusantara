@@ -45,7 +45,7 @@
 
   /**
    * The map, its data loaders and the observatory are the bulk of the page script. They are fetched once the
-   * hero has painted (page idle, first scroll or first touch, whichever comes first) so they stay off the
+   * hero has painted (once the page is idle) so they stay off the
    * critical path of first paint.
    */
   type AtlasComponent = typeof import('$lib/components/RegionAtlas.svelte').default;
@@ -78,15 +78,12 @@
     void atlas?.openRegion(code);
   }
 
+  /**
+   * Loads right after the page goes idle. It deliberately ignores scroll and touch: parsing the map bundle
+   * while the user is mid-scroll makes scrolling stutter, and idle already comes well before they reach it.
+   */
   function startDeferredLoading(): () => void {
-    const cancelIdle = afterLoadIdle(() => { void loadDeferredSections(); }, 2500);
-    const earlyEvents = ['scroll', 'pointerdown', 'keydown', 'touchstart'] as const;
-    const onEarlyInput = () => { void loadDeferredSections(); };
-    for (const name of earlyEvents) window.addEventListener(name, onEarlyInput, { once: true, passive: true });
-    return () => {
-      cancelIdle();
-      for (const name of earlyEvents) window.removeEventListener(name, onEarlyInput);
-    };
+    return afterLoadIdle(() => { void loadDeferredSections(); }, 1500);
   }
   let activeSection = 'atlas';
   let showTop = false;

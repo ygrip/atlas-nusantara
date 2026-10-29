@@ -45,7 +45,7 @@
 {/if}
 
 <style>
-  .island-icon { --group-top: var(--group-top-light); --group-side: var(--group-side-light); display: block; flex: 0 0 auto; overflow: visible; filter: drop-shadow(0 2px 2px color-mix(in srgb, var(--shadow) 60%, transparent)); }
+  .island-icon { --group-top: var(--group-top-light); --group-side: var(--group-side-light); display: block; flex: 0 0 auto; overflow: visible; }
   :global([data-theme='dark']) .island-icon { --group-top: var(--group-top-dark); --group-side: var(--group-side-dark); }
   .island-top { stroke: color-mix(in srgb, var(--group-side) 80%, var(--border)); stroke-width: .8; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
   .island-fallback { display: inline-block; }

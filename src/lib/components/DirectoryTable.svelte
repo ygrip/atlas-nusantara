@@ -61,7 +61,7 @@
     border-radius: 18px;
     background: var(--panel);
     box-shadow: var(--clay-pressed);
-    overscroll-behavior: contain;
+    overscroll-behavior-x: contain;
   }
   .region-table { width: 100%; min-width: 340px; border-collapse: separate; border-spacing: 0 5px; font-size: .82rem; }
   .region-table.wide { min-width: 460px; }

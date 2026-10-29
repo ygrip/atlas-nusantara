@@ -5,7 +5,6 @@
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Snapshot } from '$lib/data/ingestion/schema';
   import { loadPublished, publicationExpired } from '$lib/data/publication';
-  import { afterLoadIdle } from '$lib/perf/idle';
   export let kind: 'warning' | 'earthquake' | 'incident' | 'hazard';
   export let regionCode: string | undefined = undefined;
   let mounted = false;
@@ -21,8 +20,7 @@
   $: if (mounted) void load(kind);
 
   onMount(() => {
-    // The first fetch waits for the page to go idle so it never competes with first paint.
-    const cancelInitialLoad = afterLoadIdle(() => { mounted = true; });
+    mounted = true;
     const timer = setInterval(() => {
       now = Date.now();
       if (validUntil && publicationExpired(validUntil, now)) { snapshot = undefined; validUntil = ''; }
@@ -37,7 +35,7 @@
     };
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('online', resume);
-    return () => { cancelInitialLoad(); clearInterval(timer); controller?.abort(); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
+    return () => { clearInterval(timer); controller?.abort(); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
   });
 
   async function load(type: typeof kind) {

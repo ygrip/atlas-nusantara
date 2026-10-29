@@ -286,7 +286,7 @@
   tbody tr.active-region > :last-child { box-shadow: inset -1px 0 0 var(--border), inset 0 1px 0 var(--border), inset 0 -1px 0 var(--border); }
   .selected-marker { display: inline-grid; place-items: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: var(--accent); color: var(--on-accent); }
   .province-link { min-height: 60px; }
-  .province-silhouette { --clay-map-top: var(--group-top-light); --clay-map-side: var(--group-side-light); display: block; flex: 0 0 76px; width: 76px; height: 54px; overflow: visible; filter: drop-shadow(0 3px 3px color-mix(in srgb, var(--shadow) 48%, transparent)); }
+  .province-silhouette { --clay-map-top: var(--group-top-light); --clay-map-side: var(--group-side-light); display: block; flex: 0 0 76px; width: 76px; height: 54px; overflow: visible; }
   .silhouette-side { fill: var(--clay-map-side); }
   .silhouette-top { stroke: color-mix(in srgb, var(--clay-map-side) 82%, var(--border)); stroke-width: 1; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
   :global([data-theme='dark']) .province-silhouette { --clay-map-top: var(--group-top-dark); --clay-map-side: var(--group-side-dark); }
@@ -311,7 +311,7 @@
   .swatch.regency, .meter-part.regency { background: var(--seg-regency); }
   .swatch.city, .meter-part.city { background: var(--seg-city); }
 
-  .table-scroll { overflow: auto; max-height: min(620px, 72vh); overscroll-behavior: contain; padding: 0 10px 10px; border-radius: 22px; background: var(--panel); box-shadow: var(--clay-pressed); }
+  .table-scroll { overflow: auto; max-height: min(620px, 72vh); overscroll-behavior-x: contain; padding: 0 10px 10px; border-radius: 22px; background: var(--panel); box-shadow: var(--clay-pressed); }
   table { width: 100%; min-width: 720px; border-collapse: separate; border-spacing: 0 8px; font-size: .85rem; }
   caption { text-align: left; padding: 14px 8px 2px; color: var(--muted); font-size: .75rem; }
   thead th { position: sticky; top: 0; z-index: 2; padding: 10px 14px; text-align: left; background: var(--panel); font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }

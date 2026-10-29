@@ -4,7 +4,6 @@
   import { loadPublished, publicationExpired } from '$lib/data/publication';
   import type { ShareSummary } from '$lib/share/card';
   import { onMount } from 'svelte';
-  import { afterLoadIdle } from '$lib/perf/idle';
   import { m, type MessageKey } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { Bell, Activity, Flame, Mountain, Sigma, Download, Database, ChevronDown } from 'lucide-svelte';
@@ -31,7 +30,8 @@
   $: largest = summary?.derivedFacts.find(fact => fact.id === 'max-earthquake-magnitude');
 
   onMount(() => {
-    const cancelInitialLoad = afterLoadIdle(() => { void load(); });
+    // The page mounts this component only after it is idle, so the first fetch can start immediately.
+    void load();
     expiryTimer = setInterval(() => {
       if (validUntil && publicationExpired(validUntil)) {
         summary = undefined;
@@ -43,7 +43,7 @@
     const resume = () => { if (!document.hidden) void load(); };
     document.addEventListener('visibilitychange', resume);
     window.addEventListener('online', resume);
-    return () => { cancelInitialLoad(); controller?.abort(); clearInterval(expiryTimer); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
+    return () => { controller?.abort(); clearInterval(expiryTimer); document.removeEventListener('visibilitychange', resume); window.removeEventListener('online', resume); };
   });
   async function load() {
     controller?.abort();
