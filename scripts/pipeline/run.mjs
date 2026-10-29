@@ -84,7 +84,7 @@ async function collectWarnings(context, previous, options) {
   if (!intervalDue) return { warnings: stored, fetched: 0, rejected: {}, status: 'ok', skipped: true, lastSuccessAt: previousStatus(previous, BMKG_CAP.id)?.lastSuccessAt };
   try {
     const result = await collectBmkgCap(context);
-    return { ...result, status: 'ok', lastSuccessAt: context.fetchedAt };
+    return { ...result, warnings: result.warnings.filter(warning => !warning.skip), status: 'ok', lastSuccessAt: context.fetchedAt };
   } catch (error) {
     return { warnings: stored, fetched: 0, rejected: {}, status: 'failed', error: String(error.message).slice(0, 200), lastSuccessAt: previousStatus(previous, BMKG_CAP.id)?.lastSuccessAt };
   }

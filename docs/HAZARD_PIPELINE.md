@@ -79,3 +79,7 @@ Intervals live in `scripts/pipeline/sources/registry.mjs`. A failing source is r
 ## Tests
 
 `node --experimental-strip-types --test tests/pipeline/*.test.mjs tests/cloudflare/hazards.test.ts` covers cleaning, URL and date parsing, classification (including noise), geocoding ambiguity, event validation, news dedupe, and each source parser with fixtures, including the BNPB fail-closed layout checks. The Worker test runs the schedule against an in-memory SQLite stand-in for D1 (intervals, claims, failure retry, retention, re-aggregation, disabled-by-default). No test touches the network.
+
+## Free-plan subrequest budget
+
+The Workers free plan allows 50 subrequests per invocation (fetches and D1 queries both count). A BMKG CAP alert never changes once published, so the Worker keeps each downloaded alert (and a 30-minute skip marker for expired ones) in `hazard_events` and downloads only alerts it has not seen, at most 10 per tick. A steady tick costs 1 index request plus a few D1 queries; the busiest tick (every 3 hours, all sources due) is about 9 fetches, 20 D1 queries and at most 10 CAP details, under 50 when no source retries. The CLI (`scripts/pipeline/run.mjs`) has no stored alerts and fetches up to 60 details as before. The free plan also limits CPU time per invocation (10 ms); XML parsing and the gazetteer may exceed it, so confirm with `wrangler tail` after enabling, or use the Paid plan.

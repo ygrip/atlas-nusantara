@@ -12,6 +12,8 @@ import { BMKG_CAP, CAP_INTERVAL_MINUTES, collectBmkgCap } from '../scripts/pipel
 const MINUTE_MS = 60_000;
 const RETRY_AFTER_FAILURE_MINUTES = 10;
 const MAX_STORED_ROWS = 3000;
+/** The Workers free plan allows 50 subrequests per invocation: fetches and D1 queries both count. */
+const MAX_NEW_CAP_DETAILS = 10;
 const SNAPSHOT_KEY = 'data/observations/hazards.json';
 const STATE_PREFIX = 'hazard:';
 
@@ -30,10 +32,11 @@ export interface ScheduledHazardSource {
   collect(context: CollectContext): Promise<CollectResult>;
 }
 
-interface CollectContext { gazetteer: unknown; now: number; fetchedAt: string }
+/** `stored` and `maxNewDetails` let the CAP collector reuse earlier results so a tick stays inside the free-plan subrequest limit. */
+interface CollectContext { gazetteer: unknown; now: number; fetchedAt: string; stored?: unknown[]; maxNewDetails?: number }
 interface CollectResult { events?: StoredEvent[]; warnings?: StoredWarning[]; fetched: number; rejected: Record<string, number> }
 interface StoredEvent { id: string; source: string; occurredAt: string; [key: string]: unknown }
-interface StoredWarning { id: string; expires: string; effective: string; [key: string]: unknown }
+interface StoredWarning { id: string; expires: string; effective: string; skip?: boolean; [key: string]: unknown }
 
 function errorText(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -81,16 +84,23 @@ function warningStatements(db: D1Database, source: ScheduledHazardSource, warnin
   return statements;
 }
 
+/** One D1 read gives the collector the earlier alerts and skip markers, saving one download per known alert. */
+async function withStoredWarnings(db: D1Database, source: ScheduledHazardSource, context: CollectContext): Promise<CollectContext> {
+  const rows = await db.prepare("SELECT payload_json FROM hazard_events WHERE source_id = ? AND kind = 'warning'").bind(source.id).all<{ payload_json: string }>();
+  const stored = rows.results.map(row => JSON.parse(row.payload_json) as unknown);
+  return { ...context, stored, maxNewDetails: MAX_NEW_CAP_DETAILS };
+}
+
 async function runOne(db: D1Database, source: ScheduledHazardSource, context: CollectContext): Promise<'ok' | 'failed'> {
   const stateId = STATE_PREFIX + source.id;
   const runAt = context.fetchedAt;
   try {
-    const result = await source.collect(context);
+    const result = await source.collect(source.kind === 'warning' ? await withStoredWarnings(db, source, context) : context);
     const statements: D1PreparedStatement[] = [];
     let count = 0;
     if (source.kind === 'warning') {
       const warnings = result.warnings ?? [];
-      count = warnings.length;
+      count = warnings.filter(warning => !warning.skip).length;
       statements.push(...warningStatements(db, source, warnings, runAt));
     } else {
       const events = result.events ?? [];
@@ -119,7 +129,7 @@ export async function buildStoredSnapshot(db: D1Database, sources: ScheduledHaza
   const rows = await db.prepare('SELECT source_id, kind, payload_json FROM hazard_events ORDER BY occurred_at DESC LIMIT ?').bind(MAX_STORED_ROWS).all<StoredRow>();
   const states = await db.prepare("SELECT source_id, last_success_at, last_error, last_record_count FROM source_state WHERE source_id LIKE 'hazard:%'").all<StateRow>();
   const storedEvents = rows.results.filter(row => row.kind === 'event').map(row => JSON.parse(row.payload_json) as StoredEvent);
-  const warnings = rows.results.filter(row => row.kind === 'warning').map(row => JSON.parse(row.payload_json) as StoredWarning).filter(warning => Date.parse(warning.expires) > now);
+  const warnings = rows.results.filter(row => row.kind === 'warning').map(row => JSON.parse(row.payload_json) as StoredWarning).filter(warning => !warning.skip && Date.parse(warning.expires) > now);
   const eventSources = sources.filter(source => source.kind === 'event');
   const retention = retentionMap(EVENT_SOURCES.filter(source => eventSources.some(enabled => enabled.id === source.meta.id)));
   const events = reaggregate(storedEvents, [], retention, now);

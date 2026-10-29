@@ -15,8 +15,8 @@
   "vars": {
     "TURNSTILE_HOSTNAMES": "nusantara.readynaz.com",
     "COLD_DAILY_DOWNLOAD_LIMIT": "20",
-    "APPROVED_SOURCE_IDS": "",
-    "HAZARD_SOURCE_IDS": "",
+    "APPROVED_SOURCE_IDS": "bmkg-earthquakes,bmkg-nowcast",
+    "HAZARD_SOURCE_IDS": "bmkg-cap,bnpb,antara,gdelt,petabencana",
     "BMKG_EARTHQUAKES_LICENSE": "",
     "BMKG_EARTHQUAKES_LICENSE_URL": "",
     "BMKG_EARTHQUAKES_REVIEWED_BY": "",

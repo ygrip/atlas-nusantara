@@ -141,3 +141,41 @@ test('events outside their source retention are dropped from storage and from th
   const row = await db.prepare("SELECT COUNT(*) AS count FROM hazard_events WHERE id = 'bnpb:old'").first<{ count: number }>();
   assert.equal(row?.count, 0);
 });
+
+function capXml(id: string, expiresMinutes: number): string {
+  const sent = new Date(now - 600_000).toISOString();
+  const expires = new Date(now + expiresMinutes * 60_000).toISOString();
+  return `<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><identifier>${id}</identifier><sender>cuaca.ekstrem@bmkg.go.id</sender><sent>${sent}</sent><status>Actual</status><msgType>Alert</msgType><scope>Public</scope><info><language>id</language><category>Met</category><event>Hujan Lebat</event><urgency>Immediate</urgency><severity>Moderate</severity><certainty>Observed</certainty><effective>${sent}</effective><expires>${expires}</expires><headline>h</headline><description>d</description><area><areaDesc>Jawa</areaDesc><polygon>-6,106 -6,107 -7,107 -7,106 -6,106</polygon></area></info></alert>`;
+}
+
+test('the CAP collector downloads each alert once, bounds new downloads per run and remembers expired alerts', async () => {
+  const { collectBmkgCap } = await import('../../scripts/pipeline/sources/bmkg-cap.mjs');
+  const links = Array.from({ length: 5 }, (_, index) => 'https://www.bmkg.go.id/alerts/nowcast/id/cap' + index + '_alert.xml');
+  const requested: string[] = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    requested.push(url);
+    if (url.endsWith('/nowcast/id')) return new Response('<rss><channel>' + links.map(link => `<item><link>${link}</link></item>`).join('') + '</channel></rss>');
+    const index = links.indexOf(url);
+    return new Response(capXml('id-' + index, index === 4 ? -30 : 60));
+  }) as typeof fetch;
+  try {
+    const fetchedAt = new Date(now).toISOString();
+    const first = await collectBmkgCap({ fetchedAt, now, stored: [], maxNewDetails: 3 });
+    assert.equal(requested.length, 1 + 3);
+    assert.equal(first.warnings.length, 3);
+
+    requested.length = 0;
+    const second = await collectBmkgCap({ fetchedAt, now: now + 300_000, stored: first.warnings, maxNewDetails: 3 });
+    assert.deepEqual(requested.filter(url => !url.endsWith('/nowcast/id')).sort(), [links[3], links[4]]);
+    assert.equal(second.warnings.filter((item: { skip?: boolean }) => !item.skip).length, 4);
+    assert.equal(second.warnings.filter((item: { skip?: boolean }) => item.skip).length, 1);
+
+    requested.length = 0;
+    await collectBmkgCap({ fetchedAt, now: now + 600_000, stored: second.warnings, maxNewDetails: 3 });
+    assert.equal(requested.length, 1);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

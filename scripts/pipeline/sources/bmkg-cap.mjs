@@ -19,20 +19,53 @@ function provenanceFor(link, fetchedAt) {
   };
 }
 
-export async function collectBmkgCap({ fetchedAt }) {
+/** A CAP alert never changes once published, so a stored result is reused instead of downloading the detail again. */
+const SKIP_MINUTES = 30;
+
+function storedByLink(stored) {
+  const byLink = new Map();
+  for (const item of stored) {
+    if (item?.sourceLink) byLink.set(item.sourceLink, item);
+  }
+  return byLink;
+}
+
+function skipMarker(link, fetchedAt) {
+  const retryAt = new Date(Date.parse(fetchedAt) + SKIP_MINUTES * 60_000).toISOString();
+  // Expired immediately so it never reaches the published snapshot; skipUntil stops the link being downloaded again for a while.
+  return { id: 'skip:' + link, sourceLink: link, expires: fetchedAt, effective: fetchedAt, skipUntil: retryAt, skip: true };
+}
+
+/**
+ * Downloads the CAP index, then only the alerts not already known.
+ * `stored` holds earlier results (active alerts and skip markers) so a Worker tick makes one index request plus a few new details,
+ * not one request per alert. `maxNewDetails` bounds the details fetched per run; the rest follow on the next tick.
+ */
+/** @param {{ fetchedAt: string, now?: number, stored?: unknown[], maxNewDetails?: number }} context */
+export async function collectBmkgCap({ fetchedAt, now = Date.parse(fetchedAt), stored = [], maxNewDetails = MAX_CAP_DETAILS }) {
   const feed = new XMLParser({ ignoreAttributes: false, processEntities: false }).parse(await fetchText(BMKG_CAP.url));
   const rawItems = feed?.rss?.channel?.item ?? [];
   const links = (Array.isArray(rawItems) ? rawItems : [rawItems]).map(item => String(item.link)).slice(0, MAX_CAP_DETAILS);
+  const known = storedByLink(stored);
   const warnings = [];
   const rejected = {};
+  let downloaded = 0;
   for (const link of links) {
+    const previous = known.get(link);
+    if (previous?.skip && Date.parse(previous.skipUntil) > now) { warnings.push(previous); continue; }
+    if (previous && !previous.skip && Date.parse(previous.expires) > now) { warnings.push(previous); continue; }
+    if (downloaded >= maxNewDetails) continue;
+    downloaded++;
+    let text;
+    try { text = await fetchText(link); }
+    catch { rejected['fetch-failed'] = (rejected['fetch-failed'] ?? 0) + 1; continue; }
     try {
-      const snapshot = adaptBmkgCap(await fetchText(link), { provenance: provenanceFor(link, fetchedAt), generatedAt: fetchedAt });
+      const snapshot = adaptBmkgCap(text, { provenance: provenanceFor(link, fetchedAt), generatedAt: fetchedAt });
       warnings.push(warningFromRecord(snapshot.records[0], link));
     } catch (error) {
-      if (error instanceof InactiveCapWarningError) continue;
-      rejected['invalid-cap'] = (rejected['invalid-cap'] ?? 0) + 1;
+      if (!(error instanceof InactiveCapWarningError)) rejected['invalid-cap'] = (rejected['invalid-cap'] ?? 0) + 1;
+      warnings.push(skipMarker(link, fetchedAt));
     }
   }
-  return { warnings, fetched: links.length, rejected };
+  return { warnings, fetched: downloaded + 1, rejected };
 }
