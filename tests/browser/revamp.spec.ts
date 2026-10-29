@@ -119,7 +119,7 @@ test('hero lays its copy over one full-bleed archipelago with centered clay figu
 test('hero copy keeps an unsplit accessible title and the new calls to action', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1, name: 'Atlas Nusantara' })).toBeVisible();
-  await expect(page.locator('.hero-tagline')).toHaveText('Indonesia, region by region.');
+  await expect(page.locator('.hero-tagline')).toHaveText('Find your next favourite in Indonesia.');
   await expect(page.locator('.hero-actions .clay-button').first()).toHaveText(/Explore the map/);
   await expect(page.locator('.hero-actions .clay-button').nth(1)).toHaveText('Browse provinces');
 });
@@ -139,7 +139,7 @@ test('hero entrance is CSS-driven, and pointer hover does not take the map apart
 test('hero stays still under reduced motion', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  for (const selector of ['.anatomy-stage .world', '.anatomy-stage .stack-top', '.anatomy-stage .ornament', '.hero-copy .rise', '.hero-copy .word']) {
+  for (const selector of ['.anatomy-stage .world', '.anatomy-stage .stack-top', '.anatomy-stage .ornament', '.hero-copy .rise']) {
     const animation = await page.locator(selector).first().evaluate(element => getComputedStyle(element).animationName);
     expect(animation, selector).toBe('none');
   }

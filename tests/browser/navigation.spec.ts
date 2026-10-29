@@ -21,7 +21,8 @@ test('mobile settings groups language, share and theme, with reversible theme tr
       const bounds = await button.boundingBox();
       return [Math.round(bounds?.width ?? 0), Math.round(bounds?.height ?? 0)];
     }).toEqual([48, 48]);
-    await expect(button).toHaveCSS('border-radius', '50%');
+    // Rounded squares, matching the quick-settings trigger that opens them.
+    await expect(button).toHaveCSS('border-radius', '17px');
   }
   await menu.getByRole('button', { name: 'Switch color theme', exact: true }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
