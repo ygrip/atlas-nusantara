@@ -548,5 +548,13 @@
   "weather_history_source": "தினசரி மதிப்புகள் Open-Meteo (CC BY 4.0) இலிருந்து, ஒரு நகரத்துக்கு ஒரு பிரதிநிதித்துவ புள்ளிக்காக மாதிரியாக்கப்பட்டவை. நாட்கள் மேற்கு இந்தோனேசிய நேரத்தை (UTC+7) பின்பற்றுகின்றன.",
   "weather_history_day": "நாள்",
   "weather_history_caption": "தினசரி வானிலை மதிப்புகள் · {name}",
-  "weather_history_no_data": "தரவு இல்லை"
+  "weather_history_no_data": "தரவு இல்லை",
+  "warning_table_label": "வானிலை எச்சரிக்கை அட்டவணை",
+  "warning_col_severity": "தீவிரம்",
+  "warning_col_event": "எச்சரிக்கை",
+  "warning_col_ends": "முடிவு",
+  "warning_urgency": "அவசரம்",
+  "warning_certainty": "உறுதி",
+  "warning_effective": "நடைமுறை தொடக்கம்",
+  "warning_source_link": "அதிகாரப்பூர்வ எச்சரிக்கை"
 }

@@ -548,5 +548,13 @@
   "weather_history_source": "Daily values from Open-Meteo (CC BY 4.0), modelled for one representative point per city. Days follow Western Indonesia Time (UTC+7).",
   "weather_history_day": "Day",
   "weather_history_caption": "Daily weather values · {name}",
-  "weather_history_no_data": "No data"
+  "weather_history_no_data": "No data",
+  "warning_table_label": "Weather warnings table",
+  "warning_col_severity": "Severity",
+  "warning_col_event": "Warning",
+  "warning_col_ends": "Ends",
+  "warning_urgency": "Urgency",
+  "warning_certainty": "Certainty",
+  "warning_effective": "In effect from",
+  "warning_source_link": "Official alert"
 }

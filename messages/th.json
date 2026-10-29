@@ -548,5 +548,13 @@
   "weather_history_source": "ค่ารายวันจาก Open-Meteo (CC BY 4.0) จำลองสำหรับจุดตัวแทนหนึ่งจุดต่อเมือง วันนับตามเวลาอินโดนีเซียตะวันตก (UTC+7)",
   "weather_history_day": "วัน",
   "weather_history_caption": "ค่าสภาพอากาศรายวัน · {name}",
-  "weather_history_no_data": "ไม่มีข้อมูล"
+  "weather_history_no_data": "ไม่มีข้อมูล",
+  "warning_table_label": "ตารางประกาศเตือนสภาพอากาศ",
+  "warning_col_severity": "ระดับ",
+  "warning_col_event": "คำเตือน",
+  "warning_col_ends": "สิ้นสุด",
+  "warning_urgency": "ความเร่งด่วน",
+  "warning_certainty": "ความแน่นอน",
+  "warning_effective": "มีผลตั้งแต่",
+  "warning_source_link": "ประกาศเตือนอย่างเป็นทางการ"
 }

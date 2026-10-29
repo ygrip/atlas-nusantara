@@ -548,5 +548,13 @@
   "weather_history_source": "Nilai harian dari Open-Meteo (CC BY 4.0), dimodelkan untuk satu titik wakil per kota. Hari mengikuti Waktu Indonesia Barat (UTC+7).",
   "weather_history_day": "Hari",
   "weather_history_caption": "Nilai cuaca harian · {name}",
-  "weather_history_no_data": "Tidak ada data"
+  "weather_history_no_data": "Tidak ada data",
+  "warning_table_label": "Tabel peringatan cuaca",
+  "warning_col_severity": "Tingkat",
+  "warning_col_event": "Peringatan",
+  "warning_col_ends": "Berakhir",
+  "warning_urgency": "Urgensi",
+  "warning_certainty": "Kepastian",
+  "warning_effective": "Berlaku sejak",
+  "warning_source_link": "Peringatan resmi"
 }

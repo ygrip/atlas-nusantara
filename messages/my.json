@@ -548,5 +548,13 @@
   "weather_history_source": "နေ့စဉ်တန်ဖိုးများကို Open-Meteo (CC BY 4.0) မှ မြို့တစ်မြို့လျှင် ကိုယ်စားပြုအမှတ်တစ်ခုအတွက် ပုံစံထုတ်ထားသည်။ နေ့များသည် အနောက်အင်ဒိုနီးရှားအချိန် (UTC+7) ကို လိုက်သည်။",
   "weather_history_day": "နေ့",
   "weather_history_caption": "နေ့စဉ်ရာသီဥတုတန်ဖိုးများ · {name}",
-  "weather_history_no_data": "ဒေတာ မရှိပါ"
+  "weather_history_no_data": "ဒေတာ မရှိပါ",
+  "warning_table_label": "ရာသီဥတု သတိပေးချက် ဇယား",
+  "warning_col_severity": "အဆင့်",
+  "warning_col_event": "သတိပေးချက်",
+  "warning_col_ends": "ပြီးဆုံးချိန်",
+  "warning_urgency": "အရေးပေါ်မှု",
+  "warning_certainty": "သေချာမှု",
+  "warning_effective": "စတင်အသက်ဝင်ချိန်",
+  "warning_source_link": "တရားဝင် သတိပေးချက်"
 }

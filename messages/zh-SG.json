@@ -548,5 +548,13 @@
   "weather_history_source": "每日数值来自 Open-Meteo（CC BY 4.0），按每个城市一个代表点建模。日期按印度尼西亚西部时间（UTC+7）计算。",
   "weather_history_day": "日期",
   "weather_history_caption": "每日天气数值 · {name}",
-  "weather_history_no_data": "暂无数据"
+  "weather_history_no_data": "暂无数据",
+  "warning_table_label": "天气预警表",
+  "warning_col_severity": "级别",
+  "warning_col_event": "预警",
+  "warning_col_ends": "结束",
+  "warning_urgency": "紧急程度",
+  "warning_certainty": "确定性",
+  "warning_effective": "生效时间",
+  "warning_source_link": "官方预警"
 }

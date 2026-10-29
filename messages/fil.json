@@ -548,5 +548,13 @@
   "weather_history_source": "Mga arawang halaga mula sa Open-Meteo (CC BY 4.0), imodelo para sa isang kinatawang punto kada lungsod. Ang mga araw ay ayon sa Western Indonesia Time (UTC+7).",
   "weather_history_day": "Araw",
   "weather_history_caption": "Mga arawang halaga ng panahon · {name}",
-  "weather_history_no_data": "Walang datos"
+  "weather_history_no_data": "Walang datos",
+  "warning_table_label": "Talaan ng mga babala sa panahon",
+  "warning_col_severity": "Antas",
+  "warning_col_event": "Babala",
+  "warning_col_ends": "Matatapos",
+  "warning_urgency": "Pagkaapurahan",
+  "warning_certainty": "Katiyakan",
+  "warning_effective": "Epektibo mula",
+  "warning_source_link": "Opisyal na babala"
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { Cloud, CloudRain, Droplets, Thermometer, Wind } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { loadCurrentForecast, loadWeatherHistory, MAX_NEIGHBOUR_KM, regionHistory, type DailyValues, type WeatherHistory } from '$lib/data/weather-history';
@@ -28,6 +29,7 @@
   ]);
   const scopeName = $derived(regionName ?? m.level_national());
   const metric = $derived(METRIC_DEFINITIONS.find(item => item.id === metricId) ?? METRIC_DEFINITIONS[0]);
+  const metricIcons = { tmean: Thermometer, rain: CloudRain, hu: Droplets, tcc: Cloud, ws: Wind };
   const metricLabels = $derived({ tmean: m.weather_temperature(), rain: m.weather_rain(), hu: m.weather_humidity(), tcc: m.weather_clouds(), ws: m.weather_wind() });
 
   const selected = $derived(history ? regionHistory(history, regionCode) : undefined);
@@ -124,10 +126,17 @@
     {:else if historyFailed || !history}
       <p role="alert">{m.data_unavailable()}</p>
     {:else}
-      <div class="measure-picker" role="group" aria-label={m.weather_history_measure()}>
-        {#each METRIC_DEFINITIONS as item (item.id)}
-          <button type="button" aria-pressed={item.id === metricId} onclick={() => { metricId = item.id; }}>{metricLabels[item.id]}</button>
-        {/each}
+      <!-- A row that scrolls sideways on narrow screens; it must be focusable so keyboard users can reach every measure. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+      <div class="measure-scroll scroll-area" tabindex="0">
+        <div class="measure-picker" role="group" aria-label={m.weather_history_measure()}>
+          {#each METRIC_DEFINITIONS as item (item.id)}
+            {@const MeasureIcon = metricIcons[item.id]}
+            <button type="button" aria-pressed={item.id === metricId} onclick={() => { metricId = item.id; }}>
+              <MeasureIcon size={22} aria-hidden="true" /><span>{metricLabels[item.id]}</span><small>{item.unit}</small>
+            </button>
+          {/each}
+        </div>
       </div>
 
       {#if selected?.neighbour}
@@ -183,7 +192,7 @@
 
 <style>
   .weather-panel { margin-top: 20px; padding: 20px; border-radius: 22px; background: var(--surface); box-shadow: var(--clay-pressed); display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
-  [role='tabpanel'] { display: grid; gap: 14px; min-width: 0; }
+  [role='tabpanel'] { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
   [role='tabpanel'][hidden] { display: none; }
   h3 { margin: 0; }
   p { margin: 0; font-size: .85rem; color: var(--muted); }
@@ -195,10 +204,16 @@
   .summary dd { margin: 4px 0 0; font-size: 1.2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
   .summary small { color: var(--muted); font-weight: 700; overflow-wrap: anywhere; }
 
-  .measure-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-  .measure-picker button { min-height: 40px; padding: 0 14px; border: 0; border-radius: 14px; background: var(--panel); color: var(--text); font: inherit; font-weight: 850; cursor: pointer; box-shadow: var(--clay-shadow); }
-  .measure-picker button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
+  .measure-scroll { overflow-x: auto; overflow-y: hidden; padding: 4px 4px 12px; margin-inline: -4px; scroll-snap-type: x proximity; scrollbar-width: thin; }
+  .measure-picker { display: flex; gap: 10px; width: max-content; min-width: 100%; }
+  .measure-picker button { display: grid; justify-items: center; gap: 3px; flex: 1 0 104px; min-height: 84px; padding: 10px 14px; border: 0; border-radius: 20px; background: linear-gradient(165deg, var(--surface), var(--panel)); color: var(--text); font: inherit; font-weight: 850; cursor: pointer; scroll-snap-align: start; box-shadow: var(--clay-shadow); transition: transform .15s ease, box-shadow .15s ease; }
+  .measure-picker button span { font-size: .8rem; white-space: nowrap; }
+  .measure-picker button small { color: var(--muted); font-size: .68rem; font-weight: 700; }
+  .measure-picker button:hover { transform: translateY(-2px); }
+  .measure-picker button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); box-shadow: var(--clay-pressed); }
+  .measure-picker button[aria-pressed='true'] small { color: inherit; opacity: .85; }
   .measure-picker button:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { .measure-picker button { transition: none; } }
 
   .legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 0; padding: 0; list-style: none; font-size: .75rem; font-weight: 800; }
   .legend li { display: inline-flex; align-items: center; gap: 7px; }

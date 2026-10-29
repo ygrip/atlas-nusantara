@@ -548,5 +548,13 @@
   "weather_history_source": "តម្លៃប្រចាំថ្ងៃពី Open-Meteo (CC BY 4.0) គណនាសម្រាប់ចំណុចតំណាងមួយក្នុងមួយទីក្រុង។ ថ្ងៃតាមម៉ោងឥណ្ឌូនេស៊ីខាងលិច (UTC+7)។",
   "weather_history_day": "ថ្ងៃ",
   "weather_history_caption": "តម្លៃអាកាសធាតុប្រចាំថ្ងៃ · {name}",
-  "weather_history_no_data": "គ្មានទិន្នន័យ"
+  "weather_history_no_data": "គ្មានទិន្នន័យ",
+  "warning_table_label": "តារាងការព្រមានអាកាសធាតុ",
+  "warning_col_severity": "កម្រិត",
+  "warning_col_event": "ការព្រមាន",
+  "warning_col_ends": "បញ្ចប់",
+  "warning_urgency": "ភាពបន្ទាន់",
+  "warning_certainty": "ភាពច្បាស់លាស់",
+  "warning_effective": "មានប្រសិទ្ធភាពចាប់ពី",
+  "warning_source_link": "ការជូនដំណឹងផ្លូវការ"
 }

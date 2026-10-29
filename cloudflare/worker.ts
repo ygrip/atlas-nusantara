@@ -11,7 +11,7 @@ import { adaptBmkgEarthquakes } from '../src/lib/data/ingestion/adapters.ts';
 import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetRecord, type DatasetType, type Snapshot } from '../src/lib/data/ingestion/schema.ts';
 
 /** Must match the second entry of `triggers.crons` in wrangler.jsonc. */
-const LIVE_SNAPSHOT_CRON = '2-57/5 * * * *';
+const LIVE_SNAPSHOT_CRON = '2,22,42 * * * *';
 const DAY_MS = 86_400_000;
 const MAX_BODY_BYTES = 2_000_000;
 const FETCH_TIMEOUT_MS = 8_000;

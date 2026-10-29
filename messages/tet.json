@@ -548,5 +548,13 @@
   "weather_history_source": "Valór loron-loron husi Open-Meteo (CC BY 4.0), modelu ba pontu reprezentativu ida kada sidade. Loron tuir oras Indonézia Osidentál (UTC+7).",
   "weather_history_day": "Loron",
   "weather_history_caption": "Valór klima loron-loron · {name}",
-  "weather_history_no_data": "La iha dadus"
+  "weather_history_no_data": "La iha dadus",
+  "warning_table_label": "Tabela avizu klima",
+  "warning_col_severity": "Nivel",
+  "warning_col_event": "Avizu",
+  "warning_col_ends": "Remata",
+  "warning_urgency": "Urjénsia",
+  "warning_certainty": "Serteza",
+  "warning_effective": "Vale husi",
+  "warning_source_link": "Alerta ofisiál"
 }

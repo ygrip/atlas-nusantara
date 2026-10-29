@@ -548,5 +548,13 @@
   "weather_history_source": "ຄ່າລາຍວັນຈາກ Open-Meteo (CC BY 4.0) ຈຳລອງສຳລັບຈຸດຕົວແທນໜຶ່ງຈຸດຕໍ່ເມືອງ. ວັນຕາມເວລາອິນໂດເນເຊຍຕາເວັນຕົກ (UTC+7).",
   "weather_history_day": "ວັນ",
   "weather_history_caption": "ຄ່າສະພາບອາກາດລາຍວັນ · {name}",
-  "weather_history_no_data": "ບໍ່ມີຂໍ້ມູນ"
+  "weather_history_no_data": "ບໍ່ມີຂໍ້ມູນ",
+  "warning_table_label": "ຕາຕະລາງການເຕືອນສະພາບອາກາດ",
+  "warning_col_severity": "ລະດັບ",
+  "warning_col_event": "ການເຕືອນ",
+  "warning_col_ends": "ສິ້ນສຸດ",
+  "warning_urgency": "ຄວາມຮີບດ່ວນ",
+  "warning_certainty": "ຄວາມແນ່ນອນ",
+  "warning_effective": "ມີຜົນຕັ້ງແຕ່",
+  "warning_source_link": "ການເຕືອນຢ່າງເປັນທາງການ"
 }

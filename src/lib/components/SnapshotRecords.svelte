@@ -3,13 +3,19 @@
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { DatasetRecord } from '$lib/data/ingestion/schema';
   import { officialWarningUrl } from '$lib/pwa/notification-payload';
+  import WarningTable from './WarningTable.svelte';
   export let records: DatasetRecord[];
   export let source: string;
   $: displayed = records.slice(0, 30);
+  /** Weather warnings read better as a table with a details dialog than as a key/value dump. */
+  $: allWarnings = records.length > 0 && records.every(record => record.type === 'warning');
   function date(value: string) { return new Intl.DateTimeFormat(getLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)); }
 </script>
 
-{#if records.length > 0}
+{#if allWarnings}
+  <p class="record-count">{m.records_shown()}: {displayed.length} / {records.length}</p>
+  <WarningTable records={displayed} {source} />
+{:else if records.length > 0}
   <p class="record-count">{m.records_shown()}: {displayed.length} / {records.length}</p>
   <!-- svelte-ignore a11y_no_noninteractive_tabindex (a scrollable list must be focusable so keyboard users can scroll it) -->
   <ul class="snapshot-records scroll-area" tabindex="0" aria-label={m.snapshot_heading()}>
