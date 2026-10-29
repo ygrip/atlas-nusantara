@@ -61,10 +61,9 @@ The scheduled Worker keeps the forecast, history and earthquake data fresh witho
 
 | Cron (`wrangler.jsonc`) | Job |
 |---|---|
-| `*/5 * * * *` | Legacy source crawl (`bmkg-earthquakes`, `bmkg-nowcast`) |
+| `*/5 * * * *` | Legacy source crawl (`bmkg-earthquakes`, `bmkg-nowcast`), then the hazard sources (`HAZARD_SOURCE_IDS`) |
 | `2-57/5 * * * *` | Live snapshots: 20 forecast points per tick (a full cycle is about 2 hours), republish every 15 min; earthquakes every 15 min; history about daily (that tick does only history) |
-| `4-59/5 * * * *` | Hazard sources (`HAZARD_SOURCE_IDS`) |
 
-Each cron is a separate invocation with its own 50-subrequest free-plan budget (fetches and D1 queries). The forecast goes live only after at least 90% of points were fetched within 6 hours, so the first live copy appears about 2 hours after the first tick. Points BMKG fails for are listed in `unavailable` and the page borrows the nearest forecast. Apply `cloudflare/migrations/0007_forecast_points.sql` (`npx wrangler d1 migrations apply nusantara-atlas --remote`) before deploying.
+Each cron is a separate invocation with its own 50-subrequest free-plan budget (fetches and D1 queries). The free plan allows 5 cron triggers per account in total, so this Worker uses two. The forecast goes live only after at least 90% of points were fetched within 6 hours, so the first live copy appears about 2 hours after the first tick. Points BMKG fails for are listed in `unavailable` and the page borrows the nearest forecast. Apply `cloudflare/migrations/0007_forecast_points.sql` (`npx wrangler d1 migrations apply nusantara-atlas --remote`) before deploying.
 
 `BMKG_*_REVIEWED_AT` may stay empty: the Worker then stamps the run time. `BMKG_*_REVIEWED_BY`, the licence and the licence URL are still required.

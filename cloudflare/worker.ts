@@ -12,9 +12,6 @@ import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetR
 
 /** Must match the second entry of `triggers.crons` in wrangler.jsonc. */
 const LIVE_SNAPSHOT_CRON = '2-57/5 * * * *';
-/** Hazard sources run in their own invocation so their subrequests do not share the crawl's 50-subrequest free-plan budget. */
-const HAZARD_CRON = '4-59/5 * * * *';
-const CRAWL_CRON = '*/5 * * * *';
 const DAY_MS = 86_400_000;
 const MAX_BODY_BYTES = 2_000_000;
 const FETCH_TIMEOUT_MS = 8_000;
@@ -417,12 +414,8 @@ export default {
       }
       return;
     }
-    // Each cron is its own invocation with its own subrequest budget. A local `--test-scheduled` call has no cron and runs everything.
-    if (controller.cron !== HAZARD_CRON) {
-      const result = await runScheduled(env.DB, env);
-      console.log(JSON.stringify({ message: 'scheduled-crawl-complete', ...result }));
-    }
-    if (controller.cron === CRAWL_CRON) return;
+    const result = await runScheduled(env.DB, env);
+    console.log(JSON.stringify({ message: 'scheduled-crawl-complete', ...result }));
     try {
       const hazards = await runHazardSchedule(env);
       console.log(JSON.stringify({ message: 'hazard-schedule-complete', ...hazards }));
