@@ -19,7 +19,7 @@
   import LayerPicker from '$lib/components/LayerPicker.svelte';
   import RegionAtlas from '$lib/components/RegionAtlas.svelte';
   import ProvinceExplorer from '$lib/components/ProvinceExplorer.svelte';
-  import SnapshotPanel from '$lib/components/SnapshotPanel.svelte';
+  import WeatherPanel from '$lib/components/WeatherPanel.svelte';
   import EarthquakePanel from '$lib/components/EarthquakePanel.svelte';
   import HazardPanel from '$lib/components/HazardPanel.svelte';
   import { observatoryKind } from '$lib/data/observatory';
@@ -162,7 +162,7 @@
         {:else if activeLayer === 'language'}
           <LanguagePanel provinceCode={selectedRegion?.code.split('.')[0]} />
         {:else if activeLayer === 'warning'}
-          <SnapshotPanel kind="warning" regionCode={selectedRegion?.code} />
+          <WeatherPanel regionCode={selectedRegion?.code} regionName={selectedRegion?.name} />
         {/if}
       </div>
     </section>

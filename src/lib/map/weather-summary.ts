@@ -1,4 +1,5 @@
 import { forecastStepAt, type ForecastSnapshot, type ForecastStep } from './weather.ts';
+import { nearestNeighbour, type Neighbour } from '../data/weather-history-contract.ts';
 
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 
@@ -15,6 +16,8 @@ export interface WeatherSummary {
   /** Degrees clockwise from north that the wind blows towards (for an arrow that points downwind). */
   arrow: number;
   points: number;
+  /** Set when the region has no forecast of its own and this nearby location's forecast stands in for it. */
+  neighbour?: Neighbour;
 }
 
 function average(values: number[]): number {
@@ -44,8 +47,7 @@ function dominantDescription(steps: ForecastStep[]): string {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
-export function summariseWeather(forecast: ForecastSnapshot, code: string, time: string | undefined): WeatherSummary | undefined {
-  const steps = stepsForRegion(forecast, code, time);
+function summariseSteps(steps: ForecastStep[]): WeatherSummary | undefined {
   if (steps.length === 0) return undefined;
   // Vector-average the wind so opposite directions cancel instead of averaging angles.
   const east = average(steps.map(step => -Math.sin((step.wd * Math.PI) / 180) * step.ws));
@@ -62,6 +64,25 @@ export function summariseWeather(forecast: ForecastSnapshot, code: string, time:
     arrow: towards,
     points: steps.length
   };
+}
+
+/** The region's own forecast; a region BMKG returned nothing for borrows the nearest location that has one. */
+export function summariseWeather(forecast: ForecastSnapshot, code: string, time: string | undefined): WeatherSummary | undefined {
+  const own = summariseSteps(stepsForRegion(forecast, code, time));
+  if (own) return own;
+  return summariseFromNeighbour(forecast, code, time);
+}
+
+function summariseFromNeighbour(forecast: ForecastSnapshot, code: string, time: string | undefined): WeatherSummary | undefined {
+  const missing = (forecast.unavailable ?? []).filter(item => pointInRegion(item.code, code));
+  if (missing.length === 0 || !time) return undefined;
+  const target = { lat: average(missing.map(item => item.lat)), lon: average(missing.map(item => item.lon)) };
+  const usable = forecast.points.filter(point => !pointInRegion(point.code, code) && forecastStepAt(point, time));
+  const neighbour = nearestNeighbour(usable, target);
+  if (!neighbour) return undefined;
+  const summary = summariseSteps(stepsForRegion(forecast, neighbour.code, time));
+  if (!summary) return undefined;
+  return { ...summary, neighbour };
 }
 
 /**

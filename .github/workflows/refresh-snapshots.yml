@@ -33,10 +33,14 @@ jobs:
           cache: npm
       - name: Capture forecasts within the BMKG request budget
         run: node scripts/ingestion/forecast-snapshot.mjs
+      - name: Capture the seven-day daily history (Open-Meteo, 13 batched requests)
+        run: node scripts/ingestion/weather-history.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: bmkg-weather-snapshot
-          path: static/data/weather/forecast.json
+          path: |
+            static/data/weather/forecast.json
+            static/data/weather/history.json
           retention-days: 7
           if-no-files-found: error
       - name: Install the pinned publisher
@@ -51,6 +55,7 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID" && test -n "$SNAPSHOT_R2_BUCKET"
           npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/weather/forecast.json" --remote --file static/data/weather/forecast.json --content-type application/json --cache-control 'public, max-age=300'
+          npx wrangler r2 object put "$SNAPSHOT_R2_BUCKET/data/weather/history.json" --remote --file static/data/weather/history.json --content-type application/json --cache-control 'public, max-age=300'
 
   earthquake:
     if: >-

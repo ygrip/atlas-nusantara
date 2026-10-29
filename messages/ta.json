@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "புகைப்படத்துடன் உள்ள உணவுகள்",
   "hero_cta_atlas": "வரைபடத்தை ஆராயுங்கள்",
   "hero_cta_provinces": "மாகாணங்களைப் பாருங்கள்",
-  "hero_art_hint": "பிரித்துப் பார்க்க சுட்டியை வைக்கவும்"
+  "hero_art_hint": "பிரித்துப் பார்க்க சுட்டியை வைக்கவும்",
+  "weather_tabs_label": "வானிலை காட்சிகள்",
+  "weather_tab_current": "தற்போது",
+  "weather_tab_history": "கடந்த 7 நாட்கள்",
+  "weather_current_heading": "தற்போதைய வானிலை · {name}",
+  "weather_current_hint": "தற்போதைய வானிலையைக் காண வரைபடத்தில் மாகாணம் அல்லது நகரைத் தேர்ந்தெடுக்கவும்.",
+  "weather_history_heading": "தினசரி வானிலை · {name}",
+  "weather_history_desc": "கடந்த வாரத்தில் நாளுக்கு நாள் வானிலை எப்படி மாறியது.",
+  "weather_history_measure": "வானிலை அளவீடு",
+  "weather_history_range": "தினசரி குறைந்தது முதல் அதிகபட்சம்",
+  "weather_history_scope": "{count} நகரங்கள் மற்றும் மாவட்டங்களின் சராசரி",
+  "weather_neighbour_note": "{name} க்கான வானிலை அறிக்கை இல்லை. அருகிலுள்ள இடமான {nearest} ({distance} கி.மீ தொலைவு) காட்டப்படுகிறது.",
+  "weather_history_empty": "{name} க்கு வானிலை வரலாறு இல்லை, {distance} கி.மீ க்குள் எந்த இடத்திற்கும் இல்லை.",
+  "weather_history_source": "தினசரி மதிப்புகள் Open-Meteo (CC BY 4.0) இலிருந்து, ஒரு நகரத்துக்கு ஒரு பிரதிநிதித்துவ புள்ளிக்காக மாதிரியாக்கப்பட்டவை. நாட்கள் மேற்கு இந்தோனேசிய நேரத்தை (UTC+7) பின்பற்றுகின்றன.",
+  "weather_history_day": "நாள்",
+  "weather_history_caption": "தினசரி வானிலை மதிப்புகள் · {name}",
+  "weather_history_no_data": "தரவு இல்லை"
 }

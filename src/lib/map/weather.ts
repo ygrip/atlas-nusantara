@@ -19,6 +19,9 @@ export interface ForecastStep {
 
 export interface ForecastPoint { code: string; adm4: string; lon: number; lat: number; steps: ForecastStep[] }
 
+/** A city/regency BMKG returned no usable forecast for in this capture; its position lets the atlas borrow the nearest forecast. */
+export interface UnavailablePoint { code: string; lat: number; lon: number }
+
 export interface ForecastSnapshot {
   schemaVersion: 1;
   kind: 'forecast-snapshot';
@@ -31,6 +34,7 @@ export interface ForecastSnapshot {
   validTo: string;
   coverage: { requested: number; received: number };
   points: ForecastPoint[];
+  unavailable?: UnavailablePoint[];
 }
 
 /** Gridded fields over the national SVG plane (0..1000 × 0..500), row-major, origin top-left. */
@@ -62,6 +66,11 @@ export async function loadForecast(url: string, signal?: AbortSignal): Promise<F
   return loadSavedSnapshot(url, isForecastSnapshot, signal);
 }
 
+function isUnavailableList(value: unknown): value is UnavailablePoint[] {
+  if (!Array.isArray(value) || value.length > 1000) return false;
+  return value.every(item => item && /^\d{2}\.\d{2}$/.test(item.code) && Number.isFinite(item.lat) && Number.isFinite(item.lon) && Math.abs(item.lat) <= 90 && Math.abs(item.lon) <= 180);
+}
+
 export function isForecastSnapshot(value: unknown): value is ForecastSnapshot {
   if (!value || typeof value !== 'object') return false;
   const snapshot = value as ForecastSnapshot;
@@ -69,6 +78,7 @@ export function isForecastSnapshot(value: unknown): value is ForecastSnapshot {
   if (!Number.isFinite(Date.parse(snapshot.fetchedAt)) || !Number.isFinite(Date.parse(snapshot.validFrom)) || !Number.isFinite(Date.parse(snapshot.validTo))) return false;
   if (!Array.isArray(snapshot.points) || snapshot.points.length === 0 || snapshot.points.length > 1000 || snapshot.coverage?.received !== snapshot.points.length) return false;
   if (!Number.isInteger(snapshot.coverage.requested) || snapshot.coverage.requested < snapshot.points.length || snapshot.coverage.requested > 1000) return false;
+  if (snapshot.unavailable !== undefined && !isUnavailableList(snapshot.unavailable)) return false;
   const codes = new Set<string>();
   for (const point of snapshot.points) {
     if (!/^\d{2}\.\d{2}$/.test(point.code) || codes.has(point.code) || !Number.isFinite(point.lon) || !Number.isFinite(point.lat) || Math.abs(point.lon) > 180 || Math.abs(point.lat) > 90) return false;

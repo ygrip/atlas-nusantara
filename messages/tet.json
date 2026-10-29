@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Hahán ho foto",
   "hero_cta_atlas": "Esplora mapa",
   "hero_cta_provinces": "Haree provínsia",
-  "hero_art_hint": "Hili ho mouse atu fahe"
+  "hero_art_hint": "Hili ho mouse atu fahe",
+  "weather_tabs_label": "Haree klima",
+  "weather_tab_current": "Agora",
+  "weather_tab_history": "Loron 7 liubá",
+  "weather_current_heading": "Klima agora · {name}",
+  "weather_current_hint": "Hili provínsia ka sidade iha mapa atu haree klima agora.",
+  "weather_history_heading": "Klima loron-loron · {name}",
+  "weather_history_desc": "Klima muda husi loron ba loron iha semana liubá.",
+  "weather_history_measure": "Medida klima",
+  "weather_history_range": "Ki’ik to’o boot loron-loron",
+  "weather_history_scope": "Média husi sidade no munisípiu {count}",
+  "weather_neighbour_note": "La iha relatóriu klima ba {name}. Hatudu fatin besik liu, {nearest}, {distance} km dook.",
+  "weather_history_empty": "La iha istória klima ba {name}, no la iha fatin iha {distance} km ne’ebé iha.",
+  "weather_history_source": "Valór loron-loron husi Open-Meteo (CC BY 4.0), modelu ba pontu reprezentativu ida kada sidade. Loron tuir oras Indonézia Osidentál (UTC+7).",
+  "weather_history_day": "Loron",
+  "weather_history_caption": "Valór klima loron-loron · {name}",
+  "weather_history_no_data": "La iha dadus"
 }

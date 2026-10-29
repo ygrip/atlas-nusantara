@@ -5,6 +5,7 @@
 | Snapshot | Cron | Capture |
 |---|---|---|
 | BMKG forecasts | `0 */3 * * *` | Every 3 hours; about 10 minutes for 514 points at under 60 requests/minute |
+| Daily weather history (Open-Meteo, last 7 full days, WIB days) | with the forecast job | 13 batched requests (40 points each); `static/data/weather/history.json` |
 | BMKG M5+ earthquake archive | `*/25 * * * *` | Every 25 minutes (:00, :25, :50); one archive request |
 | Hazards (`hazards.json`): BMKG CAP, PetaBencana, ANTARA, GDELT, BNPB | Worker `*/5` tick, per-source intervals 5 / 10 / 15 / 30 / 180 min; CI `*/25` with `--due` | See [HAZARD_PIPELINE.md](HAZARD_PIPELINE.md#per-source-schedule) |
 
@@ -47,3 +48,9 @@ Visible map/cards refresh forecasts every two hours; earthquake pins/list refres
 ## Separate current-warning pipeline
 
 The existing Worker publication scheduler remains independently gated by its source approvals and expiry policy. Its base trigger checks persisted due times; the earthquake collector already uses a 15-minute interval. CAP warning expiry/fail-closed checks remain separate from the two-hour forecast cadence. Avoid enabling duplicate acquisition pipelines unnecessarily.
+
+## Weather history and nearest-neighbour fallback
+
+- BMKG publishes forecasts only, so `scripts/ingestion/weather-history.mjs` builds the 7-day daily history (mean/min/max temperature, rain, humidity, cloud, wind) from Open-Meteo (CC BY 4.0, free tier is non-commercial: review before relying on it with ads or switch provider). Point coordinates come from `static/data/admin-2025/forecast-points.json`.
+- A city BMKG returned nothing for is listed in the forecast snapshot's `unavailable` array. The atlas shows the nearest forecast (within 250 km) with a note. History works the same way for cities with no daily values. With no neighbour in range the chart is empty with an explanatory message.
+- The site serves these files from the deployed build. Until `SNAPSHOT_REFRESH_ENABLED`/publishing is configured, refresh by running both scripts and redeploying: `node scripts/ingestion/forecast-snapshot.mjs && node scripts/ingestion/weather-history.mjs && npm run build && npm run pages:deploy`.

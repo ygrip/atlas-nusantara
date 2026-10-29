@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Hidangan dengan foto",
   "hero_cta_atlas": "Teroka peta",
   "hero_cta_provinces": "Lihat wilayah",
-  "hero_art_hint": "Halakan kursor untuk leraikan"
+  "hero_art_hint": "Halakan kursor untuk leraikan",
+  "weather_tabs_label": "Paparan cuaca",
+  "weather_tab_current": "Semasa",
+  "weather_tab_history": "7 hari lepas",
+  "weather_current_heading": "Cuaca semasa · {name}",
+  "weather_current_hint": "Pilih wilayah atau bandar pada peta untuk melihat cuaca semasa.",
+  "weather_history_heading": "Cuaca harian · {name}",
+  "weather_history_desc": "Perubahan cuaca dari hari ke hari sepanjang seminggu lepas.",
+  "weather_history_measure": "Ukuran cuaca",
+  "weather_history_range": "Terendah hingga tertinggi harian",
+  "weather_history_scope": "Purata {count} bandar dan daerah",
+  "weather_neighbour_note": "Tiada laporan cuaca untuk {name}. Memaparkan lokasi terdekat, {nearest}, sejauh {distance} km.",
+  "weather_history_empty": "Tiada sejarah cuaca untuk {name}, dan tiada lokasi dalam {distance} km yang memilikinya.",
+  "weather_history_source": "Nilai harian daripada Open-Meteo (CC BY 4.0), dimodelkan untuk satu titik wakil bagi setiap bandar. Hari mengikut Waktu Indonesia Barat (UTC+7).",
+  "weather_history_day": "Hari",
+  "weather_history_caption": "Nilai cuaca harian · {name}",
+  "weather_history_no_data": "Tiada data"
 }

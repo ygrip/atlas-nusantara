@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "เมนูที่มีรูปภาพ",
   "hero_cta_atlas": "สำรวจแผนที่",
   "hero_cta_provinces": "ดูจังหวัด",
-  "hero_art_hint": "เลื่อนเมาส์เพื่อแยกชิ้นส่วน"
+  "hero_art_hint": "เลื่อนเมาส์เพื่อแยกชิ้นส่วน",
+  "weather_tabs_label": "มุมมองสภาพอากาศ",
+  "weather_tab_current": "ปัจจุบัน",
+  "weather_tab_history": "7 วันที่ผ่านมา",
+  "weather_current_heading": "สภาพอากาศปัจจุบัน · {name}",
+  "weather_current_hint": "เลือกจังหวัดหรือเมืองบนแผนที่เพื่อดูสภาพอากาศปัจจุบัน",
+  "weather_history_heading": "สภาพอากาศรายวัน · {name}",
+  "weather_history_desc": "สภาพอากาศที่เปลี่ยนไปในแต่ละวันตลอดสัปดาห์ที่ผ่านมา",
+  "weather_history_measure": "ตัวชี้วัดสภาพอากาศ",
+  "weather_history_range": "ต่ำสุดถึงสูงสุดรายวัน",
+  "weather_history_scope": "ค่าเฉลี่ยของ {count} เมืองและอำเภอ",
+  "weather_neighbour_note": "ไม่มีรายงานสภาพอากาศของ {name} แสดงสถานที่ที่ใกล้ที่สุดแทน คือ {nearest} ห่างออกไป {distance} กม.",
+  "weather_history_empty": "ไม่มีประวัติสภาพอากาศของ {name} และไม่มีสถานที่ใดในรัศมี {distance} กม. ที่มีข้อมูล",
+  "weather_history_source": "ค่ารายวันจาก Open-Meteo (CC BY 4.0) จำลองสำหรับจุดตัวแทนหนึ่งจุดต่อเมือง วันนับตามเวลาอินโดนีเซียตะวันตก (UTC+7)",
+  "weather_history_day": "วัน",
+  "weather_history_caption": "ค่าสภาพอากาศรายวัน · {name}",
+  "weather_history_no_data": "ไม่มีข้อมูล"
 }

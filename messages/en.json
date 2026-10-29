@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Dishes with photos",
   "hero_cta_atlas": "Explore the map",
   "hero_cta_provinces": "Browse provinces",
-  "hero_art_hint": "Hover to pull it apart"
+  "hero_art_hint": "Hover to pull it apart",
+  "weather_tabs_label": "Weather views",
+  "weather_tab_current": "Current",
+  "weather_tab_history": "Past 7 days",
+  "weather_current_heading": "Current weather · {name}",
+  "weather_current_hint": "Select a province or city on the map to see its current weather.",
+  "weather_history_heading": "Daily weather · {name}",
+  "weather_history_desc": "How the weather changed from day to day over the past week.",
+  "weather_history_measure": "Weather measure",
+  "weather_history_range": "Daily low to high",
+  "weather_history_scope": "Average of {count} cities and regencies",
+  "weather_neighbour_note": "No weather report for {name}. Showing the nearest location, {nearest}, {distance} km away.",
+  "weather_history_empty": "No weather history is available for {name}, and no location within {distance} km has any.",
+  "weather_history_source": "Daily values from Open-Meteo (CC BY 4.0), modelled for one representative point per city. Days follow Western Indonesia Time (UTC+7).",
+  "weather_history_day": "Day",
+  "weather_history_caption": "Daily weather values · {name}",
+  "weather_history_no_data": "No data"
 }

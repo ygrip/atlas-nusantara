@@ -45,7 +45,7 @@ async function fetchPoint(point) {
       const steps = (payload.data?.[0]?.cuaca ?? []).flat();
       if (!location || steps.length === 0) throw Error('Empty forecast');
       const expectedCode = point.providerCode ?? point.code;
-      if (String(location.adm2) !== expectedCode || normaliseName(location.kotkab) !== normaliseName(point.expectedName)) {
+      if (String(location.adm2) !== expectedCode || normaliseName(location.kotkab) !== normaliseName(point.providerName ?? point.expectedName)) {
         throw Error('Provider region differs from the verified code/name crosswalk');
       }
       if (!Number.isFinite(Number(location.lon)) || !Number.isFinite(Number(location.lat))) throw Error('Invalid forecast coordinates');
@@ -59,10 +59,13 @@ async function fetchPoint(point) {
 }
 
 const results = [];
+/** Cities BMKG gave no usable forecast for; the atlas shows the nearest forecast for them, with a note. */
+const unavailable = [];
 for (const [index, point] of points.entries()) {
   const started = Date.now();
   const result = await fetchPoint(point);
   if (result) results.push(result);
+  else unavailable.push({ code: point.code, lat: point.lat, lon: point.lon });
   if (index % 50 === 0) console.log(index + 1, '/', points.length);
   await sleep(Math.max(0, REQUEST_GAP_MS - (Date.now() - started)));
 }
@@ -81,7 +84,8 @@ const snapshot = {
   validTo: analysisTimes[analysisTimes.length - 1],
   units: { t: '°C', hu: '%', tcc: '%', tp: 'mm', wd: 'degrees, direction the wind comes from', ws: 'km/h' },
   coverage: { requested: points.length, received: results.length },
-  points: results
+  points: results,
+  unavailable
 };
 await mkdir(dirname(output), { recursive: true });
 const temporary = output + '.tmp';

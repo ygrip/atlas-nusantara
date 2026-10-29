@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "ဓာတ်ပုံပါသော ဟင်းလျာများ",
   "hero_cta_atlas": "မြေပုံကို ကြည့်ရှုပါ",
   "hero_cta_provinces": "ပြည်နယ်များ ကြည့်ပါ",
-  "hero_art_hint": "ခွဲကြည့်ရန် မောက်စ်တင်ပါ"
+  "hero_art_hint": "ခွဲကြည့်ရန် မောက်စ်တင်ပါ",
+  "weather_tabs_label": "ရာသီဥတု မြင်ကွင်းများ",
+  "weather_tab_current": "ယခု",
+  "weather_tab_history": "ပြီးခဲ့သော ၇ ရက်",
+  "weather_current_heading": "ယခုရာသီဥတု · {name}",
+  "weather_current_hint": "ယခုရာသီဥတုကြည့်ရန် မြေပုံပေါ်တွင် ပြည်နယ် သို့မဟုတ် မြို့ကို ရွေးပါ။",
+  "weather_history_heading": "နေ့စဉ်ရာသီဥတု · {name}",
+  "weather_history_desc": "ပြီးခဲ့သော တစ်ပတ်အတွင်း နေ့အလိုက် ရာသီဥတု ပြောင်းလဲပုံ။",
+  "weather_history_measure": "ရာသီဥတု တိုင်းတာမှု",
+  "weather_history_range": "နေ့စဉ် အနိမ့်ဆုံးမှ အမြင့်ဆုံး",
+  "weather_history_scope": "မြို့နှင့် ခရိုင် {count} ခု၏ ပျမ်းမျှ",
+  "weather_neighbour_note": "{name} အတွက် ရာသီဥတုအစီရင်ခံစာ မရှိပါ။ အနီးဆုံးနေရာ {nearest} ({distance} ကီလိုမီတာ အကွာ) ကို ပြထားသည်။",
+  "weather_history_empty": "{name} အတွက် ရာသီဥတုမှတ်တမ်း မရှိပါ၊ {distance} ကီလိုမီတာ အတွင်း မည်သည့်နေရာမှလည်း မရှိပါ။",
+  "weather_history_source": "နေ့စဉ်တန်ဖိုးများကို Open-Meteo (CC BY 4.0) မှ မြို့တစ်မြို့လျှင် ကိုယ်စားပြုအမှတ်တစ်ခုအတွက် ပုံစံထုတ်ထားသည်။ နေ့များသည် အနောက်အင်ဒိုနီးရှားအချိန် (UTC+7) ကို လိုက်သည်။",
+  "weather_history_day": "နေ့",
+  "weather_history_caption": "နေ့စဉ်ရာသီဥတုတန်ဖိုးများ · {name}",
+  "weather_history_no_data": "ဒေတာ မရှိပါ"
 }

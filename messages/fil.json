@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Mga putaheng may larawan",
   "hero_cta_atlas": "Tuklasin ang mapa",
   "hero_cta_provinces": "Tingnan ang mga lalawigan",
-  "hero_art_hint": "I-hover para paghiwalayin"
+  "hero_art_hint": "I-hover para paghiwalayin",
+  "weather_tabs_label": "Mga tanaw ng panahon",
+  "weather_tab_current": "Ngayon",
+  "weather_tab_history": "Nakaraang 7 araw",
+  "weather_current_heading": "Kasalukuyang panahon · {name}",
+  "weather_current_hint": "Pumili ng probinsya o lungsod sa mapa para makita ang kasalukuyang panahon.",
+  "weather_history_heading": "Arawang panahon · {name}",
+  "weather_history_desc": "Paano nagbago ang panahon araw-araw sa nakaraang linggo.",
+  "weather_history_measure": "Sukat ng panahon",
+  "weather_history_range": "Pinakamababa hanggang pinakamataas bawat araw",
+  "weather_history_scope": "Karaniwan ng {count} lungsod at rehiyon",
+  "weather_neighbour_note": "Walang ulat ng panahon para sa {name}. Ipinapakita ang pinakamalapit na lugar, {nearest}, {distance} km ang layo.",
+  "weather_history_empty": "Walang kasaysayan ng panahon para sa {name}, at wala ring lugar sa loob ng {distance} km na mayroon nito.",
+  "weather_history_source": "Mga arawang halaga mula sa Open-Meteo (CC BY 4.0), imodelo para sa isang kinatawang punto kada lungsod. Ang mga araw ay ayon sa Western Indonesia Time (UTC+7).",
+  "weather_history_day": "Araw",
+  "weather_history_caption": "Mga arawang halaga ng panahon · {name}",
+  "weather_history_no_data": "Walang datos"
 }

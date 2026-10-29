@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Pratos com foto",
   "hero_cta_atlas": "Explorar o mapa",
   "hero_cta_provinces": "Ver províncias",
-  "hero_art_hint": "Passe o rato para separar"
+  "hero_art_hint": "Passe o rato para separar",
+  "weather_tabs_label": "Vistas do tempo",
+  "weather_tab_current": "Atual",
+  "weather_tab_history": "Últimos 7 dias",
+  "weather_current_heading": "Tempo atual · {name}",
+  "weather_current_hint": "Selecione uma província ou cidade no mapa para ver o tempo atual.",
+  "weather_history_heading": "Tempo diário · {name}",
+  "weather_history_desc": "Como o tempo mudou de dia para dia na última semana.",
+  "weather_history_measure": "Medida do tempo",
+  "weather_history_range": "Mínima a máxima diária",
+  "weather_history_scope": "Média de {count} cidades e municípios",
+  "weather_neighbour_note": "Sem relatório do tempo para {name}. A mostrar o local mais próximo, {nearest}, a {distance} km.",
+  "weather_history_empty": "Não há histórico do tempo para {name}, nem em nenhum local num raio de {distance} km.",
+  "weather_history_source": "Valores diários do Open-Meteo (CC BY 4.0), modelados para um ponto representativo por cidade. Os dias seguem a hora da Indonésia Ocidental (UTC+7).",
+  "weather_history_day": "Dia",
+  "weather_history_caption": "Valores diários do tempo · {name}",
+  "weather_history_no_data": "Sem dados"
 }

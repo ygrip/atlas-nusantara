@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "Món có ảnh",
   "hero_cta_atlas": "Khám phá bản đồ",
   "hero_cta_provinces": "Xem các tỉnh",
-  "hero_art_hint": "Rê chuột để tách các lớp"
+  "hero_art_hint": "Rê chuột để tách các lớp",
+  "weather_tabs_label": "Chế độ xem thời tiết",
+  "weather_tab_current": "Hiện tại",
+  "weather_tab_history": "7 ngày qua",
+  "weather_current_heading": "Thời tiết hiện tại · {name}",
+  "weather_current_hint": "Chọn một tỉnh hoặc thành phố trên bản đồ để xem thời tiết hiện tại.",
+  "weather_history_heading": "Thời tiết theo ngày · {name}",
+  "weather_history_desc": "Thời tiết thay đổi từng ngày trong tuần qua.",
+  "weather_history_measure": "Chỉ số thời tiết",
+  "weather_history_range": "Thấp nhất đến cao nhất trong ngày",
+  "weather_history_scope": "Trung bình của {count} thành phố và huyện",
+  "weather_neighbour_note": "Không có báo cáo thời tiết cho {name}. Đang hiển thị địa điểm gần nhất, {nearest}, cách {distance} km.",
+  "weather_history_empty": "Chưa có lịch sử thời tiết cho {name}, và không có địa điểm nào trong bán kính {distance} km có dữ liệu.",
+  "weather_history_source": "Giá trị theo ngày từ Open-Meteo (CC BY 4.0), mô hình hóa cho một điểm đại diện mỗi thành phố. Ngày tính theo giờ Tây Indonesia (UTC+7).",
+  "weather_history_day": "Ngày",
+  "weather_history_caption": "Giá trị thời tiết theo ngày · {name}",
+  "weather_history_no_data": "Không có dữ liệu"
 }

@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "មុខម្ហូបដែលមានរូបថត",
   "hero_cta_atlas": "រុករកផែនទី",
   "hero_cta_provinces": "មើលខេត្ត",
-  "hero_art_hint": "ដាក់ទស្សន៍ទ្រនិចដើម្បីបំបែក"
+  "hero_art_hint": "ដាក់ទស្សន៍ទ្រនិចដើម្បីបំបែក",
+  "weather_tabs_label": "ទិដ្ឋភាពអាកាសធាតុ",
+  "weather_tab_current": "បច្ចុប្បន្ន",
+  "weather_tab_history": "៧ ថ្ងៃកន្លងមក",
+  "weather_current_heading": "អាកាសធាតុបច្ចុប្បន្ន · {name}",
+  "weather_current_hint": "ជ្រើសរើសខេត្ត ឬទីក្រុងលើផែនទី ដើម្បីមើលអាកាសធាតុបច្ចុប្បន្ន។",
+  "weather_history_heading": "អាកាសធាតុប្រចាំថ្ងៃ · {name}",
+  "weather_history_desc": "របៀបដែលអាកាសធាតុផ្លាស់ប្តូរពីថ្ងៃមួយទៅថ្ងៃមួយក្នុងសប្តាហ៍កន្លងមក។",
+  "weather_history_measure": "រង្វាស់អាកាសធាតុ",
+  "weather_history_range": "ទាបបំផុតដល់ខ្ពស់បំផុតប្រចាំថ្ងៃ",
+  "weather_history_scope": "មធ្យមនៃទីក្រុង និងស្រុកចំនួន {count}",
+  "weather_neighbour_note": "គ្មានរបាយការណ៍អាកាសធាតុសម្រាប់ {name} ទេ។ កំពុងបង្ហាញទីតាំងជិតបំផុត {nearest} ចម្ងាយ {distance} គ.ម។",
+  "weather_history_empty": "គ្មានប្រវត្តិអាកាសធាតុសម្រាប់ {name} ហើយក៏គ្មានទីតាំងណាក្នុងរង្វង់ {distance} គ.ម មានដែរ។",
+  "weather_history_source": "តម្លៃប្រចាំថ្ងៃពី Open-Meteo (CC BY 4.0) គណនាសម្រាប់ចំណុចតំណាងមួយក្នុងមួយទីក្រុង។ ថ្ងៃតាមម៉ោងឥណ្ឌូនេស៊ីខាងលិច (UTC+7)។",
+  "weather_history_day": "ថ្ងៃ",
+  "weather_history_caption": "តម្លៃអាកាសធាតុប្រចាំថ្ងៃ · {name}",
+  "weather_history_no_data": "គ្មានទិន្នន័យ"
 }

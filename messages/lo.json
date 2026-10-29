@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "ເມນູທີ່ມີຮູບ",
   "hero_cta_atlas": "ສຳຫຼວດແຜນທີ່",
   "hero_cta_provinces": "ເບິ່ງແຂວງ",
-  "hero_art_hint": "ເອົາເມົ້າໄປວາງເພື່ອແຍກຊັ້ນ"
+  "hero_art_hint": "ເອົາເມົ້າໄປວາງເພື່ອແຍກຊັ້ນ",
+  "weather_tabs_label": "ມຸມມອງສະພາບອາກາດ",
+  "weather_tab_current": "ປັດຈຸບັນ",
+  "weather_tab_history": "7 ວັນຜ່ານມາ",
+  "weather_current_heading": "ສະພາບອາກາດປັດຈຸບັນ · {name}",
+  "weather_current_hint": "ເລືອກແຂວງ ຫຼື ເມືອງເທິງແຜນທີ່ເພື່ອເບິ່ງສະພາບອາກາດປັດຈຸບັນ.",
+  "weather_history_heading": "ສະພາບອາກາດລາຍວັນ · {name}",
+  "weather_history_desc": "ສະພາບອາກາດປ່ຽນແປງແຕ່ລະວັນໃນອາທິດທີ່ຜ່ານມາ.",
+  "weather_history_measure": "ຕົວຊີ້ວັດສະພາບອາກາດ",
+  "weather_history_range": "ຕ່ຳສຸດຫາສູງສຸດລາຍວັນ",
+  "weather_history_scope": "ຄ່າສະເລ່ຍຂອງ {count} ເມືອງ",
+  "weather_neighbour_note": "ບໍ່ມີລາຍງານສະພາບອາກາດຂອງ {name}. ສະແດງສະຖານທີ່ໃກ້ທີ່ສຸດ, {nearest}, ຫ່າງ {distance} ກມ.",
+  "weather_history_empty": "ບໍ່ມີປະຫວັດສະພາບອາກາດຂອງ {name} ແລະ ບໍ່ມີສະຖານທີ່ໃດພາຍໃນ {distance} ກມ ທີ່ມີ.",
+  "weather_history_source": "ຄ່າລາຍວັນຈາກ Open-Meteo (CC BY 4.0) ຈຳລອງສຳລັບຈຸດຕົວແທນໜຶ່ງຈຸດຕໍ່ເມືອງ. ວັນຕາມເວລາອິນໂດເນເຊຍຕາເວັນຕົກ (UTC+7).",
+  "weather_history_day": "ວັນ",
+  "weather_history_caption": "ຄ່າສະພາບອາກາດລາຍວັນ · {name}",
+  "weather_history_no_data": "ບໍ່ມີຂໍ້ມູນ"
 }

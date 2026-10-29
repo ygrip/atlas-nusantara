@@ -142,12 +142,19 @@
   }
   $: selectedParent = city ? province?.name : undefined;
 
+  /** The nearby location a region borrowed its forecast from, by name when the loaded lists know it. */
+  function neighbourNameOf(summary: ReturnType<typeof summariseWeather> | undefined): string | undefined {
+    if (!summary?.neighbour) return undefined;
+    const code = summary.neighbour.code;
+    return [...cities, ...provinces].find(region => region.code === code)?.name ?? code;
+  }
+
   function buildRows(items: Region[], withWeather: boolean, snapshot: ForecastSnapshot | undefined, time: string | undefined, _coordinates: unknown, selectedCode: string | undefined): DirectoryRow[] {
     return items.map(region => {
       const row: DirectoryRow = { id: region.code, code: region.code, name: region.name, ariaLabel: region.name + ' ' + region.code, selected: selectedCode === region.code, cells: {} };
       if (!withWeather || !snapshot) return row;
       const summary = summariseWeather(snapshot, region.code, time);
-      if (summary) row.cells.weather = summary.description + ' · ' + summary.temperature + '°C';
+      if (summary) row.cells.weather = summary.description + ' · ' + summary.temperature + '°C' + (summary.neighbour ? ' ≈' : '');
       const coordinates = coordinatesOf(region.code);
       if (coordinates) {
         row.cells.lat = formatDegrees(coordinates.lat);
@@ -619,7 +626,7 @@
       {/if}
       {#if selectedRegion}
         <RegionDetails name={selectedRegion.name} code={selectedRegion.code} levelLabel={city ? m.level_city() : m.level_province()} parentName={selectedParent}
-          coordinates={showWeather ? coordinatesOf(selectedRegion.code) : undefined} weather={selectedWeather} />
+          coordinates={showWeather ? coordinatesOf(selectedRegion.code) : undefined} weather={selectedWeather} neighbourName={neighbourNameOf(selectedWeather)} />
       {/if}
       {/if}
     </div>

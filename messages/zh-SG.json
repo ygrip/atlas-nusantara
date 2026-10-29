@@ -532,5 +532,21 @@
   "cuisine_metric_with_photo": "有照片的菜肴",
   "hero_cta_atlas": "探索地图",
   "hero_cta_provinces": "浏览省份",
-  "hero_art_hint": "悬停以拆分图层"
+  "hero_art_hint": "悬停以拆分图层",
+  "weather_tabs_label": "天气视图",
+  "weather_tab_current": "当前",
+  "weather_tab_history": "过去 7 天",
+  "weather_current_heading": "当前天气 · {name}",
+  "weather_current_hint": "在地图上选择省份或城市，查看当前天气。",
+  "weather_history_heading": "每日天气 · {name}",
+  "weather_history_desc": "过去一周天气逐日变化情况。",
+  "weather_history_measure": "天气指标",
+  "weather_history_range": "每日最低至最高",
+  "weather_history_scope": "{count} 个城市和县的平均值",
+  "weather_neighbour_note": "{name} 暂无天气报告，显示最近的地点 {nearest}（相距 {distance} 公里）。",
+  "weather_history_empty": "{name} 暂无天气历史记录，{distance} 公里内也没有任何地点有记录。",
+  "weather_history_source": "每日数值来自 Open-Meteo（CC BY 4.0），按每个城市一个代表点建模。日期按印度尼西亚西部时间（UTC+7）计算。",
+  "weather_history_day": "日期",
+  "weather_history_caption": "每日天气数值 · {name}",
+  "weather_history_no_data": "暂无数据"
 }
