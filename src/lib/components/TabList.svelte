@@ -1,10 +1,16 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   interface TabChoice { id: string; label: string }
 
   /** Accessible tab buttons. The caller renders the panels: role="tabpanel", aria-labelledby={`${prefix}-tab-${id}`}, hidden when not chosen. */
   let { prefix, tabs, value = $bindable(), label }: { prefix: string; tabs: TabChoice[]; value: string; label: string } = $props();
 
   let buttons: HTMLButtonElement[] = [];
+  let ready = $state(false);
+  // Faster first paint must not expose an apparently clickable SSR tab before
+  // its client handlers exist, otherwise the first activation can be lost.
+  onMount(() => { ready = true; });
 
   function move(event: KeyboardEvent, index: number) {
     let next = index;
@@ -21,7 +27,7 @@
 
 <div class="tab-list" role="tablist" aria-label={label}>
   {#each tabs as tab, index (tab.id)}
-    <button bind:this={buttons[index]} type="button" role="tab" id={`${prefix}-tab-${tab.id}`} aria-selected={value === tab.id} aria-controls={`${prefix}-panel-${tab.id}`}
+    <button bind:this={buttons[index]} type="button" disabled={!ready} role="tab" id={`${prefix}-tab-${tab.id}`} aria-selected={value === tab.id} aria-controls={`${prefix}-panel-${tab.id}`}
       tabindex={value === tab.id ? 0 : -1} onclick={() => { value = tab.id; }} onkeydown={event => move(event, index)}>{tab.label}</button>
   {/each}
 </div>

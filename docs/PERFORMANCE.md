@@ -1,24 +1,33 @@
-# Rendering and motion budget
+# Startup rendering budget
 
-- Native browser scrolling replaces the removed GSAP/Lenis choreography and its always-running page tickers. The title no longer creates per-word animation layers.
-- The hero has one short entrance, no perpetual ornament/compass loops, and a thin aligned bevel: top at the source coordinates, middle/base at 1.5/3 SVG units, shadow at 5. The full map stays inside the mobile hero.
-- National statistics start paused. Visitors can explicitly start their rotation; initial facts render with their real values in HTML, and later value changes retain finite easing.
-- Ambient sea/cloud/wind/rain/lightning effects run whenever their layers and forecast conditions are active and the map is visible. Pausing the forecast timeline freezes the selected forecast time, not the weather visualization. Cloud shader detail and resolution are unchanged.
-- Forecast Play advances forecast time using a 30 Hz update budget. Animated-effect-only frames are capped at 30 FPS; actual camera interaction and morphing remain responsive at display cadence. Disabling damping is not required: its settled state no longer perpetuates rendering.
-- Weather activity is computed when fields change, not for every frame. Activity inspects regional wind vectors rather than a national mean, which can be zero for opposing winds. An inactive future forecast does not request animation work.
-- Offscreen/hidden maps cancel scheduled frames and timers. Resuming uses a fresh time baseline; disposing releases scheduled work and GPU resources.
+## What changed
 
-`tests/browser/performance.spec.ts` checks the mobile/desktop bevel, contained hero map, absence of perpetual hero animation, idle rendering, Play/Pause behavior, and offscreen suspension. Other browser fixtures mock AdSense so UI checks do not generate real advertising impressions.
+- Serve display-sized 1x/2x hero cutouts and motion strips. Audio remains activation-only; motion assets still wait for page load.
+- Gate every initial forecast caller on page load and idle, sharing one download. Explicit weather exports await that shared request instead of dropping forecast columns.
+- Load province details, saved-place cards and history charts only when needed. Cache their code and the city directory during background service-worker installation so offline navigation remains available.
+- Treat fetched forecast/history documents as immutable `$state.raw` values. Keep map warming local to the map, read its initial size before canvas insertion, and consume subsequent `ResizeObserver` measurements directly. Playback no longer starts a second render clock over an already scheduled weather frame.
+- Skip offscreen section layout/paint with guarded `content-visibility: auto`. Intrinsic block sizes are estimates from the default desktop/mobile layouts, not fixed rendered heights; `auto` remembers the measured size after first presentation. Unsupported browsers render normally, and print explicitly renders every section. WebKit retains normal-flow layout because repeated cold-anchor checks exposed jumps while skipped ancestors gained their actual height; the optimization is conservatively disabled there.
 
-For comparative profiling, use the same normal-motion Chromium viewport (390 × 844, DPR 2), block the advertising SDK, let initial loading settle, then sample two seconds at the hero and two seconds with the map visible. Count executed RAF callbacks and WebGL draw calls, and read CDP `Performance.getMetrics` TaskDuration deltas. These are local headless workload measurements, not physical GPU utilization, production field data, or a phone battery benchmark. Keep the browser idle and do not run other browser tests during the sample.
+SSR tabs remain disabled until their client handlers are mounted, so the faster first paint cannot lose an early activation.
 
-One local before/after sample with those conditions measured hero RAF callbacks at 158/s → 0/s (main-thread tasks 190 → 6 ms per sample). An earlier optimization froze weather while the timeline was paused and measured 115/s → 0/s WebGL draws (2168 → 1 ms main-thread tasks). That behavior was rejected: visible weather now animates independently of timeline playback, so the zero-draw figure does not describe the current visible map. Sampling and command overhead can extend the nominal two-second window; these single samples demonstrate eliminated idle work, not a general production speedup percentage. Visible ambient weather, active playback and camera interaction intentionally still render.
+The speculative font preload was removed. Asset savings alone did not improve the measured text LCP; avoiding offscreen layout was the important rendering change.
 
-## Initial delivery and crawlability
+## Controlled local comparison
 
-- The homepage and legal pages are prerendered in all 13 locales. Meaningful content, a single H1, lists and landmarks exist without JavaScript; the client hydrates the same content instead of assembling an empty document.
-- Eager SVG/weather/region-coordinate code uses engine-free Mercator projection. Three.js stays with the lazily imported scene; no shader detail is reduced.
-- The automatic ad SDK starts when its placement is within 500 pixels of the viewport. Its stalled-placement deadline still starts only on actual visibility.
-- Service-worker installation caches the generated critical shell manifest, not every lazy bundle, catalogue and social image. Unvisited heavy content is not promised offline; visited immutable assets and large atlas data remain runtime-cacheable.
+Baseline: commit `1780632`. Five interleaved cold-browser baseline/candidate pairs used the same HTTP server and port, a 1440×900 viewport at 1x density, 4× CPU throttling, 150 ms emulated latency and 10 Mbit/s download throughput. Service workers and advertisements were disabled for measurement. Observation continued for seven seconds after the load event, including deferred forecast work.
 
-Open Graph locales, language alternates and source-revision authorship metadata are emitted into static HTML. Schema `dateModified` identifies the source revision, not the freshness of provider observations. `/llms.txt` is optional crawler guidance, not a ranking guarantee. Public crawlers remain allowed by the wildcard robots rule; the intentional `/api/` restriction must not be removed merely to satisfy an audit tool that labels any restricted path as "partial".
+| Metric | Baseline median (range) | Candidate median (range) |
+| --- | --- | --- |
+| FCP / text LCP | 704 ms (700–880) | 664 ms (652–668) |
+| Observed blocking time | 92 ms (90–153) | 72 ms (65–86) |
+| Startup JS / CSS, decoded | 465,412 / 136,764 bytes | 443,137 / 110,767 bytes |
+
+Blocking time here is the sum of `max(0, longTask.duration - 50 ms)` over the observation window, **not Lighthouse TBT**. These local results do not guarantee a production Lighthouse score or field Core Web Vitals.
+
+The seven selected static-plus-motion image payloads decreased from 676,408 bytes to 233,454 bytes at 1x (−65%) or 507,456 bytes at high density (−25%). JSON parsing itself measured about 7–8 ms under CPU throttling, so a parsing worker was not added without evidence that its startup and cloning overhead would help.
+
+The traces still contain a small framework-owned synchronous layout when SvelteKit reads scroll position after hydration. Framework internals were not patched to remove that approximately 2 ms read.
+
+## Regression coverage
+
+`tests/browser/render-containment.spec.ts` verifies cold anchor navigation, native dialogs, saved-place section reveal and map activation at mobile and desktop sizes in Chromium/WebKit. Startup tests cover density selection, deferred forecast timing, contrast, early exports and first-use/offline lazy panels. Hero screenshots retained identical dimensions with less than 1% of pixels differing by more than 20/255 after resampling, in both themes at 390px and 1440px.

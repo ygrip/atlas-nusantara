@@ -18,7 +18,7 @@
   import { pinDataset, regionDataset, type ExportRegion } from '$lib/export/build-dataset';
   import type { ExportDataset } from '$lib/export/map-export';
   import { formatDegrees, regionCoordinatesByCode } from '$lib/atlas/region-coordinates';
-  import type { ForecastSnapshot } from '$lib/map/weather';
+  import { forecastTimes, loadForecast, nearestTimeIndex, type ForecastSnapshot } from '$lib/map/weather';
   import { forecastCoordinates, summariseWeather } from '$lib/map/weather-summary';
   import { loadDestinationIndex, loadDestinations, destinationOverlay, type DestinationCatalog, type DestinationIndex } from '$lib/data/destinations';
   import { loadEarthquakes, type EarthquakeArchive } from '$lib/data/earthquakes';
@@ -66,6 +66,9 @@
   let destinationLoading = false;
   let destinationFailed = false;
   let destinationIndexFailed = false;
+  let destinationIndexLoading = false;
+  let destinationIndexRequest: AbortController | undefined;
+  $: if (active && layer === 'destinations') void ensureDestinationIndex();
   $: void loadProvinceDestinations(layer, province?.code, destinationIndex);
   // Flora and fauna follow the destinations pattern: a small index, one lazy shard per province, a national file for download only.
   let speciesIndexes: Partial<Record<SpeciesKind, SpeciesIndex>> = {};
@@ -170,7 +173,17 @@
   }
 
   /** The data behind the current layer and map level, for the export dialog. */
-  function buildExportDataset(): ExportDataset | undefined {
+  async function buildExportDataset(): Promise<ExportDataset | undefined> {
+    // Explicit exports wait for the shared deferred forecast instead of silently
+    // producing a coordinates-only weather file when the initial download is pending.
+    if (layer === 'warning' && !forecast) {
+      const snapshot = await loadForecast(assetUrl('/data/weather/forecast.json'));
+      if (snapshot) {
+        forecast = snapshot;
+        const times = forecastTimes(snapshot);
+        forecastTime = times[nearestTimeIndex(times, Date.now())];
+      }
+    }
     const definition = OVERLAY_DEFINITIONS.find(item => item.id === layer);
     let title: string = layer;
     if (definition) title = definition.label();
@@ -239,14 +252,28 @@
   onMount(() => {
     const initial = new AbortController();
     void initializeSelection(initial.signal);
-    void loadDestinationIndex(initial.signal).then(index => { if (!initial.signal.aborted) destinationIndex = index; })
-      .catch(error => {
-        if (!initial.signal.aborted) { destinationIndexFailed = true; console.warn('Destinations unavailable', error); }
-      });
     active = true;
     const earthquakeTimer = setInterval(() => { if (!document.hidden && navigator.onLine) refreshLayerData(layer); }, 15 * 60_000);
-    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); cuisineRequest?.abort(); generation++; };
+    return () => { active = false; clearInterval(earthquakeTimer); initial.abort(); controller?.abort(); overlayRequest?.abort(); destinationIndexRequest?.abort(); destinationRequest?.abort(); speciesRequest?.abort(); cuisineRequest?.abort(); generation++; };
   });
+
+  async function ensureDestinationIndex() {
+    if (destinationIndex || destinationIndexLoading || destinationIndexFailed) return;
+    const request = new AbortController();
+    destinationIndexRequest = request;
+    destinationIndexLoading = true;
+    try {
+      const index = await loadDestinationIndex(request.signal);
+      if (!request.signal.aborted) destinationIndex = index;
+    } catch (error) {
+      if (!request.signal.aborted) {
+        destinationIndexFailed = true;
+        console.warn('Destinations unavailable', error);
+      }
+    } finally {
+      if (!request.signal.aborted) destinationIndexLoading = false;
+    }
+  }
 
   async function loadProvinceDestinations(activeLayer: string, code: string | undefined, index: DestinationIndex | undefined) {
     destinationRequest?.abort();

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { Cloud, CloudRain, Droplets, Thermometer, Wind } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
+  import { afterLoadIdle } from '$lib/perf/idle';
   import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { loadCurrentForecast, loadWeatherHistory, MAX_NEIGHBOUR_KM, regionHistory, type DailyValues, type WeatherHistory } from '$lib/data/weather-history';
@@ -11,14 +12,13 @@
   import { loadProvinceDirectory } from '$lib/directory/province-directory';
   import TabList from './TabList.svelte';
   import SnapshotPanel from './SnapshotPanel.svelte';
-  import WeatherHistoryChart from './WeatherHistoryChart.svelte';
 
   /** regionCode is the selected province or city; without it the panel describes Indonesia as a whole. */
   let { regionCode, regionName }: { regionCode?: string; regionName?: string } = $props();
 
   let tab = $state('current');
-  let history = $state<WeatherHistory>();
-  let forecast = $state<ForecastSnapshot>();
+  let history = $state.raw<WeatherHistory>();
+  let forecast = $state.raw<ForecastSnapshot>();
   let historyFailed = $state(false);
   let loadingHistory = $state(true);
   let metricId = $state('tmean');
@@ -70,9 +70,11 @@
 
   onMount(() => {
     let active = true;
-    loadCurrentForecast()
-      .then(value => { if (active && value) forecast = value; })
-      .catch(error => console.warn('Current forecast unavailable', error));
+    const cancelForecastLoad = afterLoadIdle(() => {
+      loadCurrentForecast()
+        .then(value => { if (active && value) forecast = value; })
+        .catch(error => console.warn('Current forecast unavailable', error));
+    });
     loadProvinceDirectory()
       .then(rows => {
         if (!active) return;
@@ -84,7 +86,7 @@
         names = next;
       })
       .catch(error => console.warn('Region names unavailable', error));
-    return () => { active = false; };
+    return () => { active = false; cancelForecastLoad(); };
   });
 
   function number(value: number | null, digits: number): string {
@@ -154,7 +156,13 @@
         <p class="notice" role="status">{emptyNote}</p>
       {/if}
 
-      <WeatherHistoryChart days={history.days} {metric} label={m.weather_history_heading({ name: scopeName }) + ' · ' + metricLabels[metric.id]} series={selected?.series} {reference} emptyMessage={m.weather_history_no_data()} />
+      {#if tab === 'history'}
+        {#await import('./WeatherHistoryChart.svelte') then module}
+          <module.default days={history.days} {metric} label={m.weather_history_heading({ name: scopeName }) + ' · ' + metricLabels[metric.id]} series={selected?.series} {reference} emptyMessage={m.weather_history_no_data()} />
+        {:catch error}
+          <p role="alert">{m.data_unavailable()}</p>
+        {/await}
+      {/if}
 
       {#if selected}
         <ul class="legend" aria-hidden="true">
@@ -217,8 +225,8 @@
   .measure-picker button span { font-size: .8rem; white-space: nowrap; }
   .measure-picker button small { color: var(--muted); font-size: .68rem; font-weight: 700; }
   .measure-picker button:hover { transform: translateY(-2px); }
-  .measure-picker button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); box-shadow: var(--clay-pressed); }
-  .measure-picker button[aria-pressed='true'] small { color: inherit; opacity: .85; }
+  .measure-picker button[aria-pressed='true'] { background: var(--accent-strong); color: var(--on-accent); box-shadow: inset 0 2px 4px #00000024, 0 2px 0 var(--border); }
+  .measure-picker button[aria-pressed='true'] small { color: inherit; opacity: 1; }
   .measure-picker button:focus-visible { outline: 3px solid var(--accent-strong); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .measure-picker button { transition: none; } }
 

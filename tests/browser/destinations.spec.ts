@@ -126,6 +126,7 @@ test('destination share cards use the destination photo when available', async (
   await expect(dialog.getByRole('img')).toBeVisible();
   const color = await dialog.getByRole('img').evaluate(async node => {
     const image = node as HTMLImageElement;
+    await image.decode();
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1080;

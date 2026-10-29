@@ -98,7 +98,8 @@
   }
 
   const layerLabel = $derived(OVERLAY_DEFINITIONS.find(item => item.id === activeLayer)?.label() ?? '');
-  let forecast = $state<ForecastSnapshot>();
+  // Refreshes replace the immutable snapshot; proxying every forecast row adds avoidable CPU work.
+  let forecast = $state.raw<ForecastSnapshot>();
   let times = $state<string[]>([]);
   let timeIndex = $state(0);
   let playing = $state(false);
@@ -263,17 +264,30 @@
     return () => observer.disconnect();
   });
 
-  // The 3D code (about 570 kB) is not needed until the map is on screen. It is downloaded as soon as the visitor first
-  // scrolls or interacts, so it is usually ready by the time the map comes into view, and never delays the first load.
+  // Warm 3D modules only as the map approaches or receives local input; unrelated page gestures stay lightweight.
   $effect(() => {
-    const events = ['scroll', 'pointerdown', 'keydown', 'touchstart'] as const;
+    const mapHost = host;
+    if (!mapHost) return;
+    let warmed = false;
+    const events = ['pointerdown', 'keydown', 'touchstart'] as const;
     const warm = () => {
-      for (const name of events) removeEventListener(name, warm);
-      void import('$lib/map/scene');
-      void import('$lib/map/terrain');
+      if (warmed) return;
+      warmed = true;
+      observer.disconnect();
+      for (const name of events) mapHost.removeEventListener(name, warm);
+      void Promise.all([import('$lib/map/scene'), import('$lib/map/terrain')])
+        .catch(error => console.warn('Map preloading unavailable; activation will retry.', error));
     };
-    for (const name of events) addEventListener(name, warm, { once: true, passive: true });
-    return () => { for (const name of events) removeEventListener(name, warm); };
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) warm();
+    }, { rootMargin: '100px 0px' });
+    const cancelPrewarm = afterLoadIdle(() => { if (!warmed) observer.observe(mapHost); });
+    for (const name of events) mapHost.addEventListener(name, warm, { once: true, passive: true });
+    return () => {
+      cancelPrewarm();
+      observer.disconnect();
+      for (const name of events) mapHost.removeEventListener(name, warm);
+    };
   });
 
   // Create the 3D scene only when the map approaches the viewport.

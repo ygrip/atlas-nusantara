@@ -6,12 +6,14 @@
 
   let { buildDataset }: {
     /** Builds the data behind the current map layer and view, or undefined when there is nothing to export yet. */
-    buildDataset: () => ExportDataset | undefined;
+    buildDataset: () => ExportDataset | undefined | Promise<ExportDataset | undefined>;
   } = $props();
 
   let open = $state(false);
   let dataset = $state<ExportDataset>();
   let failed = $state(false);
+  let loading = $state(false);
+  let generation = 0;
 
   const formats: { id: ExportFormat; label: string; hint: () => string; icon: typeof Braces }[] = [
     { id: 'json', label: 'JSON', hint: m.export_json_hint, icon: Braces },
@@ -19,10 +21,26 @@
     { id: 'xml', label: 'XML', hint: m.export_xml_hint, icon: Code }
   ];
 
-  function openDialog() {
+  async function openDialog() {
+    const request = ++generation;
     failed = false;
-    dataset = buildDataset();
+    dataset = undefined;
+    loading = true;
     open = true;
+    try {
+      const built = await buildDataset();
+      if (request === generation) dataset = built;
+    } catch (error) {
+      if (request === generation) failed = true;
+      console.warn('Export data unavailable', error);
+    } finally {
+      if (request === generation) loading = false;
+    }
+  }
+
+  function closeDialog() {
+    generation++;
+    open = false;
   }
 
   function download(format: ExportFormat) {
@@ -50,8 +68,12 @@
   <Download size={18} aria-hidden="true" /><span>{m.export_button()}</span>
 </button>
 
-<MapDialog {open} title={m.export_title()} onclose={() => { open = false; }}>
-  {#if !dataset || dataset.rows.length === 0}
+<MapDialog {open} title={m.export_title()} onclose={closeDialog}>
+  {#if loading}
+    <p role="status">{m.loading_data()}</p>
+  {:else if failed && !dataset}
+    <p class="export-error" role="alert">{m.data_unavailable()}</p>
+  {:else if !dataset || dataset.rows.length === 0}
     <p class="export-empty" role="status">{m.export_unavailable()}</p>
   {:else}
     <p class="export-summary">{m.export_summary({ count: dataset.rows.length.toLocaleString(), layer: dataset.title, scope: dataset.scope })}</p>

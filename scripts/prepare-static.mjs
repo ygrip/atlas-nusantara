@@ -11,7 +11,7 @@ await copyFile('build/200.html', 'build/404.html');
 const everyLocale = ['en', ...PREFIXED_LOCALES];
 const revisionDate = execFileSync('git', ['log', '-1', '--format=%cI'], { encoding: 'utf8' }).trim();
 const ogLocales = { en: 'en_US', id: 'id_ID', ms: 'ms_MY', fil: 'fil_PH', th: 'th_TH', vi: 'vi_VN', my: 'my_MM', km: 'km_KH', lo: 'lo_LA', 'zh-SG': 'zh_SG', ta: 'ta_SG', tet: 'tet_TL', 'pt-TL': 'pt_TL' };
-const shellAssets = new Set(['/200.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/brand/logo-96.webp', '/brand/logo-256.png', '/brand/favicon-64.png', '/illustrations/atlas-anatomy.svg', '/data/admin-2025/provinces.json']);
+const shellAssets = new Set(['/200.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/brand/logo-96.webp', '/brand/logo-256.png', '/brand/favicon-64.png', '/illustrations/atlas-anatomy.svg', '/data/admin-2025/provinces.json', '/data/admin-2025/cities.json']);
 // Stylesheets of lazily imported components (layer panels, the share dialog) are listed in every page head by SvelteKit,
 // which makes the browser fetch them before the first paint. Vite's dynamic import loads them together with the component,
 // so they are dropped from the head and downloaded only when the component is. Keep this list in step with the
@@ -151,9 +151,12 @@ for (const [key, entry] of Object.entries(clientManifest)) {
 for (const [key, entry] of Object.entries(clientManifest)) {
   if (/^messages\/[^/]+\.json$/.test(key)) collectRouteEntry(key);
 }
-// The default layer's panel is loaded lazily but must still work offline right after installation.
+// Fetch these lazy UI chunks in the service worker's background install, not
+// the render path. They were previously in the route bundle and must remain
+// available offline even if their tab or a saved place has not been opened yet.
+const OFFLINE_LAZY_COMPONENTS = ['WeatherPanel', 'WeatherPlaceCard', 'ProvinceTable', 'WeatherHistoryChart'];
 for (const [key, entry] of Object.entries(clientManifest)) {
-  if (entry.src?.endsWith('/WeatherPanel.svelte')) collectRouteEntry(key);
+  if (OFFLINE_LAZY_COMPONENTS.some(name => entry.src?.endsWith('/' + name + '.svelte'))) collectRouteEntry(key);
 }
 await writeFile('build/pwa-shell.json', JSON.stringify({ assets: [...shellAssets].sort() }));
 

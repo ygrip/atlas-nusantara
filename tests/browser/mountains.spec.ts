@@ -30,6 +30,8 @@ test('mountain directory and keyboard pins open a detail popup without replacing
 });
 
 test('layer picker filters by name or source and defaults to weather', async ({ page }) => {
+  // Measure sticky geometry, not the dialog's finite entrance animation.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
   await page.goto('/');
   await expect(page.locator('.layer-picker-trigger')).toContainText('Weather');

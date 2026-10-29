@@ -20,7 +20,7 @@ test('effects wait for page load and audio waits for an ornament click', async (
     if (request.url().includes('/illustrations/hero/motion/')) requestedSprites.push(request.url());
     if (/interaction[^/]*\.(js|css)/.test(request.url())) effectRequests.push(request.url());
   });
-  await page.route('**/illustrations/hero/pinisi.webp', async route => {
+  await page.route('**/illustrations/hero/pinisi*.webp', async route => {
     await imageGate;
     await route.continue();
   });

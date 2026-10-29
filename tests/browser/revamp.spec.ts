@@ -1,4 +1,6 @@
 import { expect, test } from './fixtures';
+
+test.use({ serviceWorkers: 'block' });
 import { choosePlace } from './layers';
 
 test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en')); });

@@ -81,7 +81,8 @@ test('previews and downloads a local PNG card with a public URL that excludes de
     };
   });
   await openAtlas(page);
-  await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
+  // Keyboard activation establishes an opener to restore in Safari, where mouse clicks do not focus buttons.
+  await page.getByRole('button', { name: 'Share this atlas', exact: true }).press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Share this atlas' });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.share-loading')).toBeVisible();
@@ -123,7 +124,10 @@ test('previews and downloads a local PNG card with a public URL that excludes de
   expect(downloaded.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
   expect(downloaded.readUInt32BE(16)).toBe(image.width);
   await dialog.getByRole('button', { name: 'Close share preview' }).click();
-  await page.getByRole('button', { name: 'Share this atlas', exact: true }).click();
+  // Native close events are queued: wait for cleanup before reopening the same dialog.
+  await expect(dialog).toBeHidden();
+  await expect(dialog.locator('img')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Share this atlas', exact: true }).press('Enter');
   await expect(dialog.locator('.share-loading')).toBeVisible();
   await expect.poll(() => page.evaluate(() => (window as Window & { shareCardPending?: boolean }).shareCardPending)).toBe(true);
   await dialog.getByRole('button', { name: 'Close share preview' }).click();

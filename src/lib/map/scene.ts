@@ -166,8 +166,10 @@ export class AtlasScene {
   /** Accumulated cloud travel in map units, kept in double precision. */
   private readonly cloudTravel = new Vector2();
   private readonly random = visualRandom(6117);
-  /** Drawing-buffer height in pixels, shared with the pin shader. */
+  /** Cached CSS width for camera fitting, and drawing-buffer height for the pin shader. */
+  private viewportWidth = 1;
   private readonly viewportHeight = { value: 1 };
+  private viewportInitialized = false;
   private particleClock = 0;
   /** 0 = flat plan view, 1 = full 2.5D world; see the morph windows above. */
   private morphValue = 1;
@@ -184,6 +186,10 @@ export class AtlasScene {
   private touchTapTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly container: HTMLElement, private readonly callbacks: SceneCallbacks, private readonly reducedMotion: boolean) {
+    // Read the initial viewport before appending or sizing the canvas. Subsequent
+    // sizes come directly from ResizeObserver, without a DOM read after a write.
+    const initialWidth = container.clientWidth;
+    const initialHeight = container.clientHeight;
     this.compact = window.innerWidth < 700;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
     let pixelRatioLimit = 2;
@@ -225,7 +231,10 @@ export class AtlasScene {
       onGesture: () => { this.pointerDown = undefined; this.cancelTouchTap(); }
     });
     this.bindPointer();
-    this.resizeObserver = new ResizeObserver(() => this.resize());
+    this.resizeObserver = new ResizeObserver(entries => {
+      const entry = entries.at(-1);
+      if (entry) this.resize(entry.contentRect.width, entry.contentRect.height);
+    });
     this.resizeObserver.observe(container);
     this.visibilityObserver = new IntersectionObserver(entries => {
       this.visible = entries.some(entry => entry.isIntersecting);
@@ -234,9 +243,7 @@ export class AtlasScene {
     });
     this.visibilityObserver.observe(container);
     document.addEventListener('visibilitychange', this.onVisibility);
-    this.resize();
-    this.home(false);
-    this.start();
+    this.resize(initialWidth, initialHeight);
   }
 
   /** National provinces, relief and land mask. Call once; later province packages only add detail. */
@@ -344,7 +351,10 @@ export class AtlasScene {
     this.shared.weatherMix.value = mix;
     this.windParticles.setFields(this.fieldA, this.fieldB, mix);
     this.rain.setFields(this.fieldA, this.fieldB, mix);
-    this.invalidate();
+    this.dirty = true;
+    // Playback supplies new fields at 30Hz. Let an already scheduled ambient
+    // frame consume them instead of running a second, interleaved render clock.
+    if (this.frameTimer === undefined) this.start();
   }
 
   setLayers(layers: MapLayers): void {
@@ -466,7 +476,7 @@ export class AtlasScene {
 
   home(animate = true): void {
     let homePadding = 1;
-    if (this.container.clientWidth < 700) homePadding = 0.94;
+    if (this.viewportWidth < 700) homePadding = 0.94;
     this.homeDistance = this.fitDistance([20, 30, 980, 470], homePadding);
     this.flyToBox([20, 30, 980, 470], animate, homePadding);
     this.homeFramed = true;
@@ -794,7 +804,7 @@ export class AtlasScene {
   }
 
   private start(): void {
-    if (this.disposed || this.rendering || !this.visible || document.hidden) return;
+    if (this.disposed || !this.viewportInitialized || this.rendering || !this.visible || document.hidden) return;
     clearTimeout(this.frameTimer);
     this.frameTimer = undefined;
     if (this.frame) return;
@@ -953,14 +963,18 @@ export class AtlasScene {
     this.flash = 1;
   }
 
-  private resize(): void {
-    const width = Math.max(1, this.container.clientWidth);
-    const height = Math.max(1, this.container.clientHeight);
+  private resize(contentWidth: number, contentHeight: number): void {
+    const width = Math.max(1, contentWidth);
+    const height = Math.max(1, contentHeight);
+    const firstResize = !this.viewportInitialized;
+    this.viewportWidth = width;
     this.renderer.setSize(width, height, false);
+    // Canvas width/height are drawing-buffer attributes, not layout measurements.
     this.viewportHeight.value = Math.max(1, this.renderer.domElement.height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    if (this.homeFramed) this.home(false);
+    this.viewportInitialized = true;
+    if (firstResize || this.homeFramed) this.home(false);
     this.dirty = true;
     this.start();
   }

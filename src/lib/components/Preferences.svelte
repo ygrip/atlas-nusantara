@@ -9,7 +9,6 @@
   import { assetUrl } from '$lib/pwa/assets';
   import { readPins, writePins, readCurrentLocation, writeCurrentLocation, requestPosition, requestNotifications, type Pin } from '$lib/pwa/permissions';
   import { readNotificationsEnabled, writeNotificationsEnabled, stopPushNotifications } from '$lib/pwa/notification-settings';
-  import WeatherPlaceCard from './WeatherPlaceCard.svelte';
   import PlacePicker from './PlacePicker.svelte';
   import type { PlaceOption } from '$lib/atlas/place-search';
 
@@ -20,7 +19,11 @@
   let manuallySelected = $state(false);
   let pins = $state<Pin[]>([]);
   let current = $state<Extract<Pin, { type: 'coordinates' }>>();
-  let forecast = $state<ForecastSnapshot>();
+  let forecast = $state.raw<ForecastSnapshot>();
+  let weatherCards = $state<Promise<typeof import('./WeatherPlaceCard.svelte')>>();
+  $effect(() => {
+    if ((current || pins.length > 0) && !weatherCards) weatherCards = import('./WeatherPlaceCard.svelte');
+  });
   let status = $state('');
   let busy = $state(false);
   let notificationPermission = $state<NotificationPermission | 'unavailable'>('unavailable');
@@ -146,8 +149,14 @@
   {#if status}<p role="status" class="state">{status}</p>{/if}
   {#if current || pins.length > 0}
     <div class="weather-cards">
-      {#if current}<WeatherPlaceCard pin={current} {forecast} {names} current onopen={openPlace} />{/if}
-      {#each pins as pin (pin.id)}<WeatherPlaceCard {pin} {forecast} {names} onremove={() => removePin(pin.id)} onopen={openPlace} />{/each}
+      {#if weatherCards}
+        {#await weatherCards then module}
+          {#if current}<module.default pin={current} {forecast} {names} current onopen={openPlace} />{/if}
+          {#each pins as pin (pin.id)}<module.default {pin} {forecast} {names} onremove={() => removePin(pin.id)} onopen={openPlace} />{/each}
+        {:catch error}
+          <p role="alert">{m.data_unavailable()}</p>
+        {/await}
+      {/if}
     </div>
     <p class="forecast-note">{m.forecast_archive_note()} <a href="https://data.bmkg.go.id/prakiraan-cuaca/" target="_blank" rel="noreferrer">BMKG ↗</a></p>
   {:else}<p class="empty">{m.no_pins()}</p>{/if}

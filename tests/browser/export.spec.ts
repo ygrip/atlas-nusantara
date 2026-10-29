@@ -1,6 +1,8 @@
 import { expect, test, type Page } from './fixtures';
 import { readFile } from 'node:fs/promises';
 
+test.use({ serviceWorkers: 'block' });
+
 async function openExport(page: Page, url: string) {
   await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));
   await page.goto(url);
@@ -28,6 +30,25 @@ test.describe('map data export', () => {
     expect(lines).toHaveLength(39);
     expect(lines.find(line => line.startsWith('31,'))).toMatch(/^31,Daerah Khusus Ibukota Jakarta,province,,,-6\.\d+,106\.\d+,/);
     await expect(page.getByRole('dialog')).toBeHidden();
+  });
+
+  test('an early weather export waits for the deferred forecast instead of dropping its columns', async ({ page }) => {
+    let releaseForecast!: () => void;
+    const forecastGate = new Promise<void>(resolve => { releaseForecast = resolve; });
+    await page.route('**/data/**/forecast.json*', async route => {
+      await forecastGate;
+      await route.continue();
+    });
+    try {
+      await openExport(page, '/');
+      const dialog = page.getByRole('dialog', { name: 'Export map data' });
+      await expect(dialog.getByRole('status')).toContainText('Loading');
+      await expect(dialog.locator('.export-format')).toHaveCount(0);
+    } finally {
+      releaseForecast();
+    }
+    const { text } = await downloadAs(page, 'CSV');
+    expect(text.split('\r\n')[0]).toContain('weather,temperature_c,humidity_pct');
   });
 
   test('selected province exports its cities as json with source details', async ({ page }) => {

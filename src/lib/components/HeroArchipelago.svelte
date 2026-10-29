@@ -81,8 +81,8 @@
     volcano: m.hero_volcano, komodo: m.hero_komodo,
     pinisi: m.hero_pinisi, cendrawasih: m.hero_cendrawasih
   };
-  const imageSize = { tiger: [406, 420], volcano: [361, 420], orangutan: [411, 420], flag: [222, 420],
-    komodo: [420, 297], pinisi: [374, 420], cendrawasih: [302, 420] } as Record<string, number[]>;
+  const imageSize = { tiger: [144, 150], volcano: [144, 168], orangutan: [152, 156], flag: [176, 333],
+    komodo: [168, 119], pinisi: [160, 180], cendrawasih: [128, 178] } as Record<string, number[]>;
 
 </script>
 
@@ -118,7 +118,8 @@
         aria-label={labels[ornament.id]()} aria-pressed={active === ornament.id}
         title={labels[ornament.id]() + ' · ' + m.hero_ornament_stop()} onclick={() => play(ornament.id)}>
         <span class="ornament-body" aria-hidden="true">
-          <img class="cutout" src={'/illustrations/hero/' + ornament.id + '.webp'} alt=""
+          <img class="cutout" src={'/illustrations/hero/' + ornament.id + '.webp'}
+            srcset={'/illustrations/hero/' + ornament.id + '-1x.webp 1x, /illustrations/hero/' + ornament.id + '.webp 2x'} alt=""
             width={imageSize[ornament.id][0]} height={imageSize[ornament.id][1]}
             decoding="async" fetchpriority="low"/>
           {#if ready}
@@ -127,7 +128,8 @@
               <span class="motion-viewport"
                 style={'width:' + sprite.width + '%;left:' + sprite.left + '%;bottom:' + sprite.bottom + '%;--sprite-cycle:' + sprite.cycle + 'ms;--sprite-repeats:' + sprite.repeats}>
                 <img class="motion-strip" src={'/illustrations/hero/motion/' + ornament.id + '.webp'}
-                  alt="" width="2048" height="256" decoding="async"/>
+                  srcset={'/illustrations/hero/motion/' + ornament.id + '-1x.webp 1x, /illustrations/hero/motion/' + ornament.id + '.webp 2x'}
+                  alt="" width={sprite.frameSize * 8} height={sprite.frameSize} decoding="async" fetchpriority="low"/>
               </span>
             {/if}
           {/if}

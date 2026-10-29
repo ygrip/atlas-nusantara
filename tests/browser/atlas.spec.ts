@@ -158,6 +158,14 @@ test.describe('2025 atlas and locations', () => {
   test('reports denied geolocation and does not add a pin', async ({ page, context }) => {
     await useEnglish(page);
     await context.clearPermissions();
+    // Cleared permissions may leave Safari waiting for a native prompt, not denied.
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, 'geolocation', { configurable: true, value: {
+        getCurrentPosition(_success: PositionCallback, reject?: PositionErrorCallback) {
+          reject?.({ code: 1, message: 'Permission denied', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 });
+        }
+      } });
+    });
     await openAtlas(page);
     await page.getByRole('button', { name: 'Use device location' }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Unable to read device location.' })).toBeVisible();

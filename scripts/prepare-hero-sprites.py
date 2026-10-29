@@ -13,6 +13,14 @@ SOURCE = Path('output/imagegen/hero-motion')
 DESTINATION = Path('static/illustrations/hero/motion')
 DESTINATION.mkdir(parents=True, exist_ok=True)
 
+# Largest CSS frame sizes are about 90–182px. Keep 2x detail where the source
+# supports it, and avoid transferring/decoding retina strips on 1x screens.
+FRAME_SIZES = {
+    'tiger': (96, 192), 'orangutan': (104, 208), 'komodo': (112, 224),
+    'volcano': (128, 256), 'pinisi': (104, 208), 'cendrawasih': (104, 208),
+    'flag': (192, 256),
+}
+
 
 def remove_magenta(image):
     pixels = np.asarray(image.convert('RGBA')).astype(np.float32)
@@ -53,11 +61,12 @@ def prepare(name):
     width_percent = 100 * (reference.height / reference.width) * (cell_height / resting_height)
     left_percent = 50 - ((left + right) / 2 / cell_width) * width_percent
     bottom_percent = -100 * (cell_height - bottom) / resting_height
-    strip = Image.new('RGBA', (256 * 8, 256))
-    for index, frame in enumerate(frames):
-        strip.paste(frame.resize((256, 256), Image.Resampling.LANCZOS), (256 * index, 0))
-    output = DESTINATION / f'{name}.webp'
-    strip.save(output, 'WEBP', quality=86, method=6)
+    for suffix, size in [('-1x', FRAME_SIZES[name][0]), ('', FRAME_SIZES[name][1])]:
+        strip = Image.new('RGBA', (size * 8, size))
+        for index, frame in enumerate(frames):
+            strip.paste(frame.resize((size, size), Image.Resampling.LANCZOS), (size * index, 0))
+        output = DESTINATION / f'{name}{suffix}.webp'
+        strip.save(output, 'WEBP', quality=82, method=6)
     print(json.dumps({'id': name, 'width': round(width_percent, 2), 'left': round(left_percent, 2),
                       'bottom': round(bottom_percent, 2), 'bytes': output.stat().st_size}))
 

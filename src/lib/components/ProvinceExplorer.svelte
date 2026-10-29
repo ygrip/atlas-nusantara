@@ -2,12 +2,27 @@
   import { m } from '$lib/i18n/messages';
   import IslandChart from './IslandChart.svelte';
   import RegionSplit from './RegionSplit.svelte';
-  import ProvinceTable from './ProvinceTable.svelte';
   import TabList from './TabList.svelte';
 
   let { onopen, selectedCode }: { onopen?: (code: string) => void; selectedCode?: string } = $props();
 
   let tab = $state('overview');
+  let ProvinceTable: typeof import('./ProvinceTable.svelte').default | undefined = $state();
+  let provinceTableRequested = false;
+  let provinceTableFailed = $state(false);
+
+  $effect(() => {
+    if (tab !== 'provinces' || provinceTableRequested) return;
+    provinceTableRequested = true;
+    provinceTableFailed = false;
+    void import('./ProvinceTable.svelte')
+      .then(module => { ProvinceTable = module.default; })
+      .catch(error => {
+        provinceTableRequested = false;
+        provinceTableFailed = true;
+        console.warn('Province table unavailable', error);
+      });
+  });
   const tabs = $derived([
     { id: 'overview', label: m.tab_overview() },
     { id: 'provinces', label: m.tab_province_detail() }
@@ -30,7 +45,13 @@
     </div>
   </div>
   <div role="tabpanel" id="province-explorer-panel-provinces" aria-labelledby="province-explorer-tab-provinces" hidden={tab !== 'provinces'}>
-    <ProvinceTable {selectedCode} {onopen} />
+    {#if ProvinceTable}
+      <ProvinceTable {selectedCode} {onopen} />
+    {:else if provinceTableFailed}
+      <p role="alert">{m.data_unavailable()}</p>
+    {:else}
+      <p role="status">{m.loading_data()}</p>
+    {/if}
   </div>
 </section>
 

@@ -24,6 +24,11 @@ test('3D relief map supports wheel zoom, camera controls and snapshot-only weath
     await page.getByRole('button', { name: 'Reset map view', exact: true }).click();
     await expect(zoom).toHaveText('1.0×');
     const canvas = page.locator('canvas.atlas-canvas');
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await expect.poll(() => canvas.evaluate(element => {
+      const bounds = element.getBoundingClientRect();
+      return Math.abs(element.width / element.height - bounds.width / bounds.height) < 0.01;
+    })).toBe(true);
     const bounds = await canvas.boundingBox();
     if (!bounds) throw Error('Missing 3D canvas bounds');
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);

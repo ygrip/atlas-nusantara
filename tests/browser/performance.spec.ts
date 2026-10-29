@@ -26,16 +26,24 @@ for (const width of [375, 1440]) {
     const card = await page.locator('.hero-card').boundingBox();
     const world = await page.locator('.anatomy-stage .world').boundingBox();
     if (!card || !world) throw Error('Hero layout is unavailable');
-    expect(world.x >= card.x && world.x + world.width <= card.x + card.width).toBe(true);
+    // The illustration intentionally bleeds 2.5% right; its stage clips the extra area.
+    expect(world.x >= card.x && world.x + world.width <= card.x + card.width * 1.03).toBe(true);
+    await expect(page.locator('.anatomy-stage')).toHaveCSS('overflow', 'hidden');
   });
 }
 
 test('hero has no perpetual animation and map work is capped and stops offscreen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.addInitScript(() => {
-    const state = window as Window & { atlasFrameCount: number; atlasDrawCount: number };
+    const state = window as Window & { atlasFrameCount: number; atlasDrawCount: number; atlasRenderCount: number };
     state.atlasFrameCount = 0;
     state.atlasDrawCount = 0;
+    state.atlasRenderCount = 0;
+    const clear = WebGL2RenderingContext.prototype.clear;
+    WebGL2RenderingContext.prototype.clear = function (mask: number) {
+      if (this.canvas instanceof HTMLCanvasElement && this.canvas.classList.contains('atlas-canvas') && (mask & this.COLOR_BUFFER_BIT)) state.atlasRenderCount++;
+      return clear.call(this, mask);
+    };
     const schedule = window.requestAnimationFrame.bind(window);
     window.requestAnimationFrame = callback => schedule(time => { state.atlasFrameCount++; callback(time); });
     const draw = WebGL2RenderingContext.prototype.drawElements;
@@ -49,6 +57,10 @@ test('hero has no perpetual animation and map work is capped and stops offscreen
   const infinite = await page.locator('.anatomy-stage').evaluate(element => element.getAnimations({ subtree: true }).filter(animation => animation.effect?.getTiming().iterations === Infinity).length);
   expect(infinite).toBe(0);
   const frameCount = () => page.evaluate(() => (window as Window & { atlasFrameCount: number }).atlasFrameCount);
+  const renderSample = () => page.evaluate(() => ({
+    frames: (window as Window & { atlasRenderCount: number }).atlasRenderCount,
+    at: performance.now()
+  }));
   const drawCount = () => page.evaluate(() => (window as Window & { atlasDrawCount: number }).atlasDrawCount);
   const idleBefore = await frameCount();
   await page.waitForTimeout(500);
@@ -56,17 +68,19 @@ test('hero has no perpetual animation and map work is capped and stops offscreen
   await page.locator('.atlas-3d').scrollIntoViewIfNeeded();
   await expect(page.locator('.atlas-3d')).toHaveAttribute('data-ready', 'true');
   await page.waitForTimeout(1500);
-  const activeBefore = await frameCount();
+  const activeBefore = await renderSample();
   await page.waitForTimeout(1000);
-  const ambientFrames = await frameCount() - activeBefore;
+  const activeAfter = await renderSample();
+  const ambientFrames = (activeAfter.frames - activeBefore.frames) * 1000 / (activeAfter.at - activeBefore.at);
   expect(ambientFrames).toBeGreaterThan(0);
   expect(ambientFrames).toBeLessThanOrEqual(36);
   const play = page.locator('.clay-map .play');
   await play.click();
   await page.waitForTimeout(800);
-  const playingBefore = await frameCount();
+  const playingBefore = await renderSample();
   await page.waitForTimeout(1000);
-  const playingFrames = await frameCount() - playingBefore;
+  const playingAfter = await renderSample();
+  const playingFrames = (playingAfter.frames - playingBefore.frames) * 1000 / (playingAfter.at - playingBefore.at);
   expect(playingFrames).toBeGreaterThan(0);
   expect(playingFrames).toBeLessThanOrEqual(36);
   await play.click();
