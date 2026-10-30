@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Download rate-limit counters store a hashed network address in D1, rather than the original address. The counters expire after their window and are deleted by scheduled cleanup, which may be delayed. They are used for security, not analytics.",
   "terms_ads_title": "Advertising and verified downloads",
   "terms_ads_disclosure": "The English-language homepage may request one clearly labelled Google advertisement. Ads are separate from the atlas, data sources and public-safety guidance, and do not imply endorsement. Blocked, empty or failed ads do not limit browsing. Display depends on publisher approval, availability and applicable consent requirements.",
-  "terms_download_disclosure": "Archive downloads use Cloudflare Turnstile and request, size and daily limits. Passing verification does not allow access to an unavailable dataset. Do not bypass safeguards or treat the atlas as an emergency-alert service."
+  "terms_download_disclosure": "Archive downloads use Cloudflare Turnstile and request, size and daily limits. Passing verification does not allow access to an unavailable dataset. Do not bypass safeguards or treat the atlas as an emergency-alert service.",
+  "privacy_ads_title": "Advertising and browser data"
 }
