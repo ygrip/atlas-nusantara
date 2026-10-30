@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Limitasaun download rai hash husi enderesu rede iha D1, la rai enderesu orijinál. Kontadór sira remata no apaga tuir kalendáriu, ne'ebé bele atraza. Uza ba seguransa, la'ós analítika utilizadór.",
   "terms_ads_title": "Anúnsiu no download verifikadu",
   "terms_ads_disclosure": "Pájina prinsipál Inglés bele husu anúnsiu Google ida ho rótulu klaru. Anúnsiu separadu husi dadus, fontes no orientasaun seguransa; la signifika apoiu ofisiál. Anúnsiu ne'ebé blokeadu ka falla la limita navegasaun. Ezibisaun depende aprovasaun, disponibilidade no regra konsentimentu.",
-  "terms_download_disclosure": "Download arkivu uza Cloudflare Turnstile ho limite pedidu, tamanhu no loron. Verifikasaun ne'ebé pasa la fó asesu ba dadus indisponível. Labele ultrapasa seguransa ka uza atlas hanesan sistema alerta emerjénsia."
+  "terms_download_disclosure": "Download arkivu uza Cloudflare Turnstile ho limite pedidu, tamanhu no loron. Verifikasaun ne'ebé pasa la fó asesu ba dadus indisponível. Labele ultrapasa seguransa ka uza atlas hanesan sistema alerta emerjénsia.",
+  "privacy_ads_title": "Anúnsiu no dadus browser"
 }
