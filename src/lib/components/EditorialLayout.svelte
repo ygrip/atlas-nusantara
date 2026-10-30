@@ -2,7 +2,10 @@
   import type { Snippet } from 'svelte';
   import { m } from '$lib/i18n/messages';
   import { pathFor } from '$lib/i18n/links';
-  let { title, description, eyebrow, children }: { title: string; description: string; eyebrow: string; children: Snippet } = $props();
+  type EditorialRoute = 'about' | 'guides' | 'guides/regions' | 'guides/conditions' | 'guides/nature';
+  let { title, description, eyebrow, route, children }: { title: string; description: string; eyebrow: string; route: EditorialRoute; children: Snippet } = $props();
+  const isGuide = $derived(route.startsWith('guides/'));
+  const illustration = $derived(route === 'guides' ? 'index' : route.replace('guides/', ''));
 </script>
 
 <svelte:head><title>{title} · Atlas Nusantara</title><meta name="description" content={description} /></svelte:head>
@@ -14,8 +17,16 @@
   </nav>
   <main id="main-content">
     <article class="clay-card editorial-card">
+      <nav class="editorial-breadcrumbs" aria-label={m.editorial_breadcrumb_label()}>
+        <ol>
+          <li><a href={pathFor('/')}>Atlas Nusantara</a></li>
+          {#if isGuide}<li><a href={pathFor('/guides')}>{m.editorial_index_title()}</a></li>{/if}
+          <li aria-current="page">{title}</li>
+        </ol>
+      </nav>
       <p class="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
+      <img class="editorial-illustration" src={'/illustrations/editorial-' + illustration + '.svg'} alt="" width="760" height="400" decoding="async" loading="lazy" />
       {@render children()}
     </article>
   </main>
@@ -29,6 +40,13 @@
   .editorial-links { display: flex; flex-wrap: wrap; gap: 18px; }
   .editorial-links a { text-decoration: underline; font-size: .85rem; color: var(--muted); }
   .editorial-card { padding: clamp(24px, 4vw, 48px); }
+  .editorial-breadcrumbs { margin-bottom: 24px; overflow-wrap: anywhere; }
+  .editorial-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; padding: 0; list-style: none; font-size: .83rem; }
+  .editorial-breadcrumbs li { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); }
+  .editorial-breadcrumbs li + li::before { content: "/"; color: var(--muted); opacity: .7; }
+  .editorial-breadcrumbs li:last-child { font-weight: 700; color: var(--text); }
+  .editorial-breadcrumbs a { text-decoration: underline; text-underline-offset: 3px; }
+  .editorial-illustration { display: block; width: min(100%, 720px); height: auto; margin: 10px auto 24px; aspect-ratio: 19 / 10; object-fit: contain; }
   .editorial-card h1 { margin: 8px 0 6px; font-size: clamp(2rem, 4.5vw, 3rem); letter-spacing: -.04em; line-height: 1.1; }
   .editorial-card :global(h2) { margin: 36px 0 10px; font-size: 1.45rem; letter-spacing: -.02em; }
   .editorial-card :global(h3) { margin: 24px 0 8px; font-size: 1.1rem; }
