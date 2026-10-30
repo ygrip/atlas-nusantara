@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile, unlink } from 'node:fs/promises';
 import path from 'node:path';
 
-const USER_AGENT = 'AtlasNusantaraResearch/0.1 (+https://github.com/ygrip/nusantara)';
+const USER_AGENT = 'AtlasNusantaraResearch/0.1 (+https://github.com/ygrip/atlas-nusantara)';
 const RETRYABLE = new Set([429, 500, 502, 503, 504]);
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 

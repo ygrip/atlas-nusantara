@@ -1,7 +1,7 @@
 // BMKG forecast point fetching, shared by the CLI snapshot script and the Cloudflare Worker refresh.
 // Source: https://data.bmkg.go.id/prakiraan-cuaca/ (60 requests/minute/IP). Attribution to BMKG is mandatory wherever it is shown.
 export const FORECAST_API = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=';
-export const FORECAST_USER_AGENT = 'nusantara-atlas snapshot (github.com/ygrip/nusantara)';
+export const FORECAST_USER_AGENT = 'nusantara-atlas snapshot (github.com/ygrip/atlas-nusantara)';
 
 export function normaliseName(name) {
   return name.toLowerCase().replace(/^(kabupaten|kab\.)\s+/, '').replace(/administrasi|adm\./g, '').replace(/[^a-z]/g, '');

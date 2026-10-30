@@ -3,7 +3,7 @@ import { PREFIXED_LOCALES } from '../src/lib/i18n/paths.js';
 import { execFileSync } from 'node:child_process';
 
 const SITE = 'https://nusantara.readynaz.com';
-const ROUTES = ['', 'terms', 'privacy'];
+const ROUTES = ['', 'terms', 'privacy', 'about', 'guides', 'guides/regions', 'guides/conditions', 'guides/nature'];
 const RIGHT_TO_LEFT = new Set(['ar', 'he', 'fa', 'ur']);
 
 // Keep the real prerendered pages. Only unknown routes use the client error fallback.
@@ -43,6 +43,7 @@ async function prerenderedPage(locale, route) {
   }
 }
 const attributeValue = value => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const textValue = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Replace the content of one <meta> tag, found by its name or property. */
 function setMeta(html, key, value) {
@@ -57,15 +58,18 @@ function localizeShell(source, locale, route, text) {
   let title = text.site_title + ' — ' + text.og_headline;
   let description = text.og_description;
   if (route) {
-    title = text[route + '_title'] + ' · ' + text.site_title;
-    description = text[route + '_description'];
+    const section = route.startsWith('guides/') ? route.slice('guides/'.length) : route === 'guides' ? 'index' : route;
+    const prefix = route === 'terms' || route === 'privacy' ? route : 'editorial_' + section;
+    title = text[prefix + '_title'] + ' · ' + text.site_title;
+    description = text[prefix + '_description'];
+    if (!title || !description) throw new Error('Missing metadata for ' + locale + '/' + route);
   }
   const image = SITE + '/og/nusantara-' + locale + '.png?v=clay-discovery-2';
   const imageAlt = text.site_title + ': ' + text.og_headline + ' ' + text.og_tagline;
   let html = source
     .replace(/<html lang="[^"]+"/, '<html lang="' + locale + '" dir="' + direction + '"')
     .replace('<link rel="canonical" href="' + SITE + '/" />', '<link rel="canonical" href="' + url + '" />')
-    .replace(/<title>[^<]*<\/title>/, '<title>' + title + '</title>')
+    .replace(/<title>[^<]*<\/title>/, '<title>' + textValue(title) + '</title>')
     .replace('"inLanguage":"en"', '"inLanguage":"' + locale + '"');
   // LegalLayout owns an SSR description tag; discard only the unmanaged app-shell duplicate.
   const descriptionTags = html.match(/<meta name="description"[^>]*>/g) ?? [];
@@ -82,13 +86,37 @@ function localizeShell(source, locale, route, text) {
   html = html.replace('</head>', alternates + ogAlternates + '</head>');
   html = html.replace(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/, (_match, json) => {
     const data = JSON.parse(json);
-    data.inLanguage = locale;
-    data.url = urlFor(locale, '');
-    data.description = text.og_description;
-    data.author = { '@type': 'Person', name: 'ygrip', url: 'https://github.com/ygrip' };
-    data.dateModified = revisionDate;
+    if (!route) {
+      data.inLanguage = locale;
+      data.url = url;
+      data.description = description;
+      data.dateModified = revisionDate;
+    } else {
+      const type = route === 'about' ? 'AboutPage' : route === 'guides' ? 'CollectionPage' : route.startsWith('guides/') ? 'Article' : 'WebPage';
+      const details = { '@context': 'https://schema.org', '@type': type, name: title, description, inLanguage: locale, url, isPartOf: { '@type': 'WebSite', name: 'Atlas Nusantara', url: SITE + '/' } };
+      if (type === 'Article') details.headline = title.replace(' · ' + text.site_title, '');
+      Object.assign(data, details);
+      for (const key of Object.keys(data)) if (!(key in details)) delete data[key];
+    }
     return '<script type="application/ld+json">' + JSON.stringify(data).replaceAll('<', '\\u003c') + '</script>';
   });
+
+  // A second, separately valid JSON-LD block mirrors the visible breadcrumb trail.
+  // All names and URLs use the same dictionary and locale routing as the article.
+  if (route === 'about' || route === 'guides' || route.startsWith('guides/')) {
+    const trail = [{ name: 'Atlas Nusantara', item: urlFor(locale, '') }];
+    if (route.startsWith('guides/')) trail.push({ name: text.editorial_index_title, item: urlFor(locale, 'guides') });
+    const section = route === 'guides' ? 'index' : route.replace('guides/', '');
+    trail.push({ name: text['editorial_' + section + '_title'], item: url });
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: trail.map((entry, index) => ({
+        '@type': 'ListItem', position: index + 1, name: entry.name, item: entry.item
+      }))
+    };
+    html = html.replace('</head>', '<script type="application/ld+json">' + JSON.stringify(breadcrumb).replaceAll('<', '\\u003c') + '</script></head>');
+  }
   return html;
 }
 function collectShellAssets(html, pageUrl) {

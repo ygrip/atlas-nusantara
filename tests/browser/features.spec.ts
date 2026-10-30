@@ -163,7 +163,7 @@ test('keeps the directory usable when geometry cannot be fetched', async ({ page
 
 test('shows source and support links with one automatic advertising slot', async ({ page }) => {
   await openAtlas(page);
-  await expect(page.getByRole('link', { name: /Source code/ })).toHaveAttribute('href', 'https://github.com/ygrip/nusantara');
+  await expect(page.getByRole('link', { name: /Source code/ })).toHaveAttribute('href', 'https://github.com/ygrip/atlas-nusantara');
   const support = page.locator('#support');
   for (const [name, href] of [['Trakteer', 'https://trakteer.id/yunaz_gilang'], ['Ko-fi', 'https://ko-fi.com/ygrip'], ['Patreon', 'https://www.patreon.com/c/ygrip']]) {
     await expect(support.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('href', href);

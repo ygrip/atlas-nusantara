@@ -30,7 +30,8 @@ test('hashes exact inline script content and skips external or empty scripts', (
   const inline = ' window.turnstile = true;\n';
   const other = 'window.ads = true;';
   const html = `<script>${inline}</script><script src="/app.js">ignore me</script><script>   </script><script type="application/ld+json">${other}</script>`;
-  assert.deepEqual(hashInlineScripts(html), [hash(other), hash(inline)].sort());
+  assert.deepEqual(hashInlineScripts(html), [hash(inline)]);
+  assert.deepEqual(hashInlineScripts('<script type="application/json">{ "x": 1 }</script><script type="application/ld+json">{ "@type": "WebSite" }</script>'), []);
 });
 
 test('CSP is default-deny, allows Turnstile, test ads, external catalogue images and inline hashes', () => {

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "npm run compile:locales && vite build && node scripts/prepare-static.mjs && node scripts/export-error-page.mjs && node scripts/security-headers.mjs",
+    "build": "npm run compile:locales && vite build && node scripts/prepare-static.mjs && node scripts/check-editorial-build.mjs && node scripts/export-error-page.mjs && node scripts/security-headers.mjs",
     "preview": "vite preview",
     "check": "npm run compile:locales && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:locales": "node scripts/check-locales.mjs",

@@ -42,7 +42,7 @@
         <a class="clay-button" class:primary={!presentation.retry} href={pathFor('/')}>{m.error_back()}</a>
       </div>
       {#if incidentId}<p class="error-reference">{m.error_reference()} <code>{incidentId}</code></p>{/if}
-      <a class="error-report" href="https://github.com/ygrip/nusantara/issues" target="_blank" rel="noopener noreferrer">{m.error_report()} ↗</a>
+      <a class="error-report" href="https://github.com/ygrip/atlas-nusantara/issues" target="_blank" rel="noopener noreferrer">{m.error_report()} ↗</a>
     </section>
     <div class="clay-card error-illustration">
       <img src={`/illustrations/error-${presentation.illustration}-640.webp`}

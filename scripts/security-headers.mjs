@@ -86,6 +86,9 @@ export function hashInlineScripts(html) {
   const scriptTag = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
   for (const match of html.matchAll(scriptTag)) {
     if (/\bsrc\s*=/.test(match[1])) continue;
+    // JSON-LD and JSON data blocks are inert; CSP script hashes apply to executable code.
+    // Hashing every localized JSON-LD payload would exceed Cloudflare Pages' header limit.
+    if (/\btype\s*=\s*["']application\/(?:ld\+)?json["']/i.test(match[1])) continue;
     const body = match[2];
     if (!body.trim()) continue;
     const digest = createHash('sha256').update(body, 'utf8').digest('base64');
