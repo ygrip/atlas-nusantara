@@ -32,7 +32,7 @@ for (const locale of locales) {
     if (!dataScript) throw new Error(path + ': missing structured data');
     const structured = JSON.parse(dataScript[1]);
     if (structured.url !== url || structured.inLanguage !== locale) throw new Error(path + ': incorrect structured data URL/language');
-    const jsonLd = [...html.matchAll(/<script type="application\\/ld\\+json">([\\s\\S]*?)<\\/script>/g)].map(match => JSON.parse(match[1]));
+    const jsonLd = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => JSON.parse(match[1]));
     const breadcrumb = jsonLd.find(item => item['@type'] === 'BreadcrumbList');
     const expected = route.startsWith('guides/') ? 3 : 2;
     if (!breadcrumb || breadcrumb.itemListElement?.length !== expected) throw new Error(path + ': missing or incomplete BreadcrumbList');
