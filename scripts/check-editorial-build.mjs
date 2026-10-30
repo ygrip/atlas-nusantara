@@ -40,7 +40,7 @@ for (const locale of locales) {
     if (parts[0].item !== SITE + (locale === 'en' ? '/' : '/' + locale)) throw new Error(path + ': incorrect breadcrumb root');
     if (route.startsWith('guides/') && parts[1].item !== SITE + (locale === 'en' ? '' : '/' + locale) + '/guides') throw new Error(path + ': incorrect breadcrumb parent');
     if (parts.at(-1).item !== url || parts.at(-1).name !== title) throw new Error(path + ': incorrect translated breadcrumb');
-    if (!/class="editorial-breadcrumbs(?:\\s|")/.test(html) || !html.includes('/illustrations/editorial-')) throw new Error(path + ': missing visible breadcrumbs or illustration');
+    if (!html.includes('class="editorial-breadcrumbs') || !html.includes('/illustrations/editorial-')) throw new Error(path + ': missing visible breadcrumbs or illustration');
   }
 }
 
