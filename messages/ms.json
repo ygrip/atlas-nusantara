@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Had muat turun menyimpan cincangan alamat rangkaian dalam D1, bukan alamat asal. Pengira tamat tempoh dan dibuang melalui pembersihan berjadual yang mungkin tertunda. Ia digunakan untuk keselamatan, bukan analitik.",
   "terms_ads_title": "Iklan dan muat turun disahkan",
   "terms_ads_disclosure": "Halaman utama bahasa Inggeris boleh meminta satu iklan Google berlabel jelas. Iklan tidak berkaitan dengan data, sumber atau nasihat keselamatan atlas dan tidak bermaksud sokongan rasmi. Iklan disekat atau gagal tidak menyekat pelayaran. Paparan bergantung pada kelulusan penerbit, ketersediaan dan persetujuan yang diwajibkan.",
-  "terms_download_disclosure": "Arkib memerlukan Cloudflare Turnstile serta had permintaan, saiz dan harian. Pengesahan tidak memberi akses kepada set data yang tidak tersedia. Jangan memintas perlindungan atau menggunakan atlas sebagai sistem amaran kecemasan."
+  "terms_download_disclosure": "Arkib memerlukan Cloudflare Turnstile serta had permintaan, saiz dan harian. Pengesahan tidak memberi akses kepada set data yang tidak tersedia. Jangan memintas perlindungan atau menggunakan atlas sebagai sistem amaran kecemasan.",
+  "privacy_ads_title": "Iklan dan data pelayar"
 }
