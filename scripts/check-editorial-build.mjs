@@ -25,7 +25,9 @@ for (const locale of locales) {
     if ((html.match(/<link rel="alternate" hreflang=/g) ?? []).length !== locales.length) throw new Error(path + ': incomplete hreflang alternates');
     if ((html.match(/<meta name="description"/g) ?? []).length !== 1) throw new Error(path + ': duplicate or missing description');
     if ((html.match(/<title>/g) ?? []).length !== 1) throw new Error(path + ': duplicate or missing title');
-    if (!html.includes('<h1>' + title.replaceAll('&', '&amp;').replaceAll('<', '&lt;') + '</h1>')) throw new Error(path + ': missing translated heading');
+    const rawHeading = html.match(/<h1\\b[^>]*>([\\s\\S]*?)<\\/h1>/)?.[1];
+    const heading = rawHeading?.replace(/<!--[\\s\\S]*?-->/g, '').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
+    if (heading !== title) throw new Error(path + ': incorrect translated heading ' + JSON.stringify(heading) + ', expected ' + JSON.stringify(title));
     const dataScript = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
     if (!dataScript) throw new Error(path + ': missing structured data');
     const structured = JSON.parse(dataScript[1]);
