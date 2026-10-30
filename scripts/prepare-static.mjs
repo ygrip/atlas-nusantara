@@ -43,6 +43,7 @@ async function prerenderedPage(locale, route) {
   }
 }
 const attributeValue = value => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const textValue = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 /** Replace the content of one <meta> tag, found by its name or property. */
 function setMeta(html, key, value) {
