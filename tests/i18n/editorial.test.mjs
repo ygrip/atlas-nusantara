@@ -5,7 +5,7 @@ import { BASE_LOCALE, PREFIXED_LOCALES, localizedPath } from '../../src/lib/i18n
 
 const languages = [BASE_LOCALE, ...PREFIXED_LOCALES];
 const slugs = ['regions', 'conditions', 'nature'];
-const keys = ['nav_about', 'nav_guides', 'back', 'about_label', 'guide_label', 'open_atlas', 'all_guides', 'more_guides', 'index_title', 'index_description', 'index_body', 'about_title', 'about_description', 'about_body', ...slugs.flatMap(slug => [slug + '_title', slug + '_description', slug + '_body'])].map(key => 'editorial_' + key);
+const keys = ['nav_about', 'nav_guides', 'breadcrumb_label', 'back', 'about_label', 'guide_label', 'open_atlas', 'all_guides', 'more_guides', 'index_title', 'index_description', 'index_body', 'about_title', 'about_description', 'about_body', ...slugs.flatMap(slug => [slug + '_title', slug + '_description', slug + '_body'])].map(key => 'editorial_' + key);
 const catalog = locale => JSON.parse(readFileSync('messages/' + locale + '.json', 'utf8'));
 
 test('new editorial pages have content and complete Paraglide keys in all 13 languages', () => {
@@ -18,8 +18,8 @@ test('new editorial pages have content and complete Paraglide keys in all 13 lan
     }
     for (const slug of ['about', ...slugs]) {
       const body = messages['editorial_' + slug + '_body'];
-      assert.equal((body.match(/^## /gm) ?? []).length, 4, locale + '/' + slug + ': expected four readable sections');
-      assert.ok(body.split(/\n\s*\n/).length >= 8, locale + '/' + slug + ': missing sections or explanatory paragraphs');
+      assert.ok((body.match(/^## /gm) ?? []).length >= 5, locale + '/' + slug + ': expected practical worked example and source sections');
+      assert.ok(body.split(/\n\s*\n/).length >= 10, locale + '/' + slug + ': missing sections or explanatory paragraphs');
       assert.match(body, /https:\/\/github\.com\/ygrip\/atlas-nusantara\/blob\/main\/docs\//);
       assert.doesNotMatch(body, /<script\b|\{@html/i, locale + '/' + slug + ': untrusted HTML');
     }
