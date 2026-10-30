@@ -44,8 +44,8 @@
     "BMKG_NOWCAST_REVIEWED_AT": ""
   },
   "observability": {
-    "enabled": true,
-    "logs": { "enabled": true, "head_sampling_rate": 1 },
-    "traces": { "enabled": true, "head_sampling_rate": 0.1 }
+    "enabled": false,
+    "logs": { "enabled": false },
+    "traces": { "enabled": false }
   }
 }
