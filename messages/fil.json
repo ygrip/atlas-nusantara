@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Ang mga limitasyon sa download ay nagtatago ng hash ng network address sa D1, hindi ang orihinal na address. Nag-e-expire ang counters at inaalis sa nakaiskedyul na paglilinis na maaaring maantala. Para ito sa seguridad, hindi analytics.",
   "terms_ads_title": "Mga ad at beripikadong pag-download",
   "terms_ads_disclosure": "Maaaring humiling ang English homepage ng isang malinaw na may label na Google ad. Hiwalay ang mga ad sa datos, pinagmulan at gabay sa kaligtasan; hindi ito pag-endorso. Hindi hinahadlangan ng nablock o nabigong ad ang pagtingin sa atlas. Nakasalalay ang pagpapakita sa pag-apruba, availability at naaangkop na pahintulot.",
-  "terms_download_disclosure": "Ang mga archive download ay may Cloudflare Turnstile at limitasyon sa request, laki at araw. Ang pagpasa sa beripikasyon ay hindi nagbibigay ng access sa hindi available na dataset. Huwag lampasan ang mga proteksiyon o ituring na emergency alert service ang atlas."
+  "terms_download_disclosure": "Ang mga archive download ay may Cloudflare Turnstile at limitasyon sa request, laki at araw. Ang pagpasa sa beripikasyon ay hindi nagbibigay ng access sa hindi available na dataset. Huwag lampasan ang mga proteksiyon o ituring na emergency alert service ang atlas.",
+  "privacy_ads_title": "Mga ad at datos ng browser"
 }
