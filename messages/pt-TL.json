@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Os limites de transferência guardam em D1 um hash do endereço de rede, não o endereço original. Os contadores expiram e são eliminados numa limpeza programada, que pode atrasar-se. São usados para segurança, não para análise de utilizadores.",
   "terms_ads_title": "Publicidade e transferências verificadas",
   "terms_ads_disclosure": "A página inicial em inglês poderá solicitar um anúncio Google claramente identificado. Os anúncios são independentes dos dados, fontes e orientações de segurança e não implicam apoio institucional. Anúncios bloqueados ou falhados não impedem a navegação. A apresentação depende de aprovação, disponibilidade e obrigações de consentimento.",
-  "terms_download_disclosure": "As transferências de arquivos utilizam Cloudflare Turnstile e limites de pedidos, tamanho e quota diária. A verificação não permite aceder a conjuntos de dados indisponíveis. Não contorne proteções nem utilize o atlas como serviço de alerta de emergência."
+  "terms_download_disclosure": "As transferências de arquivos utilizam Cloudflare Turnstile e limites de pedidos, tamanho e quota diária. A verificação não permite aceder a conjuntos de dados indisponíveis. Não contorne proteções nem utilize o atlas como serviço de alerta de emergência.",
+  "privacy_ads_title": "Publicidade e dados do navegador"
 }
