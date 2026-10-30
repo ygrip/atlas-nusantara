@@ -26,7 +26,7 @@
       </nav>
       <p class="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
-      <img class="editorial-illustration" src={'/illustrations/editorial-' + illustration + '.svg'} alt="" width="760" height="400" decoding="async" loading="eager" />
+      <img class="editorial-illustration" src={'/illustrations/editorial-' + illustration + '.avif'} alt="" width="1200" height="675" decoding="async" loading="eager" />
       {@render children()}
     </article>
   </main>
@@ -46,7 +46,7 @@
   .editorial-breadcrumbs li + li::before { content: "/"; color: var(--muted); opacity: .7; }
   .editorial-breadcrumbs li:last-child { font-weight: 700; color: var(--ink, inherit); }
   .editorial-breadcrumbs a { text-decoration: underline; text-underline-offset: 3px; }
-  .editorial-illustration { display: block; width: min(100%, 720px); height: auto; margin: 10px auto 24px; aspect-ratio: 19 / 10; object-fit: contain; }
+  .editorial-illustration { display: block; width: min(100%, 720px); height: auto; margin: 10px auto 24px; aspect-ratio: 16 / 9; object-fit: contain; }
   .editorial-card h1 { margin: 8px 0 6px; font-size: clamp(2rem, 4.5vw, 3rem); letter-spacing: -.04em; line-height: 1.1; }
   .editorial-card :global(h2) { margin: 36px 0 10px; font-size: 1.45rem; letter-spacing: -.02em; }
   .editorial-card :global(h3) { margin: 24px 0 8px; font-size: 1.1rem; }
