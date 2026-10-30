@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Pembatasan unduhan menyimpan hash alamat jaringan di D1, bukan alamat aslinya. Data penghitung kedaluwarsa lalu dihapus melalui pembersihan terjadwal, yang mungkin tertunda. Data ini dipakai untuk keamanan, bukan analitik.",
   "terms_ads_title": "Iklan dan unduhan terverifikasi",
   "terms_ads_disclosure": "Beranda bahasa Inggris dapat meminta satu iklan Google yang diberi label jelas. Iklan terpisah dari data, sumber, dan panduan keselamatan serta bukan bentuk dukungan resmi. Iklan yang diblokir atau gagal tidak membatasi penelusuran. Penayangan bergantung pada persetujuan penerbit, ketersediaan, dan ketentuan persetujuan yang berlaku.",
-  "terms_download_disclosure": "Unduhan arsip menggunakan Cloudflare Turnstile dan batas permintaan, ukuran, serta kuota harian. Lulus verifikasi bukan berarti dataset yang tidak tersedia dapat diakses. Jangan melewati pengamanan atau menjadikan atlas sebagai layanan peringatan darurat."
+  "terms_download_disclosure": "Unduhan arsip menggunakan Cloudflare Turnstile dan batas permintaan, ukuran, serta kuota harian. Lulus verifikasi bukan berarti dataset yang tidak tersedia dapat diakses. Jangan melewati pengamanan atau menjadikan atlas sebagai layanan peringatan darurat.",
+  "privacy_ads_title": "Iklan dan data browser"
 }
