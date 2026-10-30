@@ -100,6 +100,23 @@ function localizeShell(source, locale, route, text) {
     }
     return '<script type="application/ld+json">' + JSON.stringify(data).replaceAll('<', '\\u003c') + '</script>';
   });
+
+  // A second, separately valid JSON-LD block mirrors the visible breadcrumb trail.
+  // All names and URLs use the same dictionary and locale routing as the article.
+  if (route === 'about' || route === 'guides' || route.startsWith('guides/')) {
+    const trail = [{ name: 'Atlas Nusantara', item: urlFor(locale, '') }];
+    if (route.startsWith('guides/')) trail.push({ name: text.editorial_index_title, item: urlFor(locale, 'guides') });
+    const section = route === 'guides' ? 'index' : route.replace('guides/', '');
+    trail.push({ name: text['editorial_' + section + '_title'], item: url });
+    const breadcrumb = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: trail.map((entry, index) => ({
+        '@type': 'ListItem', position: index + 1, name: entry.name, item: entry.item
+      }))
+    };
+    html = html.replace('</head>', '<script type="application/ld+json">' + JSON.stringify(breadcrumb).replaceAll('<', '\\u003c') + '</script></head>');
+  }
   return html;
 }
 function collectShellAssets(html, pageUrl) {
