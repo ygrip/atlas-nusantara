@@ -30,7 +30,6 @@
   .editorial-links a { text-decoration: underline; font-size: .85rem; color: var(--muted); }
   .editorial-card { padding: clamp(24px, 4vw, 48px); }
   .editorial-card h1 { margin: 8px 0 6px; font-size: clamp(2rem, 4.5vw, 3rem); letter-spacing: -.04em; line-height: 1.1; }
-  .editorial-updated { margin: 0 0 22px; color: var(--muted); font-size: .8rem; }
   .editorial-card :global(h2) { margin: 36px 0 10px; font-size: 1.45rem; letter-spacing: -.02em; }
   .editorial-card :global(h3) { margin: 24px 0 8px; font-size: 1.1rem; }
   .editorial-card :global(p), .editorial-card :global(li) { color: var(--muted); line-height: 1.75; max-width: 72ch; }
