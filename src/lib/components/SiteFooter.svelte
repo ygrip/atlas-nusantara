@@ -2,7 +2,7 @@
   import { m } from '$lib/i18n/messages';
   import { pathFor } from '$lib/i18n/links';
   import ClayCompass from './ClayCompass.svelte';
-  import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database } from 'lucide-svelte';
+  import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database, BookOpen, Compass } from 'lucide-svelte';
 </script>
 
 <footer class="site-footer clay-card">
@@ -19,6 +19,8 @@
         <li><a href="#atlas"><Map size={17} aria-hidden="true" />{m.nav_atlas()}</a></li>
         <li><a href="#provinces"><Database size={17} aria-hidden="true" />{m.nav_provinces()}</a></li>
         <li><a href="#support"><Heart size={17} aria-hidden="true" />{m.support_action()}</a></li>
+        <li><a href="/about" lang="en" data-sveltekit-reload><BookOpen size={17} aria-hidden="true" />About the atlas</a></li>
+        <li><a href="/guides" lang="en" data-sveltekit-reload><Compass size={17} aria-hidden="true" />Guides</a></li>
         <li><a href="https://github.com/ygrip/nusantara" target="_blank" rel="noopener noreferrer"><CodeXml size={17} aria-hidden="true" />{m.source_code()}</a></li>
       </ul>
     </nav>

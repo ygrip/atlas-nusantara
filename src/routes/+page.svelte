@@ -4,6 +4,7 @@
   import SupportPanel from '$lib/components/SupportPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
+  import { getLocale } from '$lib/paraglide/runtime.js';
   import HeaderControls from '$lib/components/HeaderControls.svelte';
 
   import HeroArchipelago from '$lib/components/HeroArchipelago.svelte';
@@ -236,7 +237,8 @@
         <p class="summary-pending">{m.summary_scope()}</p>
       </section>
     {/if}
-    <AdSlot />
+    <!-- Only the English edition is indexed and carries the editorial pages, so only it shows an ad. -->
+    {#if getLocale() === 'en'}<AdSlot />{/if}
     <Preferences {selectedRegion} onopen={code => { chooseLayer('warning'); void openRegion(code); }} />
     <PwaManager />
 
