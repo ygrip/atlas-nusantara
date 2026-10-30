@@ -38,14 +38,14 @@ test('prerendering and sitemap both include every editorial route', () => {
   }
 });
 
-test('editorial illustrations exist as compact local SVGs with distinct subjects', () => {
+test('generated editorial artwork is committed as compact, transparent local AVIF assets', () => {
   for (const route of ['about', 'index', ...slugs]) {
-    const path = 'static/illustrations/editorial-' + route + '.svg';
-    assert.ok(existsSync(path), path + ': missing visual asset');
-    const svg = readFileSync(path, 'utf8');
-    assert.match(svg, /<svg[^>]+xmlns="http:\/\/www.w3.org\/2000\/svg"/);
-    assert.ok(Buffer.byteLength(svg, 'utf8') < 25_000, path + ': unnecessarily heavy illustration');
-    assert.match(svg, /<defs>/);
+    const path = 'static/illustrations/editorial-' + route + '.avif';
+    assert.ok(existsSync(path), path + ': missing illustration');
+    const bytes = readFileSync(path);
+    assert.ok(bytes.byteLength > 10_000 && bytes.byteLength < 150_000, path + ': unexpected image size');
+    assert.equal(bytes.subarray(4, 12).toString('ascii'), 'ftypavif', path + ': not AVIF encoded');
+    assert.equal(existsSync('static/illustrations/editorial-' + route + '.svg'), false, path + ': obsolete SVG placeholder');
   }
 });
 
