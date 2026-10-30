@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import test from 'node:test';
 import { BASE_LOCALE, PREFIXED_LOCALES, localizedPath } from '../../src/lib/i18n/paths.js';
 
@@ -12,7 +12,7 @@ test('new editorial pages have content and complete Paraglide keys in all 13 lan
   assert.equal(languages.length, 13);
   for (const locale of languages) {
     const messages = catalog(locale);
-    for (const key of keys) {
+    for (const key of [...keys, 'privacy_ads_title', 'privacy_ads_disclosure', 'privacy_security_title', 'privacy_turnstile_disclosure', 'privacy_counter_disclosure', 'terms_ads_title', 'terms_ads_disclosure', 'terms_download_disclosure']) {
       assert.equal(typeof messages[key], 'string', locale + ': ' + key);
       assert.ok(messages[key].trim(), locale + ': ' + key + ' empty');
     }
@@ -35,5 +35,24 @@ test('prerendering and sitemap both include every editorial route', () => {
   for (const route of ['/about', '/guides', ...slugs.map(slug => '/guides/' + slug)]) {
     assert.ok(config.includes("'" + route + "'"), 'missing prerender route ' + route);
     assert.ok(staticScript.includes("'" + route.slice(1) + "'"), 'missing sitemap route ' + route);
+  }
+});
+
+test('editorial illustrations exist as compact local SVGs with distinct subjects', () => {
+  for (const route of ['about', 'index', ...slugs]) {
+    const path = 'static/illustrations/editorial-' + route + '.svg';
+    assert.ok(existsSync(path), path + ': missing visual asset');
+    const svg = readFileSync(path, 'utf8');
+    assert.match(svg, /<svg[^>]+xmlns="http:\/\/www.w3.org\/2000\/svg"/);
+    assert.ok(Buffer.byteLength(svg, 'utf8') < 25_000, path + ': unnecessarily heavy illustration');
+    assert.match(svg, /<defs>/);
+  }
+});
+
+test('ad request stays scoped to English homepage, never an unsupported-language page', () => {
+  const homepage = readFileSync('src/routes/+page.svelte', 'utf8');
+  assert.match(homepage, /getLocale\(\) === 'en'[^}]*}<AdSlot/);
+  for (const path of ['src/routes/about/+page.svelte', 'src/routes/guides/+page.svelte', 'src/routes/guides/[slug]/+page.svelte']) {
+    assert.doesNotMatch(readFileSync(path, 'utf8'), /AdSlot|adsbygoogle/);
   }
 });
