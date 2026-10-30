@@ -614,5 +614,6 @@
   "privacy_counter_disclosure": "Bộ đếm giới hạn tải xuống lưu giá trị băm của địa chỉ mạng trong D1, không lưu địa chỉ gốc. Bộ đếm hết hạn rồi được xóa theo lịch, có thể chậm. Chúng phục vụ bảo mật, không phải phân tích người dùng.",
   "terms_ads_title": "Quảng cáo và tải xuống xác minh",
   "terms_ads_disclosure": "Trang chủ tiếng Anh có thể yêu cầu một quảng cáo Google với nhãn rõ ràng. Quảng cáo tách biệt với dữ liệu, nguồn và hướng dẫn an toàn; không hàm ý sự chứng thực. Quảng cáo bị chặn hoặc lỗi không cản trở xem bản đồ. Việc hiển thị phụ thuộc phê duyệt, tình trạng và nghĩa vụ về sự đồng ý.",
-  "terms_download_disclosure": "Tải kho lưu trữ cần Cloudflare Turnstile và có giới hạn lượt yêu cầu, dung lượng, hằng ngày. Xác minh thành công không cấp quyền truy cập dữ liệu không có sẵn. Không vượt qua biện pháp bảo vệ hoặc xem atlas như hệ thống cảnh báo khẩn cấp."
+  "terms_download_disclosure": "Tải kho lưu trữ cần Cloudflare Turnstile và có giới hạn lượt yêu cầu, dung lượng, hằng ngày. Xác minh thành công không cấp quyền truy cập dữ liệu không có sẵn. Không vượt qua biện pháp bảo vệ hoặc xem atlas như hệ thống cảnh báo khẩn cấp.",
+  "privacy_ads_title": "Quảng cáo và dữ liệu trình duyệt"
 }
