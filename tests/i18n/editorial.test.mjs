@@ -19,7 +19,7 @@ test('new editorial pages have content and complete Paraglide keys in all 13 lan
     for (const slug of ['about', ...slugs]) {
       const body = messages['editorial_' + slug + '_body'];
       assert.equal((body.match(/^## /gm) ?? []).length, 4, locale + '/' + slug + ': expected four readable sections');
-      assert.ok(body.length > 600, locale + '/' + slug + ': unusually short content');
+      assert.ok(body.split(/\n\s*\n/).length >= 8, locale + '/' + slug + ': missing sections or explanatory paragraphs');
       assert.match(body, /https:\/\/github\.com\/ygrip\/atlas-nusantara\/blob\/main\/docs\//);
       assert.doesNotMatch(body, /<script\b|\{@html/i, locale + '/' + slug + ': untrusted HTML');
     }
