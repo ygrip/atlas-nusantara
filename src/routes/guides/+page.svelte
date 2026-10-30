@@ -7,7 +7,7 @@
   const translate = (key: string) => (m as unknown as Record<string, () => string>)[key]();
 </script>
 
-<EditorialLayout title={m.editorial_index_title()} description={m.editorial_index_description()} eyebrow={m.editorial_nav_guides()}>
+<EditorialLayout title={m.editorial_index_title()} description={m.editorial_index_description()} eyebrow={m.editorial_nav_guides()} route="guides">
   <EditorialDocument text={m.editorial_index_body()} />
   <ul class="guide-list">
     {#each guideKeys as guide (guide.slug)}
