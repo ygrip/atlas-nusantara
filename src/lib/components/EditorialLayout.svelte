@@ -26,7 +26,7 @@
       </nav>
       <p class="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
-      <img class="editorial-illustration" src={'/illustrations/editorial-' + illustration + '.svg'} alt="" width="760" height="400" decoding="async" loading="lazy" />
+      <img class="editorial-illustration" src={'/illustrations/editorial-' + illustration + '.svg'} alt="" width="760" height="400" decoding="async" loading="eager" />
       {@render children()}
     </article>
   </main>
@@ -44,7 +44,7 @@
   .editorial-breadcrumbs ol { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; padding: 0; list-style: none; font-size: .83rem; }
   .editorial-breadcrumbs li { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); }
   .editorial-breadcrumbs li + li::before { content: "/"; color: var(--muted); opacity: .7; }
-  .editorial-breadcrumbs li:last-child { font-weight: 700; color: var(--text); }
+  .editorial-breadcrumbs li:last-child { font-weight: 700; color: var(--ink, inherit); }
   .editorial-breadcrumbs a { text-decoration: underline; text-underline-offset: 3px; }
   .editorial-illustration { display: block; width: min(100%, 720px); height: auto; margin: 10px auto 24px; aspect-ratio: 19 / 10; object-fit: contain; }
   .editorial-card h1 { margin: 8px 0 6px; font-size: clamp(2rem, 4.5vw, 3rem); letter-spacing: -.04em; line-height: 1.1; }
