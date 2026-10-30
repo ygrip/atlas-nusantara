@@ -1,23 +1,21 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-
-  // English-only editorial pages (about, guides). prepare-static.mjs copies this
-  // title and description into the canonical, Open Graph and Twitter tags.
-  let { title, description, eyebrow, updated, children }: { title: string; description: string; eyebrow: string; updated: string; children: Snippet } = $props();
+  import { m } from '$lib/i18n/messages';
+  import { pathFor } from '$lib/i18n/links';
+  let { title, description, eyebrow, children }: { title: string; description: string; eyebrow: string; children: Snippet } = $props();
 </script>
 
 <svelte:head><title>{title} · Atlas Nusantara</title><meta name="description" content={description} /></svelte:head>
 
-<div class="shell editorial-shell" lang="en">
-  <nav class="editorial-top" aria-label="Site">
-    <a class="editorial-back" href="/" data-sveltekit-reload><img src="/brand/logo-96.webp" alt="" width="32" height="32" /><span>← Atlas Nusantara</span></a>
-    <span class="editorial-links"><a href="/about">About</a><a href="/guides">Guides</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></span>
+<div class="shell editorial-shell">
+  <nav class="editorial-top" aria-label={m.nav_label()}>
+    <a class="editorial-back" href={pathFor('/')}><img src="/brand/logo-96.webp" alt="" width="32" height="32" /><span>{m.editorial_back()}</span></a>
+    <span class="editorial-links"><a href={pathFor('/about')}>{m.editorial_nav_about()}</a><a href={pathFor('/guides')}>{m.editorial_nav_guides()}</a><a href={pathFor('/terms')}>{m.legal_terms_link()}</a><a href={pathFor('/privacy')}>{m.legal_privacy_link()}</a></span>
   </nav>
   <main id="main-content">
     <article class="clay-card editorial-card">
       <p class="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
-      <p class="editorial-updated">By Yunaz Gilang Ramadhan · Updated <time datetime={updated}>{updated}</time></p>
       {@render children()}
     </article>
   </main>
