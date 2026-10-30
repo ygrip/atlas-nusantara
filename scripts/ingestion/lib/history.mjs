@@ -34,7 +34,7 @@ async function fetchBatch(batch, { fetcher, sleep, attempts }) {
   });
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
-      const response = await fetcher(API + '?' + query, { signal: AbortSignal.timeout(30000), headers: { 'user-agent': 'nusantara-atlas history (github.com/ygrip/nusantara)' } });
+      const response = await fetcher(API + '?' + query, { signal: AbortSignal.timeout(30000), headers: { 'user-agent': 'nusantara-atlas history (github.com/ygrip/atlas-nusantara)' } });
       if (response.status === 429) { await sleep(15000 * attempt); continue; }
       if (!response.ok) throw Error('HTTP ' + response.status);
       const payload = await response.json();
