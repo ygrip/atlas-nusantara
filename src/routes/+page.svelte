@@ -237,7 +237,7 @@
         <p class="summary-pending">{m.summary_scope()}</p>
       </section>
     {/if}
-    <!-- Only the English edition is indexed and carries the editorial pages, so only it shows an ad. -->
+    <!-- Preserve the existing English-only ad placement; it is independent of editorial indexing. -->
     {#if getLocale() === 'en'}<AdSlot />{/if}
     <Preferences {selectedRegion} onopen={code => { chooseLayer('warning'); void openRegion(code); }} />
     <PwaManager />
