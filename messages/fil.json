@@ -622,5 +622,12 @@
   "destination_gallery_close": "Isara ang galeriya ng larawan",
   "destination_gallery_carousel": "Karusel ng mga larawan",
   "section_indonesia": "INDONESIA",
-  "section_observatory": "SENTRO NG PAGMAMASID"
+  "section_observatory": "SENTRO NG PAGMAMASID",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali at Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

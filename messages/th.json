@@ -622,5 +622,12 @@
   "destination_gallery_close": "ปิดแกลเลอรีรูปภาพ",
   "destination_gallery_carousel": "ภาพแบบเลื่อน",
   "section_indonesia": "อินโดนีเซีย",
-  "section_observatory": "ศูนย์เฝ้าสังเกตการณ์"
+  "section_observatory": "ศูนย์เฝ้าสังเกตการณ์",
+  "island_group_sumatra": "สุมาตรา",
+  "island_group_java": "ชวา",
+  "island_group_nusa_tenggara": "บาหลีและนูซาเต็งการา",
+  "island_group_kalimantan": "กาลีมันตัน",
+  "island_group_sulawesi": "สุลาเวสี",
+  "island_group_maluku": "มาลูกู",
+  "island_group_papua": "ปาปัว"
 }

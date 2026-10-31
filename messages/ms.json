@@ -622,5 +622,12 @@
   "destination_gallery_close": "Tutup galeri foto",
   "destination_gallery_carousel": "Karusel imej",
   "section_indonesia": "INDONESIA",
-  "section_observatory": "PUSAT PEMANTAUAN"
+  "section_observatory": "PUSAT PEMANTAUAN",
+  "island_group_sumatra": "Sumatera",
+  "island_group_java": "Jawa",
+  "island_group_nusa_tenggara": "Bali dan Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

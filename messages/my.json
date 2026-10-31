@@ -622,5 +622,12 @@
   "destination_gallery_close": "ဓာတ်ပုံပြခန်း ပိတ်ရန်",
   "destination_gallery_carousel": "ဓာတ်ပုံလှည့်ပြစနစ်",
   "section_indonesia": "အင်ဒိုနီးရှား",
-  "section_observatory": "စောင့်ကြည့်လေ့လာရေးဌာန"
+  "section_observatory": "စောင့်ကြည့်လေ့လာရေးဌာန",
+  "island_group_sumatra": "ဆူမားတြား",
+  "island_group_java": "ဂျာဗား",
+  "island_group_nusa_tenggara": "ဘာလီနှင့် နူဆာတင်ဂါရာ",
+  "island_group_kalimantan": "ကာလီမန်တန်",
+  "island_group_sulawesi": "ဆူလာဝေစီ",
+  "island_group_maluku": "မာလူကူ",
+  "island_group_papua": "ပါပူအာ"
 }

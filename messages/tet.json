@@ -622,5 +622,12 @@
   "destination_gallery_close": "Taka galeria foto",
   "destination_gallery_carousel": "Karosel imajen",
   "section_indonesia": "INDONÉZIA",
-  "section_observatory": "OBSERVATÓRIU"
+  "section_observatory": "OBSERVATÓRIU",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali no Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

@@ -622,5 +622,12 @@
   "destination_gallery_close": "ປິດຄັງຮູບພາບ",
   "destination_gallery_carousel": "ການສະແດງຮູບແບບເລື່ອນ",
   "section_indonesia": "ອິນໂດເນເຊຍ",
-  "section_observatory": "ສູນສັງເກດການ"
+  "section_observatory": "ສູນສັງເກດການ",
+  "island_group_sumatra": "ສຸມາຕຣາ",
+  "island_group_java": "ຊະວາ",
+  "island_group_nusa_tenggara": "ບາຫຼີ ແລະ ນູຊາ ເຕັງກາຣາ",
+  "island_group_kalimantan": "ກາລີມັນຕັນ",
+  "island_group_sulawesi": "ຊູລາເວຊີ",
+  "island_group_maluku": "ມາລູກູ",
+  "island_group_papua": "ປາປົວ"
 }

@@ -5,7 +5,8 @@
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
   import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';
   import type { GeometryPackage } from '$lib/geo/types';
-  import { ISLAND_GROUPS, ISLAND_GROUP_COLORS, ISLAND_GROUP_NAMES } from '$lib/atlas/islands';
+  import { ISLAND_GROUPS, ISLAND_GROUP_COLORS } from '$lib/atlas/islands';
+  import { islandGroupLabel } from '$lib/i18n/island-groups';
   import { GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   import { assetUrl } from '$lib/pwa/assets';
   import type { AtlasScene, MapLayers, ThemeName } from '$lib/map/scene';
@@ -532,7 +533,7 @@
           <p class="legend-title">{m.map_legend_groups()}</p>
           <ul class="group-legend">
             {#each ISLAND_GROUPS as group (group)}
-              <li><span class="swatch" style={`--swatch: ${groupSwatch(group)}`} aria-hidden="true"></span>{ISLAND_GROUP_NAMES[group]}</li>
+              <li><span class="swatch" style={`--swatch: ${groupSwatch(group)}`} aria-hidden="true"></span>{islandGroupLabel(group)}</li>
             {/each}
           </ul>
           {#if forecast && layers.wind && activeLayer === 'warning'}

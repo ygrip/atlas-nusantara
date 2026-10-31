@@ -622,5 +622,12 @@
   "destination_gallery_close": "Close photo gallery",
   "destination_gallery_carousel": "Image carousel",
   "section_indonesia": "INDONESIA",
-  "section_observatory": "OBSERVATORY"
+  "section_observatory": "OBSERVATORY",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali and Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

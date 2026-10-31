@@ -622,5 +622,12 @@
   "destination_gallery_close": "关闭照片图库",
   "destination_gallery_carousel": "图片轮播",
   "section_indonesia": "印度尼西亚",
-  "section_observatory": "观测中心"
+  "section_observatory": "观测中心",
+  "island_group_sumatra": "苏门答腊",
+  "island_group_java": "爪哇",
+  "island_group_nusa_tenggara": "巴厘岛与努沙登加拉",
+  "island_group_kalimantan": "加里曼丹",
+  "island_group_sulawesi": "苏拉威西",
+  "island_group_maluku": "马鲁古",
+  "island_group_papua": "巴布亚"
 }

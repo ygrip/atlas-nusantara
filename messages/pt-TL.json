@@ -622,5 +622,12 @@
   "destination_gallery_close": "Fechar galeria de fotografias",
   "destination_gallery_carousel": "Carrossel de imagens",
   "section_indonesia": "INDONÉSIA",
-  "section_observatory": "OBSERVATÓRIO"
+  "section_observatory": "OBSERVATÓRIO",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali e Nusa Tenggara",
+  "island_group_kalimantan": "Calimantã",
+  "island_group_sulawesi": "Celebes",
+  "island_group_maluku": "Molucas",
+  "island_group_papua": "Papua"
 }

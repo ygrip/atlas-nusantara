@@ -622,5 +622,12 @@
   "destination_gallery_close": "படத் தொகுப்பை மூடு",
   "destination_gallery_carousel": "படச் சுழற்றி",
   "section_indonesia": "இந்தோனேசியா",
-  "section_observatory": "கண்காணிப்பு மையம்"
+  "section_observatory": "கண்காணிப்பு மையம்",
+  "island_group_sumatra": "சுமாத்திரா",
+  "island_group_java": "ஜாவா",
+  "island_group_nusa_tenggara": "பாலி மற்றும் நுசா தெங்காரா",
+  "island_group_kalimantan": "கலிமந்தான்",
+  "island_group_sulawesi": "சுலவேசி",
+  "island_group_maluku": "மலுக்கு",
+  "island_group_papua": "பப்புவா"
 }

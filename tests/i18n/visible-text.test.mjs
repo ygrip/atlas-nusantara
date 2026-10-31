@@ -14,7 +14,14 @@ const UI_MESSAGES = [
   'destination_gallery_close',
   'destination_gallery_carousel',
   'section_indonesia',
-  'section_observatory'
+  'section_observatory',
+  'island_group_sumatra',
+  'island_group_java',
+  'island_group_nusa_tenggara',
+  'island_group_kalimantan',
+  'island_group_sulawesi',
+  'island_group_maluku',
+  'island_group_papua'
 ];
 const placeholders = (value) => [...value.matchAll(/\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g)]
   .map((match) => match[1]).sort().join('|');
@@ -50,5 +57,17 @@ test('visible app copy and gallery accessibility labels use Inlang, not English 
   assert.doesNotMatch(gallery, /Close image gallery|['"] · gallery['"]|['"] photos['"]/);
   for (const source of [homepage, summary]) {
     assert.doesNotMatch(source, />\s*(INDONESIA|OBSERVATORY)\s*<\/span>/);
+  }
+});
+
+test('all user-visible island-group labels resolve through translated messages', () => {
+  const helper = file('src/lib/i18n/island-groups.ts');
+  for (const name of ['sumatra', 'java', 'nusa_tenggara', 'kalimantan', 'sulawesi', 'maluku', 'papua']) {
+    assert.ok(helper.includes('m.island_group_' + name), name);
+  }
+  for (const path of ['IslandChart', 'ProvinceTable', 'ClayMap', 'HeroArchipelago']) {
+    const source = file('src/lib/components/' + path + '.svelte');
+    assert.match(source, /islandGroupLabel\(/, path);
+    assert.doesNotMatch(source, /ISLAND_GROUP_NAMES/, path);
   }
 });
