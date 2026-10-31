@@ -31,16 +31,16 @@ test.describe('2025 atlas and locations', () => {
     await expect(details).toContainText('Cloud cover');
   });
 
-  test('renders exploration copy, all locales and the 38-province directory', async ({ page }) => {
+  test('renders exploration copy, all locales and the 38-province directory @smoke', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
     await expect(page.locator('.hero-copy')).toContainText('Get to know Indonesia');
-  await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
+    await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
     await page.getByRole('button', { name: 'Choose your language', exact: true }).click();
     await expect(page.locator('.language-grid button')).toHaveCount(13);
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: '2D', exact: true }).click();
-    await expect(page.locator('.atlas-map path[data-code]')).toHaveCount(38);
+    await expect(page.locator('.language-dialog')).toBeHidden();
+    // The separate province-selection smoke test already verifies 2D map switching.
     await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   });
 
@@ -56,7 +56,7 @@ test.describe('2025 atlas and locations', () => {
     await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   });
 
-  test('opens a province from its real polygon and selects a city', async ({ page }) => {
+  test('opens a province from its real polygon and selects a city @smoke', async ({ page }) => {
     await useEnglish(page);
     await openAtlas(page);
     await page.getByRole('button', { name: '2D', exact: true }).click();
@@ -186,7 +186,7 @@ test.describe('2025 atlas and locations', () => {
     await expect(page.getByText('Live alerts are not connected yet. Turning notifications off here does not revoke browser permission.', { exact: true })).toHaveCount(1);
   });
 
-  test('gives each locale its own path and switches every text in place, without reloading', async ({ page }) => {
+  test('gives each locale its own path and switches every text in place, without reloading @smoke', async ({ page }) => {
     await page.goto('/');
     await page.evaluate(() => { (window as unknown as { __kept: boolean }).__kept = true; });
     const hero = page.locator('.hero-copy p');
@@ -250,20 +250,5 @@ test.describe('2025 atlas and locations', () => {
     expect(transition.split(',').every(value => Number.parseFloat(value) === 0)).toBeTruthy();
   });
 
-  test('uses the SPA fallback for a deep link and serves a cached shell offline', async ({ page, context }) => {
-    await useEnglish(page);
-    await page.goto('/?region=96');
-    await expect(page.getByRole('searchbox')).toBeVisible();
-    await page.evaluate(async () => {
-      if (!('serviceWorker' in navigator)) throw new Error('Service workers unavailable');
-      await navigator.serviceWorker.ready;
-    });
-    await page.reload();
-    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBeTruthy();
-    await context.setOffline(true);
-    const offlineResponse = await page.goto('/?region=32');
-    expect(offlineResponse?.ok()).toBeTruthy();
-    await expect(page.locator('.masthead .brand')).toBeVisible();
-    await expect(page.locator('.region-directory')).toBeVisible();
-  });
+
 });

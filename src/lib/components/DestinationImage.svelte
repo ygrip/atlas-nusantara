@@ -101,7 +101,7 @@
 
 {#if photos.length}
   <button class="destination-image photo-preview" type="button" bind:this={previewButton}
-    onclick={showGallery} aria-label={name + ' · ' + photos.length + ' photos'}>
+    onclick={showGallery} aria-label={name + ' · ' + m.destination_gallery_photos({ count: photos.length })}>
     {#if !previewFailed}
       <img src={photos[0].url} alt={name} loading="lazy" decoding="async" referrerpolicy="no-referrer"
         onerror={() => { previewFailed = true; }} />
@@ -127,14 +127,14 @@
 
 {#if open && current}
   <div class="gallery-overlay" use:portalToBody role="presentation">
-    <button class="gallery-scrim" type="button" onclick={closeGallery} aria-label="Close image gallery"></button>
-    <div class="gallery-dialog" bind:this={modal} role="dialog" aria-modal="true" aria-label={name + ' · gallery'} tabindex="-1">
+    <button class="gallery-scrim" type="button" onclick={closeGallery} aria-label={m.destination_gallery_close()}></button>
+    <div class="gallery-dialog" bind:this={modal} role="dialog" aria-modal="true" aria-label={m.destination_gallery_label({ name })} tabindex="-1">
       <header class="gallery-header">
         <span class="gallery-title"><Images size={18} aria-hidden="true" /><strong>{name}</strong></span>
         <button class="gallery-control gallery-close" type="button" bind:this={closeButton}
-          onclick={closeGallery} aria-label="Close image gallery"><X size={20} strokeWidth={2.6} /></button>
+          onclick={closeGallery} aria-label={m.destination_gallery_close()}><X size={20} strokeWidth={2.6} /></button>
       </header>
-      <div class="gallery-stage" role="group" aria-roledescription="carousel" aria-label={name} onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={() => { swipeStartX = undefined; }}>
+      <div class="gallery-stage" role="group" aria-roledescription={m.destination_gallery_carousel()} aria-label={name} onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={() => { swipeStartX = undefined; }}>
         <div class="gallery-frame">
           {#if !modalFailed}
             {#key current.url}

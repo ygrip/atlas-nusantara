@@ -88,7 +88,7 @@
       </ol>
       <p class="hint">{m.language_province_hint()}</p>
     {/if}
-    <p class="clay-note">{data.note}</p>
+    <p class="clay-note">{m.language_source_note()}</p>
     <p class="clay-note"><a href={data.sourceUrl} target="_blank" rel="noreferrer">{data.source} ↗</a> · {date(data.fetchedAt)}</p>
   {/if}
 </section>

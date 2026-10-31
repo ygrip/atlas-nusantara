@@ -80,7 +80,7 @@
 <!-- The component stays mounted so the share card keeps its totals; the section itself only renders for layers with an observatory. -->
 {#if activeKind}
 <section id="summary" class="aggregate-summary details" aria-labelledby="summary-heading" aria-busy={loading}>
-  <span class="eyebrow">OBSERVATORY</span>
+  <span class="eyebrow">{m.section_observatory()}</span>
   <h2 id="summary-heading">{m.summary_heading()}</h2>
   <p class="summary-intro">{m.summary_scope()}</p>
   {#if loading}<p class="summary-empty" role="status">{m.loading_data()}</p>

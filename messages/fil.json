@@ -615,5 +615,19 @@
   "terms_ads_title": "Mga ad at beripikadong pag-download",
   "terms_ads_disclosure": "Maaaring humiling ang English homepage ng isang malinaw na may label na Google ad. Hiwalay ang mga ad sa datos, pinagmulan at gabay sa kaligtasan; hindi ito pag-endorso. Hindi hinahadlangan ng nablock o nabigong ad ang pagtingin sa atlas. Nakasalalay ang pagpapakita sa pag-apruba, availability at naaangkop na pahintulot.",
   "terms_download_disclosure": "Ang mga archive download ay may Cloudflare Turnstile at limitasyon sa request, laki at araw. Ang pagpasa sa beripikasyon ay hindi nagbibigay ng access sa hindi available na dataset. Huwag lampasan ang mga proteksiyon o ituring na emergency alert service ang atlas.",
-  "privacy_ads_title": "Mga ad at datos ng browser"
+  "privacy_ads_title": "Mga ad at datos ng browser",
+  "language_source_note": "Ang wikang sinasalita sa ilang lalawigan ay binibilang sa bawat isa. Nauna ang datos sa paghahati ng Papua noong 2022; itinalaga ang mga wika ng Papua at Papua Barat sa mga lalawigan noong 2025 batay sa mga distritong binanggit sa kanilang paglalarawan.",
+  "destination_gallery_photos": "Mga larawan: {count}",
+  "destination_gallery_label": "Galeriya ng larawan: {name}",
+  "destination_gallery_close": "Isara ang galeriya ng larawan",
+  "destination_gallery_carousel": "Karusel ng mga larawan",
+  "section_indonesia": "INDONESIA",
+  "section_observatory": "SENTRO NG PAGMAMASID",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali at Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

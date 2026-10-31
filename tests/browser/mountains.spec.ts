@@ -29,7 +29,7 @@ test('mountain directory and keyboard pins open a detail popup without replacing
   await expect(page.locator('.layer-option').filter({ hasText: 'Weather hazards' })).toBeVisible();
 });
 
-test('layer picker filters by name or source and defaults to weather', async ({ page }) => {
+test('layer picker filters by name or source and defaults to weather @smoke', async ({ page }) => {
   // Measure sticky geometry, not the dialog's finite entrance animation.
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en'));

@@ -615,5 +615,19 @@
   "terms_ads_title": "Iklan dan unduhan terverifikasi",
   "terms_ads_disclosure": "Beranda bahasa Inggris dapat meminta satu iklan Google yang diberi label jelas. Iklan terpisah dari data, sumber, dan panduan keselamatan serta bukan bentuk dukungan resmi. Iklan yang diblokir atau gagal tidak membatasi penelusuran. Penayangan bergantung pada persetujuan penerbit, ketersediaan, dan ketentuan persetujuan yang berlaku.",
   "terms_download_disclosure": "Unduhan arsip menggunakan Cloudflare Turnstile dan batas permintaan, ukuran, serta kuota harian. Lulus verifikasi bukan berarti dataset yang tidak tersedia dapat diakses. Jangan melewati pengamanan atau menjadikan atlas sebagai layanan peringatan darurat.",
-  "privacy_ads_title": "Iklan dan data browser"
+  "privacy_ads_title": "Iklan dan data browser",
+  "language_source_note": "Bahasa yang dituturkan di beberapa provinsi dihitung di masing-masing provinsi. Sumber ini berasal dari sebelum pemekaran Papua pada 2022; bahasa di Papua dan Papua Barat ditempatkan pada provinsi tahun 2025 berdasarkan kabupaten yang disebutkan dalam deskripsinya.",
+  "destination_gallery_photos": "Foto: {count}",
+  "destination_gallery_label": "Galeri foto: {name}",
+  "destination_gallery_close": "Tutup galeri foto",
+  "destination_gallery_carousel": "Korsel gambar",
+  "section_indonesia": "INDONESIA",
+  "section_observatory": "PUSAT PENGAMATAN",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Jawa",
+  "island_group_nusa_tenggara": "Bali dan Nusa Tenggara",
+  "island_group_kalimantan": "Kalimantan",
+  "island_group_sulawesi": "Sulawesi",
+  "island_group_maluku": "Maluku",
+  "island_group_papua": "Papua"
 }

@@ -7,7 +7,7 @@ test.describe('crawlable static pages', () => {
   test.use({ javaScriptEnabled: false, serviceWorkers: 'block' });
 
   for (const locale of settings.locales as string[]) {
-    test(`${locale}: content and language metadata work without JavaScript`, async ({ page }) => {
+    test(`${locale}: content and language metadata work without JavaScript${['en', 'id', 'zh-SG'].includes(locale) ? ' @smoke' : ''}`, async ({ page }) => {
       const copy = JSON.parse(readFileSync('messages/' + locale + '.json', 'utf8'));
       let path = '/';
       if (locale !== 'en') path = '/' + locale + '/';

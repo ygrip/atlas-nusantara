@@ -67,7 +67,7 @@ test('desktop web does not show an install invitation', async ({ page }) => {
   await expect(page.locator('.pwa-panel')).toHaveCount(0);
 });
 
-test('static data requests carry a release key and manifest has real install icons', async ({ page, request }) => {
+test('static data requests carry a release key and manifest has real install icons @smoke', async ({ page, request }) => {
   const provinces = page.waitForRequest(url => url.url().includes('/data/admin-2025/provinces.json'));
   await page.goto('/');
   expect(new URL((await provinces).url()).searchParams.get('v')).toBeTruthy();

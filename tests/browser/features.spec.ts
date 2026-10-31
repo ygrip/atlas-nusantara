@@ -153,7 +153,7 @@ test('copies the inviting caption and public link when native sharing is unavail
   await expect(dialog.getByRole('status')).toHaveText('Public link copied.');
 });
 
-test('keeps the directory usable when geometry cannot be fetched', async ({ page }) => {
+test('keeps the directory usable when geometry cannot be fetched @smoke', async ({ page }) => {
   await page.route('**/data/geometry-2025/**', route => route.fulfill({ status: 404 }));
   await openAtlas(page);
   await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
@@ -172,7 +172,7 @@ test('shows source and support links with one automatic advertising slot', async
   await expect(page.locator('ins[data-ad-slot="5292790825"]')).toHaveCount(1);
 });
 
-test('serves production-root canonical and OG metadata plus a local PNG image', async ({ page, request }) => {
+test('serves production-root canonical and OG metadata plus a local PNG image @smoke', async ({ page, request }) => {
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
   const metadata = await page.evaluate(() => ({

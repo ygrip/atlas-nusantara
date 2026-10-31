@@ -42,7 +42,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('starts on the national view without a location lookup and selecting a province fetches only its static shard', async ({ page }) => {
+test('starts on the national view without a location lookup and selecting a province fetches only its static shard @smoke', async ({ page }) => {
   const shards: string[] = [];
   page.on('request', request => {
     const pathname = new URL(request.url()).pathname;

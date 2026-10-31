@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { ISLAND_GROUP_NAMES } from '$lib/atlas/islands';
+  import { islandGroupLabel } from '$lib/i18n/island-groups';
   import IslandIcon from './IslandIcon.svelte';
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, totalsByGroup, type GroupTotals } from '$lib/directory/province-directory';
@@ -53,7 +53,7 @@
     <ol class="bars" aria-hidden="true">
       {#each totals as item (item.group)}
         <li style={groupStyle(item.group)}>
-          <span class="group-name"><IslandIcon group={item.group} size={26} />{ISLAND_GROUP_NAMES[item.group]}</span>
+          <span class="group-name"><IslandIcon group={item.group} size={26} />{islandGroupLabel(item.group)}</span>
           <span class="track">
             <span class="bar" style={`width: ${barWidth(item)}`}>
               {#if item.regencies > 0}<span class="segment regency" style={`flex: ${item.regencies} 1 0`}>{#if showSegmentValue(item.regencies)}{item.regencies}{/if}</span>{/if}
@@ -71,7 +71,7 @@
       <thead><tr><th scope="col">{m.table_island()}</th><th scope="col">{m.legend_regency()}</th><th scope="col">{m.legend_city()}</th><th scope="col">{m.table_total()}</th></tr></thead>
       <tbody>
         {#each totals as item (item.group)}
-          <tr><th scope="row">{ISLAND_GROUP_NAMES[item.group]}</th><td>{item.regencies}</td><td>{item.municipalities}</td><td>{item.total}</td></tr>
+          <tr><th scope="row">{islandGroupLabel(item.group)}</th><td>{item.regencies}</td><td>{item.municipalities}</td><td>{item.total}</td></tr>
         {/each}
       </tbody>
     </table>

@@ -615,5 +615,19 @@
   "terms_ads_title": "Publicidade e transferências verificadas",
   "terms_ads_disclosure": "A página inicial em inglês poderá solicitar um anúncio Google claramente identificado. Os anúncios são independentes dos dados, fontes e orientações de segurança e não implicam apoio institucional. Anúncios bloqueados ou falhados não impedem a navegação. A apresentação depende de aprovação, disponibilidade e obrigações de consentimento.",
   "terms_download_disclosure": "As transferências de arquivos utilizam Cloudflare Turnstile e limites de pedidos, tamanho e quota diária. A verificação não permite aceder a conjuntos de dados indisponíveis. Não contorne proteções nem utilize o atlas como serviço de alerta de emergência.",
-  "privacy_ads_title": "Publicidade e dados do navegador"
+  "privacy_ads_title": "Publicidade e dados do navegador",
+  "language_source_note": "Uma língua falada em várias províncias é contada em cada uma delas. A fonte é anterior à divisão administrativa de Papua em 2022; as línguas de Papua e Papua Barat são atribuídas às províncias de 2025 com base nos distritos mencionados nas respetivas descrições.",
+  "destination_gallery_photos": "Fotografias: {count}",
+  "destination_gallery_label": "Galeria de fotografias: {name}",
+  "destination_gallery_close": "Fechar galeria de fotografias",
+  "destination_gallery_carousel": "Carrossel de imagens",
+  "section_indonesia": "INDONÉSIA",
+  "section_observatory": "OBSERVATÓRIO",
+  "island_group_sumatra": "Sumatra",
+  "island_group_java": "Java",
+  "island_group_nusa_tenggara": "Bali e Nusa Tenggara",
+  "island_group_kalimantan": "Calimantã",
+  "island_group_sulawesi": "Celebes",
+  "island_group_maluku": "Molucas",
+  "island_group_papua": "Papua"
 }

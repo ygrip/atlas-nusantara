@@ -5,7 +5,8 @@
   import { loadProvinceShapes } from '$lib/directory/island-shapes';
   import IslandIcon from './IslandIcon.svelte';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { ISLAND_GROUPS, ISLAND_GROUP_NAMES, type IslandGroup } from '$lib/atlas/islands';
+  import { ISLAND_GROUPS, type IslandGroup } from '$lib/atlas/islands';
+  import { islandGroupLabel } from '$lib/i18n/island-groups';
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, type ProvinceRow } from '$lib/directory/province-directory';
   import RingChart from './RingChart.svelte';
@@ -165,7 +166,7 @@
     <div class="group-tabs group-filter" role="group" aria-label={m.table_island()}>
       <button type="button" class="island-tab all" aria-pressed={groupFilter === undefined} onclick={() => toggleGroup(undefined)}><Layers size={16} aria-hidden="true" />{m.filter_all()}</button>
       {#each ISLAND_GROUPS as group (group)}
-        <button type="button" class="island-tab" style={groupStyle(group)} aria-pressed={groupFilter === group} onclick={() => toggleGroup(group)}><IslandIcon {group} size={20} />{ISLAND_GROUP_NAMES[group]}</button>
+        <button type="button" class="island-tab" style={groupStyle(group)} aria-pressed={groupFilter === group} onclick={() => toggleGroup(group)}><IslandIcon {group} size={20} />{islandGroupLabel(group)}</button>
       {/each}
     </div>
   </div>
@@ -214,7 +215,7 @@
                   {/if}
                   <span>{row.name}</span>{#if currentProvince(row.code)}<span class="selected-marker"><Check size={13} aria-hidden="true" /></span>{/if}
                 </button>
-                <small>{ISLAND_GROUP_NAMES[row.group]}</small>
+                <small>{islandGroupLabel(row.group)}</small>
               </th>
               <td class="numeric">{number(row.regencies.length)}</td>
               <td class="numeric">{number(row.municipalities.length)}</td>
@@ -240,7 +241,7 @@
   {#if selected}
     <div class="dialog-body" style={groupStyle(selected.group)}>
       <header>
-        <span class="group-chip pill"><IslandIcon group={selected.group} size={18} />{ISLAND_GROUP_NAMES[selected.group]}</span>
+        <span class="group-chip pill"><IslandIcon group={selected.group} size={18} />{islandGroupLabel(selected.group)}</span>
         <h2 id="province-dialog-title">{selected.name}</h2>
         <p>{m.table_code()} {selected.code}</p>
       </header>

@@ -13,6 +13,7 @@ test('cuisine badges keep one line and ellipsize long labels in both views', asy
 });
 
 test('cuisine share cards draw a raised tinted chip with readable text in both themes', async () => {
+  const idMessages = JSON.parse(await readFile(new URL('../../messages/id.json', import.meta.url), 'utf8'));
   const saved = new Map(['window', 'document', 'Image'].map(name => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   try {
     for (const theme of ['light', 'dark']) {
@@ -59,7 +60,8 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
           kindLabel: 'Cuisine', chipLabel: '2 recipes', chipColor: '#a9473a',
           description: 'Test description', placeholderUrl: '/illustration.svg', placeholderBackground: '#f5e1c8'
         },
-        caveat: 'Test caveat'
+        caveat: 'Test caveat',
+        visitLabel: idMessages.share_visit_cta
       });
       assert.equal(blob.type, 'image/png');
       const label = labels.find(item => item.text === '2 recipes');
@@ -70,7 +72,7 @@ test('cuisine share cards draw a raised tinted chip with readable text in both t
       assert.equal(chipGradient.stops.length, 2);
       assert.notEqual(chipGradient.stops[0].color, '#a9473a', 'the solid category color is not the text background');
       assert.ok(images.includes('/brand/logo-256.png'), 'the export includes the atlas icon');
-      for (const text of ['Atlas Nusantara', 'nusantara.readynaz.com', 'Explore the atlas']) {
+      for (const text of ['Atlas Nusantara', 'nusantara.readynaz.com', idMessages.share_visit_cta]) {
         assert.ok(labels.some(label => label.text === text), 'the export includes ' + text);
       }
       assert.ok(dots.some(item => item.radius === 5), 'the category remains visible as a small colored dot');

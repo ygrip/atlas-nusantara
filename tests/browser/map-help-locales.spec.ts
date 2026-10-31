@@ -1,12 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from './fixtures';
 
-const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
+// All 13 catalogs are checked in tests/i18n/map-help.test.mjs.
+// Browser coverage only needs representative scripts and directions.
+const locales = ['en', 'id', 'zh-SG'];
 test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce', serviceWorkers: 'block' });
 
 for (const locale of locales) {
   const messages = JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
-  test(`${locale}: map help renders from its own catalog in both modes`, async ({ page }) => {
+  test(`${locale}: map help renders from its own catalog in both modes${locale === 'id' ? ' @smoke' : ''}`, async ({ page }) => {
     let path = '/';
     if (locale !== 'en') path = '/' + locale + '/';
     await page.goto(path);

@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
+  import { islandGroupLabel } from '$lib/i18n/island-groups';
+  import type { IslandGroup } from '$lib/atlas/islands';
   import type { HeroInteraction } from '$lib/hero/interaction';
   import type { HeroSprite } from '$lib/hero/sprites';
 
@@ -54,13 +56,13 @@
    * (base, middle, top) over a soft shadow. The map is never tilted or re-projected.
    */
   const islands = [
-    { id: 'sumatra', label: 'Sumatra', top: '#f1c2c5', middle: '#e5a2a7', base: '#b87482' },
-    { id: 'java', label: 'Java', top: '#de949a', middle: '#c66b7a', base: '#9d465f' },
-    { id: 'nusa-tenggara', label: 'Bali and Nusa Tenggara', top: '#efdaac', middle: '#d2af76', base: '#a38350' },
-    { id: 'kalimantan', label: 'Kalimantan', top: '#aed4b5', middle: '#8fbb9c', base: '#5d9273' },
-    { id: 'sulawesi', label: 'Sulawesi', top: '#cde0af', middle: '#acc68d', base: '#76975d' },
-    { id: 'maluku', label: 'Maluku', top: '#f0d3cf', middle: '#d7aaae', base: '#ae7b83' },
-    { id: 'papua', label: 'Papua', top: '#e3cda0', middle: '#c5ad7d', base: '#947e56' }
+    { id: 'sumatra', top: '#f1c2c5', middle: '#e5a2a7', base: '#b87482' },
+    { id: 'java', top: '#de949a', middle: '#c66b7a', base: '#9d465f' },
+    { id: 'nusa-tenggara', top: '#efdaac', middle: '#d2af76', base: '#a38350' },
+    { id: 'kalimantan', top: '#aed4b5', middle: '#8fbb9c', base: '#5d9273' },
+    { id: 'sulawesi', top: '#cde0af', middle: '#acc68d', base: '#76975d' },
+    { id: 'maluku', top: '#f0d3cf', middle: '#d7aaae', base: '#ae7b83' },
+    { id: 'papua', top: '#e3cda0', middle: '#c5ad7d', base: '#947e56' }
   ];
 
   /**
@@ -102,7 +104,7 @@
       {#each islands as island (island.id)}
         <g class="island-assembly"
           style={'--top:' + island.top + ';--middle:' + island.middle + ';--base:' + island.base}>
-          <title>{island.label}</title>
+          <title>{islandGroupLabel(island.id as IslandGroup)}</title>
           <g class="stack-shadow"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 5)"/></g>
           <g class="stack-base"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 3)"/></g>
           <g class="stack-middle"><use href={'/illustrations/atlas-anatomy.svg#' + island.id} transform="translate(0 1.5)"/></g>

@@ -12,7 +12,7 @@ export const OVERLAY_DEFINITIONS: OverlayDefinition[] = [
   { id: 'mountains', label: m.layer_mountains, source: 'BIG', renderer: 'points', icon: 'mountain', snapshotUrl: '/data/observations/mountains.json' },
   { id: 'incident', label: m.layer_disaster_reports, source: 'BNPB · PetaBencana', renderer: 'points', icon: 'incident' },
   { id: 'hazard', label: m.layer_weather_hazards, source: 'BMKG', renderer: 'points', icon: 'hazard' },
-  { id: 'destinations', label: m.layer_destinations, source: 'Tourism', renderer: 'points', icon: 'landmark' },
+  { id: 'destinations', label: m.layer_destinations, source: 'SISPARNAS', renderer: 'points', icon: 'landmark' },
   // Species per province from GBIF with KSDAE, iNaturalist and other sources; province shards plus a national download. See docs/SPECIES.md.
   { id: 'flora', label: m.layer_flora, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'flora' },
   { id: 'fauna', label: m.layer_fauna, source: 'GBIF · KSDAE · iNaturalist', renderer: 'points', icon: 'fauna' },
