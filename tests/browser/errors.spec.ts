@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from './fixtures';
 
 const localeStorageKey = 'PARAGLIDE_LOCALE';
@@ -21,6 +22,21 @@ test.describe('error pages and legal pages', () => {
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole('searchbox')).toBeVisible();
   });
+
+
+  for (const [locale, status] of [['id', 500], ['zh-SG', 503]] as const) {
+    test('standalone ' + status + ' error localizes from the ' + locale + ' URL', async ({ page }) => {
+      const html = await readFile(new URL('../../build/' + status + '.html', import.meta.url), 'utf8');
+      const copy = JSON.parse(await readFile(new URL('../../messages/' + locale + '.json', import.meta.url), 'utf8'));
+      await page.route('**/' + locale + '/fatal-i18n', route =>
+        route.fulfill({ status, contentType: 'text/html', body: html }));
+      await page.goto('/' + locale + '/fatal-i18n');
+      await expect(page.locator('html')).toHaveAttribute('lang', locale);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(copy['error_' + status + '_title']);
+      await expect(page.getByRole('navigation', { name: copy.error_title })).toBeVisible();
+      await expect(page.getByRole('link', { name: copy.error_back })).toHaveAttribute('href', '/' + locale + '/');
+    });
+  }
 
   for (const status of [500, 503]) {
     test(`exported ${status}.html works without JavaScript, fonts or images`, async ({ browser }) => {
