@@ -29,6 +29,7 @@
   import { populationHeatmap } from '$lib/data/population-heatmap';
   import { loadLanguages, type LanguageData } from '$lib/data/languages';
   import { languageHeatmap } from '$lib/data/language-heatmap';
+  import { historyZonesAt } from '$lib/data/history';
   import type { RegionHeatmap } from '$lib/map/heatmap';
 
   /** Layer panels are downloaded when their layer is chosen, so the first page load does not carry them. */
@@ -40,6 +41,8 @@
   export let layer = 'warning';
   /** Year shown by the population heat map; the newest year when not set. */
   export let populationYear: number | undefined = undefined;
+  export let historyYear = 682;
+  $: historyZones = layer === 'history' ? historyZonesAt(historyYear) : undefined;
   let populationData: PopulationData | undefined;
   $: if (layer === 'population' && !populationData) void ensurePopulation();
   let languageData: LanguageData | undefined;
@@ -618,13 +621,14 @@
   <div class="atlas-body">
     <div class="atlas-view">
       <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} geometryUnavailable={geometryLoaded && !national} />
-      <div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>
+        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} {historyZones} geometryUnavailable={geometryLoaded && !national} />
+      {#if layer !== 'history'}<div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>{/if}
       {#if layer === 'mountains'}
         <p class="clay-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>
       {/if}
       <p class="clay-note"><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA · CC BY 3.0 IGO</a> · <a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA</a> · <a href="/terms#sources">{m.source_details()}</a></p>
     </div>
+    {#if layer !== 'history'}
     <div class="region-directory">
       {#if layer === 'destinations'}
         {#await panelModules.destinations() then module}
@@ -673,5 +677,6 @@
       {/if}
       {/if}
     </div>
+    {/if}
   </div>
 </section>
