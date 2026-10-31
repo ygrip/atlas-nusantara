@@ -8,8 +8,8 @@ const slugs = ['regions', 'conditions', 'nature'];
 const keys = ['nav_about', 'nav_guides', 'breadcrumb_label', 'back', 'about_label', 'guide_label', 'open_atlas', 'all_guides', 'more_guides', 'index_title', 'index_description', 'index_body', 'about_title', 'about_description', 'about_body', ...slugs.flatMap(slug => [slug + '_title', slug + '_description', slug + '_body'])].map(key => 'editorial_' + key);
 const catalog = locale => JSON.parse(readFileSync('messages/' + locale + '.json', 'utf8'));
 
-test('new editorial pages have content and complete Paraglide keys in all 13 languages', () => {
-  assert.equal(languages.length, 13);
+test('new editorial pages have content and complete Paraglide keys in all 14 languages', () => {
+  assert.equal(languages.length, 14);
   for (const locale of languages) {
     const messages = catalog(locale);
     for (const key of [...keys, 'privacy_ads_title', 'privacy_ads_disclosure', 'privacy_security_title', 'privacy_turnstile_disclosure', 'privacy_counter_disclosure', 'terms_ads_title', 'terms_ads_disclosure', 'terms_download_disclosure']) {
