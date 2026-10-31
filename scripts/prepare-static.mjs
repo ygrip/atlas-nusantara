@@ -10,13 +10,13 @@ const RIGHT_TO_LEFT = new Set(['ar', 'he', 'fa', 'ur']);
 await copyFile('build/200.html', 'build/404.html');
 const everyLocale = ['en', ...PREFIXED_LOCALES];
 const revisionDate = execFileSync('git', ['log', '-1', '--format=%cI'], { encoding: 'utf8' }).trim();
-const ogLocales = { en: 'en_US', id: 'id_ID', ms: 'ms_MY', fil: 'fil_PH', th: 'th_TH', vi: 'vi_VN', my: 'my_MM', km: 'km_KH', lo: 'lo_LA', 'zh-SG': 'zh_SG', ta: 'ta_SG', tet: 'tet_TL', 'pt-TL': 'pt_TL' };
+const ogLocales = { en: 'en_US', id: 'id_ID', ms: 'ms_MY', fil: 'fil_PH', th: 'th_TH', vi: 'vi_VN', my: 'my_MM', km: 'km_KH', lo: 'lo_LA', 'zh-SG': 'zh_SG', ta: 'ta_SG', tet: 'tet_TL', 'pt-TL': 'pt_TL', ja: 'ja_JP' };
 const shellAssets = new Set(['/200.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/brand/logo-96.webp', '/brand/logo-256.png', '/brand/favicon-64.png', '/illustrations/atlas-anatomy.svg', '/data/admin-2025/provinces.json', '/data/admin-2025/cities.json']);
 // Stylesheets of lazily imported components (layer panels, the share dialog) are listed in every page head by SvelteKit,
 // which makes the browser fetch them before the first paint. Vite's dynamic import loads them together with the component,
 // so they are dropped from the head and downloaded only when the component is. Keep this list in step with the
 // `import('...Panel.svelte')` calls in src/routes/+page.svelte and RegionAtlas.svelte.
-const LAZY_COMPONENT_STYLES = ['SharePanel', 'DestinationsPanel', 'SpeciesPanel', 'CuisinePanel', 'EarthquakePanel', 'HazardPanel', 'PopulationPanel', 'LanguagePanel', 'WeatherPanel'];
+const LAZY_COMPONENT_STYLES = ['SharePanel', 'DestinationsPanel', 'SpeciesPanel', 'CuisinePanel', 'EarthquakePanel', 'HazardPanel', 'PopulationPanel', 'LanguagePanel', 'WeatherPanel', 'HistoryPanel'];
 const clientManifest = JSON.parse(await readFile('.svelte-kit/output/client/.vite/manifest.json', 'utf8'));
 function isLazyStylesheet(href) {
   const file = href.split('/').pop() ?? '';
@@ -64,7 +64,8 @@ function localizeShell(source, locale, route, text) {
     description = text[prefix + '_description'];
     if (!title || !description) throw new Error('Missing metadata for ' + locale + '/' + route);
   }
-  const image = SITE + '/og/nusantara-' + locale + '.png?v=clay-discovery-2';
+  // Japanese social art needs a freshly generated screenshot; use the existing English preview until that asset is reviewed.
+  const image = SITE + '/og/nusantara-' + (locale === 'ja' ? 'en' : locale) + '.png?v=clay-discovery-2';
   const imageAlt = text.site_title + ': ' + text.og_headline + ' ' + text.og_tagline;
   let html = source
     .replace(/<html lang="[^"]+"/, '<html lang="' + locale + '" dir="' + direction + '"')
