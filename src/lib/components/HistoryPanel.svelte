@@ -3,6 +3,7 @@
   import { Download, Pause, Play, SkipBack, SkipForward } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
+  import { localizedHistorySummary } from '$lib/data/history-summary';
   import {
     HISTORICAL_POLITIES, HISTORY_EVENTS, HISTORY_MIN_YEAR, HISTORY_MAX_YEAR,
     historyActive, historyRulersAt, type HistoricalPolity
@@ -87,12 +88,6 @@
       'text/csv;charset=utf-8');
   }
 
-  function explanation(polity: HistoricalPolity) {
-    const locale = getLocale();
-    if (locale === 'id') return polity.summary.id;
-    if (locale === 'ms') return polity.summary.id;
-    return polity.summary.en;
-  }
   const colors = {
     'hindu-buddhist': '#b88743',
     'islamic': '#388b77',
@@ -161,7 +156,7 @@
       {#if selected}
         <h4>{selected.name} <small>{selected.from}–{selected.to} CE</small></h4>
         <p class="place">{selected.place}</p>
-        <p class="summary">{explanation(selected)}</p>
+        <p class="summary">{localizedHistorySummary(selected)}</p>
         <h5>{m.history_rulers()}</h5>
         {#if currentRulers.length}<p class="current-ruler">{currentRulers.map(r => r.name).join(' · ')}</p>{/if}
         {#if selected.rulers.length}
