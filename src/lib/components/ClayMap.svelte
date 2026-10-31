@@ -22,13 +22,15 @@
   import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { MapPin, PointOverlay } from '$lib/map/overlays';
   import type { RegionHeatmap } from '$lib/map/heatmap';
+  import type { HistoryZoneMarker } from '$lib/map/history-map';
 
-  let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, onweather, activeLayer = 'warning', overlay, heatmap, geometryUnavailable = false }: {
+  let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, onweather, activeLayer = 'warning', overlay, heatmap, historyZones, geometryUnavailable = false }: {
     geometryUnavailable?: boolean;
     activeLayer?: string;
     overlay?: PointOverlay;
     /** Province colours for statistics layers such as population. */
     heatmap?: RegionHeatmap;
+    historyZones?: HistoryZoneMarker[];
     label: string;
     national?: GeometryPackage;
     detail?: GeometryPackage;
@@ -373,6 +375,9 @@
     }
   }
 
+  // Historical spheres of influence have a dedicated SVG renderer; do not present them as today's 3D administrative provinces.
+  $effect(() => { if (activeLayer === 'history' && mode !== '2d') { mode = '2d'; finishTransition(); } });
+
   function fallbackTo2d() {
     webglFailed = true;
     mode = '2d';
@@ -481,7 +486,7 @@
 <div class="clay-map" data-mode={mode}>
   <div class="map-toolbar">
     <div class="segmented" role="group" aria-label={label}>
-      <button type="button" aria-pressed={mode === '3d'} disabled={webglFailed} onclick={() => { void switchMode('3d'); }}><Box size={18} aria-hidden="true" /><span>{m.map_view_3d()}</span></button>
+      <button type="button" aria-pressed={mode === '3d'} disabled={webglFailed || activeLayer === 'history'} onclick={() => { void switchMode('3d'); }}><Box size={18} aria-hidden="true" /><span>{m.map_view_3d()}</span></button>
       <button type="button" aria-pressed={mode === '2d'} onclick={() => { void switchMode('2d'); }}><MapIcon size={18} aria-hidden="true" /><span>{m.map_view_2d()}</span></button>
     </div>
     {#if (mode === '3d' && show3d) || (mode === '2d' && show2d)}
@@ -564,7 +569,7 @@
     {#if show2d}
       <div class="view-pane pane-2d" class:overlay={show3d} class:entering={transition === 'to2d'} class:folding={transition === 'to3d' && sceneRevealed} bind:this={pane2dElement}>
       {#if webglFailed}<p class="map-notice" role="status">{m.map_webgl_unavailable()}</p>{/if}
-      {#if svgGeometry}<SvgMap bind:this={svgMap} onzoom={scale => { svgScale = scale; }} geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} {heatmap} onpin={handlePin} projection={national?.projection} />{/if}
+      {#if svgGeometry}<SvgMap bind:this={svgMap} onzoom={scale => { svgScale = scale; }} geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} {heatmap} onpin={handlePin} projection={national?.projection} {historyZones} />{/if}
       {#if heatmap && !show3d}
         <!-- The 3D map key is not on screen in 2D, so the heat colours get their own key here. -->
         <div class="heat-key" role="group" aria-label={heatmap.title}>
