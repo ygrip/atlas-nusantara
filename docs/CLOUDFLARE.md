@@ -114,4 +114,6 @@ Resource identifiers such as `account_id`, `database_id`, and the Turnstile *sit
 
 **D1 migrations are deliberately not executed by CI.** Review and apply any new migrations using an authorized operator token before merging a release that requires them: `npx wrangler d1 migrations apply nusantara-atlas --remote`. Automatic migrations would require additional write permissions and could irreversibly change production data. Likewise, unrelated snapshot publishing remains separately opt-in.
 
+The checked-in `scripts/check-deployment-config.mjs` enforces matching Pages/Worker D1 bindings and validates the deployment account against GitHub's `CLOUDFLARE_ACCOUNT_ID` secret without printing it. 
+
 The basic credential guard does not scan Git history or replace GitHub secret-scanning/push protection. Enable those repository protections if available. Any token found in Git history must be revoked, even if the file is later deleted.
