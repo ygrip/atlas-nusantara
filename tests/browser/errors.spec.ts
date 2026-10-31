@@ -7,7 +7,7 @@ async function useEnglish(page: Page) {
 }
 
 test.describe('error pages and legal pages', () => {
-  test('unknown routes show an illustrated 404 and link back to the atlas', async ({ page }) => {
+  test('unknown routes show an illustrated 404 and link back to the atlas @smoke', async ({ page }) => {
     await useEnglish(page);
     await page.setViewportSize({ width: 375, height: 812 });
     const response = await page.goto('/a-missing-place');

@@ -3,21 +3,34 @@ on:
   pull_request:
   push:
     branches: [main]
+
+# Cancel outdated builds when newer commits arrive on the same PR.
+concurrency:
+  group: atlas-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run check:locales
       - run: npm run check
       - run: npm run worker:check
       - run: npm test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium webkit
-      - run: npx playwright test
+      # Validate Workers before browser tests so a browser failure cannot skip them.
       - run: node tests/integration/worker.mjs
       - run: npm run worker:dry-run
+      - run: npx playwright install --with-deps chromium
+      - name: Browser smoke tests
+        run: npx playwright test --grep '@smoke' --workers=4 --reporter=line

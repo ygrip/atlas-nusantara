@@ -4,7 +4,7 @@ import { chooseLayer } from './layers';
 test.use({ serviceWorkers: 'block' });
 test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.setItem('PARAGLIDE_LOCALE', 'en')); });
 
-test('local languages layer: heat map by province and a language list for the selected province', async ({ page }) => {
+test('local languages layer: heat map by province and a language list for the selected province @smoke', async ({ page }) => {
   await page.goto('/');
   await chooseLayer(page, 'Local languages');
   await expect(page).toHaveURL(/layer=language/);

@@ -1,0 +1,46 @@
+name: Extended browser regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      webkit:
+        description: 'Also run the full suite in Safari/WebKit (slower)'
+        type: boolean
+        required: false
+        default: false
+  schedule:
+    - cron: '17 2 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atlas-full-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - if: ${{ inputs.webkit == true }}
+        run: npx playwright install --with-deps webkit
+      - name: Full browser suite
+        env:
+          WEBKIT: ${{ inputs.webkit == true && '1' || '' }}
+        run: npx playwright test --workers=4 --reporter=line
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-regression-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

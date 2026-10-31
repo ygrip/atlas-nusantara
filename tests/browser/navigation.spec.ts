@@ -49,7 +49,7 @@ test('a city picked from the table updates the map, breadcrumb and highlighted p
 });
 
 
-test('mobile hero and header do not overflow or show a preview-share CTA', async ({ page }) => {
+test('mobile hero and header do not overflow or show a preview-share CTA @smoke', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Preview share card' })).toHaveCount(0);
