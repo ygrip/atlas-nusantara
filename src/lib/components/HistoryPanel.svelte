@@ -6,7 +6,7 @@
   import { localizedHistorySummary } from '$lib/data/history-summary';
   import {
     HISTORICAL_POLITIES, HISTORY_EVENTS, HISTORY_MIN_YEAR, HISTORY_MAX_YEAR,
-    historyActive, historyRulersAt, type HistoricalPolity
+    historyActive, historyRulersAt, historyCategoryAt
   } from '$lib/data/history';
 
   let { year = $bindable(682) }: { year: number } = $props();
@@ -137,7 +137,7 @@
       <div class="polity-choices">
         {#each active as item (item.id)}
           <button type="button" class:selected={selected?.id === item.id} onclick={() => focusId = item.id} aria-pressed={selected?.id === item.id}>
-            <span class="dot" style={'--tone:' + colors[item.category]}></span>{item.name}
+            <span class="dot" style={'--tone:' + colors[historyCategoryAt(item, year)]}></span>{item.name}
           </button>
         {/each}
       </div>
