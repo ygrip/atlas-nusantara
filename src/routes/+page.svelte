@@ -180,7 +180,7 @@
       <div class="clay-card hero-card">
         <HeroArchipelago alt={m.hero_art_alt()} />
         <div class="hero-copy">
-          <span class="eyebrow rise" style="--i:0">INDONESIA</span>
+          <span class="eyebrow rise" style="--i:0">{m.section_indonesia()}</span>
           <h1 id="site-title"><span class="brand-desktop">{m.site_title()}</span><span class="brand-mobile">Nusantara</span></h1>
           <span class="hero-tagline rise" style="--i:3">{m.og_headline()}</span>
           <p>{m.atlas_intro()}</p>
@@ -197,7 +197,7 @@
     <section id="atlas" class="atlas-section" aria-labelledby="atlas-heading">
       <div class="section-heading">
         <div>
-          <span class="eyebrow">INDONESIA</span>
+          <span class="eyebrow">{m.section_indonesia()}</span>
           <h2 id="atlas-heading">{m.nav_atlas()}</h2>
         </div>
         <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
@@ -232,7 +232,7 @@
     {:else if observatoryKind(activeLayer)}
       <!-- Same section id and heading as the real component, so anchors and prerendered text exist before it loads. -->
       <section id="summary" class="aggregate-summary details pending" aria-labelledby="summary-heading" aria-busy="true">
-        <span class="eyebrow">OBSERVATORY</span>
+        <span class="eyebrow">{m.section_observatory()}</span>
         <h2 id="summary-heading">{m.summary_heading()}</h2>
         <p class="summary-pending">{m.summary_scope()}</p>
       </section>

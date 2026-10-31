@@ -615,5 +615,12 @@
   "terms_ads_title": "Quảng cáo và tải xuống xác minh",
   "terms_ads_disclosure": "Trang chủ tiếng Anh có thể yêu cầu một quảng cáo Google với nhãn rõ ràng. Quảng cáo tách biệt với dữ liệu, nguồn và hướng dẫn an toàn; không hàm ý sự chứng thực. Quảng cáo bị chặn hoặc lỗi không cản trở xem bản đồ. Việc hiển thị phụ thuộc phê duyệt, tình trạng và nghĩa vụ về sự đồng ý.",
   "terms_download_disclosure": "Tải kho lưu trữ cần Cloudflare Turnstile và có giới hạn lượt yêu cầu, dung lượng, hằng ngày. Xác minh thành công không cấp quyền truy cập dữ liệu không có sẵn. Không vượt qua biện pháp bảo vệ hoặc xem atlas như hệ thống cảnh báo khẩn cấp.",
-  "privacy_ads_title": "Quảng cáo và dữ liệu trình duyệt"
+  "privacy_ads_title": "Quảng cáo và dữ liệu trình duyệt",
+  "language_source_note": "Một ngôn ngữ được sử dụng ở nhiều tỉnh sẽ được tính ở từng tỉnh. Nguồn dữ liệu có trước đợt chia tách Papua năm 2022; các ngôn ngữ ở Papua và Papua Barat được gán cho các tỉnh năm 2025 dựa trên những huyện được nêu trong mô tả.",
+  "destination_gallery_photos": "Ảnh: {count}",
+  "destination_gallery_label": "Bộ sưu tập ảnh: {name}",
+  "destination_gallery_close": "Đóng bộ sưu tập ảnh",
+  "destination_gallery_carousel": "Băng chuyền ảnh",
+  "section_indonesia": "INDONESIA",
+  "section_observatory": "TRẠM QUAN SÁT"
 }

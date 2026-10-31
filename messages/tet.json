@@ -615,5 +615,12 @@
   "terms_ads_title": "Anúnsiu no download verifikadu",
   "terms_ads_disclosure": "Pájina prinsipál Inglés bele husu anúnsiu Google ida ho rótulu klaru. Anúnsiu separadu husi dadus, fontes no orientasaun seguransa; la signifika apoiu ofisiál. Anúnsiu ne'ebé blokeadu ka falla la limita navegasaun. Ezibisaun depende aprovasaun, disponibilidade no regra konsentimentu.",
   "terms_download_disclosure": "Download arkivu uza Cloudflare Turnstile ho limite pedidu, tamanhu no loron. Verifikasaun ne'ebé pasa la fó asesu ba dadus indisponível. Labele ultrapasa seguransa ka uza atlas hanesan sistema alerta emerjénsia.",
-  "privacy_ads_title": "Anúnsiu no dadus browser"
+  "privacy_ads_title": "Anúnsiu no dadus browser",
+  "language_source_note": "Lia ida ne'ebé ko'alia iha provínsia oioin konta iha provínsia ida-idak. Fonte dadus ne'e antes divizaun Papua iha 2022; lia sira iha Papua no Papua Barat tau ba provínsia sira tuir divizaun 2025 bazeia ba distritu sira ne'ebé temi iha deskrisaun.",
+  "destination_gallery_photos": "Foto: {count}",
+  "destination_gallery_label": "Galeria foto: {name}",
+  "destination_gallery_close": "Taka galeria foto",
+  "destination_gallery_carousel": "Karosel imajen",
+  "section_indonesia": "INDONÉZIA",
+  "section_observatory": "OBSERVATÓRIU"
 }

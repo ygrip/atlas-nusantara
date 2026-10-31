@@ -615,5 +615,12 @@
   "terms_ads_title": "广告与验证下载",
   "terms_ads_disclosure": "英文首页可能请求一处明确标识的 Google 广告。广告与地图数据、来源和安全指引互相独立，不代表任何机构认可。屏蔽或加载失败不会妨碍浏览。展示取决于发布商审批、可用情况和适用的同意要求。",
   "terms_download_disclosure": "归档下载需要 Cloudflare Turnstile 验证，并受到请求次数、文件大小和每日配额限制。通过验证不代表可以访问不存在或不可用的数据。请勿绕过保护措施或将地图视为紧急警报系统。",
-  "privacy_ads_title": "广告与浏览器数据"
+  "privacy_ads_title": "广告与浏览器数据",
+  "language_source_note": "一种语言如在多个省份使用，会在每个省份分别计数。数据来源早于 2022 年巴布亚行政区划调整；原巴布亚和西巴布亚的语言依据描述中提及的县区，归入 2025 年的对应省份。",
+  "destination_gallery_photos": "照片：{count}",
+  "destination_gallery_label": "照片图库：{name}",
+  "destination_gallery_close": "关闭照片图库",
+  "destination_gallery_carousel": "图片轮播",
+  "section_indonesia": "印度尼西亚",
+  "section_observatory": "观测中心"
 }

@@ -615,5 +615,12 @@
   "terms_ads_title": "Iklan dan muat turun disahkan",
   "terms_ads_disclosure": "Halaman utama bahasa Inggeris boleh meminta satu iklan Google berlabel jelas. Iklan tidak berkaitan dengan data, sumber atau nasihat keselamatan atlas dan tidak bermaksud sokongan rasmi. Iklan disekat atau gagal tidak menyekat pelayaran. Paparan bergantung pada kelulusan penerbit, ketersediaan dan persetujuan yang diwajibkan.",
   "terms_download_disclosure": "Arkib memerlukan Cloudflare Turnstile serta had permintaan, saiz dan harian. Pengesahan tidak memberi akses kepada set data yang tidak tersedia. Jangan memintas perlindungan atau menggunakan atlas sebagai sistem amaran kecemasan.",
-  "privacy_ads_title": "Iklan dan data pelayar"
+  "privacy_ads_title": "Iklan dan data pelayar",
+  "language_source_note": "Bahasa yang dituturkan di beberapa wilayah dikira dalam setiap wilayah tersebut. Sumber ini mendahului pemecahan Papua pada 2022; bahasa di Papua dan Papua Barat dipadankan dengan wilayah tahun 2025 berdasarkan daerah yang disebut dalam huraiannya.",
+  "destination_gallery_photos": "Foto: {count}",
+  "destination_gallery_label": "Galeri foto: {name}",
+  "destination_gallery_close": "Tutup galeri foto",
+  "destination_gallery_carousel": "Karusel imej",
+  "section_indonesia": "INDONESIA",
+  "section_observatory": "PUSAT PEMANTAUAN"
 }
