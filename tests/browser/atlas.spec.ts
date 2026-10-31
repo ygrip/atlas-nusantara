@@ -35,12 +35,12 @@ test.describe('2025 atlas and locations', () => {
     await useEnglish(page);
     await openAtlas(page);
     await expect(page.locator('.hero-copy')).toContainText('Get to know Indonesia');
-  await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
+    await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
     await page.getByRole('button', { name: 'Choose your language', exact: true }).click();
     await expect(page.locator('.language-grid button')).toHaveCount(13);
     await page.keyboard.press('Escape');
-    await page.getByRole('button', { name: '2D', exact: true }).click();
-    await expect(page.locator('.atlas-map path[data-code]')).toHaveCount(38);
+    await expect(page.locator('.language-dialog')).toBeHidden();
+    // The separate province-selection smoke test already verifies 2D map switching.
     await expect(page.locator('.region-table tbody tr')).toHaveCount(38);
   });
 
