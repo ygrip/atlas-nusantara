@@ -84,7 +84,7 @@ export async function buildFatalErrorFallback() {
 export async function generateFatalErrorFallback() {
   const { html } = await buildFatalErrorFallback();
   await writeFile(new URL('../src/error.html', import.meta.url), html);
-  console.log('Generated standalone 13-locale fatal error fallback');
+  console.log('Generated standalone 14-locale fatal error fallback');
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -31,8 +31,8 @@ test('dataset methodology matches the English Inlang source message', () => {
   assert.equal(languageDataset.note, base.language_source_note);
 });
 
-test('all 13 Inlang catalogs translate app-authored language, gallery and section text', () => {
-  assert.equal(locales.length, 13);
+test('all 14 Inlang catalogs translate app-authored language, gallery and section text', () => {
+  assert.equal(locales.length, 14);
   for (const locale of locales) {
     const dictionary = JSON.parse(file('messages/' + locale + '.json'));
     assert.deepEqual(Object.keys(dictionary).sort(), Object.keys(base).sort(), locale + ': catalog keys');

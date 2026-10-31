@@ -14,11 +14,11 @@ Wind, cloud, rain and sea visuals use a saved BMKG forecast, not a runtime provi
 
 GSAP provides short hero/heading transitions. Lenis is the sole page smooth-scroll engine and excludes the map, dialogs, tables and directory. Both are bypassed for reduced motion. MapControls alone owns wheel/pinch camera gestures; page scrolling outside the map remains ordinary navigation.
 
-Paraglide supplies 13 locales. The language picker is a native dialog with flags and native-language names; mobile settings group language, share and theme. A control-centred View Transition switches themes where supported. Source/edition details and roadmap prose do not occupy the homepage.
+Paraglide supplies 14 locales. The language picker is a native dialog with flags and native-language names; mobile settings group language, share and theme. A control-centred View Transition switches themes where supported. Source/edition details and roadmap prose do not occupy the homepage.
 
 ## Static routes and errors
 
-SvelteKit prerenders the homepage, Terms and Privacy in all 13 URL locales (39 real HTML pages). Request-scoped Paraglide state keeps the content, headings and metadata in the correct language before JavaScript runs. Absolute asset paths support both clean URLs and directory indexes. The build retains `200.html` for offline recovery and emits a `404.html` client error fallback; it never overwrites the prerendered pages with that empty shell. Workers Static Assets uses `not_found_handling: "404-page"`: known pages return 200, unknown routes return 404 and render the illustrated Svelte error view. **Do not restore `/* /200.html 200`**: it incorrectly rewrites real data assets.
+SvelteKit prerenders the homepage, Terms and Privacy in all 14 URL locales (42 real HTML pages). Request-scoped Paraglide state keeps the content, headings and metadata in the correct language before JavaScript runs. Absolute asset paths support both clean URLs and directory indexes. The build retains `200.html` for offline recovery and emits a `404.html` client error fallback; it never overwrites the prerendered pages with that empty shell. Workers Static Assets uses `not_found_handling: "404-page"`: known pages return 200, unknown routes return 404 and render the illustrated Svelte error view. **Do not restore `/* /200.html 200`**: it incorrectly rewrites real data assets.
 
 Unexpected client errors expose only a safe incident reference. Independent `500.html` and `503.html` pages need no JavaScript, fonts or image requests; a host must serve them with the appropriate status when using them as infrastructure fallbacks.
 
@@ -30,6 +30,10 @@ Scheduled snapshot refreshes are defined separately in [SNAPSHOT_REFRESH.md](SNA
 2. **Reviewed-source publication:** the scheduler Worker's cron collects only approved sources into D1, applies retention, and writes 30-day hot summaries/current warnings to versioned JSON rows in D1's `publications` table (migration `0005_publications.sql`). Pages Functions serve these on same-origin paths with a maximum 60-second cache bounded by publication validity. This uses D1 and Pages Function invocations on cache misses; it needs no R2 bucket or separate public data hostname. Pages archive requests use the existing server-side Turnstile verifier with D1 fixed-window limits before archive reads and an atomic daily download budget. Unapproved or unavailable sources still fail closed.
 
 Disaster reports and weather hazards come from the offline [hazard pipeline](HAZARD_PIPELINE.md) (BNPB, PetaBencana.id, ANTARA, GDELT, BMKG CAP) as one dated snapshot that the browser validates before drawing; InaRISK polygons remain unconnected. Current CAP warnings are never substituted with stale saved alerts. Inactive CAP items are skipped; malformed or incomplete warning crawls fail closed.
+
+## Historical atlas
+
+Historical polities, source-qualified core locations, ruler reigns and early-to-1944 milestones are curated in `src/lib/data/history.ts`. `src/lib/map/history-map.ts` projects muted confidence-based zones in the 2D renderer only, and `HistoryPanel.svelte` owns year playback and local CSV/JSON downloads. See [HISTORY.md](HISTORY.md); the circles must never be presented as measured historical borders.
 
 ## Device privacy
 

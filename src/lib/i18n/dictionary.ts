@@ -2,7 +2,7 @@ import { baseLocale } from '$lib/paraglide/runtime.js';
 
 /**
  * Message text, one small chunk per language. A visitor downloads only their own language
- * (about 40 to 70 kB) instead of all thirteen at once (about 550 kB). The chunks are the same
+ * (about 40 to 70 kB) instead of all fourteen at once (about 550 kB). The chunks are the same
  * `messages/<locale>.json` files the locale checks already validate.
  */
 type Dictionary = Record<string, string>;

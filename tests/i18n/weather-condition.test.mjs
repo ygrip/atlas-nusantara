@@ -20,10 +20,10 @@ for (const [description, condition] of conditions) {
   });
 }
 
-test('every weather condition has a nonempty translation in all 13 locales', () => {
+test('every weather condition has a nonempty translation in all 14 locales', () => {
   const { locales } = JSON.parse(readFileSync('project.inlang/settings.json', 'utf8'));
   const keys = new Set(conditions.map(([description]) => weatherConditionKey(description)));
-  assert.equal(locales.length, 13);
+  assert.equal(locales.length, 14);
   assert.equal(keys.size, 16);
   for (const locale of locales) {
     const catalog = JSON.parse(readFileSync(`messages/${locale}.json`, 'utf8'));
