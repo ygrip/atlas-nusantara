@@ -25,7 +25,7 @@ test.describe('error pages and legal pages', () => {
 
 
   for (const [locale, status] of [['id', 500], ['zh-SG', 503]] as const) {
-    test('standalone ' + status + ' error localizes from the ' + locale + ' URL', async ({ page }) => {
+    test('standalone ' + status + ' error localizes from the ' + locale + ' URL @smoke', async ({ page }) => {
       const html = await readFile(new URL('../../build/' + status + '.html', import.meta.url), 'utf8');
       const copy = JSON.parse(await readFile(new URL('../../messages/' + locale + '.json', import.meta.url), 'utf8'));
       await page.route('**/' + locale + '/fatal-i18n', route =>
