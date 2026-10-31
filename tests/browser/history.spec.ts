@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 
-test('historical timeline loads lazily, scrubs major eras and exposes sourced downloads', async ({ page }) => {
+test('historical timeline loads lazily, scrubs major eras and exposes sourced downloads @smoke', async ({ page }) => {
   await page.goto('/?layer=history');
   const panel = page.locator('.history-panel');
   await expect(panel).toBeVisible();
