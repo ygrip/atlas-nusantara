@@ -40,7 +40,7 @@ jobs:
       - name: Full browser suite
         env:
           WEBKIT: ${{ inputs.webkit == true && '1' || '' }}
-        run: npx playwright test --workers=4 --reporter=line
+        run: npx playwright test --workers=2 --reporter=line
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
