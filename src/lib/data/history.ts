@@ -182,9 +182,16 @@ export const HISTORY_EVENTS = [
 export const HISTORY_MIN_YEAR = -400;
 export const HISTORY_MAX_YEAR = 1944;
 export const historyActive = (year: number): HistoricalPolity[] => HISTORICAL_POLITIES.filter(p => p.from <= year && year <= p.to);
+/** Later Islamic titles must not be projected backward onto a polity's earlier period. */
+export function historyCategoryAt(p: HistoricalPolity, year: number): HistoryCategory {
+  if (p.id === 'ternate' && year < 1470) return 'regional';
+  if (p.id === 'tidore' && year < 1490) return 'regional';
+  if (p.id === 'gowa-tallo' && year < 1605) return 'regional';
+  return p.category;
+}
 export const historyZonesAt = (year: number) => historyActive(year).flatMap(polity =>
   polity.zones.filter(zone => (zone.from ?? polity.from) <= year && year <= (zone.to ?? polity.to))
-    .map(zone => ({ ...zone, id: polity.id, name: polity.name, category: polity.category }))
+    .map(zone => ({ ...zone, id: polity.id, name: polity.name, category: historyCategoryAt(polity, year) }))
 );
 export const historyRulersAt = (polity: HistoricalPolity, year: number): HistoryRuler[] =>
   polity.rulers.filter(r => r.from !== undefined && r.to !== undefined && r.from <= year && year <= r.to);
