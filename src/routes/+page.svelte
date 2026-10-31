@@ -20,7 +20,7 @@
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed } from 'lucide-svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle } from 'lucide-svelte';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
 
   let selectedRegion: ShareRegion | undefined;
@@ -34,6 +34,7 @@
     earthquake: () => import('$lib/components/EarthquakePanel.svelte'),
     hazard: () => import('$lib/components/HazardPanel.svelte'),
     population: () => import('$lib/components/PopulationPanel.svelte'),
+    history: () => import('$lib/components/HistoryPanel.svelte'),
     language: () => import('$lib/components/LanguagePanel.svelte'),
     weather: () => import('$lib/components/WeatherPanel.svelte')
   };
@@ -138,7 +139,8 @@
   let activeLayer = DEFAULT_LAYER;
   /** Shared by the population panel and the map heat colours so both always show the same year. */
   let populationYear: number | undefined;
-  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users, language: Languages, flora: Leaf, fauna: PawPrint, food: UtensilsCrossed };
+  let historyYear = 682;
+  const overlayIcons = { weather: CloudRain, earthquake: Activity, incident: Flame, hazard: Mountain, mountain: Mountain, landmark: MapPin, population: Users, language: Languages, flora: Leaf, fauna: PawPrint, food: UtensilsCrossed, history: Castle };
   const layers = OVERLAY_DEFINITIONS.map(layer => ({ ...layer, icon: overlayIcons[layer.icon] }));
 
   /** A shared link may carry ?layer=<id>; unknown ids fall back to the weather layer. */
@@ -204,7 +206,7 @@
       </div>
       <div class="clay-card atlas-stage" class:pending={!AtlasView}>
         {#if AtlasView}
-          <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
+          <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} {historyYear} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {:else}
           <p class="atlas-pending" role="status">{m.loading_data()}</p>
         {/if}
@@ -218,6 +220,8 @@
           {#await panelModules.hazard() then module}<svelte:component this={module.default} kind="warnings" />{/await}
         {:else if activeLayer === 'population'}
           {#await panelModules.population() then module}<svelte:component this={module.default} provinceCode={selectedRegion?.code.split('.')[0]} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} bind:year={populationYear} />{/await}
+        {:else if activeLayer === 'history'}
+          {#await panelModules.history() then module}<svelte:component this={module.default} bind:year={historyYear} />{/await}
         {:else if activeLayer === 'language'}
           {#await panelModules.language() then module}<svelte:component this={module.default} provinceCode={selectedRegion?.code.split('.')[0]} />{/await}
         {:else if activeLayer === 'warning'}
