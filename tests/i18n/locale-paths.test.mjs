@@ -28,7 +28,7 @@ test('localizedPath swaps the language and keeps the route and hash', () => {
 test('every language has a social preview image and its own copy', () => {
   const settings = JSON.parse(readFileSync('project.inlang/settings.json', 'utf8'));
   for (const locale of settings.locales) {
-    const png = readFileSync('static/og/nusantara-' + locale + '.png');
+    const png = readFileSync('static/og/nusantara-' + (locale === 'ja' ? 'en' : locale) + '.png');
     assert.equal(png.subarray(1, 4).toString(), 'PNG', locale + ' image is a PNG');
     assert.equal(png.readUInt32BE(16), 1200, locale + ' width');
     assert.equal(png.readUInt32BE(20), 630, locale + ' height');
