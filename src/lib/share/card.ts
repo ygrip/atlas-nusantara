@@ -110,7 +110,7 @@ export interface ShareCardContent {
   caveat: string;
   labels: Record<ShareKind, string>;
   unavailable: string;
-  visitLabel?: string;
+  visitLabel: string;
 }
 
 /** One shared place: its name, where it is, and (when available) a photo that may be drawn on the card. */
@@ -132,7 +132,7 @@ export interface DestinationCardContent {
   provinceCode: string;
   caveat: string;
   noPhoto: string;
-  visitLabel?: string;
+  visitLabel: string;
 }
 
 interface ShareColors { page: string; card: string; text: string; muted: string; accent: string; border: string }
@@ -142,7 +142,7 @@ function shareColors(dark: boolean): ShareColors {
   return { page: '#f6f0e7', card: '#fffaf2', text: '#392f2b', muted: '#6c6057', accent: '#a74f29', border: '#d9cbb9' };
 }
 
-function drawBrandHeader(context: CanvasRenderingContext2D, colors: ShareColors, logo: HTMLImageElement | undefined, visitLabel: string | undefined, includeVisitBadge = true) {
+function drawBrandHeader(context: CanvasRenderingContext2D, colors: ShareColors, logo: HTMLImageElement | undefined, visitLabel: string, includeVisitBadge = true) {
   if (logo) {
     context.save();
     context.shadowColor = 'rgba(24, 17, 13, .18)';
@@ -161,7 +161,7 @@ function drawBrandHeader(context: CanvasRenderingContext2D, colors: ShareColors,
   context.textAlign = 'start';
 
   if (!includeVisitBadge) return;
-  const text = visitLabel?.trim() || 'Explore the atlas';
+  const text = visitLabel.trim();
   const left = 670;
   const top = 112;
   const width = 314;
@@ -193,7 +193,7 @@ function drawBrandHeader(context: CanvasRenderingContext2D, colors: ShareColors,
   context.textAlign = 'start';
 }
 
-function drawAtlasInvitation(context: CanvasRenderingContext2D, colors: ShareColors, label: string | undefined) {
+function drawAtlasInvitation(context: CanvasRenderingContext2D, colors: ShareColors, label: string) {
   context.save();
   const surface = context.createLinearGradient(0, 754, 0, 838);
   surface.addColorStop(0, blendHexColors(colors.accent, '#ffffff', .15));
@@ -208,7 +208,7 @@ function drawAtlasInvitation(context: CanvasRenderingContext2D, colors: ShareCol
   context.fillStyle = colors.card;
   context.font = '900 34px "Nunito Variable", system-ui, sans-serif';
   context.textAlign = 'center';
-  context.fillText(label ?? 'Explore the atlas', 540, 808, 552);
+  context.fillText(label, 540, 808, 552);
   context.fillStyle = colors.text;
   context.font = '800 32px "Nunito Variable", system-ui, sans-serif';
   context.fillText(new URL(PUBLIC_ORIGIN).hostname, 540, 894, 888);
@@ -515,7 +515,7 @@ export interface ShareSpecies {
 export interface SpeciesCardContent {
   species: ShareSpecies;
   caveat: string;
-  visitLabel?: string;
+  visitLabel: string;
 }
 
 const SPECIES_PHOTO_BOX = { left: 96, top: 150, width: 888, height: 400 };
@@ -694,7 +694,7 @@ export interface ShareDish {
 export interface DishCardContent {
   dish: ShareDish;
   caveat: string;
-  visitLabel?: string;
+  visitLabel: string;
 }
 
 /** A square card for one dish: photo (or illustration), name, group, recipe count, description and photo credit. */
