@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   browser:
+    env:
+      VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAFpTFqEhiXanSRaa' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

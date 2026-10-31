@@ -92,3 +92,26 @@ To fill it for real:
 1. Local: `npm run data:bootstrap` applies migrations, seeds regions, runs one scheduled collection and prints the published summary. `npm run worker:dev` serves the Worker locally; `npm run pages:dev` runs the Pages Function adapter.
 2. Production: provision Pages and the separate cron Worker, bind both to the same migrated D1 database, and deploy the Pages build. No public data origin is needed. Keep sources disabled until approved.
 3. Counts grow only after collection runs: each run stores new observations, and the summary covers the last 30 days. Right after the first run most counts are small.
+
+## CI-gated production deployment
+
+GitHub Actions runs `.github/workflows/ci.yml` for pull requests and `main` pushes. The `check` job validates locales, Svelte/TypeScript, Node unit tests, Worker types and dry-run, the production build, and Chromium smoke tests. It also rejects common accidentally committed credential files and token formats. A successful `main` build is uploaded as a one-day artifact and **deployed without rebuilding**:
+
+1. **Pages:** `npx wrangler pages deploy --cwd pages --branch main --commit-hash "$GITHUB_SHA"` deploys the existing `nusantara-atlas` project, including Pages Functions and the production D1 binding.
+2. **Scheduler:** `npx wrangler deploy --config wrangler.jsonc` deploys `nusantara-atlas-scheduler` only when `wrangler.jsonc`, `cloudflare/**`, or `src/lib/data/ingestion/**` changes. It runs after Pages succeeds. Use Actions → **Validate atlas** → **Run workflow** on `main` with `deploy_worker=true` to force a Worker redeploy; manual dispatch also redeploys Pages after CI.
+3. **Safety:** PRs run only validation; never use a `pull_request_target` event for Cloudflare credentials. Superseded production runs are canceled. Both production deployment jobs use the `production` GitHub environment, with repository-scoped deployment secrets injected only into their Wrangler commands.
+
+GitHub Actions repository **secrets**:
+
+| Name | Purpose |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with **Account → Cloudflare Pages → Edit** and, for Worker deploys, **Account → Workers Scripts → Edit** on the intended account. The R2 snapshot publishing workflow (if enabled) needs *additional* R2 permissions. |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account identifier (not itself an authentication secret). |
+
+Optional GitHub Actions repository **variable** `VITE_TURNSTILE_SITE_KEY` configures the public browser-side Turnstile site key. If unset, CI uses the project's public site key `0x4AAAAAAFpTFqEhiXanSRaa`. The **secret** `TURNSTILE_SECRET` must remain encrypted in the Cloudflare Pages production environment. Never put it in `VITE_*`, YAML, GitHub build artifacts, or checked-in Wrangler `vars`.
+
+Resource identifiers such as `account_id`, `database_id`, and the Turnstile *site* key are **not access credentials**. Retaining the database binding and Cloudflare account ID in the configuration makes local commands reproducible. The Wrangler file is the configuration source of truth for non-secret settings; existing encrypted Cloudflare secrets are retained across deployment.
+
+**D1 migrations are deliberately not executed by CI.** Review and apply any new migrations using an authorized operator token before merging a release that requires them: `npx wrangler d1 migrations apply nusantara-atlas --remote`. Automatic migrations would require additional write permissions and could irreversibly change production data. Likewise, unrelated snapshot publishing remains separately opt-in.
+
+The basic credential guard does not scan Git history or replace GitHub secret-scanning/push protection. Enable those repository protections if available. Any token found in Git history must be revoked, even if the file is later deleted.
