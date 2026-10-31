@@ -68,7 +68,7 @@ jobs:
       - run: npm run worker:dry-run
       - run: npx playwright install --with-deps chromium
       - name: Browser smoke tests
-        run: npx playwright test --grep '@smoke' --workers=4 --reporter=line
+        run: npx playwright test --grep '@smoke' --workers=2 --reporter=line
       # Only a validated main build may become a production artifact.
       - name: Upload validated Pages/Worker assets
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
