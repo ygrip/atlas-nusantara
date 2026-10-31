@@ -7,11 +7,12 @@
   import type { PointOverlay, MapPin } from '$lib/map/overlays';
   import { mountainColor, type PinSymbol } from '$lib/map/overlay-contract';
   import type { RegionHeatmap } from '$lib/map/heatmap';
+  import { HISTORY_COLORS, historyRadiusDegrees, influenceOpacity, type HistoryZoneMarker } from '$lib/map/history-map';
   import { CLAY_PIN_VIEWBOX, clayPinInner, clayPinKey } from '$lib/map/clay-pin';
 
-  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap }: {
+  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap, historyZones }: {
     geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void; onpin?: (pin: MapPin) => void; onzoom?: (scale: number) => void;
-    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap;
+    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap; historyZones?: HistoryZoneMarker[];
   } = $props();
 
   const MAX_SCALE = 8;
@@ -33,6 +34,16 @@
   });
   /** Side of one clay marker in map units; the shape fills about two thirds of it. */
   const pinSize = $derived(box[2] * 0.03);
+  const historicalHeat = $derived.by(() => {
+    if (!historyZones || !projection) return [];
+    return historyZones.map(zone => {
+      const point = projectLonLat(projection, zone.lon, zone.lat);
+      const edge = projectLonLat(projection, zone.lon + historyRadiusDegrees(zone.radiusKm, zone.lat), zone.lat);
+      const radius = Math.max(box[2] * 0.006, Math.min(box[2] * 0.2, Math.abs(edge.x - point.x)));
+      return { key: zone.id + '-' + zone.lon + '-' + zone.lat, x: point.x, y: point.y,
+        radius, color: HISTORY_COLORS[zone.category], opacity: influenceOpacity(zone.confidence) };
+    });
+  });
   const symbolsId = $props.id();
   interface PinKind { id: string; symbol: PinSymbol; color: string }
   function kindOf(pin: MapPin): { symbol: PinSymbol; color: string } {
@@ -204,6 +215,17 @@
           {/each}
         </defs>
       {/if}
+      {#if historicalHeat.length}
+        <defs>
+          {#each historicalHeat as mark (mark.key)}
+            <radialGradient id={'history-' + symbolsId + '-' + mark.key.replace(/[^a-z0-9-]/gi, '-')} cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color={mark.color} stop-opacity="0.95"/>
+              <stop offset="60%" stop-color={mark.color} stop-opacity="0.55"/>
+              <stop offset="100%" stop-color={mark.color} stop-opacity="0"/>
+            </radialGradient>
+          {/each}
+        </defs>
+      {/if}
       {#each geometry.regions as region (region.id)}
         <path d={region.path} data-code={region.sourceCode} class:selected={selectedCode === region.sourceCode} style={fill(region.sourceCode)}
           role="button" tabindex="0" aria-label={region.name + ' · ' + (heatmap?.valueText[region.sourceCode] ?? region.sourceCode)}
@@ -212,6 +234,13 @@
           <title>{region.name}{#if heatmap?.valueText[region.sourceCode]} · {heatmap.valueText[region.sourceCode]}{/if}</title>
         </path>
       {/each}
+      {#if historicalHeat.length}
+        <g class="history-heat" aria-hidden="true">
+          {#each historicalHeat as mark (mark.key)}
+            <circle cx={mark.x} cy={mark.y} r={mark.radius} opacity={mark.opacity} fill={'url(#history-' + symbolsId + '-' + mark.key.replace(/[^a-z0-9-]/gi, '-') + ')'} />
+          {/each}
+        </g>
+      {/if}
       {#if overlay && projection}
         {#each visiblePins as pin (pin.id)}
           {@const point = projectLonLat(projection, pin.lon, pin.lat)}
@@ -241,6 +270,7 @@
   :global(:root[data-theme='dark']) path:not(.selected) { fill: var(--fill-dark, #91b89b); }
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
+  .history-heat { pointer-events:none; }
   .overlay-pin { cursor:pointer; }
   .overlay-pin use { transition: filter 140ms; }
   .overlay-pin:hover use, .overlay-pin:focus use { filter: brightness(1.12) drop-shadow(0 0 4px #ffffffcc); }
