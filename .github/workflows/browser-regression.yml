@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      # Integration starts multiple local Wrangler/Pages servers and applies D1 migrations.
+      - run: node tests/integration/worker.mjs
       - run: npx playwright install --with-deps chromium
       - if: ${{ inputs.webkit == true }}
         run: npx playwright install --with-deps webkit

@@ -28,8 +28,7 @@ jobs:
       - run: npm run worker:check
       - run: npm test
       - run: npm run build
-      # Validate Workers before browser tests so a browser failure cannot skip them.
-      - run: node tests/integration/worker.mjs
+      # Validate the Worker bundle without starting heavyweight Wrangler/D1 servers.
       - run: npm run worker:dry-run
       - run: npx playwright install --with-deps chromium
       - name: Browser smoke tests
