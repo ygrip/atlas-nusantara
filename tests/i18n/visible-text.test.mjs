@@ -71,3 +71,11 @@ test('all user-visible island-group labels resolve through translated messages',
     assert.doesNotMatch(source, /ISLAND_GROUP_NAMES/, path);
   }
 });
+
+test('all four share card variants require the localized visit label', () => {
+  const renderer = file('src/lib/share/card.ts');
+  const panel = file('src/lib/components/SharePanel.svelte');
+  assert.doesNotMatch(renderer, /Explore the atlas/);
+  assert.equal((renderer.match(/visitLabel: string;/g) ?? []).length, 4);
+  assert.ok((panel.match(/m\.share_visit_cta\(\)/g) ?? []).length >= 4);
+});
