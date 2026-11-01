@@ -5,6 +5,10 @@ declare global {
       message: string;
       incidentId?: string;
     }
+    /** Shallow-routing state: the atlas is open in full-screen mode, so the Back button closes it. */
+    interface PageState {
+      atlasImmersive?: boolean;
+    }
   }
 }
 export {};

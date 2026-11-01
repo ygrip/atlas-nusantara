@@ -1,0 +1,282 @@
+/*
+ * Full-screen atlas.
+ *
+ * Normal page: `.atlas-shell` is `display: contents`, so the section looks as it always did, plus one round entry button.
+ * Full screen (`.atlas-section.immersive`): the shell covers the viewport and the existing pieces are re-seated:
+ *
+ *   - `.section-heading`  -> top bar: [map icon + "Atlas"] [breadcrumb] ........ [layer picker] [details] [x]
+ *   - `.atlas-view`       -> the map, filling everything under the bar
+ *   - `.atlas-stage`      -> the details panel (directory, layer panels): a side drawer on desktop, a bottom sheet on phones
+ *   - `.atlas-breadcrumb` -> lifted into the bar
+ *
+ * Nothing is removed: every control and panel keeps its DOM node, so no feature changes behaviour.
+ * Map internals (`.clay-map`, `.view-stage`, ...) are only restyled from outside, never edited.
+ *
+ * Do not put `transform`, `filter`, `contain` or `will-change` on the shell, the stage or `.atlas-view`.
+ * They would become the containing block of the fixed children and break the layout.
+ */
+
+/* ---- Entry / exit button -------------------------------------------------------------------------------------- */
+.atlas-shell { display: contents; }
+.atlas-heading-text { display: block; }
+.atlas-brand-logo { display: none; }
+.atlas-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.atlas-panel-toggle { display: none; }
+
+.atlas-fullscreen-toggle {
+  display: inline-grid; place-items: center; flex: none; width: 56px; height: 56px; padding: 0;
+  border: 1px solid var(--border); border-radius: 50%; color: var(--text); cursor: pointer;
+  background: linear-gradient(165deg, var(--surface), var(--panel));
+  box-shadow: 0 4px 0 var(--border), inset 0 2px 1px var(--clay-highlight);
+  transition: transform 120ms, box-shadow 120ms, color 160ms;
+}
+.atlas-fullscreen-toggle:hover { color: var(--accent); }
+.atlas-fullscreen-toggle:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--border), inset 0 2px 4px var(--shadow); }
+
+/* Phones: the layer picker keeps its own row, as before; the round button sits beside it. */
+@media (max-width: 560px) {
+  .atlas-tools { width: 100%; flex-wrap: nowrap; }
+  .atlas-tools > .layer-picker-trigger { flex: 1 1 0; min-width: 0; }
+}
+
+/* ---- Page behind ---------------------------------------------------------------------------------------------- */
+html.atlas-immersive, html.atlas-immersive body { overflow: hidden; overscroll-behavior: none; }
+html.atlas-immersive .to-top { display: none; }
+/* The atlas leaves the page flow while the section keeps its height. Scroll anchoring would read that as a shift and move the page. */
+.atlas-section.immersive, .atlas-section.immersive * { overflow-anchor: none; }
+
+/* ---- Shell ---------------------------------------------------------------------------------------------------- */
+.atlas-section.immersive {
+  --atlas-row: 60px;
+  --atlas-bar: var(--atlas-row);
+  --atlas-top: calc(var(--atlas-bar) + env(safe-area-inset-top, 0px));
+  --atlas-edge: 12px;
+  --atlas-brand-w: 120px;
+  --atlas-picker-w: clamp(190px, 20vw, 260px);
+  --atlas-crumb-left: calc(var(--atlas-edge) + var(--atlas-brand-w) + 8px);
+  --atlas-crumb-room: calc(100vw - var(--atlas-crumb-left) - var(--atlas-picker-w) - 110px);
+  --atlas-drawer: min(clamp(420px, 36vw, 540px), 100vw);
+  --atlas-sheet: min(66dvh, 600px);
+  --atlas-glass: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+.atlas-section.immersive .atlas-shell {
+  display: block; position: fixed; inset: 0; z-index: 60; overflow: hidden;
+  background: var(--map-bg, var(--page)); color: var(--text);
+  animation: atlas-immersive-in 200ms ease-out;
+}
+@keyframes atlas-immersive-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---- Top bar -------------------------------------------------------------------------------------------------- */
+/* The bar sits below the stage layer so the breadcrumb, which lives in the stage, can paint over it. */
+.atlas-section.immersive .section-heading {
+  position: absolute; z-index: 2; inset: 0 0 auto 0; box-sizing: border-box; height: var(--atlas-top); margin: 0;
+  display: flex; flex-wrap: wrap; align-content: flex-start; align-items: center; gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + (var(--atlas-row) - 44px) / 2) max(var(--atlas-edge), env(safe-area-inset-right, 0px)) 0 max(var(--atlas-edge), env(safe-area-inset-left, 0px));
+  background: var(--atlas-glass); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+  border-bottom: 1px solid var(--border); box-shadow: 0 8px 18px -14px var(--shadow);
+}
+.atlas-section.immersive .atlas-tools { display: contents; }
+
+/* Left: map icon and name. */
+.atlas-section.immersive .atlas-heading-text { order: 0; display: flex; align-items: center; gap: 10px; flex: none; width: var(--atlas-brand-w); min-width: 0; height: 44px; }
+.atlas-section.immersive .atlas-heading-text > div { min-width: 0; }
+.atlas-section.immersive .atlas-heading-text .eyebrow { display: none; }
+.atlas-section.immersive .atlas-brand-logo { display: block; flex: none; width: 40px; height: 40px; border-radius: 13px; box-shadow: 0 2px 6px -2px var(--shadow); }
+.atlas-section.immersive .section-heading h2 { margin: 0; font-size: 1.1rem; letter-spacing: -.02em; line-height: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Right: layer picker, details, close. */
+.atlas-section.immersive .layer-picker-trigger {
+  order: 2; flex: 0 0 var(--atlas-picker-w); width: var(--atlas-picker-w); box-sizing: border-box; margin-left: auto; min-width: 0; min-height: 44px; padding: 4px 12px 4px 6px; gap: 8px; border-radius: 14px;
+  box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight);
+}
+.atlas-section.immersive .layer-picker-trigger .trigger-icon { width: 32px; height: 32px; border-radius: 11px; }
+.atlas-section.immersive .layer-picker-trigger .trigger-text { min-width: 0; flex: 1; }
+.atlas-section.immersive .layer-picker-trigger .trigger-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas-section.immersive .layer-picker-trigger .source-tag { display: none; }
+
+.atlas-section.immersive .atlas-panel-toggle {
+  order: 3; display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0;
+  border: 1px solid var(--border); border-radius: 50%; color: var(--text); cursor: pointer;
+  background: linear-gradient(165deg, var(--surface), var(--panel));
+  box-shadow: 0 3px 0 var(--border), inset 0 2px 1px var(--clay-highlight);
+  transition: transform 120ms, box-shadow 120ms, color 160ms;
+}
+.atlas-section.immersive .atlas-panel-toggle:hover { color: var(--accent); }
+.atlas-section.immersive .atlas-panel-toggle:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--border), inset 0 2px 4px var(--shadow); }
+.atlas-section.immersive .atlas-panel-toggle[aria-pressed='true'] { color: var(--accent); }
+.atlas-section.immersive .panel-icon-bottom { display: none; }
+
+.atlas-section.immersive .atlas-fullscreen-toggle {
+  order: 4; width: 44px; height: 44px;
+  border-color: var(--accent-strong); background: var(--accent); color: var(--on-accent);
+  box-shadow: 0 3px 0 var(--accent-strong), inset 0 2px 1px #ffffff40;
+}
+.atlas-section.immersive .atlas-fullscreen-toggle:hover { color: var(--on-accent); filter: brightness(1.07); }
+.atlas-section.immersive .atlas-fullscreen-toggle:active { box-shadow: 0 1px 0 var(--accent-strong), inset 0 2px 4px #00000040; }
+
+/* ---- Breadcrumb: part of the bar ------------------------------------------------------------------------------ */
+.atlas-section.immersive .atlas-breadcrumb {
+  position: fixed; z-index: 4; visibility: visible; margin: 0; padding: 0; gap: 4px; flex-wrap: nowrap; overflow: hidden; pointer-events: none;
+  top: calc(env(safe-area-inset-top, 0px) + (var(--atlas-row) - 40px) / 2); left: var(--atlas-crumb-left); height: 40px; align-items: center;
+  max-width: max(120px, var(--atlas-crumb-room));
+}
+.atlas-section.immersive .atlas-breadcrumb > * { pointer-events: auto; flex: none; }
+.atlas-section.immersive .atlas-breadcrumb button { min-height: 36px; padding: 6px 12px; border-width: 1px; border-radius: 12px; box-shadow: none; white-space: nowrap; }
+.atlas-section.immersive .atlas-breadcrumb strong { padding: 0 8px; white-space: nowrap; }
+.atlas-section.immersive .atlas-breadcrumb [aria-hidden='true'] { color: var(--muted); }
+
+/* ---- Map ------------------------------------------------------------------------------------------------------ */
+/* The map fills everything below the bar. The camera toolbar floats over its top edge; the weather timeline, export
+   button and credits stay in normal flow under it, so nothing covers the map legend or the weather readout. */
+.atlas-section.immersive .atlas-view {
+  position: fixed; z-index: 1; visibility: visible; inset: var(--atlas-top) 0 0 0; box-sizing: border-box;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto auto;
+}
+.atlas-section.immersive .atlas-view > .clay-map { grid-column: 1 / -1; grid-row: 1; min-height: 0; }
+
+.atlas-section.immersive .clay-map {
+  --map-viewport-height: 100%;
+  position: relative; display: flex; flex-direction: column; gap: 6px; height: 100%; min-width: 0; min-height: 0;
+}
+.atlas-section.immersive .map-toolbar {
+  position: absolute; z-index: 4; top: var(--atlas-edge); left: var(--atlas-edge); max-width: calc(100% - 2 * var(--atlas-edge)); box-sizing: border-box;
+  background: var(--atlas-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.atlas-section.immersive .clay-map > .mountain-filters,
+.atlas-section.immersive .clay-map > .mountain-notice,
+.atlas-section.immersive .clay-map > .map-notice,
+.atlas-section.immersive .clay-map > .weather-bar,
+.atlas-section.immersive .clay-map > .map-help { flex: none; margin-inline: var(--atlas-edge); }
+.atlas-section.immersive .clay-map > .map-help { margin-bottom: 6px; }
+/* Mountain filters and notices sit under the map, not over it, so they never hide behind the floating toolbar. */
+.atlas-section.immersive .clay-map > .mountain-filters,
+.atlas-section.immersive .clay-map > .mountain-notice,
+.atlas-section.immersive .clay-map > .map-notice { order: 2; }
+
+/* The scene and the flat map are edge to edge: no frame, no rounded corners, nothing between them and the screen edge. */
+/* app.css frames `.atlas-map` with an !important radius, border and inset shadow; full screen has no frame. */
+.atlas-section.immersive .atlas-map { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+.atlas-section.immersive .view-stage { flex: 1 1 0; min-height: 0; border-radius: 0; grid-template-rows: minmax(0, 1fr); }
+.atlas-section.immersive .view-pane { min-height: 0; border-radius: 0; }
+.atlas-section.immersive .pane-3d { position: relative; }
+.atlas-section.immersive .atlas-3d { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+.atlas-section.immersive .atlas-3d canvas.atlas-canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 0; }
+
+/* Flat map: fills the stage like the 3D scene. Its help text becomes a caption over the map instead of taking a row. */
+.atlas-section.immersive .pane-2d { grid-template-rows: minmax(0, 1fr) auto; align-content: stretch; gap: 0; min-height: 0; }
+.atlas-section.immersive .pane-2d:not(.overlay) { position: relative; }
+.atlas-section.immersive .pane-2d .atlas-map { height: 100%; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+.atlas-section.immersive .pane-2d > .map-help {
+  position: absolute; z-index: 2; left: var(--atlas-edge); right: var(--atlas-edge); bottom: 6px; width: fit-content; max-width: min(640px, calc(100% - 2 * var(--atlas-edge)));
+  padding: 4px 10px; border-radius: 12px; background: var(--atlas-glass); font-size: .68rem; pointer-events: none;
+}
+.atlas-section.immersive .pane-2d > .map-help a { pointer-events: auto; }
+
+/* Weather timeline: one compact card. */
+.atlas-section.immersive .weather-bar { padding: 10px 12px; gap: 8px 14px; border-radius: 20px; }
+
+/* Export button and source credits share one slim row under the map. */
+.atlas-section.immersive .atlas-actions { grid-column: 2; grid-row: 2; align-self: center; margin: 4px var(--atlas-edge) calc(4px + env(safe-area-inset-bottom, 0px)) 0; }
+.atlas-section.immersive .atlas-view > .clay-note.clay-note {
+  grid-column: 1; grid-row: 2; align-self: center; min-width: 0; margin: 0; padding: 4px var(--atlas-edge) calc(4px + env(safe-area-inset-bottom, 0px));
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; font-size: .68rem; line-height: 1.45; color: var(--muted);
+}
+.atlas-section.immersive .atlas-view > .clay-note.clay-note::before,
+.atlas-section.immersive .atlas-view > .clay-note.clay-note::after { display: none; }
+/* The mountains layer adds a second credit; it gets its own row above. */
+.atlas-section.immersive .atlas-view > .clay-note.clay-note:not(:last-child) { grid-column: 1 / -1; grid-row: 2; }
+.atlas-section.immersive .atlas-view > .clay-note.clay-note:not(:last-child) ~ .clay-note { grid-row: 3; }
+.atlas-section.immersive .atlas-view:has(> .clay-note:not(:last-child)) .atlas-actions { grid-row: 3; }
+
+/* ---- Details panel: side drawer ------------------------------------------------------------------------------- */
+.atlas-section.immersive .atlas-stage {
+  position: fixed; z-index: 3; top: var(--atlas-top); bottom: 0; right: calc(var(--atlas-drawer) * -1); width: var(--atlas-drawer);
+  box-sizing: border-box; min-height: 0; margin: 0; padding: 14px; overflow: hidden auto; overscroll-behavior: contain;
+  border-width: 0 0 0 1px; border-radius: 0; box-shadow: -14px 0 30px -20px var(--shadow);
+  background: var(--surface); content-visibility: visible; contain: none; visibility: hidden;
+  transition: right 240ms cubic-bezier(.2, .8, .2, 1), bottom 240ms cubic-bezier(.2, .8, .2, 1), visibility 0s linear 240ms;
+}
+.atlas-section.immersive .atlas-stage.drawer-open { right: 0; visibility: visible; transition-delay: 0s; }
+.atlas-section.immersive .atlas-stage .atlas-body { gap: 14px; }
+.atlas-section.immersive .atlas-stage .region-directory { padding: 12px; }
+
+@media (min-width: 900px) {
+  .atlas-section.immersive .atlas-stage.drawer-open .atlas-view { right: var(--atlas-drawer); }
+  /* Region tables (weather, population, ...) need room for their columns. */
+  .atlas-section.immersive:has(.region-directory) { --atlas-drawer: min(clamp(460px, 38vw, 560px), 100vw); }
+  /* A single, readable column. The history timeline switches to its one-column layout below 620px of panel width. */
+  .atlas-section.immersive:has(.history-panel) { --atlas-drawer: min(clamp(440px, 34vw, 520px), 100vw); }
+}
+
+/* The history result list sizes every row to 76px (its minimum) and lets the text spill into the next card.
+   Rows must size to their content. */
+.atlas-section.immersive .polity-results { grid-auto-rows: max-content; }
+.atlas-section.immersive .polity-result { height: auto; align-items: flex-start; }
+
+/* ---- Details panel: bottom sheet on phones and small tablets -------------------------------------------------- */
+@media (max-width: 899px) {
+  .atlas-section.immersive { --atlas-picker-w: clamp(170px, 26vw, 240px); --atlas-crumb-room: calc(100vw - var(--atlas-crumb-left) - var(--atlas-picker-w) - 110px); }
+  .atlas-section.immersive .panel-icon-side { display: none; }
+  .atlas-section.immersive .panel-icon-bottom { display: inline-block; }
+  .atlas-section.immersive .atlas-stage {
+    top: auto; left: 0; right: 0; width: auto; height: var(--atlas-sheet); bottom: calc(var(--atlas-sheet) * -1 - 24px);
+    padding: 16px max(14px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
+    border-width: 1px 0 0; border-radius: 22px 22px 0 0; box-shadow: 0 -16px 32px -20px var(--shadow);
+  }
+  /* Grab handle: shows that this is a sheet. The bar's details button opens and closes it. */
+  .atlas-section.immersive .atlas-stage::before { content: ''; display: block; width: 44px; height: 5px; margin: -6px auto 12px; border-radius: 3px; background: var(--border); }
+  .atlas-section.immersive .atlas-stage.drawer-open { right: 0; bottom: 0; }
+  /* The open sheet covers the lower part of the map. Clipping the map keeps the sheet's own background and touches on top. */
+  .atlas-section.immersive .atlas-stage.drawer-open .atlas-view { clip-path: inset(0 0 var(--atlas-sheet) 0); }
+}
+
+/* ---- Phones: the breadcrumb gets its own row under the bar ---------------------------------------------------- */
+@media (max-width: 700px) {
+  .atlas-section.immersive { --atlas-edge: 8px; --atlas-bar: calc(var(--atlas-row) + 44px); --atlas-brand-w: 92px; }
+  .atlas-section.immersive .layer-picker-trigger { flex: 1 1 0; width: auto; margin-left: 0; }
+  .atlas-section.immersive .layer-picker-trigger .trigger-text small { display: none; }
+  .atlas-section.immersive .atlas-breadcrumb {
+    top: calc(env(safe-area-inset-top, 0px) + var(--atlas-row)); left: max(var(--atlas-edge), env(safe-area-inset-left, 0px)); max-width: calc(100vw - 2 * var(--atlas-edge));
+    overflow-x: auto; scrollbar-width: none;
+  }
+  /* Camera toolbar: icon-only, one row where it fits, so it covers as little of the map as possible. */
+  .atlas-section.immersive .map-toolbar { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 4px; padding: 4px; border-radius: 16px; }
+  .atlas-section.immersive .segmented { display: inline-flex; padding: 3px; gap: 2px; border-radius: 14px; }
+  .atlas-section.immersive .segmented button { min-width: 44px; padding: 0 8px; }
+  .atlas-section.immersive .segmented button span,
+  .atlas-section.immersive .map-controls output { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .atlas-section.immersive .map-controls { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 4px; width: auto; flex: 1 1 auto; }
+  /* Weather timeline on one row: layer chips on the left, play and slider on the right. */
+  .atlas-section.immersive .weather-bar { grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; padding: 8px; border-radius: 18px; }
+  .atlas-section.immersive .layer-chips { display: flex; gap: 4px; padding: 3px; }
+  .atlas-section.immersive .layer-chips button { min-width: 44px; padding: 0 6px; }
+  .atlas-section.immersive .weather-bar .play { width: 44px; height: 44px; }
+  .atlas-section.immersive .weather-source { padding-top: 6px; font-size: .64rem; }
+  /* Gesture help is standard on phones; it stays in the accessibility tree. */
+  .atlas-section.immersive .clay-map > .map-help,
+  .atlas-section.immersive .pane-2d > .map-help { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .atlas-section.immersive .atlas-view > .clay-note.clay-note { font-size: .7rem; line-height: 1.5; }
+  .atlas-section.immersive .weather-bar .time-slider > span { text-wrap: balance; }
+}
+@media (max-width: 420px) {
+  .atlas-section.immersive .layer-picker-trigger .trigger-icon { display: none; }
+  .atlas-section.immersive .layer-picker-trigger { padding-left: 12px; }
+}
+@media (max-width: 380px) {
+  .atlas-section.immersive { --atlas-brand-w: 44px; }
+  .atlas-section.immersive .section-heading h2 { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+/* ---- Short screens (phones in landscape, small laptop windows) ------------------------------------------------ */
+@media (max-height: 560px) {
+  .atlas-section.immersive { --atlas-row: 52px; }
+  .atlas-section.immersive .weather-bar { padding: 6px 10px; gap: 4px 12px; border-radius: 16px; }
+  .atlas-section.immersive .weather-source { padding-top: 4px; font-size: .62rem; }
+  .atlas-section.immersive .clay-map > .map-help,
+  .atlas-section.immersive .pane-2d > .map-help { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-section.immersive .atlas-shell { animation: none; }
+  .atlas-section.immersive .atlas-stage { transition: none; }
+}

@@ -20,7 +20,11 @@
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle } from 'lucide-svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle, Expand, X, PanelRightOpen, PanelRightClose, PanelBottomOpen, PanelBottomClose } from 'lucide-svelte';
+  import { page } from '$app/stores';
+  import { pushState } from '$app/navigation';
+  import { DRAWER_DESKTOP_QUERY, escapeBelongsToTarget, isModalDialogOpen, setPageImmersive } from '$lib/atlas/immersive';
+  import '$lib/atlas/immersive.css';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
 
   let selectedRegion: ShareRegion | undefined;
@@ -135,6 +139,52 @@
     return () => { sectionObserver.disconnect(); heroObserver.disconnect(); };
   }
 
+  /**
+   * Full-screen atlas. The state lives in the history entry (shallow routing), so the browser Back button and the
+   * Esc key both close it, and a reload returns to the normal page. The page behind keeps its scroll position.
+   */
+  let atlasSection: HTMLElement | undefined;
+  /** Height the section had before it left the page flow, so the sections below do not jump while the atlas covers them. */
+  let placeholderHeight: number | undefined;
+  let drawerOpen = true;
+  $: immersive = $page.state.atlasImmersive === true;
+  $: if (mounted) setPageImmersive(immersive);
+  $: placeholderMinHeight = placeholderHeightStyle(immersive, placeholderHeight);
+  $: fullscreenLabel = fullscreenLabelFor(immersive, $page.url);
+
+  /** The URL argument makes the label follow a change of language, like the other computed labels on the page. */
+  function fullscreenLabelFor(on: boolean, _url: URL): string {
+    if (on) return m.atlas_fullscreen_exit();
+    return m.atlas_fullscreen_enter();
+  }
+
+  function placeholderHeightStyle(on: boolean, height: number | undefined): string | undefined {
+    if (!on || !height) return undefined;
+    return height + 'px';
+  }
+
+  function enterImmersive() {
+    placeholderHeight = atlasSection?.offsetHeight;
+    drawerOpen = window.matchMedia(DRAWER_DESKTOP_QUERY).matches;
+    pushState('', { atlasImmersive: true });
+  }
+
+  function exitImmersive() {
+    placeholderHeight = undefined;
+    history.back();
+  }
+
+  function toggleImmersive() {
+    if (immersive) exitImmersive();
+    else enterImmersive();
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (!immersive || event.key !== 'Escape' || event.defaultPrevented) return;
+    if (isModalDialogOpen() || escapeBelongsToTarget(event.target)) return;
+    exitImmersive();
+  }
+
   const DEFAULT_LAYER = 'warning';
   let activeLayer = DEFAULT_LAYER;
   /** Shared by the population panel and the map heat colours so both always show the same year. */
@@ -162,6 +212,7 @@
 
 
 <svelte:head><title>{m.site_title()} — {m.og_headline()}</title></svelte:head>
+<svelte:window onkeydown={handleKeydown} />
 <a class="skip-link" href="#atlas">{m.nav_skip()}</a>
 <div class="shell">
   <header class="masthead">
@@ -197,15 +248,33 @@
       <NationalStats />
     </section>
 
-    <section id="atlas" class="atlas-section" aria-labelledby="atlas-heading">
+    <section id="atlas" class="atlas-section" class:immersive aria-labelledby="atlas-heading" bind:this={atlasSection} style:min-height={placeholderMinHeight}>
+      <div class="atlas-shell">
       <div class="section-heading">
-        <div>
-          <span class="eyebrow">{m.section_indonesia()}</span>
-          <h2 id="atlas-heading">{m.nav_atlas()}</h2>
+        <div class="atlas-heading-text">
+          <img class="atlas-brand-logo" src="/brand/logo-96.webp" alt="" width="40" height="40" />
+          <div>
+            <span class="eyebrow">{m.section_indonesia()}</span>
+            <h2 id="atlas-heading">{m.nav_atlas()}</h2>
+          </div>
         </div>
-        <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
+        <div class="atlas-tools">
+          <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
+          {#if immersive}
+            <button type="button" class="atlas-panel-toggle" aria-pressed={drawerOpen} aria-controls="atlas-stage" aria-label={m.atlas_panel_toggle()} title={m.atlas_panel_toggle()} onclick={() => { drawerOpen = !drawerOpen; }}>
+              {#if drawerOpen}
+                <PanelRightClose class="panel-icon-side" size={22} aria-hidden="true" /><PanelBottomClose class="panel-icon-bottom" size={22} aria-hidden="true" />
+              {:else}
+                <PanelRightOpen class="panel-icon-side" size={22} aria-hidden="true" /><PanelBottomOpen class="panel-icon-bottom" size={22} aria-hidden="true" />
+              {/if}
+            </button>
+          {/if}
+          <button type="button" class="atlas-fullscreen-toggle" aria-label={fullscreenLabel} title={fullscreenLabel} onclick={toggleImmersive}>
+            {#if immersive}<X size={22} strokeWidth={2.6} aria-hidden="true" />{:else}<Expand size={22} strokeWidth={2.2} aria-hidden="true" />{/if}
+          </button>
+        </div>
       </div>
-      <div class="clay-card atlas-stage" class:pending={!AtlasView}>
+      <div id="atlas-stage" class="clay-card atlas-stage" class:pending={!AtlasView} class:drawer-open={drawerOpen}>
         {#if AtlasView}
           <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} {historyYear} {historyFocusId} onhistoryselect={(id) => { historyFocusId = id; }} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {:else}
@@ -228,6 +297,7 @@
         {:else if activeLayer === 'warning'}
           {#await panelModules.weather() then module}<svelte:component this={module.default} regionCode={selectedRegion?.code} regionName={selectedRegion?.name} />{/await}
         {/if}
+      </div>
       </div>
     </section>
 
