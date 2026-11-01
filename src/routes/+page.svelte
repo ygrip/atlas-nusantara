@@ -328,7 +328,7 @@
         {#if AtlasView}
           <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} {historyYear} {historyFocusId} onhistoryselect={(id) => { historyFocusId = id; }} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {:else}
-          <p class="atlas-pending" role="status">{m.loading_data()}</p>
+          <div class="atlas-pending" role="status" aria-label={m.loading_data()}><span class="map-spinner" aria-hidden="true"></span></div>
         {/if}
         {#if !panelsReady}
           <!-- Layer panels load with the map. -->
