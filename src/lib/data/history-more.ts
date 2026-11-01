@@ -83,13 +83,13 @@ export const MORE_POLITIES: HistoricalPolity[] = [
     name: "Kerajaan Tanjungpura (Sukadana)",
     from: 701,
     to: 1944,
-    category: "islamic",
+    category: "regional",
     region: "borneo",
     place: "Sukadana, Kayong Utara, West Kalimantan",
     placeId: "Sukadana, Kayong Utara, Kalimantan Barat",
     summary: {
-      en: "The Tanjungpura kingdom of West Kalimantan, which moved its capital to Sukadana in the 14th century after its ruler converted to Islam; later Sukadana and Matan centred the line.",
-      id: "Kerajaan Tanjungpura di Kalimantan Barat, memindahkan ibu kota ke Sukadana pada abad ke-14 setelah rajanya memeluk Islam; kemudian Sukadana dan Matan menjadi pusat garis ini."
+      en: "A West Kalimantan royal tradition associated with Tanjungpura, Sukadana and Matan. Accounts differ on the chronology of its centres and the adoption of Islam.",
+      id: "Tradisi kerajaan di Kalimantan Barat yang terkait dengan Tanjungpura, Sukadana, dan Matan. Riwayat mengenai urutan pusat kerajaan dan masuknya Islam berbeda-beda."
     },
     rulers: [
       {
@@ -107,7 +107,8 @@ export const MORE_POLITIES: HistoricalPolity[] = [
     ],
     sources: [
       "https://id.wikipedia.org/wiki/Kerajaan_Tanjungpura",
-      "https://id.wikipedia.org/wiki/Sukadana,_Kayong_Utara"
+      "https://id.wikipedia.org/wiki/Sukadana,_Kayong_Utara",
+      "https://idr.uin-antasari.ac.id/20780/1/Islam%20Kawasan%20Kalimantan%20-%20Rahmadi.pdf"
     ],
     dateNote: {
       en: "Start 701 = earliest year of the 'abad ke-8' date in the source (relaxed rule). Early history is partly legendary; the source has no end date, so 'to' is set to the 1944 cap. Ruler Zainuddin reign per source. Matan and Sukadana fall under this entry. Centre = Sukadana town.",
@@ -570,8 +571,8 @@ export const MORE_POLITIES: HistoricalPolity[] = [
     place: "Baubau, Buton island, Southeast Sulawesi",
     placeId: "Kota Baubau, Pulau Buton, Sulawesi Tenggara",
     summary: {
-      en: "A sultanate on Buton island with its seat at Baubau and the Wolio-language court from 1332 and continuing to 1960.",
-      id: "Kesultanan di Pulau Buton dengan pusat di Baubau dan istana berbahasa Wolio; dicatat sejak 1332 dan berlanjut hingga 1960."
+      en: "A polity on Buton island associated with a Wolio-speaking court and later a sultanate. One account dates Islam's official adoption to 1542; other chronologies differ.",
+      id: "Pemerintahan di Pulau Buton yang terkait dengan istana berbahasa Wolio dan kemudian menjadi kesultanan. Satu riwayat menempatkan penerimaan resmi Islam pada 1542; kronologi lain berbeda."
     },
     rulers: [],
     zones: [
@@ -584,7 +585,8 @@ export const MORE_POLITIES: HistoricalPolity[] = [
     ],
     sources: [
       "https://id.wikipedia.org/wiki/Kesultanan_Buton",
-      "https://id.wikipedia.org/wiki/Kota_Baubau"
+      "https://id.wikipedia.org/wiki/Kota_Baubau",
+      "https://repositori.kemendikdasmen.go.id/411/1/Pendidikan%20Multikultural%20Berbasis%20Kearifan%20Lokal%202015.pdf"
     ],
     dateNote: {
       en: "1332–1960 per infobox; end capped to 1944. Centre = Baubau city, the infobox capital.",

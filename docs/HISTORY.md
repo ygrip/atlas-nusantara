@@ -81,6 +81,6 @@ Every record cites at least one record-specific URL (a polity article or institu
 - capitals and the existence dates of Dutch-era traditional states;
 - candidate historical flag images, which are **not displayed** because permission has not been confirmed.
 
-**Permission:** the site's introduction asks that anyone wanting to use its material, or link to it, contact the owner for permission. The atlas cites the site where referenced, but credit is not permission. **Before release, obtain the owner's permission or remove the WorldStatesmen source entries and material derived from them.**
+**Use and attribution:** WorldStatesmen's homepage asks prospective non-commercial users to notify its editor of the intended use, and requires express written permission for commercial use. Its introduction also asks readers to contact the owner about use or linking. Historical facts can be cited as research leads; attribution alone does not grant rights to copy text or images. Confirm applicable rights and any requested permission before release. Most flags are credited by WorldStatesmen to third parties, so each image needs its own rights check.
 
 **Flags:** No WorldStatesmen images are displayed or copied. Obtain permission or find independently licensed, historically verified images before adding flags.

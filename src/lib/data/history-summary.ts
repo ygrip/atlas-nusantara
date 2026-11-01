@@ -60,6 +60,6 @@ export function localizedDateNote(polity: HistoricalPolity): string {
   if (!note) return '';
   const locale = getLocale();
   if (locale === 'en') return note.en;
-  if (locale === 'id' || locale === 'ms') return note.id;
+  if ((locale === 'id' || locale === 'ms') && note.id !== note.en) return note.id;
   return m.history_date_note_generic();
 }

@@ -198,6 +198,8 @@ export function historyCategoryAt(p: HistoricalPolity, year: number): HistoryCat
   if (p.id === 'ternate' && year < 1470) return 'regional';
   if (p.id === 'tidore' && year < 1490) return 'regional';
   if (p.id === 'gowa-tallo' && year < 1605) return 'regional';
+  if (p.id === 'buton' && year < 1542) return 'regional';
+  if (p.id === 'jailolo' && year < 1500) return 'regional';
   return p.category;
 }
 /** Sum of the radii of the zones active in a year: a rough, display-only ranking of how widely a polity is drawn. */

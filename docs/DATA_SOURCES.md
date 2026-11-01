@@ -64,4 +64,4 @@ InaRISK hazard polygons and BNPB historical archives beyond the latest DIBI rows
 ## Historical empires (pre-1945)
 
 - Polity records cite their own sources; see [HISTORY.md](HISTORY.md).
-- **WorldStatesmen.org** (© Ben Cahoon, https://www.worldstatesmen.org/Indonesia.htm and subpages `Indonesia_princely_states1.html`, `Indonesia_princely_states2.html`): a reference for ruler reign years and traditional-state dates. The owner requests permission before reuse or linking. Permission is not confirmed; WorldStatesmen flag images are not displayed.
+- **WorldStatesmen.org** (© Ben Cahoon, https://www.worldstatesmen.org/Indonesia.htm and subpages `Indonesia_princely_states1.html`, `Indonesia_princely_states2.html`): a reference for ruler reign years and traditional-state dates. The owner asks non-commercial users to notify the editor and requires written permission for commercial use. Individual images may belong to third parties; WorldStatesmen flags are not displayed without verified rights.

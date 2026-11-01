@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   HISTORICAL_POLITIES, HISTORY_EVENTS, HISTORY_MAX_YEAR, HISTORY_MIN_YEAR,
-  historyActive, historyRulersAt, historyZonesAt, isHistoricalPolity
+  historyActive, historyCategoryAt, historyRulersAt, historyZonesAt, isHistoricalPolity
 } from '../../src/lib/data/history.ts';
 import { influenceOpacity, historyRadiusDegrees } from '../../src/lib/map/history-map.ts';
 
@@ -39,6 +39,13 @@ test('the historical cartography has distinct confidence bands and finite geomet
     assert.ok(degrees > 0 && Number.isFinite(degrees));
   }
 });
+test('Buton is not presented as a sultanate before the documented Islamization period', () => {
+  const buton = HISTORICAL_POLITIES.find(p => p.id === 'buton');
+  assert.ok(buton);
+  assert.equal(historyCategoryAt(buton, 1400), 'regional');
+  assert.equal(historyCategoryAt(buton, 1542), 'islamic');
+});
+
 test('rulers are selected by contemporaneous dates, without inventing reigns', () => {
   const majapahit = HISTORICAL_POLITIES.find(p => p.id === 'majapahit');
   assert.ok(majapahit);
