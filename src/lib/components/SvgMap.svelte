@@ -1,5 +1,8 @@
 <script lang="ts">
   import { m } from '$lib/i18n/messages';
+  import { base } from '$app/paths';
+  import { territoryPath, type HistoricalTerritoryCollection } from '$lib/map/history-territories';
+  import { historyPeriodLabel, localizedHistorySummary } from '$lib/data/history-summary';
   import type { GeometryPackage } from '$lib/geo/types';
   import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
   import { projectLonLat } from '$lib/map/projection';
@@ -10,10 +13,25 @@
   import { HISTORY_COLORS, historyRadiusDegrees, influenceOpacity, type HistoryZoneMarker } from '$lib/map/history-map';
   import { CLAY_PIN_VIEWBOX, clayPinInner, clayPinKey } from '$lib/map/clay-pin';
 
-  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap, historyZones, historyFocusId }: {
+  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap, historyZones, historyYear = 682, historyFocusId, onhistoryselect }: {
     geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void; onpin?: (pin: MapPin) => void; onzoom?: (scale: number) => void;
-    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap; historyZones?: HistoryZoneMarker[]; historyFocusId?: string;
+    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap; historyZones?: HistoryZoneMarker[]; historyYear?: number; historyFocusId?: string; onhistoryselect?: (id: string) => void;
   } = $props();
+
+  let territories = $state<HistoricalTerritoryCollection>();
+  let territoriesRequested = false;
+  let territoriesFailed = $state(false);
+  $effect(() => {
+    if (!historyZones || territoriesRequested) return;
+    territoriesRequested = true;
+    fetch(`${base}/data/history-territories.geojson`)
+      .then(response => {
+        if (!response.ok) throw new Error(`Historical territories: HTTP ${response.status}`);
+        return response.json();
+      })
+      .then(data => { territories = data; })
+      .catch(error => { territoriesFailed = true; console.warn('Historical territory data unavailable', error); });
+  });
 
   const MAX_SCALE = 8;
   /** The contact shadow of a clay marker sits at this fraction of its height, so it lands on the true location. */
@@ -69,6 +87,17 @@
     }
     return placed;
   });
+  const historicalTerritories = $derived.by(() => {
+    if (!territories || !projection || !historyZones) return [];
+    const active = new Map(historyZones.map(zone => [zone.id, zone]));
+    return territories.features.flatMap(feature => {
+      const zone = active.get(feature.properties.id);
+      if (!zone || historyYear < feature.properties.from || historyYear > feature.properties.to) return [];
+      return [{ id: zone.id, name: zone.name, color: HISTORY_COLORS[zone.category], path: territoryPath(feature, projection), key: `${zone.id}-${feature.properties.from}-${feature.properties.to}` }];
+    });
+  });
+  const territoryIds = $derived(new Set(historicalTerritories.map(territory => territory.id)));
+  const focusedPolity = $derived(historyZones?.find(zone => zone.id === historyFocusId)?.polity);
   const symbolsId = $props.id();
   interface PinKind { id: string; symbol: PinSymbol; color: string }
   function kindOf(pin: MapPin): { symbol: PinSymbol; color: string } {
@@ -110,6 +139,7 @@
     let moved = 0;
     let touchCode: string | undefined;
     let touchPin: string | undefined;
+    let touchHistory: string | undefined;
     let suppressClickUntil = 0;
     let multiTouch = false;
     let tapTimer: ReturnType<typeof setTimeout> | undefined;
@@ -151,15 +181,17 @@
       clearTimeout(tapTimer);
       const code = touchCode;
       const pinId = touchPin;
+      const historyId = touchHistory;
       lastTap = { ...coordinates(event), time: now };
       tapTimer = setTimeout(() => {
         lastTap = undefined;
-        if (pinId) { const pin = overlay?.pins.find(item => item.id === pinId); if (pin) onpin?.(pin); }
+        if (historyId) onhistoryselect?.(historyId);
+        else if (pinId) { const pin = overlay?.pins.find(item => item.id === pinId); if (pin) onpin?.(pin); }
         else if (code) onselect(code);
       }, 280);
     }
     function down(event: PointerEvent) {
-      if ((event.target as Element).closest('button')) return;
+      if ((event.target as Element).closest('button, .history-map-detail')) return;
       if (pointers.size === 0) { moved = 0; multiTouch = false; }
       pointers.set(event.pointerId, coordinates(event));
       if (pointers.size > 1) { multiTouch = true; clearTap(); }
@@ -167,6 +199,7 @@
         node.setPointerCapture(event.pointerId);
         touchCode = (event.target as Element).closest('[data-code]')?.getAttribute('data-code') ?? undefined;
         touchPin = (event.target as Element).closest('[data-pin-id]')?.getAttribute('data-pin-id') ?? undefined;
+        touchHistory = (event.target as Element).closest('[data-history-id]')?.getAttribute('data-history-id') ?? undefined;
       }
     }
     function move(event: PointerEvent) {
@@ -196,6 +229,7 @@
       if (moved > 5 || event.pointerType === 'touch') suppressClickUntil = performance.now() + 300;
       if (event.pointerType === 'touch' && !multiTouch && moved < 5 && pointers.size === 1) tap(event);
       touchPin = undefined;
+      touchHistory = undefined;
       pointers.delete(event.pointerId);
       if (pointers.size === 0) multiTouch = false;
       if (node.hasPointerCapture(event.pointerId)) node.releasePointerCapture(event.pointerId);
@@ -205,10 +239,12 @@
       pointers.delete(event.pointerId);
       touchCode = undefined;
       touchPin = undefined;
+      touchHistory = undefined;
       if (pointers.size === 0) multiTouch = false;
     }
     function click(event: MouseEvent) { if (performance.now() < suppressClickUntil) { event.stopPropagation(); event.preventDefault(); } }
     function wheel(event: WheelEvent) {
+      if ((event.target as Element).closest('.history-map-detail')) return;
       event.preventDefault();
       zoom(Math.exp(-Math.max(-100, Math.min(100, event.deltaY)) * 0.004));
     }
@@ -242,13 +278,7 @@
       {/if}
       {#if historicalHeat.length}
         <defs>
-          {#each historicalHeat as mark (mark.key)}
-            <radialGradient id={'history-' + symbolsId + '-' + mark.key.replace(/[^a-z0-9-]/gi, '-')} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color={mark.color} stop-opacity="0.95"/>
-              <stop offset="60%" stop-color={mark.color} stop-opacity="0.55"/>
-              <stop offset="100%" stop-color={mark.color} stop-opacity="0"/>
-            </radialGradient>
-          {/each}
+          <clipPath id={'history-land-' + symbolsId}>{#each geometry.regions as region (region.id)}<path d={region.path} clip-rule="evenodd" />{/each}</clipPath>
         </defs>
       {/if}
       {#each geometry.regions as region (region.id)}
@@ -260,18 +290,30 @@
         </path>
       {/each}
       {#if historicalHeat.length}
-        <g class="history-heat" aria-hidden="true">
+        <g class="history-territories" clip-path={'url(#history-land-' + symbolsId + ')'}>
+          {#each historicalTerritories as territory (territory.key)}
+            <path class="history-territory" class:focused={territory.id === historyFocusId} data-history-id={territory.id} d={territory.path}
+              style={`--territory-color:${territory.color}`} fill-rule="evenodd" role="button" tabindex="0" aria-label={territory.name} aria-pressed={territory.id === historyFocusId}
+              onclick={() => onhistoryselect?.(territory.id)}
+              onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onhistoryselect?.(territory.id); } }}><title>{territory.name}</title></path>
+          {/each}
+        </g>
+        <g class="history-heat" clip-path={'url(#history-land-' + symbolsId + ')'} aria-hidden="true">
           {#each historicalHeat as mark (mark.key)}
-            <circle cx={mark.x} cy={mark.y} r={mark.radius} opacity={mark.opacity} fill={'url(#history-' + symbolsId + '-' + mark.key.replace(/[^a-z0-9-]/gi, '-') + ')'} />
+            {#if !territoryIds.has(mark.polityId)}<circle cx={mark.x} cy={mark.y} r={mark.radius} opacity={mark.opacity * 0.45} fill={mark.color} />{/if}
             {#if mark.isCentre}
               <circle class="history-centre" cx={mark.x} cy={mark.y} r={box[2] * 0.0022} fill={mark.color} />
             {/if}
-            {#if mark.polityId === historyFocusId}
-              <circle class="history-focus-ring" cx={mark.x} cy={mark.y} r={mark.radius * 0.75} fill="none" stroke={mark.color} stroke-width={box[2] * 0.0018} stroke-dasharray={box[2] * 0.006 + ' ' + box[2] * 0.004} />
-            {/if}
           {/each}
+        </g>
+        <g class="history-labels">
           {#each historyLabels as mark (mark.polityId)}
-            <text class="history-label" class:focused={mark.polityId === historyFocusId} x={mark.x} y={mark.y} text-anchor="middle" font-size={box[2] * 0.0105}>{mark.name.replace(/\s*\(.*\)$/, '')}</text>
+            <g class="history-label-button" data-history-id={mark.polityId} role="button" tabindex="0" aria-label={mark.name} aria-pressed={mark.polityId === historyFocusId}
+              onclick={() => onhistoryselect?.(mark.polityId)}
+              onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onhistoryselect?.(mark.polityId); } }}>
+              <title>{mark.name}</title>
+              <text class="history-label" class:focused={mark.polityId === historyFocusId} x={mark.x} y={mark.y} text-anchor="middle" font-size={box[2] * 0.0105}>{mark.name.replace(/\s*\(.*\)$/, '')}</text>
+            </g>
           {/each}
         </g>
       {/if}
@@ -290,12 +332,23 @@
       {/if}
     </g>
   </svg>
+  {#if focusedPolity}
+    {#key focusedPolity.id}
+      <aside class="history-map-detail" aria-label={focusedPolity.name}>
+        <strong>{focusedPolity.name}</strong><small>{historyPeriodLabel(focusedPolity.from, focusedPolity.to)}</small>
+        <p>{localizedHistorySummary(focusedPolity)}</p>
+      </aside>
+    {/key}
+  {/if}
 </div>
-<p class="map-help">{m.map_help()}</p>
+<p class="map-help">{m.map_help()}{#if historyZones} · <a href="https://github.com/Seshat-Global-History-Databank/cliopatria" target="_blank" rel="noreferrer">Cliopatria, Bennett et al. (adapted)</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>{#if territoriesFailed} · {m.data_unavailable()}{/if}{/if}</p>
 
 <style>
   .atlas-map { height: var(--map-viewport-height, clamp(280px, 52svh, 520px)); min-width: 0; display: block; background: linear-gradient(180deg, var(--green-wash), var(--map-bg)); border: 1px solid var(--border); border-radius: 24px; overflow: hidden; }
-  .interactive { touch-action: none; cursor: grab; }
+  .interactive { position:relative; touch-action: none; cursor: grab; }
+  .history-map-detail {position:absolute;left:12px;bottom:12px;width:min(285px,calc(100% - 24px));max-height:38%;overflow:hidden;pointer-events:auto;padding:11px 14px;border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);box-shadow:0 4px 0 var(--border),inset 0 2px 2px var(--clay-highlight);animation:history-bubble 320ms cubic-bezier(.2,1.45,.4,1) both;cursor:auto;}
+  .history-map-detail strong,.history-map-detail small {display:block}.history-map-detail small {color:var(--muted);font-size:.7rem}.history-map-detail p {display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:5px 0 0;font-size:.73rem;line-height:1.45;color:var(--text)}
+  @keyframes history-bubble {from{opacity:0;transform:translateY(12px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
   .interactive:active { cursor: grabbing; }
   svg { display: block; width: 100%; height: 100%; }
   path { fill: var(--fill-light, #91b89b); stroke: var(--surface); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: filter 160ms; }
@@ -305,6 +358,11 @@
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
   .history-heat { pointer-events:none; }
+  .history-territory, :global(:root[data-theme='dark']) .history-territory:not(.selected) { fill:var(--territory-color);fill-opacity:.42;stroke:var(--territory-color);stroke-width:1;vector-effect:non-scaling-stroke;cursor:pointer;transition:fill-opacity 180ms,stroke-width 180ms; }
+  .history-territory:hover,.history-territory.focused,.history-territory:focus-visible {fill-opacity:.65;stroke-width:2;filter:none;}
+  .history-territory:focus-visible {outline:3px solid var(--accent);outline-offset:2px;}
+  .history-label-button { cursor:pointer; }
+  .history-label-button:focus-visible .history-label { stroke:var(--accent); stroke-width:5px; }
   .history-centre { stroke:#fffaf2; stroke-width:1.2px; }
   .history-label { fill:#2b2420; stroke:#fffaf2; stroke-width:3px; paint-order:stroke; stroke-linejoin:round; font-weight:700; opacity:.85; }
   .history-label.focused { font-weight:900; opacity:1; }
@@ -316,5 +374,5 @@
   .overlay-pin[role='button'] { cursor: pointer; }
   .overlay-pin[role='button']:focus-visible { outline: 3px solid var(--accent); }
   .map-help { margin: 0; font-size: .74rem; line-height: 1.5; opacity: .8; }
-  @media (prefers-reduced-motion: reduce) { path { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { path,.history-territory { transition: none; } .history-map-detail {animation:none;} }
 </style>

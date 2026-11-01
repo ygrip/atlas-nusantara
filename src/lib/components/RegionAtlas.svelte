@@ -43,6 +43,7 @@
   export let populationYear: number | undefined = undefined;
   export let historyYear = 682;
   export let historyFocusId: string | undefined = undefined;
+  export let onhistoryselect: ((id: string) => void) | undefined = undefined;
   /** The gazetteer is large, so it loads only when the History layer is opened. */
   let historyZonesAt: ((year: number) => HistoryZoneMarker[]) | undefined;
   $: if (layer === 'history' && !historyZonesAt) void loadHistoryData();
@@ -629,7 +630,7 @@
   <div class="atlas-body">
     <div class="atlas-view">
       <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} {historyZones} {historyFocusId} geometryUnavailable={geometryLoaded && !national} />
+        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} {historyZones} {historyYear} {historyFocusId} {onhistoryselect} geometryUnavailable={geometryLoaded && !national} />
       {#if layer !== 'history'}<div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>{/if}
       {#if layer === 'mountains'}
         <p class="clay-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>

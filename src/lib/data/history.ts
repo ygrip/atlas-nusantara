@@ -214,7 +214,7 @@ export function historyMostProminent(year: number): HistoricalPolity | undefined
 }
 export const historyZonesAt = (year: number) => historyActive(year).flatMap(polity =>
   polity.zones.filter(zone => (zone.from ?? polity.from) <= year && year <= (zone.to ?? polity.to))
-    .map(zone => ({ ...zone, id: polity.id, name: polity.name, category: historyCategoryAt(polity, year) }))
+    .map(zone => ({ ...zone, id: polity.id, name: polity.name, category: historyCategoryAt(polity, year), polity }))
 );
 export const historyRulersAt = (polity: HistoricalPolity, year: number): HistoryRuler[] =>
   polity.rulers.filter(r => r.from !== undefined && r.to !== undefined && r.from <= year && year <= r.to);

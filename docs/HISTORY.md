@@ -7,11 +7,13 @@ Atlas Nusantara's **History** layer is a curated and attributable catalogue of a
 - Select `Historical empires` in the layer picker or visit `/?layer=history`.
 - Play the timeline from **400 BCE to 1944 CE**; use the year slider or step between milestones. The earliest archaeology marker is *not* presented as a kingdom.
 - Inspect the **simultaneous**, not mutually exclusive, polities in each year; select one to read the associated region, sourced editorial summary, notable rulers and dated known reigns.
-- Download the entire curated dataset directly in **JSON** (preserves evidence, uncertainty, period-specific circles and source URLs) or **CSV** (spreadsheet-friendly, JSON-encoded zones). Files are generated locally by the browser without a backend or personal tracking.
+- Download the entire curated dataset through the shared export dialog in **JSON**, **CSV**, or **XML**. Rulers and zones are JSON-encoded fields; records include source URLs and date notes. Files are generated locally by the browser without a backend or personal tracking.
 
-## Geography is a schematic heat map, not a boundary map
+## Geography: reconstructed territory and approximate influence
 
-The circles on the map are *editorial approximations* made for an overview, not copied survey polygons. A circular centre, especially for a maritime kingdom, does **not** imply that it administered every place inside the circle. Three confidence classes are encoded:
+For 34 matching polities, the map uses dated polygon reconstructions from [Cliopatria v0.2.1](https://github.com/Seshat-Global-History-Databank/cliopatria), Bennett et al. and the Seshat Global History Databank, [paper](https://doi.org/10.1038/s41597-025-04516-9), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), extracted and identity-mapped by `scripts/geo/build-history-territories.mjs`. The data was not simplified. The source is an interpretation, not a surveyed or independently verified annual frontier; its date ranges extend reconstructed snapshots between irregular source dates. Catalog dates can differ from Cliopatria, so a polygon is shown only where both agree.
+
+All polygons are clipped to the atlas's mapped modern land geometry so their fills follow its island shapes. Land outside that geometry is not shown, and historical coastlines may differ. Where no dated polygon is available, the map clips the existing editorial influence zone to the same land geometry. This is only an approximate location, **not a boundary or evidence of sovereignty**. The three confidence classes of these fallback zones are:
 
 | Class | Visual | Meaning |
 | --- | --- | --- |
@@ -19,7 +21,7 @@ The circles on the map are *editorial approximations* made for an overview, not 
 | `approximate-core` | Intermediate | Hypothesised nearby core region |
 | `contested-influence` | Subtle | Accounts of tribute, trade, campaigns, alliances or political influence, not direct annexation |
 
-Circles may overlap. Neither a country's current provincial boundaries nor its current coastlines are used to infer medieval political jurisdiction. Do not compute territory sizes, population, percentage of modern Indonesia controlled, or modern legal claims from these zones. Approximate original city/site coordinates remain data points, and historical sites and ports may have changed locations. The **three-dimensional map is disabled for this layer** to avoid presenting modern raised administrative provinces as medieval borders.
+Polygons and fallback influence zones may overlap. Current provincial boundaries and coastlines are used only as a visual land mask, not to infer historical jurisdiction. Do not compute territory sizes, population, percentage of modern Indonesia controlled, or modern legal claims from these visualizations. Approximate original city/site coordinates remain data points, and historical sites and ports may have changed locations. The **three-dimensional map is disabled for this layer** to avoid presenting modern raised administrative provinces as medieval borders.
 
 ## Historical chronology and source criticism
 
@@ -55,9 +57,9 @@ Editorial source-specific research notes use Indonesian and English originals. T
 ## Architecture & performance
 
 - Data is a lightweight local ESM catalog imported only by the dynamically loaded History panel and by the selected map layer. No remote history backend, cloud databases, animation dependencies, video media or extra paid services are required.
-- The historical overlay renders blended SVG circles projected through the same atlas projection as other markers; it is visually different from the current province choropleth and is accessible as a textual ruler/period list outside the SVG.
+- The historical overlay projects dated Cliopatria Polygon/MultiPolygon rings through the atlas Mercator projection, preserving islands and holes. When no polygon is available, it uses the land-clipped editorial influence halo. Map features, labels and the textual list share the selected polity.
 - Playback stops when the tab is hidden. Users can scrub directly or jump to milestones. Browser reduced-motion settings are respected by existing map controls.
-- The **current** animated history displays one editorial heat-map approximation for each active polity, not a reconstructed annual historical border. Do not market it as an exact territorial animation.
+- The animated history combines source reconstructions and schematic fallback zones. Do not market it as an exact territorial animation.
 
 ## Inventory gap (research)
 

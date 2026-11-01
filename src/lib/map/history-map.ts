@@ -1,8 +1,9 @@
-import type { HistoryCategory, HistoryZone } from '$lib/data/history';
+import type { HistoricalPolity, HistoryCategory, HistoryZone } from '$lib/data/history';
 export interface HistoryZoneMarker extends HistoryZone {
   id: string;
   name: string;
   category: HistoryCategory;
+  polity: HistoricalPolity;
 }
 /** Each hue represents a historical polity tradition, not a modern country. */
 export const HISTORY_COLORS: Record<HistoryCategory, string> = {

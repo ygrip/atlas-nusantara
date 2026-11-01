@@ -207,7 +207,7 @@
       </div>
       <div class="clay-card atlas-stage" class:pending={!AtlasView}>
         {#if AtlasView}
-          <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} {historyYear} {historyFocusId} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
+          <svelte:component this={AtlasView} bind:this={atlas} layer={activeLayer} {populationYear} {historyYear} {historyFocusId} onhistoryselect={(id) => { historyFocusId = id; }} onselection={(region, geometry) => { selectedRegion = region; selectedGeometry = geometry; }} />
         {:else}
           <p class="atlas-pending" role="status">{m.loading_data()}</p>
         {/if}
