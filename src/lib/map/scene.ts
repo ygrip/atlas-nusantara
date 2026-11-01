@@ -5,16 +5,21 @@ import {
 } from 'three';
 import { visualRandom } from './random';
 import { RegionIndex } from './region-index';
+import { activeHistoricalTerritories, territoryGeometryKey, type HistoricalTerritoryCollection, type HistoryReferenceFeature } from './history-territories';
+import { BATUJAYA_SITE, historyMarkerActive, historyPolityColor, type HistoryZoneMarker } from './history-map';
 import { CAMERA_LIMITS, fitMapDistance } from './camera';
 import { WindParticles, RainStreaks, type ViewRect } from './particles';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { GeometryPackage } from '$lib/geo/types';
 import type { MapPin, PointOverlay } from './overlay-contract';
 import { projectLonLat } from './geometry';
 import { ISLAND_GROUP_COLORS, islandGroupOf } from '$lib/atlas/islands';
 import { MAP_CENTER, parseRings } from './geometry';
 import { MapTouchGestures } from './touch-gestures';
-import { TerrainModel } from './terrain';
+import { LAND_BASE, METRES_TO_UNITS, rasteriseMask, TerrainModel } from './terrain';
 import { FIELD_HEIGHT, FIELD_WIDTH, packField, PLANE_HEIGHT, PLANE_WIDTH, sampleChannel, type WeatherField } from './weather';
 import { weatherActivity } from './weather-motion';
 import { CLOUD_BASE_HEIGHT, CLOUD_TOP_HEIGHT } from './layout';
@@ -23,6 +28,7 @@ import { applyThemeToShared, createSharedUniforms, type SharedUniforms } from '.
 import { SpaceBackdrop } from './space';
 import { Sea } from './sea';
 import { TerrainSurface } from './terrain-mesh';
+import { HistoryContextLayer } from './history-context';
 import { CloudLayers } from './clouds';
 import { createPinPoints, disposePinPoints, pinHeight, PIN_CONTACT_OFFSET, PIN_SPRITE_SIZE } from './pins';
 
@@ -35,7 +41,11 @@ export interface SceneCallbacks {
   onzoom: (level: number) => void;
   onfeature?: (pin: MapPin | undefined, clientX: number, clientY: number) => void;
   onpinclick?: (pin: MapPin) => void;
+  onhistoryselect?: (id: string) => void;
+  onhistorylabels?: (labels: HistoryScreenLabel[]) => void;
 }
+
+export interface HistoryScreenLabel { id: string; name: string; color: string; x: number; y: number; showName: boolean; sourceUrl?: string }
 
 interface RegionEntry { id: number; code: string; name: string; bbox: [number, number, number, number]; rings: Vector2[][]; level: 'province' | 'city' }
 
@@ -105,6 +115,19 @@ function lerp(from: number, to: number, amount: number): number {
   return from + (to - from) * amount;
 }
 
+function referencePath(feature: HistoryReferenceFeature, projection: NonNullable<GeometryPackage['projection']>): string {
+  let polygons: number[][][][];
+  if (feature.geometry.type === 'Polygon') polygons = [feature.geometry.coordinates];
+  else polygons = feature.geometry.coordinates;
+  return polygons.flatMap(polygon => polygon.map(ring => {
+    const points = ring.map(([lon, lat]) => {
+      const point = projectLonLat(projection, lon, lat);
+      return `${point.x} ${point.y}`;
+    });
+    return `M${points.join('L')}Z`;
+  })).join('');
+}
+
 /**
  * The atlas as a small world floating in space: relief land under a wind-driven ocean that rolls over a rounded
  * edge, volumetric clouds, rain and wind streamlines from a dated forecast snapshot, and a starfield beyond.
@@ -130,6 +153,8 @@ export class AtlasScene {
   private homeFramed = false;
   private flight: { from: Vector3; to: Vector3; fromTarget: Vector3; toTarget: Vector3; start: number; duration: number } | undefined;
 
+  private historyLabelPoints: Array<{ id: string; name: string; color: string; x: number; y: number; sourceUrl?: string }> = [];
+  private historyLabelFocus: string | undefined;
   private terrain: TerrainModel | undefined;
   private terrainSurface: TerrainSurface | undefined;
   private sea: Sea | undefined;
@@ -137,12 +162,25 @@ export class AtlasScene {
   private readonly space: SpaceBackdrop;
   private borderLines: LineSegments | undefined;
   private cityLines: LineSegments | undefined;
+  private historyBoundaryLines: LineSegments2[] = [];
+  private historyBoundarySignature = '';
+  private historyBoundaryAnimationStart = 0;
+  private historyBoundaryAnimationDuration = 420;
+  private pendingHistoryUpdate: (() => void) | undefined;
+  private activeHistoryPolities = new Set<string>();
+  private historyContextLayer: HistoryContextLayer | undefined;
+  private historyContextSource: HistoricalTerritoryCollection['context_land'] | undefined;
   private observationPoints: Points | undefined;
   private pointOverlay: PointOverlay | undefined;
   private pointProjection: GeometryPackage['projection'];
   private readonly compact: boolean;
   private readonly baseIndex = new RegionIndex(ID_WIDTH, ID_HEIGHT);
   private readonly detailIndex = new RegionIndex(2048, 2048);
+  private readonly historyIndex = new RegionIndex(ID_WIDTH, ID_HEIGHT);
+  private historyPaletteData = new Uint8Array(256 * 4);
+  private historyPaletteTexture: DataTexture;
+  private historyMode = false;
+  private historyEntries = new Map<number, { id: string; name: string }>();
   private paletteData = new Uint8Array(256 * 4);
   private paletteTexture: DataTexture;
   private weatherA: DataTexture;
@@ -211,6 +249,9 @@ export class AtlasScene {
     this.controls.addEventListener('start', () => { this.homeFramed = false; this.flight = undefined; });
 
     this.paletteTexture = new DataTexture(this.paletteData, 256, 1, RGBAFormat);
+    this.historyPaletteTexture = new DataTexture(this.historyPaletteData, 256, 1, RGBAFormat);
+    this.historyPaletteTexture.magFilter = NearestFilter;
+    this.historyPaletteTexture.minFilter = NearestFilter;
     this.paletteTexture.magFilter = NearestFilter;
     this.paletteTexture.minFilter = NearestFilter;
     this.weatherA = fieldTexture(this.fieldA);
@@ -262,7 +303,8 @@ export class AtlasScene {
     this.scene.add(this.sea.mesh);
 
     this.terrainSurface = new TerrainSurface(this.terrain, this.shared, colors, {
-      regionIds: this.baseIndex.texture, detailIds: this.detailIndex.texture, detailBounds: this.detailIndex.bounds, palette: this.paletteTexture
+      regionIds: this.baseIndex.texture, detailIds: this.detailIndex.texture, detailBounds: this.detailIndex.bounds, palette: this.paletteTexture,
+      historyIds: this.historyIndex.texture, historyPalette: this.historyPaletteTexture
     }, this.compact);
     this.scene.add(this.terrainSurface.mesh);
     this.applyReliefScale();
@@ -297,6 +339,7 @@ export class AtlasScene {
     if (this.cityLines) { this.scene.remove(this.cityLines); this.cityLines.geometry.dispose(); this.cityLines = undefined; }
     if (this.cities.length > 0) {
       this.cityLines = this.buildBorders(this.cities, THEMES[this.theme].cityBorder, 0.55, 0.3);
+      this.cityLines.visible = !this.historyMode;
       this.scene.add(this.cityLines);
       this.applyReliefScale();
     }
@@ -305,6 +348,153 @@ export class AtlasScene {
     if (province) this.flyToBox(province.bbox, animate);
     if (!code) this.home(animate);
     this.dirty = true;
+  }
+
+  /** Dated historical polygons are draped onto the same relief mesh and use separate picking IDs. */
+  setHistoryTerritories(collection: HistoricalTerritoryCollection | undefined, zones: HistoryZoneMarker[] | undefined, year: number, projection: NonNullable<GeometryPackage['projection']>, focusId?: string): void {
+    this.historyMode = Boolean(zones);
+    this.historyLabelFocus = focusId;
+    const activeZones = (zones ?? []).filter(zone => historyMarkerActive(zone, year));
+    this.activeHistoryPolities = new Set(activeZones.map(zone => zone.id));
+    this.syncHistoryContext(collection?.context_land, this.historyMode, projection);
+    const centres = new Map<string, HistoryZoneMarker>();
+    for (const zone of activeZones) {
+      if (!centres.has(zone.id) && zone.confidence !== 'contested-influence') centres.set(zone.id, zone);
+    }
+    this.historyLabelPoints = [...centres.values()].map(zone => {
+      const point = projectLonLat(projection, zone.lon, zone.lat);
+      return { id: zone.id, name: zone.name, color: historyPolityColor(zone.id), x: point.x, y: point.y };
+    });
+    if (zones && year >= BATUJAYA_SITE.from && year <= BATUJAYA_SITE.to) {
+      const point = projectLonLat(projection, BATUJAYA_SITE.lon, BATUJAYA_SITE.lat);
+      this.historyLabelPoints.push({ id: 'site-batujaya', name: BATUJAYA_SITE.name, color: '#635b78', x: point.x, y: point.y, sourceUrl: BATUJAYA_SITE.source });
+    }
+    if (!zones) this.callbacks.onhistorylabels?.([]);
+    this.terrainSurface?.setHistoryMode(this.historyMode);
+    if (this.borderLines) this.borderLines.visible = !this.historyMode;
+    if (this.cityLines) this.cityLines.visible = !this.historyMode;
+    const active = new Map(activeZones.map(zone => [zone.id, zone]));
+    const activeDates = new Map(activeZones.map(zone => [zone.id, zone.polity]));
+    const entries: RegionEntry[] = [];
+    const colors: Record<string, string> = {};
+    const assignedIds = new Map<string, number>();
+    const datedTerritories = activeHistoricalTerritories(collection, activeDates, year);
+    const boundarySignature = datedTerritories.map(feature => territoryGeometryKey(feature)).sort().join('|');
+    const boundariesChanged = boundarySignature !== this.historyBoundarySignature;
+    if (boundariesChanged && zones && !this.reducedMotion && this.historyBoundaryAnimationStart > 0) {
+      // Keep only the latest scrub target; finish the current blend rather than jumping to its target.
+      this.pendingHistoryUpdate = () => this.setHistoryTerritories(collection, zones, year, projection, focusId);
+      this.invalidate();
+      return;
+    }
+    this.pendingHistoryUpdate = undefined;
+    this.historyEntries.clear();
+    if (boundariesChanged) this.terrainSurface?.captureHistoryFrame(this.historyIndex.texture, this.historyPaletteData);
+    this.historyPaletteData.fill(0);
+    for (const feature of datedTerritories) {
+      const zone = active.get(feature.properties.id);
+      if (!zone) continue;
+      let id = assignedIds.get(zone.id);
+      if (id === undefined) {
+        if (assignedIds.size >= 254) continue;
+        id = assignedIds.size + 1;
+        assignedIds.set(zone.id, id);
+        this.historyEntries.set(id, { id: zone.id, name: zone.name });
+        colors[String(id)] = historyPolityColor(zone.id);
+      }
+      const rings: Vector2[][] = [];
+      let polygons: number[][][][];
+      if (feature.geometry.type === 'Polygon') polygons = [feature.geometry.coordinates];
+      else polygons = feature.geometry.coordinates;
+      for (const polygon of polygons) for (const ring of polygon) {
+        const points = ring.map(([lon, lat]) => {
+          const projected = projectLonLat(projection, lon, lat);
+          return projected;
+        });
+        if (points.length >= 4) rings.push(points);
+      }
+      if (rings.length === 0) continue;
+      const allPoints = rings.flat();
+      entries.push({ id, code: zone.id, name: zone.name, bbox: [Math.min(...allPoints.map(point => point.x)), Math.min(...allPoints.map(point => point.y)), Math.max(...allPoints.map(point => point.x)), Math.max(...allPoints.map(point => point.y))], rings, level: 'province' });
+    }
+    // Retain only source polygons for border rendering; fallback points are never border geometry.
+    const territorialEntries = [...entries];
+    // A small point marks a centre when no dated polygon exists; it does not imply a territorial extent.
+    const mappedPolities = new Set(entries.map(entry => entry.code));
+    for (const zone of activeZones) {
+      if (mappedPolities.has(zone.id) || assignedIds.size >= 254) continue;
+      mappedPolities.add(zone.id);
+      const id = assignedIds.size + 1;
+      assignedIds.set(zone.id, id);
+      this.historyEntries.set(id, { id: zone.id, name: zone.name });
+      colors[String(id)] = historyPolityColor(zone.id);
+      const center = projectLonLat(projection, zone.lon, zone.lat);
+      const radius = 2.2;
+      const ring: Vector2[] = [];
+      for (let index = 0; index <= 16; index++) {
+        const angle = index / 16 * Math.PI * 2;
+        ring.push(new Vector2(center.x + Math.cos(angle) * radius, center.y + Math.sin(angle) * radius));
+      }
+      entries.push({ id, code: zone.id, name: zone.name, bbox: [center.x - radius, center.y - radius, center.x + radius, center.y + radius], rings: [ring], level: 'province' });
+    }
+    // The index stores one polity per pixel; keep the selected reconstruction on top in overlaps.
+    entries.sort((a, b) => Number(a.code === focusId) - Number(b.code === focusId));
+    this.historyIndex.set(entries);
+    if (boundariesChanged) {
+      this.removeHistoryBoundaries();
+      this.historyBoundarySignature = boundarySignature;
+      this.createHistoryBoundaries(territorialEntries, colors);
+      if (this.reducedMotion) {
+        this.historyBoundaryAnimationStart = 0;
+        this.updateHistoryBoundaryOpacity(1);
+      } else {
+        this.historyBoundaryAnimationStart = performance.now();
+        this.updateHistoryBoundaryOpacity(0);
+      }
+    }
+    const indonesiaBounds = territorialEntries.filter(entry => entry.code === 'indonesia').flatMap(entry => entry.rings.flat());
+    if (indonesiaBounds.length > 0) {
+      const minY = Math.min(...indonesiaBounds.map(point => point.y));
+      const maxY = Math.max(...indonesiaBounds.map(point => point.y));
+      this.terrainSurface?.setIndonesiaSplitY((minY + maxY) / 2);
+    } else {
+      this.terrainSurface?.setIndonesiaSplitY(-1);
+    }
+    const indonesiaClaim = datedTerritories.some(feature => feature.properties.id === 'indonesia' && feature.properties.render_role === 'declared_claim_reference_not_effective_control');
+    for (const [id, color] of Object.entries(colors)) {
+      const rgb = new Color(color);
+      const offset = Number(id) * 4;
+      this.historyPaletteData[offset] = Math.round(rgb.r * 255);
+      this.historyPaletteData[offset + 1] = Math.round(rgb.g * 255);
+      this.historyPaletteData[offset + 2] = Math.round(rgb.b * 255);
+      const entry = this.historyEntries.get(Number(id));
+      this.historyPaletteData[offset + 3] = entry?.id === 'indonesia' ? 235 : 155;
+      if (entry?.id === 'indonesia' && indonesiaClaim) this.historyPaletteData[offset + 3] = 90;
+      if (entry && entry.id === focusId && entry.id !== 'indonesia') this.historyPaletteData[offset + 3] = 190;
+    }
+    this.historyPaletteTexture.needsUpdate = true;
+    this.invalidate();
+  }
+
+  private updateHistoryLabels(): void {
+    if (!this.callbacks.onhistorylabels || !this.historyMode) return;
+    const width = this.renderer.domElement.clientWidth;
+    const height = this.renderer.domElement.clientHeight;
+    const labels: HistoryScreenLabel[] = [];
+    const occupied: Array<{ x: number; y: number }> = [];
+    const points = [...this.historyLabelPoints].sort((a, b) => Number(b.id === this.historyLabelFocus) - Number(a.id === this.historyLabelFocus));
+    const reliefScale = this.reliefScale();
+    for (const point of points) {
+      const worldHeight = pinHeight(this.terrain, point.x, point.y) * reliefScale;
+      const screen = world(point.x, point.y, worldHeight).project(this.camera);
+      const x = (screen.x + 1) * width / 2;
+      const y = (1 - screen.y) * height / 2;
+      if (screen.z < -1 || screen.z > 1 || x < 0 || x > width || y < 0 || y > height) continue;
+      const showName = !occupied.some(other => Math.abs(other.x - x) < 100 && Math.abs(other.y - y) < 24);
+      if (showName) occupied.push({ x, y });
+      labels.push({ ...point, x, y, showName });
+    }
+    this.callbacks.onhistorylabels(labels);
   }
 
   /** Every overlay pin uses actual coordinates, never a name-to-region join. */
@@ -375,6 +565,7 @@ export class AtlasScene {
     this.terrainSurface?.setTheme(colors);
     this.clouds?.setTheme(colors);
     if (this.borderLines) (this.borderLines.material as LineBasicMaterial).color.set(colors.border);
+    this.updateHistoryBoundaryTheme();
     if (this.cityLines) (this.cityLines.material as LineBasicMaterial).color.set(colors.cityBorder);
     this.windParticles.setTheme(theme);
     this.updatePalette();
@@ -450,10 +641,15 @@ export class AtlasScene {
     this.emitZoom();
   }
 
+  private reliefScale(): number {
+    return Math.max(0.001, morphWindow(this.morphValue, MORPH_RELIEF_WINDOW));
+  }
+
   /** Everything that sits on the ground is squashed with it while the land is flat. */
   private applyReliefScale(): void {
-    const scale = Math.max(0.001, morphWindow(this.morphValue, MORPH_RELIEF_WINDOW));
+    const scale = this.reliefScale();
     if (this.terrainSurface) this.terrainSurface.mesh.scale.y = scale;
+    if (this.historyContextLayer) this.historyContextLayer.mesh.scale.y = scale;
     if (this.borderLines) this.borderLines.scale.y = scale;
     if (this.cityLines) this.cityLines.scale.y = scale;
     if (this.observationPoints) this.observationPoints.scale.y = scale;
@@ -506,11 +702,14 @@ export class AtlasScene {
       if (Array.isArray(material)) material.forEach(item => item.dispose());
       else material?.dispose();
     });
+    this.historyContextLayer?.dispose();
     this.sea?.dispose();
     this.terrainSurface?.dispose();
     for (const texture of [this.paletteTexture, this.weatherA, this.weatherB]) texture.dispose();
     this.baseIndex.dispose();
     this.detailIndex.dispose();
+    this.historyIndex.dispose();
+    this.historyPaletteTexture.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
     this.renderer.forceContextLoss();
@@ -532,6 +731,145 @@ export class AtlasScene {
     const bottom = Math.max(...this.cities.map(region => region.bbox[3]));
     const pad = Math.max(right - left, bottom - top) * 0.01 + 0.001;
     this.detailIndex.set(this.cities, [left - pad, top - pad, right - left + pad * 2, bottom - top + pad * 2]);
+  }
+
+  private syncHistoryContext(context: HistoricalTerritoryCollection['context_land'] | undefined, enabled: boolean, projection: NonNullable<GeometryPackage['projection']>): void {
+    if (!enabled || !context || !this.terrain || !this.terrainSurface || context.features.length === 0) {
+      if (this.historyContextLayer) {
+        this.scene.remove(this.historyContextLayer.mesh);
+        this.historyContextLayer.dispose();
+        this.historyContextLayer = undefined;
+        this.historyContextSource = undefined;
+      }
+      return;
+    }
+    if (this.historyContextLayer && this.historyContextSource === context) return;
+    if (this.historyContextLayer) {
+      this.scene.remove(this.historyContextLayer.mesh);
+      this.historyContextLayer.dispose();
+    }
+    const paths = context.features.map(feature => referencePath(feature, projection));
+    const mask = rasteriseMask(paths, this.terrain.maskWidth, this.terrain.maskHeight);
+    this.historyContextLayer = new HistoryContextLayer({
+      model: this.terrain, surface: this.terrainSurface, features: context.features, projection, mask,
+      heightAt: (x, y) => LAND_BASE + Math.max(0, this.terrain!.elevationAt(x, y)) * METRES_TO_UNITS
+    });
+    this.historyContextSource = context;
+    this.scene.add(this.historyContextLayer.mesh);
+    this.applyReliefScale();
+  }
+
+  private removeHistoryBoundaries(): void {
+    for (const lines of this.historyBoundaryLines) {
+      this.scene.remove(lines);
+      lines.geometry.dispose();
+      const material = lines.material;
+      if (Array.isArray(material)) for (const item of material) item.dispose();
+      else material.dispose();
+    }
+    this.historyBoundaryLines = [];
+    this.historyBoundaryAnimationStart = 0;
+  }
+
+  private updateHistoryBoundaryOpacity(opacity: number): void {
+    this.terrainSurface?.setHistoryBlend(opacity);
+    for (const lines of this.historyBoundaryLines) {
+      const material = lines.material as LineMaterial;
+      const baseOpacity = Number(lines.userData.baseOpacity ?? 1);
+      material.opacity = baseOpacity * opacity;
+    }
+  }
+
+  private updateHistoryBoundaryAnimation(now: number): boolean {
+    if (this.historyBoundaryAnimationStart === 0) return false;
+    const elapsed = now - this.historyBoundaryAnimationStart;
+    const progress = Math.min(1, elapsed / this.historyBoundaryAnimationDuration);
+    const eased = 1 - (1 - progress) * (1 - progress);
+    this.updateHistoryBoundaryOpacity(eased);
+    if (progress >= 1) {
+      this.historyBoundaryAnimationStart = 0;
+      const pending = this.pendingHistoryUpdate;
+      this.pendingHistoryUpdate = undefined;
+      if (pending) pending();
+      return this.historyBoundaryAnimationStart > 0;
+    }
+    return true;
+  }
+
+  private updateHistoryBoundaryResolution(): void {
+    for (const lines of this.historyBoundaryLines) {
+      const material = lines.material as LineMaterial;
+      material.resolution.set(this.viewportWidth, this.viewportHeight.value);
+    }
+  }
+
+  private historyBoundaryContrastColor(): string {
+    if (this.theme === 'dark') return '#fff4df';
+    return '#241b17';
+  }
+
+  private updateHistoryBoundaryTheme(): void {
+    const outline = this.historyBoundaryContrastColor();
+    for (const lines of this.historyBoundaryLines) {
+      const material = lines.material as LineMaterial;
+      if (lines.userData.role === 'halo') material.color.set(outline);
+    }
+  }
+
+  private createHistoryBoundaries(entries: RegionEntry[], colors: Record<string, string>): void {
+    const grouped = new Map<string, RegionEntry[]>();
+    for (const entry of entries) {
+      const group = grouped.get(entry.code) ?? [];
+      group.push(entry);
+      grouped.set(entry.code, group);
+    }
+    for (const [id, regions] of grouped) {
+      const color = colors[String(regions[0].id)] ?? historyPolityColor(id);
+      const halo = this.buildHistoryBorders(regions, this.historyBoundaryContrastColor(), 0.94, 3.5, 1.65);
+      halo.userData.role = 'halo';
+      halo.renderOrder = 4;
+      const outline = this.buildHistoryBorders(regions, color, 0.98, 1.65, 1.9);
+      outline.renderOrder = 5;
+      this.historyBoundaryLines.push(halo, outline);
+      this.scene.add(halo, outline);
+    }
+  }
+
+  /** Historical outlines use Three.js's screen-space wide lines; WebGL native lines are limited to 1px. */
+  private buildHistoryBorders(regions: RegionEntry[], color: string, opacity: number, width: number, lift: number): LineSegments2 {
+    const terrain = this.terrain;
+    const points: number[] = [];
+    for (const region of regions) {
+      for (const ring of region.rings) {
+        for (let index = 0; index < ring.length; index++) {
+          const a = ring[index];
+          const b = ring[(index + 1) % ring.length];
+          const steps = Math.max(1, Math.ceil(a.distanceTo(b) / 1.2));
+          for (let step = 0; step < steps; step++) {
+            const start = a.clone().lerp(b, step / steps);
+            const end = a.clone().lerp(b, (step + 1) / steps);
+            let startHeight = lift;
+            let endHeight = lift;
+            if (terrain) {
+              startHeight += terrain.surfaceAt(start.x, start.y);
+              endHeight += terrain.surfaceAt(end.x, end.y);
+            }
+            points.push(start.x - MAP_CENTER.x, startHeight, start.y - MAP_CENTER.y, end.x - MAP_CENTER.x, endHeight, end.y - MAP_CENTER.y);
+          }
+        }
+      }
+    }
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions(points);
+    const material = new LineMaterial({
+      color, linewidth: width, worldUnits: false, transparent: true, opacity,
+      depthWrite: false, resolution: new Vector2(this.viewportWidth, this.viewportHeight.value)
+    });
+    material.alphaToCoverage = true;
+    const lines = new LineSegments2(geometry, material);
+    lines.userData.baseOpacity = opacity;
+    lines.computeLineDistances();
+    return lines;
   }
 
   /** Region outlines draped on the relief; long edges are subdivided so they follow the ground. */
@@ -695,6 +1033,11 @@ export class AtlasScene {
   private selectAt(clientX: number, clientY: number): void {
     const pin = this.pickPin(clientX, clientY);
     if (pin) { this.callbacks.onpinclick?.(pin); return; }
+    if (this.historyMode) {
+      const history = this.pickHistory(clientX, clientY);
+      if (history) this.callbacks.onhistoryselect?.(history.id);
+      return;
+    }
     const region = this.pick(clientX, clientY);
     if (region) this.callbacks.onselect(region.code);
   }
@@ -763,8 +1106,26 @@ export class AtlasScene {
     this.updatePalette();
   }
 
-  /** Marches the view ray across the height field and reads the region id under the hit. */
+  private pickHistory(clientX: number, clientY: number): { id: string; name: string } | undefined {
+    if (this.pendingHistoryUpdate) return undefined;
+    const point = this.terrainPoint(clientX, clientY);
+    if (!point || !this.terrain || this.terrain.landAt(point.x, point.y) < 0.5) return undefined;
+    const entry = this.historyEntries.get(this.historyIndex.sample(point.x, point.y));
+    if (!entry || !this.activeHistoryPolities.has(entry.id)) return undefined;
+    return entry;
+  }
+
   private pick(clientX: number, clientY: number): RegionEntry | undefined {
+    if (this.historyMode) return undefined;
+    const point = this.terrainPoint(clientX, clientY);
+    if (!point) return undefined;
+    let id = this.detailIndex.sample(point.x, point.y);
+    if (id === 0) id = this.baseIndex.sample(point.x, point.y);
+    return this.byId.get(id);
+  }
+
+  /** March the view ray across the relief to find its position in map coordinates. */
+  private terrainPoint(clientX: number, clientY: number): Vector2 | undefined {
     const terrain = this.terrain;
     if (!terrain) return undefined;
     const bounds = this.renderer.domElement.getBoundingClientRect();
@@ -782,10 +1143,7 @@ export class AtlasScene {
       const x = point.x + MAP_CENTER.x;
       const y = point.z + MAP_CENTER.y;
       if (x < 0 || x > PLANE_WIDTH || y < 0 || y > PLANE_HEIGHT) continue;
-      if (point.y > terrain.surfaceAt(x, y)) continue;
-      let id = this.detailIndex.sample(x, y);
-      if (id === 0) id = this.baseIndex.sample(x, y);
-      return this.byId.get(id);
+      if (point.y <= terrain.surfaceAt(x, y)) return new Vector2(x, y);
     }
     return undefined;
   }
@@ -924,12 +1282,14 @@ export class AtlasScene {
     const moving = controlsMoving || this.flight !== undefined || this.morphAnimation !== undefined;
     this.updateCloudVeil();
     this.space.follow(this.camera);
-    const renderFrame = this.dirty || effectsAnimating || moving;
+    const historyBordersAnimating = this.updateHistoryBoundaryAnimation(now);
+    const renderFrame = this.dirty || effectsAnimating || moving || historyBordersAnimating;
     if (renderFrame) {
       this.renderer.render(this.scene, this.camera);
+      this.updateHistoryLabels();
       this.dirty = false;
     }
-    const keepGoing = effectsAnimating || moving;
+    const keepGoing = effectsAnimating || moving || historyBordersAnimating;
     this.rendering = false;
     if (this.visible && !document.hidden && keepGoing) {
       if (effectsAnimating && !moving) {
@@ -969,6 +1329,7 @@ export class AtlasScene {
     const firstResize = !this.viewportInitialized;
     this.viewportWidth = width;
     this.renderer.setSize(width, height, false);
+    this.updateHistoryBoundaryResolution();
     // Canvas width/height are drawing-buffer attributes, not layout measurements.
     this.viewportHeight.value = Math.max(1, this.renderer.domElement.height);
     this.camera.aspect = width / height;

@@ -1,4 +1,4 @@
-import type { HistoricalPolity, HistoryRegion } from './history';
+import type { HistoricalPolity, HistoryRegion, HistoryRuler } from './history';
 import { getLocale } from '$lib/paraglide/runtime.js';
 import { m, type MessageKey } from '$lib/i18n/messages';
 
@@ -17,8 +17,15 @@ export function historyYearLabel(year: number): string {
   return m.history_era_ce({ year });
 }
 
-export function historyPeriodLabel(from: number, to: number): string {
+export function historyPeriodLabel(from: number, to: number, ongoing = false): string {
+  if (ongoing) return historyYearLabel(from) + ' – ' + m.history_present();
   return historyYearLabel(from) + ' – ' + historyYearLabel(to);
+}
+
+export function historyRulerPeriodLabel(ruler: HistoryRuler): string {
+  if (ruler.from === undefined) return '';
+  if (ruler.ongoing) return ruler.from + '–' + m.history_present();
+  return ruler.from + '–' + (ruler.to ?? '?');
 }
 
 export function regionLabel(region: HistoryRegion): string {
@@ -27,7 +34,14 @@ export function regionLabel(region: HistoryRegion): string {
 }
 
 /** Free-text place names are curated in English and Indonesian only; other locales show the region alone. */
+export function localizedHistoryName(id: string, name: string): string {
+  if (id === 'indonesia') return m.history_country_indonesia();
+  if (id === 'timor-leste') return m.history_country_timor_leste();
+  return name;
+}
+
 export function localizedPlace(polity: HistoricalPolity): string {
+  if (polity.id === 'indonesia') return m.history_place_jakarta();
   const locale = getLocale();
   if (locale === 'en') return polity.place;
   if (locale === 'id' || locale === 'ms') return polity.placeId;
@@ -47,9 +61,9 @@ export function localizedHistorySummary(polity: HistoricalPolity): string {
   const rulerNames = polity.rulers.slice(0, MAX_RULERS_IN_OVERVIEW).map(ruler => ruler.name);
   const rulers = rulerNames.length > 0 ? rulerNames.join(', ') : m.history_unknown_rulers();
   return m.history_summary_template({
-    name: polity.name,
+    name: localizedHistoryName(polity.id, polity.name),
     place: regionLabel(polity.region),
-    period: historyPeriodLabel(polity.from, polity.to),
+    period: historyPeriodLabel(polity.from, polity.to, polity.ongoing),
     rulers
   });
 }

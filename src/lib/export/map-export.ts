@@ -1,5 +1,7 @@
-/** Plain, localisation-free description of the data behind a map view, and its three file formats. */
-export type ExportFormat = 'json' | 'csv' | 'xml';
+/** Plain, localisation-free data behind a map view and its safe export formats. */
+export type ExportFormat = 'json' | 'csv' | 'xml' | 'geojson';
+export type ExportNode = string | number | boolean | null | ExportNode[] | { [key: string]: ExportNode };
+export interface ExportDocument { [key: string]: ExportNode }
 export type ExportValue = string | number | null;
 
 export interface ExportColumn {
@@ -21,6 +23,8 @@ export interface ExportDataset {
   dataTime?: string;
   columns: ExportColumn[];
   rows: Record<string, ExportValue>[];
+  /** Optional structured representation, retaining nested records in JSON/GeoJSON and XML. */
+  document?: ExportDocument;
 }
 
 export interface ExportFile {
@@ -31,11 +35,13 @@ export interface ExportFile {
 
 const FORMATS: Record<ExportFormat, { mimeType: string; extension: string }> = {
   json: { mimeType: 'application/json', extension: 'json' },
+  geojson: { mimeType: 'application/geo+json', extension: 'geojson' },
   csv: { mimeType: 'text/csv', extension: 'csv' },
   xml: { mimeType: 'application/xml', extension: 'xml' }
 };
 
 const COLUMN_ID = /^[a-z][a-z0-9_]*$/;
+const XML_ELEMENT_NAME = /^[A-Za-z_][A-Za-z0-9_.-]*$/;
 const BYTE_ORDER_MARK = '\uFEFF';
 /** A spreadsheet runs text that starts with one of these as a formula. */
 const FORMULA_START = /^[=+\-@\t\r]/;
@@ -69,6 +75,7 @@ function cellOf(row: Record<string, ExportValue>, id: string): ExportValue {
 
 export function toJson(dataset: ExportDataset): string {
   assertColumns(dataset);
+  if (dataset.document) return JSON.stringify(dataset.document, null, 2) + '\n';
   const records = dataset.rows.map(row => {
     const record: Record<string, ExportValue> = {};
     for (const column of dataset.columns) record[column.id] = cellOf(row, column.id);
@@ -94,6 +101,17 @@ export function toCsv(dataset: ExportDataset): string {
   return BYTE_ORDER_MARK + lines.join('\r\n') + '\r\n';
 }
 
+function structuredXml(name: string, value: ExportNode, indent: string): string {
+  if (!XML_ELEMENT_NAME.test(name)) throw Error('Invalid structured XML element: ' + name);
+  if (value === null) return indent + '<' + name + ' nil="true"/>';
+  if (typeof value !== 'object') return xmlElement(name, String(value), indent);
+  let entries: [string, ExportNode][];
+  if (Array.isArray(value)) entries = value.map(item => ['item', item]);
+  else entries = Object.entries(value);
+  const children = entries.map(([key, item]) => structuredXml(key, item, indent + '  '));
+  return [indent + '<' + name + '>', ...children, indent + '</' + name + '>'].join('\n');
+}
+
 /** Removes characters XML 1.0 cannot carry, then escapes the five markup characters. */
 export function escapeXml(text: string): string {
   // eslint-disable-next-line no-control-regex
@@ -108,6 +126,7 @@ function xmlElement(name: string, value: ExportValue, indent: string): string {
 
 export function toXml(dataset: ExportDataset): string {
   assertColumns(dataset);
+  if (dataset.document) return '<?xml version="1.0" encoding="UTF-8"?>\n' + structuredXml('dataset', dataset.document, '') + '\n';
   const lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<dataset>', '  <metadata>'];
   for (const [name, value] of Object.entries(metadataOf(dataset))) lines.push(xmlElement(name, value, '    '));
   lines.push('  </metadata>', '  <records count="' + dataset.rows.length + '">');
@@ -122,7 +141,8 @@ export function toXml(dataset: ExportDataset): string {
 
 export function serializeDataset(dataset: ExportDataset, format: ExportFormat): ExportFile {
   const { mimeType, extension } = FORMATS[format];
-  if (format === 'json') return { content: toJson(dataset), mimeType, extension };
+  if (format === 'geojson' && dataset.document?.type !== 'FeatureCollection') throw Error('GeoJSON unavailable for this dataset');
+  if (format === 'json' || format === 'geojson') return { content: toJson(dataset), mimeType, extension };
   if (format === 'csv') return { content: toCsv(dataset), mimeType, extension };
   return { content: toXml(dataset), mimeType, extension };
 }

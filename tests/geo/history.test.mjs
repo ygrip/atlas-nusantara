@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { Color } from 'three';
 import {
   HISTORICAL_POLITIES, HISTORY_EVENTS, HISTORY_MAX_YEAR, HISTORY_MIN_YEAR,
   historyActive, historyCategoryAt, historyRulersAt, historyZonesAt, isHistoricalPolity
 } from '../../src/lib/data/history.ts';
-import { influenceOpacity, historyRadiusDegrees } from '../../src/lib/map/history-map.ts';
+import { BATUJAYA_SITE, historyPolityColor, influenceOpacity, historyRadiusDegrees } from '../../src/lib/map/history-map.ts';
 
 test('historical gazetteer has unique validated records and historical citations', () => {
   assert.ok(HISTORICAL_POLITIES.length >= 90);
@@ -18,19 +19,32 @@ test('historical gazetteer has unique validated records and historical citations
     assert.ok(p.zones.every(z => (z.from ?? p.from) >= p.from && (z.to ?? p.to) <= p.to), 'zone beyond documented polity dates: ' + p.id);
   }
 });
-test('playable timeline covers archaeology through last full pre-independence year', () => {
+test('playable timeline covers archaeology through the present with distinct modern states', () => {
   assert.equal(HISTORY_MIN_YEAR, -400);
-  assert.equal(HISTORY_MAX_YEAR, 1944);
-  assert.equal(historyActive(1945).length, 0);
+  assert.equal(HISTORY_MAX_YEAR, new Date().getUTCFullYear());
+  assert.deepEqual(historyActive(1945).map(polity => polity.id), ['indonesia']);
+  assert.deepEqual(new Set(historyActive(HISTORY_MAX_YEAR).map(polity => polity.id)), new Set(['indonesia', 'timor-leste']));
   const years = HISTORY_EVENTS.map(e => e.year);
   assert.equal(years[0], HISTORY_MIN_YEAR);
-  assert.equal(years.at(-1), HISTORY_MAX_YEAR);
+  assert.ok(years.at(-1) <= HISTORY_MAX_YEAR);
   assert.deepEqual(years, [...years].sort((a,b) => a - b));
   assert.ok(historyActive(682).some(p => p.id === 'srivijaya'));
   assert.ok(historyActive(1350).some(p => p.id === 'majapahit'));
   assert.ok(historyActive(1944).some(p => p.id === 'japanese-occupation'));
   assert.ok(historyZonesAt(1944).every(zone => zone.confidence !== undefined));
 });
+test('early evidence and dated centres remain distinct from invented borders', () => {
+  assert.ok(historyActive(375).some(polity => polity.id === 'kutai-martadipura'));
+  assert.equal(historyActive(-50).length, 0);
+  assert.ok(BATUJAYA_SITE.from <= -50 && BATUJAYA_SITE.to >= -50);
+  const before = historyZonesAt(1855).find(zone => zone.id === 'tanjungpura');
+  const after = historyZonesAt(1856).find(zone => zone.id === 'tanjungpura');
+  assert.ok(before && after);
+  assert.notEqual(before.lat, after.lat);
+  const colors = HISTORICAL_POLITIES.map(polity => new Color(historyPolityColor(polity.id)).getHexString());
+  assert.equal(new Set(colors).size, colors.length);
+});
+
 test('the historical cartography has distinct confidence bands and finite geometry', () => {
   assert.ok(influenceOpacity('attested-centre') > influenceOpacity('approximate-core'));
   assert.ok(influenceOpacity('approximate-core') > influenceOpacity('contested-influence'));

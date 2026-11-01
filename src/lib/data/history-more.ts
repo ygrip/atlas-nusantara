@@ -102,17 +102,28 @@ export const MORE_POLITIES: HistoricalPolity[] = [
         lon: 109.949479,
         lat: -1.237165,
         radiusKm: 40,
-        confidence: "attested-centre"
+        confidence: "approximate-core",
+        to: 1855
+      },
+      {
+        lon: 109.9809,
+        lat: -1.8617,
+        radiusKm: 40,
+        confidence: "approximate-core",
+        from: 1856
       }
     ],
     sources: [
+      "https://ia600106.us.archive.org/2/items/kumpulan-berbagai-buku/Ensiklopedi%20Kerajaan-Kerajaan%20Nusantara%20Hikayat%20dan%20Sejarah%202%20by%20Ivan%20Taniputera.pdf",
+      "https://revue-archipel.fr/pdfnumeros/ARCHIPEL89%282015%29.pdf",
+      "https://evendo.com/locations/indonesia/west-kalimantan/attraction/keraton-matan-kayong-ketapang",
       "https://id.wikipedia.org/wiki/Kerajaan_Tanjungpura",
       "https://id.wikipedia.org/wiki/Sukadana,_Kayong_Utara",
       "https://idr.uin-antasari.ac.id/20780/1/Islam%20Kawasan%20Kalimantan%20-%20Rahmadi.pdf"
     ],
     dateNote: {
-      en: "Start 701 = earliest year of the 'abad ke-8' date in the source (relaxed rule). Early history is partly legendary; the source has no end date, so 'to' is set to the 1944 cap. Ruler Zainuddin reign per source. Matan and Sukadana fall under this entry. Centre = Sukadana town.",
-      id: "Start 701 = earliest year of the 'abad ke-8' date in the source (relaxed rule). Early history is partly legendary; the source has no end date, so 'to' is set to the 1944 cap. Ruler Zainuddin reign per source. Matan and Sukadana fall under this entry. Centre = Sukadana town."
+      en: "The 701 start is an uncertain traditional date; 1944 is the atlas cutoff. Accounts place the court at Sukadana and then Matan, with differing chronologies. Taniputera (2017, volume 2, pp. 241–247) reports a move to Mulia Kerta in 1856. Before then the marker is a regional approximation, not a dated capital; the later marker is an approximate palace location.",
+      id: "Awal 701 adalah tanggal tradisional yang belum pasti; 1944 adalah batas atlas. Sumber menempatkan pusat pemerintahan di Sukadana lalu Matan dengan kronologi berbeda. Taniputera (2017, jilid 2, hlm. 241–247) mencatat perpindahan ke Mulia Kerta pada 1856. Penanda sebelumnya adalah perkiraan wilayah, bukan ibu kota bertanggal; penanda kemudian adalah perkiraan lokasi keraton."
     }
   },
   {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { territoryPath } from '../../src/lib/map/history-territories.ts';
+import { activeHistoricalTerritories, territoryPath } from '../../src/lib/map/history-territories.ts';
 import { HISTORICAL_POLITIES } from '../../src/lib/data/history.ts';
 
 const data = JSON.parse(await readFile(new URL('../../static/data/history-territories.geojson', import.meta.url), 'utf8'));
@@ -31,6 +31,27 @@ test('projection retains multiple islands and holes as separate closed paths', (
   assert.equal((path.match(/M/g) ?? []).length, 3);
   assert.equal((path.match(/Z/g) ?? []).length, 3);
   assert.ok(!path.includes('NaN'));
+});
+
+test('Sukadana features map only to their documented Tanjungpura catalogue period', () => {
+  const features = data.features.filter(feature => feature.properties.id === 'tanjungpura');
+  assert.ok(features.length > 0);
+  assert.ok(features.every(feature => feature.properties.sourceName === 'Sultanate of Sukadana' && feature.properties.from >= 1619 && feature.properties.to <= 1833));
+});
+
+test('expired, not-yet-active and out-of-catalogue source polygons are hidden', () => {
+  const source = { type: 'FeatureCollection', features: [
+    { type: 'Feature', properties: { id: 'polity', from: 10, to: 20 }, geometry: { type: 'Polygon', coordinates: [] } },
+    { type: 'Feature', properties: { id: 'polity', from: 21, to: 30 }, geometry: { type: 'Polygon', coordinates: [] } },
+    { type: 'Feature', properties: { id: 'orphan', from: 10, to: 30 }, geometry: { type: 'Polygon', coordinates: [] } }
+  ] };
+  const catalog = new Map([['polity', { from: 15, to: 25 }]]);
+  assert.deepEqual(activeHistoricalTerritories(source, catalog, 14), []);
+  assert.deepEqual(activeHistoricalTerritories(source, catalog, 15), [source.features[0]]);
+  assert.deepEqual(activeHistoricalTerritories(source, catalog, 21), [source.features[1]]);
+  assert.deepEqual(activeHistoricalTerritories(source, catalog, 26), []);
+  assert.deepEqual(activeHistoricalTerritories(source, catalog, 25), [source.features[1]]);
+  assert.deepEqual(activeHistoricalTerritories(undefined, catalog, 20), []);
 });
 
 test('Majapahit reconstruction changes on its inclusive source date boundary', () => {

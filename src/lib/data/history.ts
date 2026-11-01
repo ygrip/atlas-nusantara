@@ -1,5 +1,5 @@
 /**
- * Pre-1945 Nusantara historical gazetteer.
+ * Nusantara historical gazetteer and the sourced modern-state timeline.
  *
  * This is a curated catalogue of major polities, not an exhaustive dynasty census.
  * Date boundaries are approximate and inclusive. A heat zone marks an attested
@@ -9,17 +9,22 @@
  */
 export type Confidence = 'attested-centre' | 'approximate-core' | 'contested-influence';
 export type HistoryRegion = 'sumatra' | 'java' | 'bali' | 'borneo' | 'sulawesi' | 'nusa-tenggara' | 'maluku' | 'papua' | 'malay-peninsula' | 'archipelago';
-export type HistoryCategory = 'hindu-buddhist' | 'islamic' | 'regional' | 'colonial';
-export interface HistoryRuler { name: string; from?: number; to?: number; uncertain?: boolean }
+export type HistoryCategory = 'hindu-buddhist' | 'islamic' | 'regional' | 'colonial' | 'republic';
+export interface HistoryRuler { name: string; from?: number; to?: number; uncertain?: boolean; ongoing?: boolean }
 export interface HistoryZone { lon: number; lat: number; radiusKm: number; confidence: Confidence; from?: number; to?: number }
 export interface HistoricalPolity {
-  id: string; name: string; from: number; to: number;
+  id: string; name: string; from: number; to: number; fromDate?: string; ongoing?: boolean;
   category: HistoryCategory; region: HistoryRegion; place: string; placeId: string;
   summary: { en: string; id: string };
   rulers: HistoryRuler[]; zones: HistoryZone[];
   sources: string[]; dateNote?: { en: string; id: string };
 }
 import { MORE_POLITIES } from './history-more.ts';
+import { RESEARCHED_POLITIES } from './history-researched.ts';
+import { MODERN_POLITIES, MODERN_TIMELINE_EVENTS } from './history-countries.ts';
+import { HISTORY_PRESENT_YEAR } from './history-modern.ts';
+/** Legacy royal profiles deliberately stop here; this is not necessarily dissolution. */
+export const HISTORY_LEGACY_CUTOFF_YEAR = 1944;
 const wiki = 'https://id.wikipedia.org/wiki/Sejarah_Nusantara';
 const big = 'https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_MasaIndonesiaKlasik/MapServer';
 const yupa = 'https://suarbetang.kemdikbud.go.id/jurnal/index.php/BETANG/article/viewFile/113/104';
@@ -29,10 +34,10 @@ const yogya = 'https://budaya.data.kemdikbud.go.id/cagarbudaya/objek/KB000089';
 const c = (lon: number, lat: number, radiusKm: number, confidence: Confidence = 'approximate-core', from?: number, to?: number): HistoryZone => ({ lon,lat,radiusKm,confidence,from,to });
 /** Each date span is capped at 1944 even where the institution survived independence. */
 const CORE_POLITIES: HistoricalPolity[] = [
-  { id:'kutai-martadipura',name:'Kutai Martadipura',from:400,to:600,category:'hindu-buddhist',place:'Muara Kaman, East Kalimantan',placeId:'Muara Kaman, Kalimantan Timur',region:'borneo',
-    summary:{en:'The early Mahakam River polity is attested by fifth-century yupa inscriptions recording the genealogy and gifts of Mulawarman. The inscriptions do not give it the later name “Kutai”.',id:'Kerajaan awal di Sungai Mahakam dikenal melalui prasasti yupa abad ke-5 yang mencatat silsilah serta pemberian Mulawarman. Nama “Kutai” sendiri tidak disebut dalam prasasti itu.'},
+  { id:'kutai-martadipura',name:'Kutai Martadipura',from:350,to:600,category:'hindu-buddhist',place:'Muara Kaman, East Kalimantan',placeId:'Muara Kaman, Kalimantan Timur',region:'borneo',
+    summary:{en:'The early Mahakam River polity is attested by yupa inscriptions recording Mulawarman. Their date is debated between the late fourth and fifth centuries; “Kutai” is a later name.',id:'Kerajaan awal di Sungai Mahakam dibuktikan prasasti yupa tentang Mulawarman. Penanggalannya diperdebatkan antara akhir abad ke-4 dan abad ke-5; “Kutai” adalah nama kemudian.'},
     rulers:[{name:'Kudungga'},{name:'Aswawarman'},{name:'Mulawarman'}],
-    zones:[c(116.93,-0.38,65,'attested-centre')],sources:[yupa,wiki],dateNote:{en:'Fifth-century inscriptions; exact founding and end dates unknown.',id:'Prasasti abad ke-5; tahun pendirian dan berakhirnya tidak diketahui pasti.'} },
+    zones:[c(116.93,-0.38,65,'attested-centre')],sources:['https://press-files.anu.edu.au/downloads/press/p69411/html/ch15s02.html',yupa,wiki],dateNote:{en:'The start at 350 CE represents one palaeographic dating, not a known founding year. Muara Kaman is the inscription area, not a securely identified capital; the end date is unknown.',id:'Awal 350 M mewakili salah satu penanggalan paleografis, bukan tahun pendirian yang diketahui. Muara Kaman adalah wilayah temuan prasasti, bukan ibu kota yang dipastikan; tahun berakhirnya tidak diketahui.'} },
   { id:'tarumanagara',name:'Tarumanagara',from:400,to:700,category:'hindu-buddhist',place:'Western Java',placeId:'Jawa Barat',region:'java',
     summary:{en:'An early Hindu polity in western Java, documented by inscriptions associated with King Purnawarman; its political limits are not known.',id:'Kerajaan Hindu awal di Jawa Barat yang dikenal melalui prasasti terkait Raja Purnawarman; batas kekuasaannya belum dapat dipastikan.'},
     rulers:[{name:'Purnawarman'}],zones:[c(106.8,-6.42,110,'approximate-core')],sources:["https://repositori.kemendikdasmen.go.id/26567/",wiki] },
@@ -83,7 +88,7 @@ const CORE_POLITIES: HistoricalPolity[] = [
   { id:'gowa-tallo',name:'Gowa–Tallo',from:1320,to:1669,category:'islamic',place:'Makassar, South Sulawesi',placeId:'Makassar, Sulawesi Selatan',region:'sulawesi',
     summary:{en:'The paired Makassar courts built a maritime trading power; Islam was adopted by rulers in the early seventeenth century, before defeat in the Makassar War.',id:'Kerajaan kembar di Makassar berkembang sebagai kekuatan niaga maritim; penguasanya menerima Islam pada awal abad ke-17 sebelum kalah dalam Perang Makassar.'},
     rulers:[{name:'Sultan Alauddin',from:1593,to:1639},{name:'Sultan Hasanuddin',from:1653,to:1669}],
-    zones:[c(119.45,-5.15,150,'approximate-core')],sources:[wiki,'https://id.wikipedia.org/wiki/Kesultanan_Gowa'] },
+    zones:[c(119.45,-5.15,150,'approximate-core',1320,1524),c(119.45,-5.20,150,'approximate-core',1525,1669)],sources:[wiki,'https://id.wikipedia.org/wiki/Kesultanan_Gowa','https://disbudpar.sulselprov.go.id/page/budaya/180/benteng-somba-opu','https://ia600106.us.archive.org/2/items/kumpulan-berbagai-buku/Ensiklopedi%20Kerajaan-Kerajaan%20Nusantara%20Hikayat%20dan%20Sejarah%202%20by%20Ivan%20Taniputera.pdf'],dateNote:{en:'The pre-1525 marker is a regional approximation. The later marker locates Somba Opu approximately; the paired Gowa and Tallo courts did not always share one seat. See Taniputera, volume 2, pp. 588–595.',id:'Penanda sebelum 1525 adalah perkiraan wilayah. Penanda kemudian menunjukkan perkiraan lokasi Somba Opu; pusat Gowa dan Tallo tidak selalu berada di tempat yang sama. Lihat Taniputera, jilid 2, hlm. 588–595.'} },
   { id:'pagaruyung',name:'Pagaruyung',from:1347,to:1833,category:'regional',place:'Minangkabau Highlands, West Sumatra',placeId:'Dataran Tinggi Minangkabau, Sumatra Barat',region:'sumatra',
     summary:{en:'The Minangkabau royal centre emerged from Adityawarman’s fourteenth-century inscriptions; later influence and the court’s authority varied over time.',id:'Pusat kerajaan Minangkabau terkait dengan prasasti Adityawarman abad ke-14; pengaruh wilayah dan kewibawaan istana berubah sepanjang waktu.'},
     rulers:[{name:'Adityawarman',from:1347,to:1375}],zones:[c(100.5,-0.45,145,'approximate-core')],sources:["https://repositori.kemendikdasmen.go.id/23858/",wiki] },
@@ -92,7 +97,7 @@ const CORE_POLITIES: HistoricalPolity[] = [
     rulers:[{name:'Sultan Bolkiah',from:1485,to:1524}],zones:[c(114.94,4.9,115,'approximate-core')],sources:[wiki,'https://id.wikipedia.org/wiki/Kesultanan_Brunei'] },
   { id:'tidore',name:'Kesultanan Tidore',from:1450,to:1944,category:'islamic',place:'Tidore, North Maluku',placeId:'Tidore, Maluku Utara',region:'maluku',
     summary:{en:'A spice-island sultanate with changing influence in the eastern islands and Papua, frequently competing and negotiating with Ternate and foreign powers.',id:'Kesultanan pulau rempah dengan pengaruh yang berubah di kepulauan timur dan Papua, sering bersaing dan berunding dengan Ternate serta kekuatan asing.'},
-    rulers:[{name:'Sultan Nuku',from:1797,to:1805}],zones:[c(127.4,0.68,62,'attested-centre'),c(130,-1,180,'contested-influence',1750,1840)],sources:[wiki,'https://id.wikipedia.org/wiki/Kesultanan_Tidore'],dateNote:{en:'Foundation traditions predate securely documented reigns.',id:'Tradisi pendirian lebih tua daripada masa pemerintahan yang terdokumentasi dengan kuat.'} },
+    rulers:[{name:'Sultan Nuku',from:1797,to:1805}],zones:[c(127.4,0.68,62,'approximate-core',1450,1796),c(127.445,0.653,62,'attested-centre',1797,1805),c(127.4,0.68,62,'approximate-core',1806,1944),c(130,-1,180,'contested-influence',1750,1840)],sources:[wiki,'https://id.wikipedia.org/wiki/Kesultanan_Tidore','https://mapcarta.com/15593580','https://files01.core.ac.uk/download/388692399.pdf','https://ia600106.us.archive.org/2/items/kumpulan-berbagai-buku/Ensiklopedi%20Kerajaan-Kerajaan%20Nusantara%20Hikayat%20dan%20Sejarah%202%20by%20Ivan%20Taniputera.pdf'],dateNote:{en:'Foundation traditions predate securely documented reigns. Soasiu was a centre around Nuku’s reign; Taniputera (volume 2, p. 892) describes moves to Maba in 1806 and Maitara in 1807. Outside 1797–1805 the marker is an approximate regional centre, not a dated capital.',id:'Tradisi pendirian lebih tua daripada masa pemerintahan yang terdokumentasi dengan kuat. Soasiu adalah pusat sekitar masa Nuku; Taniputera (jilid 2, hlm. 892) mencatat perpindahan ke Maba pada 1806 dan Maitara pada 1807. Di luar 1797–1805, penanda hanya perkiraan wilayah, bukan ibu kota bertanggal.'} },
   { id:'demak',name:'Kesultanan Demak',from:1475,to:1554,category:'islamic',place:'North Coast of Central Java',placeId:'Pesisir utara Jawa Tengah',region:'java',
     summary:{en:'An early Muslim royal centre on the north coast of Java, active in port politics and campaigns after Majapahit’s decline.',id:'Pusat kerajaan Islam awal di pesisir utara Jawa yang aktif dalam perdagangan pelabuhan dan ekspedisi setelah melemahnya Majapahit.'},
     rulers:[{name:'Raden Patah',from:1475,to:1518},{name:'Pati Unus',from:1518,to:1521},{name:'Sultan Trenggana',from:1521,to:1546}],
@@ -158,7 +163,7 @@ const CORE_POLITIES: HistoricalPolity[] = [
 
 /** Chronological milestones have independent attestations; timelines need not imply dynastic succession. */
 /** Core records plus the extended gazetteer in history-more.ts, ordered by start year. */
-export const HISTORICAL_POLITIES: HistoricalPolity[] = [...CORE_POLITIES, ...MORE_POLITIES]
+export const HISTORICAL_POLITIES: HistoricalPolity[] = [...CORE_POLITIES, ...MORE_POLITIES, ...RESEARCHED_POLITIES, ...MODERN_POLITIES]
   .sort((a, b) => a.from - b.from || a.id.localeCompare(b.id));
 export const HISTORY_EVENTS = [
   { year:-400, en:'Buni archaeological culture (not a kingdom)', id:'Kebudayaan arkeologis Buni (bukan kerajaan)' },
@@ -188,10 +193,11 @@ export const HISTORY_EVENTS = [
   { year:1908, en:'Early Indonesian nationalist organisations', id:'Organisasi kebangsaan Indonesia awal' },
   { year:1928, en:'Youth Pledge', id:'Sumpah Pemuda' },
   { year:1942, en:'Japanese occupation begins', id:'Pendudukan Jepang dimulai' },
-  { year:1944, en:'Last full year before Indonesian independence', id:'Tahun penuh terakhir sebelum kemerdekaan Indonesia' }
+  { year:1944, en:'Last full year before Indonesian independence', id:'Tahun penuh terakhir sebelum kemerdekaan Indonesia' },
+  ...MODERN_TIMELINE_EVENTS
 ] as const;
 export const HISTORY_MIN_YEAR = -400;
-export const HISTORY_MAX_YEAR = 1944;
+export const HISTORY_MAX_YEAR = HISTORY_PRESENT_YEAR;
 export const historyActive = (year: number): HistoricalPolity[] => HISTORICAL_POLITIES.filter(p => p.from <= year && year <= p.to);
 /** Later Islamic titles must not be projected backward onto a polity's earlier period. */
 export function historyCategoryAt(p: HistoricalPolity, year: number): HistoryCategory {
@@ -217,7 +223,7 @@ export const historyZonesAt = (year: number) => historyActive(year).flatMap(poli
     .map(zone => ({ ...zone, id: polity.id, name: polity.name, category: historyCategoryAt(polity, year), polity }))
 );
 export const historyRulersAt = (polity: HistoricalPolity, year: number): HistoryRuler[] =>
-  polity.rulers.filter(r => r.from !== undefined && r.to !== undefined && r.from <= year && year <= r.to);
+  polity.rulers.filter(r => r.from !== undefined && r.from <= year && (r.ongoing === true || (r.to !== undefined && year <= r.to)));
 export function isHistoricalPolity(value: unknown): value is HistoricalPolity {
   if (!value || typeof value !== 'object') return false;
   const p = value as HistoricalPolity;

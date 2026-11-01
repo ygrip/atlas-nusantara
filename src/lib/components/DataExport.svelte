@@ -10,12 +10,13 @@
   } = $props();
 
   let open = $state(false);
-  let dataset = $state<ExportDataset>();
+  let dataset = $state.raw<ExportDataset>();
   let failed = $state(false);
   let loading = $state(false);
   let generation = 0;
 
   const formats: { id: ExportFormat; label: string; hint: () => string; icon: typeof Braces }[] = [
+    { id: 'geojson', label: 'GeoJSON', hint: m.export_json_hint, icon: Braces },
     { id: 'json', label: 'JSON', hint: m.export_json_hint, icon: Braces },
     { id: 'csv', label: 'CSV', hint: m.export_csv_hint, icon: Table },
     { id: 'xml', label: 'XML', hint: m.export_xml_hint, icon: Code }
@@ -78,7 +79,7 @@
   {:else}
     <p class="export-summary">{m.export_summary({ count: dataset.rows.length.toLocaleString(), layer: dataset.title, scope: dataset.scope })}</p>
     <ul class="export-formats">
-      {#each formats as format (format.id)}
+      {#each formats.filter(format => format.id !== 'geojson' || dataset?.document?.type === 'FeatureCollection') as format (format.id)}
         {@const FormatIcon = format.icon}
         <li>
           <button type="button" class="export-format" data-format={format.id} onclick={() => download(format.id)}>

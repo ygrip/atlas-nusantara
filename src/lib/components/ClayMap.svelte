@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
+  import { fadeHistoryLabel } from '$lib/map/history-label-transition';
   import { Box, ChevronDown, ChevronUp, CloudRain, Compass, Layers, LocateFixed, Map as MapIcon, Minus, Pause, Play, Plus, Rotate3d, Waves, Wind } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
@@ -9,7 +10,7 @@
   import { islandGroupLabel } from '$lib/i18n/island-groups';
   import { GEOMETRY_DATA_PATH } from '$lib/atlas/edition';
   import { assetUrl } from '$lib/pwa/assets';
-  import type { AtlasScene, MapLayers, ThemeName } from '$lib/map/scene';
+  import type { AtlasScene, HistoryScreenLabel, MapLayers, ThemeName } from '$lib/map/scene';
   import { buildField, forecastTimes, loadForecast, nearestTimeIndex, type ForecastSnapshot, type WeatherField } from '$lib/map/weather';
   import { focusForecast, forecastCoordinates } from '$lib/map/weather-summary';
   import { regionCoordinatesByCode } from '$lib/atlas/region-coordinates';
@@ -22,7 +23,11 @@
   import { visibleMountainPins } from '$lib/map/mountain-density';
   import type { MapPin, PointOverlay } from '$lib/map/overlays';
   import type { RegionHeatmap } from '$lib/map/heatmap';
-  import type { HistoryZoneMarker } from '$lib/map/history-map';
+  import { BATUJAYA_SITE, historyPolityColor, historyMarkerActive, type HistoryZoneMarker } from '$lib/map/history-map';
+  import HistoryMapReadout from './HistoryMapReadout.svelte';
+  import { localizedHistoryName } from '$lib/data/history-summary';
+  import IndonesiaFlag from './IndonesiaFlag.svelte';
+  import type { HistoricalTerritoryCollection } from '$lib/map/history-territories';
 
   let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, onweather, activeLayer = 'warning', overlay, heatmap, historyZones, historyYear, historyFocusId, onhistoryselect, geometryUnavailable = false }: {
     geometryUnavailable?: boolean;
@@ -48,6 +53,10 @@
   } = $props();
 
   type ViewMode = '3d' | '2d';
+  function initialViewMode(): ViewMode {
+    if (activeLayer === 'history') return '2d';
+    return '3d';
+  }
   const PLAY_STEP_SECONDS = 6;
   /** Length of the 2D <-> 3D transition: the camera tilts, the land rises and the sea fades in (or the reverse). */
   const TRANSITION_MS = 1700;
@@ -56,10 +65,11 @@
   /** The legend melts shut in about half a second; the view change waits for it so the two animations never overlap. */
   const LEGEND_COLLAPSE_MS = 560;
 
-  let mode = $state<ViewMode>('3d');
-  // The 3D scene and the SVG map are both mounted while one transitions into the other.
-  let show3d = $state(true);
-  let show2d = $state(false);
+  const startingMode = initialViewMode();
+  let mode = $state<ViewMode>(startingMode);
+  // Direct History entry stays in 2D; users can explicitly switch to 3D from the view control.
+  let show3d = $state(startingMode === '3d');
+  let show2d = $state(startingMode === '2d');
   let transition = $state<'to2d' | 'to3d'>();
   /** 2D -> 3D only starts animating once the scene has loaded, so the SVG map stays up while it waits. */
   let sceneRevealed = $state(false);
@@ -70,13 +80,39 @@
   let webglFailed = $state(false);
   let host = $state<HTMLDivElement>();
   let scene = $state<AtlasScene>();
+  let historyTerritories = $state.raw<HistoricalTerritoryCollection>();
+  let historyTerritoriesFailed = $state(false);
+  let historyTerritoriesRequest: Promise<HistoricalTerritoryCollection | undefined> | undefined;
   let loading = $state(false);
   let mapVisible = $state(false);
   let legendOpen = $state(false);
   /** The legend was open when the view change began, so it can reopen once the new view has settled. */
   let reopenLegend = false;
   /** True while the legend is folding away ahead of a view change. */
-  let switching = false;
+  let switching = $state(false);
+  let historyScreenLabels = $state.raw<HistoryScreenLabel[]>([]);
+  const historyFadeDuration = $derived.by(() => {
+    if (reducedMotion) return 0;
+    return 420;
+  });
+  const activeHistoryIds = $derived(new Set((historyZones ?? []).filter(zone => historyMarkerActive(zone, historyYear ?? 682)).map(zone => zone.id)));
+  const visibleHistoryScreenLabels = $derived(historyScreenLabels.filter(mark => historyScreenLabelIsActive(mark.id)));
+  function historyScreenLabelIsActive(id: string): boolean {
+    if (activeLayer !== 'history') return false;
+    if (id === 'site-batujaya') {
+      const year = historyYear ?? 682;
+      return year >= BATUJAYA_SITE.from && year <= BATUJAYA_SITE.to;
+    }
+    return activeHistoryIds.has(id);
+  }
+  function historyScreenLabelTabIndex(id: string): number {
+    if (historyScreenLabelIsActive(id)) return 0;
+    return -1;
+  }
+  function activateHistoryLabel(id: string) {
+    if (!historyScreenLabelIsActive(id)) return;
+    onhistoryselect?.(id);
+  }
   let documentVisible = $state(true);
   let zoomLevel = $state(1);
   /** Zoom of the flat map, reported by SvgMap. */
@@ -111,7 +147,7 @@
   let playing = $state(false);
   let progress = $state(0);
   let layers = $state<MapLayers>({ wind: true, weather: true, sea: true });
-  let reducedMotion = false;
+  let reducedMotion = $state(false);
   /** Fields are cached per focus area and time; the cache is emptied when it grows past this. */
   const MAX_CACHED_FIELDS = 48;
   const fieldCache = new Map<string, WeatherField>();
@@ -122,7 +158,12 @@
     for (const region of detail?.regions ?? []) names.set(region.sourceCode, region.name);
     return names;
   });
-  const svgGeometry = $derived(detail ?? national);
+  const svgGeometry = $derived.by(() => {
+    if (activeLayer === 'history') return national;
+    return detail ?? national;
+  });
+  const focusedHistoryPolity = $derived(historyZones?.find(zone => zone.id === historyFocusId && historyMarkerActive(zone, historyYear ?? 682))?.polity);
+  const historyLegend = $derived([...new Map((historyZones ?? []).filter(zone => historyMarkerActive(zone, historyYear ?? 682)).map(zone => [zone.id, zone])).values()]);
   const currentTime = $derived(times[timeIndex]);
   const readoutCode = $derived(hover?.code ?? selectedCode ?? openProvince);
   const playLabel = $derived.by(() => {
@@ -134,6 +175,25 @@
     if (times.length < 2) return 0;
     return (timeIndex / (times.length - 1)) * 100;
   });
+
+  function loadHistoryTerritories(): Promise<HistoricalTerritoryCollection | undefined> {
+    if (historyTerritories) return Promise.resolve(historyTerritories);
+    if (historyTerritoriesRequest) return historyTerritoriesRequest;
+    historyTerritoriesFailed = false;
+    historyTerritoriesRequest = fetch(assetUrl('/data/history-territories-render.geojson'))
+      .then(response => {
+        if (!response.ok) throw new Error(`Historical territories: HTTP ${response.status}`);
+        return response.json() as Promise<HistoricalTerritoryCollection>;
+      })
+      .then(data => { historyTerritories = data; return data; })
+      .catch(error => {
+        historyTerritoriesRequest = undefined;
+        historyTerritoriesFailed = true;
+        console.warn('Historical 3D boundaries unavailable', error);
+        return undefined;
+      });
+    return historyTerritoriesRequest;
+  }
 
   function currentTheme(): ThemeName {
     if (document.documentElement.dataset.theme === 'dark') return 'dark';
@@ -191,6 +251,8 @@
         },
         onzoom: level => { zoomLevel = level; },
         onpinclick: handlePin,
+        onhistoryselect: id => onhistoryselect?.(id),
+        onhistorylabels: labels => { historyScreenLabels = labels; },
         onfeature: (pin, x, y) => {
           if (!pin) { feature = undefined; return; }
           const bounds = target.getBoundingClientRect();
@@ -210,6 +272,9 @@
       created.setProvince(openProvince, detail, false);
       created.setSelected(selectedCode);
       created.setHeatmap(heatmap?.colors);
+      let visibleZones = historyZones;
+      if (activeLayer === 'history') visibleZones = historyZones ?? [];
+      if (nationalPackage.projection) created.setHistoryTerritories(historyTerritories, visibleZones, historyYear ?? 682, nationalPackage.projection, historyFocusId);
       if (transition === 'to3d') await revealScene(created);
     } catch (error) {
       console.warn('3D atlas unavailable; using the 2D map', error);
@@ -222,18 +287,15 @@
   }
 
   onMount(() => {
-    reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+    const syncMotionPreference = () => { reducedMotion = motionPreference.matches; };
+    syncMotionPreference();
+    motionPreference.addEventListener('change', syncMotionPreference);
     legendOpen = matchMedia('(min-width: 701px)').matches;
     const syncVisibility = () => { documentVisible = !document.hidden; };
     syncVisibility();
     document.addEventListener('visibilitychange', syncVisibility);
     const controller = new AbortController();
-    const handleContextLoss = (event: Event) => {
-      if (mode !== '3d' || !host?.isConnected) return;
-      event.preventDefault();
-      fallbackTo2d();
-    };
-    host?.addEventListener('webglcontextlost', handleContextLoss, true);
     const refreshForecast = () => {
       void loadForecast(assetUrl('/data/weather/forecast.json'), controller.signal)
         .then(snapshot => {
@@ -256,11 +318,23 @@
       clearTimeout(transitionTimer);
       clearInterval(forecastTimer);
       document.removeEventListener('visibilitychange', syncVisibility);
-      host?.removeEventListener('webglcontextlost', handleContextLoss, true);
+      motionPreference.removeEventListener('change', syncMotionPreference);
       themeObserver.disconnect();
       scene?.dispose();
       scene = undefined;
     };
+  });
+
+  $effect(() => {
+    const mapHost = host;
+    if (!mapHost) return;
+    const handleContextLoss = (event: Event) => {
+      if (mode !== '3d' || !mapHost.isConnected) return;
+      event.preventDefault();
+      fallbackTo2d();
+    };
+    mapHost.addEventListener('webglcontextlost', handleContextLoss, true);
+    return () => mapHost.removeEventListener('webglcontextlost', handleContextLoss, true);
   });
 
   $effect(() => {
@@ -326,6 +400,16 @@
   $effect(() => { onweather?.(forecast, currentTime); });
   $effect(() => { scene?.setSelected(selectedCode); });
   $effect(() => { scene?.setHeatmap(heatmap?.colors); });
+  $effect(() => {
+    if (activeLayer !== 'history' || !show3d || historyTerritories) return;
+    void loadHistoryTerritories();
+  });
+  $effect(() => {
+    if (!scene || !national?.projection) return;
+    let visibleZones = historyZones;
+    if (activeLayer === 'history') visibleZones = historyZones ?? [];
+    scene.setHistoryTerritories(historyTerritories, visibleZones, historyYear ?? 682, national.projection, historyFocusId);
+  });
   $effect(() => { void activeLayer; openedPin = undefined; });
   const effectiveLayers = $derived.by(() => {
     if (activeLayer === 'warning') return layers;
@@ -378,9 +462,6 @@
     }
   }
 
-  // Historical spheres of influence have a dedicated SVG renderer; do not present them as today's 3D administrative provinces.
-  $effect(() => { if (activeLayer === 'history' && mode !== '2d') { mode = '2d'; finishTransition(); } });
-
   function fallbackTo2d() {
     webglFailed = true;
     mode = '2d';
@@ -406,6 +487,10 @@
     if (next === mode || (next === '3d' && webglFailed) || switching) return;
     switching = true;
     try {
+      if (next === '3d' && activeLayer === 'history') {
+        const territories = await loadHistoryTerritories();
+        if (!territories) return;
+      }
       await collapseLegend();
       await startModeChange(next);
     } finally {
@@ -487,9 +572,10 @@
 </script>
 
 <div class="clay-map" data-mode={mode}>
+  {#if activeLayer === 'history' && historyTerritoriesFailed}<p class="map-notice" role="status">{m.data_unavailable()}</p>{/if}
   <div class="map-toolbar">
     <div class="segmented" role="group" aria-label={label}>
-      <button type="button" aria-pressed={mode === '3d'} disabled={webglFailed || activeLayer === 'history'} onclick={() => { void switchMode('3d'); }}><Box size={18} aria-hidden="true" /><span>{m.map_view_3d()}</span></button>
+      <button type="button" aria-pressed={mode === '3d'} disabled={webglFailed} onclick={() => { void switchMode('3d'); }}><Box size={18} aria-hidden="true" /><span>{m.map_view_3d()}</span></button>
       <button type="button" aria-pressed={mode === '2d'} onclick={() => { void switchMode('2d'); }}><MapIcon size={18} aria-hidden="true" /><span>{m.map_view_2d()}</span></button>
     </div>
     {#if (mode === '3d' && show3d) || (mode === '2d' && show2d)}
@@ -524,12 +610,32 @@
     {#if !overlay}<p class="mountain-notice" role="status">{m.source_not_connected_details()}</p>{/if}
   {/if}
 
-  <div class="view-stage" data-map-zoom class:animating={Boolean(transition)} style={`--morph-ms: ${TRANSITION_MS}ms; --crossfade-ms: ${CROSSFADE_MS}ms`} bind:this={stageElement}>
+  <div class="view-stage" data-map-zoom aria-busy={switching || Boolean(transition) || (show3d && mode === '3d' && !geometryUnavailable && (loading || !scene))} class:animating={Boolean(transition)} style={`--morph-ms: ${TRANSITION_MS}ms; --crossfade-ms: ${CROSSFADE_MS}ms`} bind:this={stageElement}>
     {#if show3d}
       <div class="view-pane pane-3d" bind:this={pane3dElement}>
       <div class="atlas-map atlas-3d" bind:this={host} data-ready={Boolean(scene && !loading)} role="application" aria-label={label + ' — ' + m.map_help_3d()}>
         {#if geometryUnavailable}<div class="map-loading" role="status">{m.data_unavailable()}</div>
-        {:else if loading || !scene}<div class="map-loading" role="status"><span class="spinner" aria-hidden="true"></span>{m.loading_data()}</div>{/if}
+        {/if}
+        {#if activeLayer === 'history'}
+          <div class="history-screen-labels">
+            {#each visibleHistoryScreenLabels as mark (mark.id)}
+              {#if mark.sourceUrl}
+                <a class="history-screen-label" style={`left:${mark.x}px;top:${mark.y}px;--marker-color:${mark.color}`} href={mark.sourceUrl} target="_blank" rel="noreferrer" aria-label={m.history_event_bce400()} aria-hidden={!historyScreenLabelIsActive(mark.id)} aria-disabled={!historyScreenLabelIsActive(mark.id)} tabindex={historyScreenLabelTabIndex(mark.id)} out:fadeHistoryLabel={{ duration: historyFadeDuration }}>
+                  <svg class="history-flag" aria-hidden="true" viewBox="0 0 20 24"><path d="M10 3 18 12 10 21 2 12z" fill="var(--marker-color)" stroke="white" stroke-width="1.5" /></svg><span class="history-screen-name">{localizedHistoryName(mark.id, mark.name)}</span>
+                </a>
+              {:else}
+                <button type="button" class="history-screen-label" class:focused={mark.id === historyFocusId} style={`left:${mark.x}px;top:${mark.y}px;--marker-color:${mark.color}`} aria-label={localizedHistoryName(mark.id, mark.name)} aria-pressed={mark.id === historyFocusId} aria-hidden={!historyScreenLabelIsActive(mark.id)} aria-disabled={!historyScreenLabelIsActive(mark.id)} tabindex={historyScreenLabelTabIndex(mark.id)} out:fadeHistoryLabel={{ duration: historyFadeDuration }} onclick={() => activateHistoryLabel(mark.id)}>
+                  {#if mark.id === 'indonesia'}
+                    <IndonesiaFlag width={17} decorative />
+                  {:else}
+                    <svg class="history-flag" aria-hidden="true" viewBox="0 0 20 24"><path d="M4 22V2m0 1h12l-3 4 3 4H4" fill="var(--marker-color)" stroke="white" stroke-width="1.5" stroke-linejoin="round" /></svg>
+                  {/if}
+                  {#if mark.showName}<span class="history-screen-name">{localizedHistoryName(mark.id, mark.name)}</span>{/if}
+                </button>
+              {/if}
+            {/each}
+          </div>
+        {/if}
         {#if feature}
           <div class="map-tooltip feature-tooltip" style={`left:${feature.x}px; top:${feature.y}px`} aria-hidden="true"><strong>{feature.pin.label}</strong></div>
         {:else if hover}
@@ -538,12 +644,21 @@
           </div>
         {/if}
         <GooeyPanel class="map-legend" corner="bottom-left" icon={Layers} label={m.map_legend_label()} bind:open={legendOpen}>
-          <p class="legend-title">{m.map_legend_groups()}</p>
-          <ul class="group-legend">
-            {#each ISLAND_GROUPS as group (group)}
-              <li><span class="swatch" style={`--swatch: ${groupSwatch(group)}`} aria-hidden="true"></span>{islandGroupLabel(group)}</li>
-            {/each}
-          </ul>
+          {#if activeLayer === 'history'}
+            <p class="legend-title">{m.history_active()}</p>
+            <ul class="group-legend history-legend">
+              {#each historyLegend as polity (polity.id)}
+                <li out:fadeHistoryLabel={{ duration: historyFadeDuration }}><span class="swatch" style={`--swatch: ${historyPolityColor(polity.id)}`} aria-hidden="true"></span>{localizedHistoryName(polity.id, polity.name)}</li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="legend-title">{m.map_legend_groups()}</p>
+            <ul class="group-legend">
+              {#each ISLAND_GROUPS as group (group)}
+                <li><span class="swatch" style={`--swatch: ${groupSwatch(group)}`} aria-hidden="true"></span>{islandGroupLabel(group)}</li>
+              {/each}
+            </ul>
+          {/if}
           {#if forecast && layers.wind && activeLayer === 'warning'}
             <p class="legend-title">{m.map_legend_wind()}</p>
             <div class="wind-ramp" aria-hidden="true"></div>
@@ -563,6 +678,7 @@
           <div class="relief-ramp" aria-hidden="true"></div>
           <div class="wind-scale"><span>−9,000</span><span>0</span><span>4,400</span></div>
         </GooeyPanel>
+        {#if activeLayer === 'history' && focusedHistoryPolity}<HistoryMapReadout polity={focusedHistoryPolity} />{/if}
         {#if forecast && readoutCode && activeLayer === 'warning'}
           <WeatherReadout {forecast} code={readoutCode} time={currentTime} name={regionNames.get(readoutCode) ?? readoutCode} coordinates={readoutCoordinates} />
         {/if}
@@ -584,7 +700,9 @@
         </div>
       {/if}
       </div>
-      {#if transition === 'to3d' && !sceneRevealed}<span class="stage-spinner spinner" role="status" aria-label={m.loading_data()}></span>{/if}
+    {/if}
+    {#if switching || (transition === 'to3d' && !sceneRevealed) || transition === 'to2d' || (show3d && mode === '3d' && !geometryUnavailable && (loading || !scene))}
+      <div class="stage-loading" role="status"><div class="loading-card"><span class="spinner" aria-hidden="true"></span><span>{m.loading_data()}</span></div></div>
     {/if}
   </div>
 
@@ -673,7 +791,16 @@
   /* The 3D scene animates itself (tilt, relief, sea); the flat map only cross-fades at the flat end of the timeline. */
   .pane-2d.entering { animation: map-fade-in var(--crossfade-ms) ease-out calc(var(--morph-ms) - var(--crossfade-ms)) both; }
   .pane-2d.folding { animation: map-fade-out var(--crossfade-ms) ease-in forwards; pointer-events: none; }
-  .stage-spinner { position: absolute; top: 16px; right: 16px; z-index: 4; width: 28px; height: 28px; border-width: 3px; }
+  .stage-loading { position:absolute; inset:0; z-index:5; display:grid; place-items:center; pointer-events:none; }
+  .loading-card { display:flex; align-items:center; gap:12px; padding:14px 20px; border:1px solid var(--border); border-radius:18px; background:var(--surface, #fffaf2); box-shadow:0 12px 32px #0003; color:var(--text, #352c28); font-weight:750; }
+  .loading-card .spinner { width:24px; height:24px; border-width:3px; }
+  .history-screen-labels { position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
+  .history-screen-label { position:absolute; transform:translate(-6px, -100%); display:flex; align-items:center; gap:3px; border:0; padding:0; background:transparent; color:#292323; font:700 11px/1.1 system-ui, sans-serif; pointer-events:auto; cursor:pointer; text-shadow:0 0 3px white, 0 0 3px white, 0 0 3px white; white-space:nowrap; }
+  .history-screen-label:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .history-screen-label[aria-hidden='true'] { pointer-events:none; cursor:default; }
+  .history-flag { width:17px; height:21px; flex:none; filter:drop-shadow(0 1px 2px #0008); }
+  .group-legend.history-legend { grid-template-columns:minmax(0, 1fr); max-height:200px; overflow:auto; }
+  .history-legend li { white-space:normal; }
   @keyframes map-fade-in { from { opacity: 0; } to { opacity: 1; } }
   @keyframes map-fade-out { from { opacity: 1; } to { opacity: 0; } }
 

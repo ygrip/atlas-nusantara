@@ -11,7 +11,11 @@ const requiredKeys = [
   ...REGION_KEYS,
   ...HISTORY_EVENTS.map(event => eventKey(event.year)),
   'history_era_bce', 'history_era_ce', 'history_unknown_rulers', 'history_ruler_uncertain',
-  'history_date_note_generic', 'history_summary_template'
+  'history_date_note_generic', 'history_summary_template', 'history_catalogue_scope',
+  'history_search', 'history_search_hint', 'history_scope', 'history_search_empty',
+  'history_scope_active', 'history_scope_all', 'history_research_badge', 'history_adapted',
+  'history_inventory', 'history_inventory_note', 'history_inventory_empty', 'history_export_detail',
+  'history_research_detail', 'history_dates_unknown', 'history_evidence_warning', 'history_reported_fields', 'history_genealogy_source', 'history_catalogue_incomplete'
 ];
 
 async function messagesFor(locale) {
@@ -38,8 +42,12 @@ test('translated history strings keep their placeholders and are not copied from
       assert.ok(messages.history_summary_template.includes(placeholder), locale + ' template lost ' + placeholder);
     }
     assert.ok(messages.history_era_ce.includes('{year}') && messages.history_era_bce.includes('{year}'), locale + ' era lost {year}');
-    if (locale === 'ms' || locale === 'fil' || locale === 'tet' || locale === 'pt-TL') continue;
-    for (const key of ['history_event_1928', 'history_event_1873']) {
+    for (const key of ['history_event_1928', 'history_event_1873',
+      'history_search', 'history_search_hint', 'history_scope', 'history_search_empty',
+      'history_scope_active', 'history_scope_all', 'history_research_badge', 'history_adapted',
+      'history_inventory', 'history_inventory_note', 'history_inventory_empty', 'history_export_detail',
+      'history_research_detail', 'history_dates_unknown', 'history_evidence_warning', 'history_reported_fields', 'history_genealogy_source', 'history_catalogue_incomplete']) {
+      if (key.startsWith('history_event_') && ['ms', 'fil', 'tet', 'pt-TL'].includes(locale)) continue;
       assert.notEqual(messages[key], english[key], locale + ' left English text in ' + key);
     }
   }
