@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { buildFatalErrorFallback, FATAL_KEYS } from '../../scripts/generate-fatal-error.mjs';
 
-test('the standalone error document stays synchronized with all 13 Inlang catalogs', async () => {
+test('the standalone error document stays synchronized with all 14 Inlang catalogs', async () => {
   const { html, script, translations, hash } = await buildFatalErrorFallback();
   assert.equal(html, await readFile(new URL('../../src/error.html', import.meta.url), 'utf8'));
-  assert.equal(Object.keys(translations).length, 13);
+  assert.equal(Object.keys(translations).length, 14);
   for (const [locale, copy] of Object.entries(translations)) {
     assert.deepEqual(Object.keys(copy).sort(), [...FATAL_KEYS].sort(), locale);
     assert.ok(FATAL_KEYS.every(key => copy[key].trim()), locale + ': nonempty fatal messages');

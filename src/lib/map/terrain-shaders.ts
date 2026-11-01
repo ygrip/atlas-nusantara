@@ -30,6 +30,14 @@ export const terrainFragment = /* glsl */ `
   uniform sampler2D detailIds;
   uniform vec4 detailBounds;
   uniform sampler2D palette;
+  uniform sampler2D historyIds;
+  uniform sampler2D historyPalette;
+  uniform sampler2D previousHistoryIds;
+  uniform sampler2D previousHistoryPalette;
+  uniform float historyMode;
+  uniform float historyMix;
+  uniform float indonesiaSplitY;
+  uniform float previousIndonesiaSplitY;
   uniform sampler2D reliefDetail;
   uniform vec3 skyLight;
   uniform vec3 groundLight;
@@ -80,6 +88,10 @@ export const terrainFragment = /* glsl */ `
       if (cityId > 0.5) id = cityId;
     }
     vec4 region = texture2D(palette, vec2((id + 0.5) / 256.0, 0.5));
+    float historyId = floor(texture2D(historyIds, uv).r * 255.0 + 0.5);
+    vec4 historyRegion = texture2D(historyPalette, vec2((historyId + 0.5) / 256.0, 0.5));
+    float previousHistoryId = floor(texture2D(previousHistoryIds, uv).r * 255.0 + 0.5);
+    vec4 previousHistoryRegion = texture2D(previousHistoryPalette, vec2((previousHistoryId + 0.5) / 256.0, 0.5));
     float metres = max(vElevation, 0.0);
 
     // Contour terms use derivatives, so they are computed before any branch.
@@ -108,8 +120,29 @@ export const terrainFragment = /* glsl */ `
     float rockAmount = smoothstep(0.22, 0.5, slope) * smoothstep(80.0, 700.0, metres);
     albedo = mix(albedo, srgb(vec3(0.5, 0.47, 0.44)), rockAmount * 0.75);
     float tint = region.a * 0.9;
-    if (id < 0.5) tint = 0.0;
+    if (id < 0.5 || historyMode > 0.5) tint = 0.0;
     albedo = mix(albedo, region.rgb, tint);
+    vec3 previousHistoryAlbedo = albedo;
+    float previousHistoryTint = previousHistoryRegion.a * historyMode;
+    bool previousIndonesia = previousHistoryRegion.r > 0.95 && previousHistoryRegion.g < 0.05 && previousHistoryRegion.b < 0.05;
+    if (historyMode > 0.5 && previousIndonesia && previousIndonesiaSplitY >= 0.0) {
+      vec3 previousFlagColor = vec3(1.0);
+      if (vPlane.y < previousIndonesiaSplitY) previousFlagColor = vec3(1.0, 0.0, 0.0);
+      previousHistoryAlbedo = mix(previousHistoryAlbedo, previousFlagColor, 0.92 * previousHistoryRegion.a);
+    } else {
+      previousHistoryAlbedo = mix(previousHistoryAlbedo, previousHistoryRegion.rgb, previousHistoryTint);
+    }
+    vec3 currentHistoryAlbedo = albedo;
+    float historyTint = historyRegion.a * historyMode;
+    bool indonesia = historyRegion.r > 0.95 && historyRegion.g < 0.05 && historyRegion.b < 0.05;
+    if (historyMode > 0.5 && indonesia && indonesiaSplitY >= 0.0) {
+      vec3 flagColor = vec3(1.0);
+      if (vPlane.y < indonesiaSplitY) flagColor = vec3(1.0, 0.0, 0.0);
+      currentHistoryAlbedo = mix(currentHistoryAlbedo, flagColor, 0.92 * historyRegion.a);
+    } else {
+      currentHistoryAlbedo = mix(currentHistoryAlbedo, historyRegion.rgb, historyTint);
+    }
+    albedo = mix(previousHistoryAlbedo, currentHistoryAlbedo, historyMix);
 
     // Beach above the waterline, wet and darker where the swash reaches.
     float beach = (1.0 - smoothstep(0.72, 0.92, vLand)) * (1.0 - smoothstep(4.0, 60.0, metres));

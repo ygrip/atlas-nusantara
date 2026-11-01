@@ -13,6 +13,7 @@
   <ul class="source-list">
     {#each sources as source}<li><a href={source.url} target="_blank" rel="noreferrer">{source.agency} ↗</a></li>{/each}
     <li><a href="https://data.humdata.org/dataset/cod-ab-idn" target="_blank" rel="noreferrer">BPS / OCHA COD-AB · CC BY 3.0 IGO ↗</a></li>
+    <li><a href="https://www.worldstatesmen.org/Indonesia.htm" target="_blank" rel="noreferrer">WorldStatesmen.org · © Ben Cahoon ↗</a></li>
     <li><a href="https://www.ncei.noaa.gov/products/etopo-global-relief-model" target="_blank" rel="noreferrer">ETOPO1 / NOAA NCEI · Public domain ↗</a></li>
   </ul>
   <h2>{m.terms_boundaries_title()}</h2>

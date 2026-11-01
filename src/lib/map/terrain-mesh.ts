@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Color, DataTexture, LinearFilter, Mesh, RGBAFormat, ShaderMaterial, type Texture, type Vector4 } from 'three';
+import { BufferAttribute, BufferGeometry, Color, DataTexture, LinearFilter, Mesh, NearestFilter, RedFormat, RGBAFormat, ShaderMaterial, type Texture, type Vector4 } from 'three';
 import { MAP_CENTER } from './geometry';
 import type { SharedUniforms } from './shared-uniforms';
 import { buildReliefDetail, type TerrainModel } from './terrain';
@@ -11,6 +11,8 @@ export interface RegionTextures {
   detailIds: Texture;
   detailBounds: Vector4;
   palette: Texture;
+  historyIds: Texture;
+  historyPalette: Texture;
 }
 
 const DESKTOP_COLUMNS = 1280;
@@ -91,6 +93,8 @@ export class TerrainSurface {
   readonly mesh: Mesh;
   private readonly material: ShaderMaterial;
   private readonly reliefTexture: DataTexture;
+  private readonly previousHistoryIds: DataTexture;
+  private readonly previousHistoryPalette: DataTexture;
 
   constructor(model: TerrainModel, shared: SharedUniforms, theme: MapTheme, textures: RegionTextures, compact: boolean) {
     let columns = DESKTOP_COLUMNS;
@@ -102,6 +106,13 @@ export class TerrainSurface {
     geometry.setAttribute('land', new BufferAttribute(grid.lands, 1));
     geometry.setIndex(new BufferAttribute(landIndices(grid), 1));
     this.reliefTexture = createReliefTexture(model);
+    const historyImage = textures.historyIds.image as { data: Uint8Array; width: number; height: number };
+    this.previousHistoryIds = new DataTexture(new Uint8Array(historyImage.data.length), historyImage.width, historyImage.height, RedFormat);
+    this.previousHistoryPalette = new DataTexture(new Uint8Array(256 * 4), 256, 1, RGBAFormat);
+    this.previousHistoryIds.magFilter = NearestFilter;
+    this.previousHistoryIds.minFilter = NearestFilter;
+    this.previousHistoryPalette.magFilter = NearestFilter;
+    this.previousHistoryPalette.minFilter = NearestFilter;
     this.material = new ShaderMaterial({
       vertexShader: terrainVertex,
       fragmentShader: terrainFragment,
@@ -111,6 +122,14 @@ export class TerrainSurface {
         detailIds: { value: textures.detailIds },
         detailBounds: { value: textures.detailBounds },
         palette: { value: textures.palette },
+        historyIds: { value: textures.historyIds },
+        historyPalette: { value: textures.historyPalette },
+        previousHistoryIds: { value: this.previousHistoryIds },
+        previousHistoryPalette: { value: this.previousHistoryPalette },
+        historyMode: { value: 0 },
+        historyMix: { value: 1 },
+        indonesiaSplitY: { value: -1 },
+        previousIndonesiaSplitY: { value: -1 },
         reliefDetail: { value: this.reliefTexture },
         skyLight: { value: new Color(theme.skyLight) },
         groundLight: { value: new Color(theme.groundLight) },
@@ -120,6 +139,36 @@ export class TerrainSurface {
     });
     this.mesh = new Mesh(geometry, this.material);
     this.mesh.renderOrder = 1;
+  }
+
+  setHistoryMode(enabled: boolean): void {
+    let value = 0;
+    if (enabled) value = 1;
+    this.material.uniforms.historyMode.value = value;
+  }
+
+  setIndonesiaSplitY(value: number): void {
+    this.material.uniforms.indonesiaSplitY.value = value;
+  }
+
+  captureHistoryFrame(historyIds: Texture, palette: Uint8Array): void {
+    const sourceIds = (historyIds.image as { data: Uint8Array }).data;
+    const previousIds = this.previousHistoryIds.image.data as Uint8Array;
+    previousIds.set(sourceIds);
+    this.previousHistoryIds.needsUpdate = true;
+    (this.previousHistoryPalette.image.data as Uint8Array).set(palette);
+    this.previousHistoryPalette.needsUpdate = true;
+    this.material.uniforms.previousIndonesiaSplitY.value = this.material.uniforms.indonesiaSplitY.value;
+  }
+
+  setHistoryBlend(value: number): void {
+    this.material.uniforms.historyMix.value = value;
+  }
+
+  createContextMesh(geometry: BufferGeometry): Mesh {
+    const mesh = new Mesh(geometry, this.material);
+    mesh.renderOrder = 1;
+    return mesh;
   }
 
   setTheme(theme: MapTheme): void {
@@ -136,5 +185,7 @@ export class TerrainSurface {
 
   dispose(): void {
     this.reliefTexture.dispose();
+    this.previousHistoryIds.dispose();
+    this.previousHistoryPalette.dispose();
   }
 }

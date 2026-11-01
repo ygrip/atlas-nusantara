@@ -13,6 +13,7 @@ The base map does not know about earthquake, mountain, volcano or landmark datas
 | Mountains | Category-coloured triangle pins in 2D/3D; details and photo fallback | BIG named mountains and A/B/C volcano classes |
 | Destinations | Province summary pins + photo gallery | Non-exhaustive 76-place starter selection; see [DESTINATIONS.md](DESTINATIONS.md) |
 | Local languages (`language`) | Panel and province heat map (`renderer: 'statistics'`): language count per province, ranking, language list | `static/data/observations/languages.json` from Badan Bahasa's Peta Bahasa; see [Local language data](#local-language-data) |
+| Historical empires (`history`) | Dated confidence-weighted SVG heat zones, year playback and timeline/polity panel (2D only) | Curated research gazetteer and sources; [HISTORY.md](HISTORY.md). Heat zones are not historical state borders. |
 | Population (`population`) | Panel only (`renderer: 'statistics'`): year picker, age/sex pyramid, five-year history table and line | Hand-maintained `static/data/observations/population.json` from BPS; see [Population data](#population-data) |
 
 Both layers read `static/data/observations/hazards.json`, written by the [hazard pipeline](HAZARD_PIPELINE.md) (`npm run snapshot:hazards`, CI job `hazard` every 25 minutes). Pins carry their own `color` and `symbol`. Events known only to province level are listed but not pinned. An empty snapshot is not proof of no incidents or low risk. InaRISK hazard polygons are still not connected.

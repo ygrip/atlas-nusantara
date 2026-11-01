@@ -3,7 +3,7 @@
 export const localeEnglishNames = {
   en: 'English', id: 'Indonesian', ms: 'Malay', fil: 'Filipino Tagalog',
   th: 'Thai', vi: 'Vietnamese', my: 'Burmese Myanmar', km: 'Khmer Cambodian',
-  lo: 'Lao', 'zh-SG': 'Chinese Mandarin', ta: 'Tamil', tet: 'Tetum', 'pt-TL': 'Portuguese'
+  lo: 'Lao', 'zh-SG': 'Chinese Mandarin', ta: 'Tamil', tet: 'Tetum', 'pt-TL': 'Portuguese', ja: 'Japanese'
 } as const;
 
 // Native display names avoid showing every choice in English.
@@ -20,5 +20,6 @@ export const localeNames = {
   'zh-SG': '简体中文',
   ta: 'தமிழ்',
   tet: 'Tetun',
-  'pt-TL': 'Português'
+  'pt-TL': 'Português',
+  ja: '日本語'
 } as const;

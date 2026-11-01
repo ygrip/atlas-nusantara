@@ -10,7 +10,7 @@
   import { m } from '$lib/i18n/messages';
 
   let { onshare }: { onshare: () => void } = $props();
-  const flags: Record<string, string> = { en: '🇬🇧', id: '🇮🇩', ms: '🇲🇾', fil: '🇵🇭', th: '🇹🇭', vi: '🇻🇳', my: '🇲🇲', km: '🇰🇭', lo: '🇱🇦', 'zh-SG': '🇸🇬', ta: '🇸🇬', tet: '🇹🇱', 'pt-TL': '🇹🇱' };
+  const flags: Record<string, string> = { en: '🇬🇧', id: '🇮🇩', ms: '🇲🇾', fil: '🇵🇭', th: '🇹🇭', vi: '🇻🇳', my: '🇲🇲', km: '🇰🇭', lo: '🇱🇦', 'zh-SG': '🇸🇬', ta: '🇸🇬', tet: '🇹🇱', 'pt-TL': '🇹🇱', ja: '🇯🇵' };
   let root: HTMLDivElement;
   let scrim: HTMLDivElement;
   let languageDialog: HTMLDialogElement;

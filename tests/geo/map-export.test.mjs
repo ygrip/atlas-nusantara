@@ -75,3 +75,9 @@ test('pin dataset exports every pin with the overlay source', () => {
   assert.equal(result.rows[0].category, null);
   assert.equal(result.sourceUrl, 'https://example.org');
 });
+
+test('structured XML accepts original camelCase source keys but rejects markup in element names', () => {
+  const structured = { ...dataset, document: { sourceName: 'A & B', features: [{ geometry: null }] } };
+  assert.ok(toXml(structured).includes('<sourceName>A &amp; B</sourceName>'));
+  assert.throws(() => toXml({ ...dataset, document: { 'bad><injected': 'value' } }), /Invalid structured XML element/);
+});

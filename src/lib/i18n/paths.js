@@ -3,7 +3,7 @@
  * Keep these codes aligned with project.inlang/settings.json (a test enforces it).
  */
 export const BASE_LOCALE = 'en';
-export const PREFIXED_LOCALES = ['id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
+export const PREFIXED_LOCALES = ['id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL', 'ja'];
 
 const localePrefix = new RegExp('^/(' + PREFIXED_LOCALES.join('|') + ')(?=/|$)');
 

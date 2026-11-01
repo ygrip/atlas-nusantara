@@ -1,7 +1,7 @@
 import { expect, test, type Page } from './fixtures';
 import { choosePlace, openProvinceDetails } from './layers';
 
-const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL'];
+const locales = ['en', 'id', 'ms', 'fil', 'th', 'vi', 'my', 'km', 'lo', 'zh-SG', 'ta', 'tet', 'pt-TL', 'ja'];
 
 async function useEnglish(page: Page) {
 }
@@ -37,7 +37,7 @@ test.describe('2025 atlas and locations', () => {
     await expect(page.locator('.hero-copy')).toContainText('Get to know Indonesia');
     await expect(page.locator('.hero-copy .notice')).toHaveCount(0);
     await page.getByRole('button', { name: 'Choose your language', exact: true }).click();
-    await expect(page.locator('.language-grid button')).toHaveCount(13);
+    await expect(page.locator('.language-grid button')).toHaveCount(14);
     await page.keyboard.press('Escape');
     await expect(page.locator('.language-dialog')).toBeHidden();
     // The separate province-selection smoke test already verifies 2D map switching.
