@@ -10,9 +10,9 @@
   import { HISTORY_COLORS, historyRadiusDegrees, influenceOpacity, type HistoryZoneMarker } from '$lib/map/history-map';
   import { CLAY_PIN_VIEWBOX, clayPinInner, clayPinKey } from '$lib/map/clay-pin';
 
-  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap, historyZones }: {
+  let { geometry, label, selectedCode, onselect, onpin, onzoom, overlay, projection, heatmap, historyZones, historyFocusId }: {
     geometry: GeometryPackage; label: string; selectedCode?: string; onselect: (code: string) => void; onpin?: (pin: MapPin) => void; onzoom?: (scale: number) => void;
-    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap; historyZones?: HistoryZoneMarker[];
+    overlay?: PointOverlay; projection?: GeometryPackage['projection']; heatmap?: RegionHeatmap; historyZones?: HistoryZoneMarker[]; historyFocusId?: string;
   } = $props();
 
   const MAX_SCALE = 8;
@@ -34,15 +34,40 @@
   });
   /** Side of one clay marker in map units; the shape fills about two thirds of it. */
   const pinSize = $derived(box[2] * 0.03);
+  /** Halos are drawn a little larger than the schematic radius so the smallest courts stay visible. */
+  const HALO_VISUAL_SCALE = 1.35;
   const historicalHeat = $derived.by(() => {
     if (!historyZones || !projection) return [];
     return historyZones.map(zone => {
       const point = projectLonLat(projection, zone.lon, zone.lat);
       const edge = projectLonLat(projection, zone.lon + historyRadiusDegrees(zone.radiusKm, zone.lat), zone.lat);
-      const radius = Math.max(box[2] * 0.006, Math.min(box[2] * 0.2, Math.abs(edge.x - point.x)));
-      return { key: zone.id + '-' + zone.lon + '-' + zone.lat, x: point.x, y: point.y,
-        radius, color: HISTORY_COLORS[zone.category], opacity: influenceOpacity(zone.confidence) };
+      const rawRadius = Math.abs(edge.x - point.x) * HALO_VISUAL_SCALE;
+      const radius = Math.max(box[2] * 0.012, Math.min(box[2] * 0.2, rawRadius));
+      return { key: zone.id + '-' + zone.lon + '-' + zone.lat, polityId: zone.id, name: zone.name, x: point.x, y: point.y,
+        radius, color: HISTORY_COLORS[zone.category], opacity: influenceOpacity(zone.confidence),
+        isCentre: zone.confidence === 'attested-centre' };
     });
+  });
+  /** One label per polity at its first zone; the focused polity wins, crowded neighbours are skipped. */
+  const historyLabels = $derived.by(() => {
+    const minDx = box[2] * 0.05;
+    const minDy = box[2] * 0.014;
+    const firstZoneByPolity = new Map<string, (typeof historicalHeat)[number]>();
+    for (const mark of historicalHeat) {
+      if (!firstZoneByPolity.has(mark.polityId)) firstZoneByPolity.set(mark.polityId, mark);
+    }
+    const candidates = [...firstZoneByPolity.values()].sort((a, b) =>
+      Number(b.polityId === historyFocusId) - Number(a.polityId === historyFocusId));
+    const placed: typeof candidates = [];
+    // Keep the centred text inside the viewBox: a label is about 0.1 of the map wide.
+    const edge = box[2] * 0.07;
+    for (const candidate of candidates) {
+      const x = Math.min(box[0] + box[2] - edge, Math.max(box[0] + edge, candidate.x));
+      const mark = { ...candidate, x };
+      const crowded = placed.some(other => Math.abs(other.x - mark.x) < minDx && Math.abs(other.y - mark.y) < minDy);
+      if (!crowded) placed.push(mark);
+    }
+    return placed;
   });
   const symbolsId = $props.id();
   interface PinKind { id: string; symbol: PinSymbol; color: string }
@@ -238,6 +263,15 @@
         <g class="history-heat" aria-hidden="true">
           {#each historicalHeat as mark (mark.key)}
             <circle cx={mark.x} cy={mark.y} r={mark.radius} opacity={mark.opacity} fill={'url(#history-' + symbolsId + '-' + mark.key.replace(/[^a-z0-9-]/gi, '-') + ')'} />
+            {#if mark.isCentre}
+              <circle class="history-centre" cx={mark.x} cy={mark.y} r={box[2] * 0.0022} fill={mark.color} />
+            {/if}
+            {#if mark.polityId === historyFocusId}
+              <circle class="history-focus-ring" cx={mark.x} cy={mark.y} r={mark.radius * 0.75} fill="none" stroke={mark.color} stroke-width={box[2] * 0.0018} stroke-dasharray={box[2] * 0.006 + ' ' + box[2] * 0.004} />
+            {/if}
+          {/each}
+          {#each historyLabels as mark (mark.polityId)}
+            <text class="history-label" class:focused={mark.polityId === historyFocusId} x={mark.x} y={mark.y} text-anchor="middle" font-size={box[2] * 0.0105}>{mark.name.replace(/\s*\(.*\)$/, '')}</text>
           {/each}
         </g>
       {/if}
@@ -271,6 +305,10 @@
   path:hover, path:focus { filter: brightness(1.08) saturate(1.2); outline: none; }
   path.selected { fill: var(--accent); stroke: var(--surface); stroke-width: 1.3; }
   .history-heat { pointer-events:none; }
+  .history-centre { stroke:#fffaf2; stroke-width:1.2px; }
+  .history-label { fill:#2b2420; stroke:#fffaf2; stroke-width:3px; paint-order:stroke; stroke-linejoin:round; font-weight:700; opacity:.85; }
+  .history-label.focused { font-weight:900; opacity:1; }
+  :global(:root[data-theme='dark']) .history-label { fill:#f4ede4; stroke:#1d1916; }
   .overlay-pin { cursor:pointer; }
   .overlay-pin use { transition: filter 140ms; }
   .overlay-pin:hover use, .overlay-pin:focus use { filter: brightness(1.12) drop-shadow(0 0 4px #ffffffcc); }

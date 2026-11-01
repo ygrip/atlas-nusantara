@@ -60,3 +60,8 @@ Collected by the [hazard pipeline](HAZARD_PIPELINE.md) into one dated snapshot:
 - **BMKG CAP** nowcast warnings, <https://github.com/infoBMKG/data-cap>: see [BMKG_CAP.md](BMKG_CAP.md).
 
 InaRISK hazard polygons and BNPB historical archives beyond the latest DIBI rows remain unconnected.
+
+## Historical empires (pre-1945)
+
+- Polity records cite their own sources; see [HISTORY.md](HISTORY.md).
+- **WorldStatesmen.org** (© Ben Cahoon, https://www.worldstatesmen.org/Indonesia.htm and subpages `Indonesia_princely_states1.html`, `Indonesia_princely_states2.html`): a reference for ruler reign years and traditional-state dates. The owner requests permission before reuse or linking. Permission is not confirmed; WorldStatesmen flag images are not displayed.

@@ -7,7 +7,7 @@ import {
 import { influenceOpacity, historyRadiusDegrees } from '../../src/lib/map/history-map.ts';
 
 test('historical gazetteer has unique validated records and historical citations', () => {
-  assert.ok(HISTORICAL_POLITIES.length >= 30);
+  assert.ok(HISTORICAL_POLITIES.length >= 90);
   const ids = HISTORICAL_POLITIES.map(p => p.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const p of HISTORICAL_POLITIES) {
@@ -44,4 +44,26 @@ test('rulers are selected by contemporaneous dates, without inventing reigns', (
   assert.ok(majapahit);
   assert.ok(historyRulersAt(majapahit, 1370).some(r => r.name === 'Hayam Wuruk'));
   assert.equal(historyRulersAt(majapahit, 1700).length, 0);
+});
+
+const REGIONS = ['sumatra','java','bali','borneo','sulawesi','nusa-tenggara','maluku','papua','malay-peninsula','archipelago'];
+const GENERIC_SOURCES = ['https://id.wikipedia.org/wiki/Sejarah_Nusantara', 'https://geoservices.big.go.id/'];
+
+test('every record has a region, bilingual place text and a record-specific source', () => {
+  for (const p of HISTORICAL_POLITIES) {
+    assert.ok(REGIONS.includes(p.region), 'bad region: ' + p.id);
+    assert.ok(p.place.trim() && p.placeId.trim(), 'missing place text: ' + p.id);
+    const specific = p.sources.filter(url => !GENERIC_SOURCES.some(generic => url.startsWith(generic)));
+    assert.ok(specific.length >= 1, 'only generic sources: ' + p.id);
+    if (p.dateNote) assert.ok(p.dateNote.en.trim() && p.dateNote.id.trim(), 'dateNote needs en and id: ' + p.id);
+  }
+});
+
+test('zone centres stay within the Nusantara bounding box and every region is represented', () => {
+  for (const p of HISTORICAL_POLITIES) for (const z of p.zones) {
+    assert.ok(z.lon >= 95 && z.lon <= 141 && z.lat >= -11 && z.lat <= 6, 'zone outside the archipelago: ' + p.id);
+  }
+  for (const region of REGIONS) {
+    assert.ok(HISTORICAL_POLITIES.some(p => p.region === region), 'no polity in region ' + region);
+  }
 });

@@ -2,28 +2,43 @@
   import { onMount } from 'svelte';
   import { Download, Pause, Play, SkipBack, SkipForward } from 'lucide-svelte';
   import { m } from '$lib/i18n/messages';
-  import { getLocale } from '$lib/paraglide/runtime.js';
-  import { localizedHistorySummary } from '$lib/data/history-summary';
+  import {
+    historyEventLabel, historyPeriodLabel, historyYearLabel, localizedDateNote, localizedHistorySummary, localizedPlace, regionLabel
+  } from '$lib/data/history-summary';
   import {
     HISTORICAL_POLITIES, HISTORY_EVENTS, HISTORY_MIN_YEAR, HISTORY_MAX_YEAR,
-    historyActive, historyRulersAt, historyCategoryAt
+    historyActive, historyRulersAt, historyCategoryAt, historyMostProminent
   } from '$lib/data/history';
 
-  let { year = $bindable(682) }: { year: number } = $props();
+  let { year = $bindable(682), selectedId = $bindable() }: { year: number; selectedId?: string } = $props();
   let playing = $state(false);
   let focusId = $state<string>();
   let showAll = $state(false);
   const active = $derived(historyActive(year));
-  const selected = $derived(active.find(item => item.id === focusId) ?? active[0]);
+  const selected = $derived(active.find(item => item.id === focusId) ?? historyMostProminent(year));
   const nearest = $derived([...HISTORY_EVENTS].reverse().find(event => event.year <= year));
+  $effect(() => { selectedId = selected?.id; });
   const currentRulers = $derived(selected ? historyRulersAt(selected, year) : []);
+
+  /** Reduced-motion readers get one slow step per milestone instead of a fast 25-year sweep. */
+  function prefersReducedMotion(): boolean {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function advanceOneStep() {
+    if (prefersReducedMotion()) {
+      const nextMilestone = HISTORY_EVENTS.map(event => event.year).find(value => value > year);
+      year = nextMilestone ?? HISTORY_MAX_YEAR;
+    } else {
+      year = Math.min(HISTORY_MAX_YEAR, year + 25);
+    }
+    if (year >= HISTORY_MAX_YEAR) playing = false;
+  }
 
   $effect(() => {
     if (!playing) return;
-    const id = window.setInterval(() => {
-      year = Math.min(HISTORY_MAX_YEAR, year + 25);
-      if (year >= HISTORY_MAX_YEAR) playing = false;
-    }, 520);
+    const delayMs = prefersReducedMotion() ? 1800 : 520;
+    const id = window.setInterval(advanceOneStep, delayMs);
     return () => window.clearInterval(id);
   });
 
@@ -102,7 +117,7 @@
       <h3>{m.history_title()}</h3>
       <p>{m.history_intro()}</p>
     </div>
-    <span class="era">{year < 0 ? Math.abs(year) + ' BCE' : year + ' CE'}</span>
+    <span class="era">{historyYearLabel(year)}</span>
   </header>
 
   <div class="playback" role="group" aria-label={m.history_timeline()}>
@@ -113,13 +128,13 @@
     <label class="year-slider">
       <span class="sr-only">{m.history_year()}</span>
       <input type="range" min={HISTORY_MIN_YEAR} max={HISTORY_MAX_YEAR} step="1" value={year} oninput={event => { year = Number(event.currentTarget.value); playing = false; }} aria-label={m.history_year()} />
-      <span class="bounds"><span>400 BCE</span><span>1944 CE</span></span>
+      <span class="bounds"><span>{historyYearLabel(HISTORY_MIN_YEAR)}</span><span>{historyYearLabel(HISTORY_MAX_YEAR)}</span></span>
     </label>
     <button type="button" onclick={() => jump(1)} title={m.history_next()} aria-label={m.history_next()}><SkipForward size={18} /></button>
   </div>
 
   {#if nearest}
-    <p class="milestone" aria-live="off"><strong>{nearest.year < 0 ? Math.abs(nearest.year) + ' BCE' : nearest.year}</strong> · {getLocale() === 'id' || getLocale() === 'ms' ? nearest.id : nearest.en}</p>
+    <p class="milestone" aria-live="off"><strong>{historyYearLabel(nearest.year)}</strong> · {historyEventLabel(nearest.year)}</p>
   {/if}
 
   <div class="legend" aria-label={m.history_legend()}>
@@ -154,17 +169,17 @@
     </div>
     <div class="polity-detail">
       {#if selected}
-        <h4>{selected.name} <small>{selected.from}–{selected.to} CE</small></h4>
-        <p class="place">{selected.place}</p>
+        <h4>{selected.name} <small>{historyPeriodLabel(selected.from, selected.to)}</small></h4>
+        <p class="place">{regionLabel(selected.region)}{#if localizedPlace(selected)}{' · ' + localizedPlace(selected)}{/if}</p>
         <p class="summary">{localizedHistorySummary(selected)}</p>
         <h5>{m.history_rulers()}</h5>
         {#if currentRulers.length}<p class="current-ruler">{currentRulers.map(r => r.name).join(' · ')}</p>{/if}
         {#if selected.rulers.length}
           <ul>{#each selected.rulers as ruler (ruler.name)}
-            <li>{ruler.name}{#if ruler.from !== undefined} ({ruler.from}–{ruler.to ?? '?'}){/if}{#if ruler.note} <small>{ruler.note}</small>{/if}</li>
+            <li>{ruler.name}{#if ruler.from !== undefined}{' '}({ruler.from}–{ruler.to ?? '?'}){/if}{#if ruler.uncertain} <small>{m.history_ruler_uncertain()}</small>{/if}</li>
           {/each}</ul>
         {:else}<p>{m.history_no_rulers()}</p>{/if}
-        {#if selected.dateNote}<p class="caution">{selected.dateNote}</p>{/if}
+        {#if selected.dateNote}<p class="caution">{localizedDateNote(selected)}</p>{/if}
         <h5>{m.history_sources()}</h5>
         <ul class="sources">{#each selected.sources as url (url)}<li><a href={url} target="_blank" rel="noreferrer">{new URL(url).hostname}</a></li>{/each}</ul>
       {:else}
@@ -201,6 +216,7 @@
   select{width:100%;padding:11px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text)}
   h4 small{font-weight:600;font-size:.77rem;color:var(--muted)}.place{font-weight:800}
   .summary{color:var(--text)}.polity-detail ul{padding-left:19px;margin:0;font-size:.8rem;line-height:1.75;color:var(--text)}
+  .polity-detail ul:not(.sources){max-height:14rem;overflow:auto}
   .polity-detail li small{color:var(--muted)}.sources{display:flex;flex-wrap:wrap;gap:6px 24px}.sources a{color:var(--accent-strong);overflow-wrap:anywhere}
   .current-ruler{font-weight:900;color:var(--text)}.downloads{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
   .downloads small{flex-basis:100%;font-size:.73rem;color:var(--muted)}

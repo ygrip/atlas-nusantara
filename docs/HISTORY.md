@@ -1,6 +1,6 @@
 # Historical empires layer (pre-1945)
 
-Atlas Nusantara's **History** layer is a curated and attributable introduction to Nusantara's pre-independence political history. This is not an exhaustive national history and does not claim that every named dynasty formed part of modern Indonesia. The maritime history of Nusantara also involves present-day Malaysia, Brunei and other regions.
+Atlas Nusantara's **History** layer is a curated and attributable catalogue of about 100 **major** Nusantara polities before independence, across Sumatra, Java, Bali, Borneo, Sulawesi, Nusa Tenggara, Maluku, Papua and the Malay Peninsula. It is **not** an exhaustive census: the Indonesian Wikipedia list of kingdoms names roughly 830 entries, most of them village-scale vassal domains (see *Inventory gap* below). It does not claim that every named dynasty formed part of modern Indonesia. The maritime history of Nusantara also involves present-day Malaysia, Brunei and other regions.
 
 ## What readers can do
 
@@ -23,7 +23,7 @@ Circles may overlap. Neither a country's current provincial boundaries nor its c
 
 ## Historical chronology and source criticism
 
-The data in `src/lib/data/history.ts` is **hand-edited**: each record has a stable ID, approximate start/end years, tradition, a named region, short original EN/ID narratives, named rulers (some with known dates), dated schematic zones, source URLs, and optional chronographic notes. Colonial entities are explicitly marked separately and are not grouped with dynasties.
+The core records in `src/lib/data/history.ts` and the extended gazetteer in `src/lib/data/history-more.ts` are **hand-edited**: each record has a stable ID, approximate start/end years, tradition, an island `region` (localized in all locales), `place` and `placeId` text, short original EN/ID narratives, named rulers (some with known dates), dated schematic zones, source URLs, and optional chronographic notes. Colonial entities are explicitly marked separately and are not grouped with dynasties.
 
 The 2019 **Kementerian Pendidikan dan Kebudayaan** volume *Kerajaan-kerajaan Nusantara dalam sejarah: Sumatera* (Agus Aris Munandar et al.) is a useful scholarly starting point for Sumatran polities: https://repositori.kemendikdasmen.go.id/23858/. Access and usage conditions of the book are **CC BY-NC 4.0**, so the book itself and its illustrations are **not bundled** in this repository.
 
@@ -58,3 +58,29 @@ Editorial source-specific research notes use Indonesian and English originals. T
 - The historical overlay renders blended SVG circles projected through the same atlas projection as other markers; it is visually different from the current province choropleth and is accessible as a textual ruler/period list outside the SVG.
 - Playback stops when the tab is hidden. Users can scrub directly or jump to milestones. Browser reduced-motion settings are respected by existing map controls.
 - The **current** animated history displays one editorial heat-map approximation for each active polity, not a reconstructed annual historical border. Do not market it as an exact territorial animation.
+
+## Inventory gap (research)
+
+The Indonesian Wikipedia *Daftar kerajaan yang pernah ada di Nusantara* lists hundreds of candidate entries. This is a starting point, not an independently verified census: many entries are village-scale or vassal domains, and names can refer to the same polity. Each candidate needs record-specific evidence, dates and editorial review before inclusion.
+
+## Source quality (known limit)
+
+Every record cites at least one record-specific URL (a polity article or institutional page). Many extended-gazetteer records cite **only encyclopedia articles** that were opened during compilation; only some add Kemendikdasmen, Balai Arkeologi or museum sources. Dates that a source gives only as a century or tradition use the earliest/latest sourced year and carry a bilingual `dateNote`. A specialist should review the extended records before the layer is presented as authoritative.
+
+## Localization
+
+- UI strings, island regions, milestone events, era formats (`400 BCE`/`西暦…`) and the summary template exist in all 14 locales (`tests/i18n/history-messages.test.mjs`).
+- Source-specific narratives and `dateNote` text exist in Indonesian and English only. Other locales receive a translated overview (name, region, period, rulers) and a neutral date caution. Polity and ruler names stay in their Latin-script original.
+- Native-speaker review of the machine-assisted translations (especially Burmese, Khmer, Lao, Tamil, Tetum and Japanese) is still open.
+
+## WorldStatesmen.org (rulers, capitals, flags)
+
+[WorldStatesmen.org](https://www.worldstatesmen.org/Indonesia.htm) (© Ben Cahoon) and its subpages [Traditional States part 1](https://www.worldstatesmen.org/Indonesia_princely_states1.html) and [part 2](https://www.worldstatesmen.org/Indonesia_princely_states2.html) are used as a **reference source** for:
+
+- reign start and end years of rulers of traditional states and of the Dutch East India Company governors-general, with reign years only (names and years are facts; the site's prose is not copied);
+- capitals and the existence dates of Dutch-era traditional states;
+- candidate historical flag images, which are **not displayed** because permission has not been confirmed.
+
+**Permission:** the site's introduction asks that anyone wanting to use its material, or link to it, contact the owner for permission. The atlas cites the site where referenced, but credit is not permission. **Before release, obtain the owner's permission or remove the WorldStatesmen source entries and material derived from them.**
+
+**Flags:** No WorldStatesmen images are displayed or copied. Obtain permission or find independently licensed, historically verified images before adding flags.

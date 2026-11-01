@@ -19,8 +19,8 @@ test.describe('crawlable static pages', () => {
       await expect(page.locator('.hero-copy p')).toHaveText(copy.atlas_intro);
       await expect(page.locator('.hero-tagline')).toHaveText(copy.og_headline);
       await expect(page.locator('.animated-number').first()).toHaveText(new Intl.NumberFormat(locale).format(38));
-      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(13);
-      await expect(page.locator('meta[property="og:locale:alternate"]')).toHaveCount(12);
+      await expect(page.locator('link[rel="alternate"][hreflang]')).toHaveCount(settings.locales.length);
+      await expect(page.locator('meta[property="og:locale:alternate"]')).toHaveCount(settings.locales.length - 1);
       const structuredData = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '{}');
       expect(structuredData).toMatchObject({ inLanguage: locale, author: { name: 'ygrip' } });
       expect(Number.isNaN(Date.parse(structuredData.dateModified))).toBe(false);

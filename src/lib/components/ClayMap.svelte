@@ -24,13 +24,14 @@
   import type { RegionHeatmap } from '$lib/map/heatmap';
   import type { HistoryZoneMarker } from '$lib/map/history-map';
 
-  let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, onweather, activeLayer = 'warning', overlay, heatmap, historyZones, geometryUnavailable = false }: {
+  let { label, national, detail, openProvince, selectedCode, onprovince, oncity, onselect, onweather, activeLayer = 'warning', overlay, heatmap, historyZones, historyFocusId, geometryUnavailable = false }: {
     geometryUnavailable?: boolean;
     activeLayer?: string;
     overlay?: PointOverlay;
     /** Province colours for statistics layers such as population. */
     heatmap?: RegionHeatmap;
     historyZones?: HistoryZoneMarker[];
+    historyFocusId?: string;
     label: string;
     national?: GeometryPackage;
     detail?: GeometryPackage;
@@ -569,7 +570,7 @@
     {#if show2d}
       <div class="view-pane pane-2d" class:overlay={show3d} class:entering={transition === 'to2d'} class:folding={transition === 'to3d' && sceneRevealed} bind:this={pane2dElement}>
       {#if webglFailed}<p class="map-notice" role="status">{m.map_webgl_unavailable()}</p>{/if}
-      {#if svgGeometry}<SvgMap bind:this={svgMap} onzoom={scale => { svgScale = scale; }} geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} {heatmap} onpin={handlePin} projection={national?.projection} {historyZones} />{/if}
+      {#if svgGeometry}<SvgMap bind:this={svgMap} onzoom={scale => { svgScale = scale; }} geometry={svgGeometry} {label} {selectedCode} {onselect} overlay={displayedOverlay} {heatmap} onpin={handlePin} projection={national?.projection} {historyZones} {historyFocusId} />{/if}
       {#if heatmap && !show3d}
         <!-- The 3D map key is not on screen in 2D, so the heat colours get their own key here. -->
         <div class="heat-key" role="group" aria-label={heatmap.title}>

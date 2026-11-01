@@ -29,7 +29,7 @@
   import { populationHeatmap } from '$lib/data/population-heatmap';
   import { loadLanguages, type LanguageData } from '$lib/data/languages';
   import { languageHeatmap } from '$lib/data/language-heatmap';
-  import { historyZonesAt } from '$lib/data/history';
+  import type { HistoryZoneMarker } from '$lib/map/history-map';
   import type { RegionHeatmap } from '$lib/map/heatmap';
 
   /** Layer panels are downloaded when their layer is chosen, so the first page load does not carry them. */
@@ -42,7 +42,15 @@
   /** Year shown by the population heat map; the newest year when not set. */
   export let populationYear: number | undefined = undefined;
   export let historyYear = 682;
-  $: historyZones = layer === 'history' ? historyZonesAt(historyYear) : undefined;
+  export let historyFocusId: string | undefined = undefined;
+  /** The gazetteer is large, so it loads only when the History layer is opened. */
+  let historyZonesAt: ((year: number) => HistoryZoneMarker[]) | undefined;
+  $: if (layer === 'history' && !historyZonesAt) void loadHistoryData();
+  $: historyZones = layer === 'history' && historyZonesAt ? historyZonesAt(historyYear) : undefined;
+  async function loadHistoryData() {
+    const module = await import('$lib/data/history');
+    historyZonesAt = module.historyZonesAt;
+  }
   let populationData: PopulationData | undefined;
   $: if (layer === 'population' && !populationData) void ensurePopulation();
   let languageData: LanguageData | undefined;
@@ -621,7 +629,7 @@
   <div class="atlas-body">
     <div class="atlas-view">
       <ClayMap bind:this={clayMap} label={province?.name ?? m.level_national()} {national} {detail} openProvince={province?.code} selectedCode={city?.code}
-        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} {historyZones} geometryUnavailable={geometryLoaded && !national} />
+        onselect={mapSelect} onprovince={openProvince} oncity={selectMapCity} onweather={handleWeather} activeLayer={layer} overlay={activeOverlay} {heatmap} {historyZones} {historyFocusId} geometryUnavailable={geometryLoaded && !national} />
       {#if layer !== 'history'}<div class="atlas-actions"><DataExport buildDataset={buildExportDataset} /></div>{/if}
       {#if layer === 'mountains'}
         <p class="clay-note"><a href="https://geoservices.big.go.id/gis/rest/services/PTRA/Atlas_250K_NKRI/MapServer" target="_blank" rel="noreferrer">BIG Atlas Nasional ↗</a> · {m.mountain_coverage()}</p>

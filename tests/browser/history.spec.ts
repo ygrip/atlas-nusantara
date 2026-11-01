@@ -17,5 +17,7 @@ test('historical timeline loads lazily, scrubs major eras and exposes sourced do
   await expect(panel.getByRole('button', { name: 'Download JSON' })).toBeVisible();
   await expect(panel.getByRole('button', { name: 'Download CSV' })).toBeVisible();
   await expect(page.locator('.atlas-map .history-heat circle').first()).toBeVisible();
+  await expect(page.locator('.atlas-map .history-label').first()).toBeVisible();
+  await expect(page.locator('.atlas-map .history-label.focused')).toHaveCount(1);
   await expect(page.getByRole('button', { name: '3D', exact: true })).toBeDisabled();
 });
