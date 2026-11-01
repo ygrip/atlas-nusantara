@@ -23,6 +23,7 @@
   import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle, Expand, X, PanelRightOpen, PanelRightClose, PanelBottomOpen, PanelBottomClose } from 'lucide-svelte';
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
+  import { cancelImmersiveMotion, playEnter, playExit, type Box } from '$lib/atlas/immersive-motion';
   import { DRAWER_DESKTOP_QUERY, escapeBelongsToTarget, isModalDialogOpen, setPageImmersive } from '$lib/atlas/immersive';
   import '$lib/atlas/immersive.css';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
@@ -147,13 +148,18 @@
   /** Height the section had before it left the page flow, so the sections below do not jump while the atlas covers them. */
   let placeholderHeight: number | undefined;
   let drawerOpen = true;
+  /** `immersive` follows the history entry. `phase` also covers the exit animation, which runs after the entry is already gone. */
+  type Phase = 'closed' | 'open' | 'closing';
+  let phase: Phase = 'closed';
+  /** Where the map sat in the page, relative to the section, so the exit can shrink back onto it. */
+  let mapOffset: Box | undefined;
   $: immersive = $page.state.atlasImmersive === true;
-  $: if (mounted) setPageImmersive(immersive);
-  $: placeholderMinHeight = placeholderHeightStyle(immersive, placeholderHeight);
-  $: fullscreenLabel = fullscreenLabelFor(immersive, $page.url);
+  $: shown = phase !== 'closed';
+  $: if (mounted) void followHistory(immersive);
+  $: if (mounted) setPageImmersive(shown);
+  $: placeholderMinHeight = placeholderHeightStyle(shown, placeholderHeight);
 
-  /** The URL argument makes the label follow a change of language, like the other computed labels on the page. */
-  function fullscreenLabelFor(on: boolean, _url: URL): string {
+  function fullscreenLabelFor(on: boolean): string {
     if (on) return m.atlas_fullscreen_exit();
     return m.atlas_fullscreen_enter();
   }
@@ -163,14 +169,58 @@
     return height + 'px';
   }
 
+  function mapBox(): Box | undefined {
+    const section = atlasSection?.getBoundingClientRect();
+    if (!section || !mapOffset) return undefined;
+    return { top: section.top + mapOffset.top, left: section.left + mapOffset.left, width: mapOffset.width, height: mapOffset.height };
+  }
+
+  function rememberMapPlace() {
+    const section = atlasSection?.getBoundingClientRect();
+    const map = atlasSection?.querySelector('.atlas-view')?.getBoundingClientRect();
+    if (!section || !map) {
+      mapOffset = undefined;
+      return;
+    }
+    mapOffset = { top: map.top - section.top, left: map.left - section.left, width: map.width, height: map.height };
+  }
+
+  function shellParts() {
+    const shell = atlasSection?.querySelector<HTMLElement>('.atlas-shell') ?? null;
+    const bar = atlasSection?.querySelector<HTMLElement>('.section-heading') ?? null;
+    const map = atlasSection?.querySelector<HTMLElement>('.atlas-view') ?? null;
+    return { shell, bar, map };
+  }
+
+  async function followHistory(on: boolean) {
+    if (on) {
+      cancelImmersiveMotion();
+      phase = 'open';
+      await tick();
+      const { shell, bar, map } = shellParts();
+      const from = mapBox();
+      if (shell && from) await playEnter(shell, bar, map, from);
+      return;
+    }
+    if (phase !== 'open') return;
+    phase = 'closing';
+    const { shell, bar, map } = shellParts();
+    const to = mapBox();
+    if (shell && to) await playExit(shell, bar, map, to);
+    if (phase !== 'closing') return;
+    phase = 'closed';
+    placeholderHeight = undefined;
+    cancelImmersiveMotion();
+  }
+
   function enterImmersive() {
     placeholderHeight = atlasSection?.offsetHeight;
+    rememberMapPlace();
     drawerOpen = window.matchMedia(DRAWER_DESKTOP_QUERY).matches;
     pushState('', { atlasImmersive: true });
   }
 
   function exitImmersive() {
-    placeholderHeight = undefined;
     history.back();
   }
 
@@ -248,7 +298,7 @@
       <NationalStats />
     </section>
 
-    <section id="atlas" class="atlas-section" class:immersive aria-labelledby="atlas-heading" bind:this={atlasSection} style:min-height={placeholderMinHeight}>
+    <section id="atlas" class="atlas-section" class:immersive={shown} aria-labelledby="atlas-heading" bind:this={atlasSection} style:min-height={placeholderMinHeight}>
       <div class="atlas-shell">
       <div class="section-heading">
         <div class="atlas-heading-text">
@@ -260,7 +310,7 @@
         </div>
         <div class="atlas-tools">
           <LayerPicker {layers} value={activeLayer} onchange={chooseLayer} />
-          {#if immersive}
+          {#if shown}
             <button type="button" class="atlas-panel-toggle" aria-pressed={drawerOpen} aria-controls="atlas-stage" aria-label={m.atlas_panel_toggle()} title={m.atlas_panel_toggle()} onclick={() => { drawerOpen = !drawerOpen; }}>
               {#if drawerOpen}
                 <PanelRightClose class="panel-icon-side" size={22} aria-hidden="true" /><PanelBottomClose class="panel-icon-bottom" size={22} aria-hidden="true" />
@@ -269,8 +319,8 @@
               {/if}
             </button>
           {/if}
-          <button type="button" class="atlas-fullscreen-toggle" aria-label={fullscreenLabel} title={fullscreenLabel} onclick={toggleImmersive}>
-            {#if immersive}<X size={22} strokeWidth={2.6} aria-hidden="true" />{:else}<Expand size={22} strokeWidth={2.2} aria-hidden="true" />{/if}
+          <button type="button" class="atlas-fullscreen-toggle" aria-label={fullscreenLabelFor(shown)} title={fullscreenLabelFor(shown)} onclick={toggleImmersive}>
+            {#if shown}<X size={22} strokeWidth={2.6} aria-hidden="true" />{:else}<Expand size={22} strokeWidth={2.2} aria-hidden="true" />{/if}
           </button>
         </div>
       </div>
