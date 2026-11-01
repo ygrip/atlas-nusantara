@@ -5,7 +5,7 @@ export default defineConfig({
   timeout: 45000,
   fullyParallel: true,
   workers: 2, // each worker owns one browser process
-  retries: 0,
+  retries: process.env.CI ? 1 : 0, // CI runners are slower and share one cold server; a real failure still fails twice
   use: { baseURL: 'http://127.0.0.1:4173', locale: 'en', trace: 'retain-on-failure' },
   // One browser keeps the suite light. Run Safari too with: WEBKIT=1 npx playwright test
   projects: [

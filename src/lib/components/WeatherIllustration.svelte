@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Wind, CloudRain, CloudSun } from 'lucide-svelte';
+  import { Wind, CloudRain, CloudSun } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   let active = false;
   let visible = false;

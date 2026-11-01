@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { CloudSun } from 'lucide-svelte';
+  import { CloudSun } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';

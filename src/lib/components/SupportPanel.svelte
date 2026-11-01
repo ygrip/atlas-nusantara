@@ -1,6 +1,6 @@
 <script lang="ts">
   import { m, type MessageKey } from '$lib/i18n/messages';
-  import { ExternalLink } from 'lucide-svelte';
+  import { ExternalLink } from '@lucide/svelte';
 
   const options: { id: string; name: string; href: string; tone: string; note: MessageKey }[] = [
     { id: 'trakteer', name: 'Trakteer', href: 'https://trakteer.id/yunaz_gilang', tone: 'peach', note: 'support_trakteer_note' },

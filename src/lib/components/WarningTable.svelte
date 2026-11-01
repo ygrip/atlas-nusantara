@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlertOctagon, AlertTriangle, ChevronRight, ExternalLink, Info, ShieldAlert } from 'lucide-svelte';
+  import { AlertOctagon, AlertTriangle, ChevronRight, ExternalLink, Info, ShieldAlert } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { DatasetRecord } from '$lib/data/ingestion/schema';

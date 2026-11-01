@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Leaf, PawPrint, Search, ShieldCheck, TriangleAlert, Layers, MapPinned, Download, Info, ChevronDown } from 'lucide-svelte';
+  import { Leaf, PawPrint, Search, ShieldCheck, TriangleAlert, Layers, MapPinned, Download, Info, ChevronDown } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Region } from '$lib/atlas/regions';

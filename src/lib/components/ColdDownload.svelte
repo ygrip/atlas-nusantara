@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte';
   import { m } from '$lib/i18n/messages';
-  import { ShieldCheck, Download, Braces, FileSpreadsheet } from 'lucide-svelte';
+  import { ShieldCheck, Download, Braces, FileSpreadsheet } from '@lucide/svelte';
   import { loadTurnstile, type TurnstileApi } from '$lib/pwa/turnstile';
 
   export let kind: 'warning' | 'earthquake' | 'incident' | 'hazard';

@@ -2,7 +2,7 @@
   import { m } from '$lib/i18n/messages';
   import { pathFor } from '$lib/i18n/links';
   import ClayCompass from './ClayCompass.svelte';
-  import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database, BookOpen, Compass } from 'lucide-svelte';
+  import { Map, Heart, CodeXml, ShieldCheck, LockKeyhole, ExternalLink, Database, BookOpen, Compass } from '@lucide/svelte';
 </script>
 
 <footer class="site-footer clay-card">

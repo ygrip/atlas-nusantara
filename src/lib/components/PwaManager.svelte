@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Download, Smartphone } from 'lucide-svelte';
+  import { Download, Smartphone } from '@lucide/svelte';
   import { dev } from '$app/environment';
   import { m } from '$lib/i18n/messages';
   import { watchUpdates } from '$lib/pwa/updates';

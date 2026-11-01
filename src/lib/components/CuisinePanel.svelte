@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { UtensilsCrossed, Search, BookOpen, Camera, Layers, MapPinned, Download, Info, ChevronDown, Clock3 } from 'lucide-svelte';
+  import { UtensilsCrossed, Search, BookOpen, Camera, Layers, MapPinned, Download, Info, ChevronDown, Clock3 } from '@lucide/svelte';
   import { onMount } from 'svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';

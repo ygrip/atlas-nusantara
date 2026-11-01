@@ -10,7 +10,7 @@
   import { groupStyle } from '$lib/directory/group-style';
   import { loadProvinceDirectory, type ProvinceRow } from '$lib/directory/province-directory';
   import RingChart from './RingChart.svelte';
-  import { Check, Layers } from 'lucide-svelte';
+  import { Check, Layers } from '@lucide/svelte';
 
   type SortKey = 'code' | 'name' | 'regencies' | 'municipalities' | 'total';
   type SortDirection = 'ascending' | 'descending';

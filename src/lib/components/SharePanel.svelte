@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { ArrowUpRight, Download, Share2 } from 'lucide-svelte';
+  import { ArrowUpRight, Download, Share2 } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import type { GeometryPackage } from '$lib/geo/types';
   import { makeDestinationShareUrl, makeShareUrl, makeDishShareUrl, makeSpeciesShareUrl, renderDestinationShareCard, renderDishShareCard, renderShareCard, renderSpeciesShareCard, summaryForShare, type ShareDestination, type ShareDish, type ShareRegion, type ShareSpecies, type ShareSummary } from '$lib/share/card';

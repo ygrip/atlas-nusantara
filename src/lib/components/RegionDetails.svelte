@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Check, Cloud, CloudLightning, CloudRain, CloudSun, Copy, Droplets, ExternalLink, MapPin, Sun, Wind } from 'lucide-svelte';
+  import { Check, Cloud, CloudLightning, CloudRain, CloudSun, Copy, Droplets, ExternalLink, MapPin, Sun, Wind } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { formatDegrees, type Coordinates } from '$lib/atlas/region-coordinates';

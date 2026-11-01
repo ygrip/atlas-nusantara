@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { Languages, Moon, Sun, Share2, SlidersHorizontal, X, Check, Search } from 'lucide-svelte';
+  import { Languages, Moon, Sun, Share2, SlidersHorizontal, X, Check, Search } from '@lucide/svelte';
   import { changeTheme } from '$lib/pwa/theme';
   import { goto } from '$app/navigation';
   import { page } from '$app/state';

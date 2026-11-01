@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MapPin, Leaf, Landmark as LandmarkIcon, Search, Share2 } from 'lucide-svelte';
+  import { MapPin, Leaf, Landmark as LandmarkIcon, Search, Share2 } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Region } from '$lib/atlas/regions';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Cloud, CloudMoon, CloudRain, CloudLightning, CloudSun, Moon, Sun, Wind, Droplets, MapPin, X, Navigation } from 'lucide-svelte';
+  import { Cloud, CloudMoon, CloudRain, CloudLightning, CloudSun, Moon, Sun, Wind, Droplets, MapPin, X, Navigation } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { weatherConditionKey } from '$lib/i18n/weather-condition';
   import { getLocale } from '$lib/paraglide/runtime.js';

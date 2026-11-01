@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import { fadeHistoryLabel } from '$lib/map/history-label-transition';
-  import { Box, ChevronDown, ChevronUp, CloudRain, Compass, Layers, LocateFixed, Map as MapIcon, Minus, Pause, Play, Plus, Rotate3d, Waves, Wind } from 'lucide-svelte';
+  import { Box, ChevronDown, ChevronUp, CloudRain, Compass, Layers, LocateFixed, Map as MapIcon, Minus, Pause, Play, Plus, Rotate3d, Waves, Wind } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { OVERLAY_DEFINITIONS } from '$lib/map/overlays';
   import { isProvinceCatalogLayer } from '$lib/map/layer-kinds';

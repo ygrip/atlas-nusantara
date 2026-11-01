@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronDown, Search, X } from 'lucide-svelte';
+  import { ChevronDown, Search, X } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { searchPlaces, type PlaceOption } from '$lib/atlas/place-search';
   import MapDialog from './MapDialog.svelte';

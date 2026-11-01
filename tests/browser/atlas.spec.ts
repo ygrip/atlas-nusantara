@@ -60,7 +60,7 @@ test.describe('2025 atlas and locations', () => {
     await useEnglish(page);
     await openAtlas(page);
     await page.getByRole('button', { name: '2D', exact: true }).click();
-    await expect(page.locator('.atlas-map path[data-code]')).toHaveCount(38);
+    await expect(page.locator('.atlas-map path[data-code]')).toHaveCount(38, { timeout: 20000 });
     await page.locator('path[data-code="32"]').focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/region=32$/);

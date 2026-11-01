@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlertOctagon, AlertTriangle, ExternalLink, Info, ShieldAlert } from 'lucide-svelte';
+  import { AlertOctagon, AlertTriangle, ExternalLink, Info, ShieldAlert } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { HazardWarning } from '$lib/data/hazards';

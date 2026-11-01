@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ArrowUp } from 'lucide-svelte';
+  import { ArrowUp } from '@lucide/svelte';
   import SupportPanel from '$lib/components/SupportPanel.svelte';
   import SiteFooter from '$lib/components/SiteFooter.svelte';
   import AdSlot from '$lib/components/AdSlot.svelte';
@@ -20,7 +20,7 @@
   import { observatoryKind } from '$lib/data/observatory';
   import { tick } from 'svelte';
   import NationalStats from '$lib/components/NationalStats.svelte';
-  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle, Expand, X, PanelRightOpen, PanelRightClose, PanelBottomOpen, PanelBottomClose } from 'lucide-svelte';
+  import { CloudRain, Activity, Flame, Mountain, MapPin, Users, Languages, Leaf, PawPrint, UtensilsCrossed, Castle, Expand, X, PanelRightOpen, PanelRightClose, PanelBottomOpen, PanelBottomClose } from '@lucide/svelte';
   import { page } from '$app/stores';
   import { pushState } from '$app/navigation';
   import { cancelImmersiveMotion, playEnter, playExit, type Box } from '$lib/atlas/immersive-motion';

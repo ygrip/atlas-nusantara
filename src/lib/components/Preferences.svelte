@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { MapPinPlus, MapPin, LocateFixed, Bell, BellOff } from 'lucide-svelte';
+  import { MapPinPlus, MapPin, LocateFixed, Bell, BellOff } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { loadRegions, type Region } from '$lib/atlas/regions';
   import { ADMIN_DATA_PATH } from '$lib/atlas/edition';

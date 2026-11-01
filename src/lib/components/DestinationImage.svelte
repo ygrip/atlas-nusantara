@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import { ImageOff, Images, ChevronLeft, ChevronRight, X } from 'lucide-svelte';
+  import { ImageOff, Images, ChevronLeft, ChevronRight, X } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import type { DestinationPhoto } from '$lib/data/destination-contract';
 

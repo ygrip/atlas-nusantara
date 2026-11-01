@@ -6,7 +6,7 @@
   import { onMount } from 'svelte';
   import { m, type MessageKey } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
-  import { Bell, Activity, Flame, Mountain, Sigma, Download, Database, ChevronDown } from 'lucide-svelte';
+  import { Bell, Activity, Flame, Mountain, Sigma, Download, Database, ChevronDown } from '@lucide/svelte';
   import { observatoryKind, type ObservatoryKind } from '$lib/data/observatory';
   type Kind = ObservatoryKind;
   interface Source { id: string; name: string; type?: Kind | null; status: string; intervalMinutes: number; lastSuccessAt?: string; nextDueAt?: string; sourceUrl: string; termsUrl: string }

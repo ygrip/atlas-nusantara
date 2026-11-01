@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Cloud, CloudRain, Droplets, Thermometer, Wind } from 'lucide-svelte';
+  import { Cloud, CloudRain, Droplets, Thermometer, Wind } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { afterLoadIdle } from '$lib/perf/idle';
   import { weatherConditionKey } from '$lib/i18n/weather-condition';

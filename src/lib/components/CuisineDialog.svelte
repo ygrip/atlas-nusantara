@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronLeft, ChevronRight, Clock3, ExternalLink, Share2, Users } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, Clock3, ExternalLink, Share2, Users } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import type { Region } from '$lib/atlas/regions';

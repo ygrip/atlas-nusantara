@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChevronLeft, ChevronRight, Share2, ShieldCheck, ExternalLink } from 'lucide-svelte';
+  import { ChevronLeft, ChevronRight, Share2, ShieldCheck, ExternalLink } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import type { Region } from '$lib/atlas/regions';
   import type { SpeciesKind, SpeciesRecord } from '$lib/data/species';

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { Pause, Play } from 'lucide-svelte';
+  import { Pause, Play } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { getLocale } from '$lib/paraglide/runtime.js';
   import { EDITION_COUNTS } from '$lib/atlas/edition';

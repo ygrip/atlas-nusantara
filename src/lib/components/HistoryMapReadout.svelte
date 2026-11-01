@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Landmark } from 'lucide-svelte';
+  import { Landmark } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import type { HistoricalPolity } from '$lib/data/history';
   import { historyPeriodLabel, localizedHistorySummary, localizedHistoryName } from '$lib/data/history-summary';

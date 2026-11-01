@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { Info, X } from 'lucide-svelte';
+  import { Info, X } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
 
   type Corner = 'top-right' | 'bottom-left';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Check, Landmark, Pause, Play, Search, SkipBack, SkipForward } from 'lucide-svelte';
+  import { Check, Landmark, Pause, Play, Search, SkipBack, SkipForward } from '@lucide/svelte';
   import DataExport from './DataExport.svelte';
   import HistoryInventory from './HistoryInventory.svelte';
   import HistoryResearchDetail from './HistoryResearchDetail.svelte';

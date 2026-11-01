@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ChevronDown, LibraryBig } from 'lucide-svelte';
+  import { ChevronDown, LibraryBig } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import { foldHistorySearch } from '$lib/data/history-catalogue';
   import { loadHistoryInventory, type HistoryInventory } from '$lib/data/history-inventory';

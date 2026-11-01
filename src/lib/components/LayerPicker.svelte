@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { ComponentType } from 'svelte';
-  import { Check, ChevronDown, Search } from 'lucide-svelte';
+  import type { LucideIcon } from '@lucide/svelte';
+  import { Check, ChevronDown, Search } from '@lucide/svelte';
   import { m } from '$lib/i18n/messages';
   import MapDialog from './MapDialog.svelte';
 
-  interface LayerChoice { id: string; label: () => string; source: string; icon: ComponentType }
+  interface LayerChoice { id: string; label: () => string; source: string; icon: LucideIcon }
 
   let { layers, value, onchange }: { layers: LayerChoice[]; value: string; onchange: (id: string) => void } = $props();
 
