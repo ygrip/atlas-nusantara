@@ -95,7 +95,9 @@ test('the 2D to 3D loading indicator is centered while history data loads', asyn
     await expect(page.locator('.history-territory').first()).toBeVisible();
     await page.getByRole('button', { name: '3D', exact: true }).click();
     const stage = page.locator('.view-stage');
-    const indicator = page.locator('.stage-loading .loading-card');
+    const indicator = page.locator('.stage-loading .map-spinner');
+    await expect(page.locator('.stage-loading')).toHaveText('');
+    await expect(page.locator('.stage-loading')).toHaveAttribute('aria-label', /.+/);
     await expect(indicator).toBeVisible();
     const stageBox = await stage.boundingBox();
     const indicatorBox = await indicator.boundingBox();

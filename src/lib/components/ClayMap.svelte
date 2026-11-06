@@ -702,7 +702,7 @@
       </div>
     {/if}
     {#if switching || (transition === 'to3d' && !sceneRevealed) || transition === 'to2d' || (show3d && mode === '3d' && !geometryUnavailable && (loading || !scene))}
-      <div class="stage-loading" role="status"><div class="loading-card"><span class="spinner" aria-hidden="true"></span><span>{m.loading_data()}</span></div></div>
+      <div class="stage-loading" role="status" aria-label={m.loading_data()}><span class="map-spinner" aria-hidden="true"></span></div>
     {/if}
   </div>
 
@@ -760,8 +760,6 @@
   .atlas-3d { height: var(--map-viewport-height); touch-action: none; box-shadow: inset 0 2px 0 #ffffff80, 0 18px 40px -22px #5e4a3466; }
   .atlas-3d :global(canvas.atlas-canvas) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
   .map-loading { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; font-weight: 800; color: var(--muted, #6c6057); z-index: 2; }
-  .spinner { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #ffffff90; border-top-color: var(--accent, #b5532c); animation: spin 900ms linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
   .map-tooltip { position: absolute; transform: translate(14px, -50%); pointer-events: none; z-index: 3; display: grid; gap: 1px; padding: 8px 12px; border-radius: 14px; background: color-mix(in srgb, var(--surface, #fffaf2) 92%, transparent); box-shadow: 0 10px 24px -10px #00000055; font-size: .82rem; white-space: nowrap; }
   .map-tooltip small { font: 700 .7rem ui-monospace, monospace; opacity: .7; }
   .legend-title { margin: 0 0 6px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; font-size: .62rem; opacity: .75; }
@@ -792,8 +790,6 @@
   .pane-2d.entering { animation: map-fade-in var(--crossfade-ms) ease-out calc(var(--morph-ms) - var(--crossfade-ms)) both; }
   .pane-2d.folding { animation: map-fade-out var(--crossfade-ms) ease-in forwards; pointer-events: none; }
   .stage-loading { position:absolute; inset:0; z-index:5; display:grid; place-items:center; pointer-events:none; }
-  .loading-card { display:flex; align-items:center; gap:12px; padding:14px 20px; border:1px solid var(--border); border-radius:18px; background:var(--surface, #fffaf2); box-shadow:0 12px 32px #0003; color:var(--text, #352c28); font-weight:750; }
-  .loading-card .spinner { width:24px; height:24px; border-width:3px; }
   .history-screen-labels { position:absolute; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
   .history-screen-label { position:absolute; transform:translate(-6px, -100%); display:flex; align-items:center; gap:3px; border:0; padding:0; background:transparent; color:#292323; font:700 11px/1.1 system-ui, sans-serif; pointer-events:auto; cursor:pointer; text-shadow:0 0 3px white, 0 0 3px white, 0 0 3px white; white-space:nowrap; }
   .history-screen-label:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
@@ -848,7 +844,6 @@
     .playback { gap: 10px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .spinner { animation: none; }
     .pane-3d, .pane-2d, .view-stage { animation: none !important; transition: none !important; }
     .segmented button, .tool, .layer-chips button, .play { transition: none; }
   }
