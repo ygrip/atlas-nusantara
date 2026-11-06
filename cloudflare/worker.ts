@@ -7,6 +7,7 @@ import { runHazardSchedule } from './hazards.ts';
 import { runLiveSnapshots } from './snapshots.ts';
 import { liveKeyForPath } from './live-snapshots.ts';
 import { cleanupRateLimits } from './rate-limit.ts';
+import { cleanupExpiredObservations, countActiveWarnings, readObservationCounts } from './query-efficiency.ts';
 import { adaptBmkgEarthquakes } from '../src/lib/data/ingestion/adapters.ts';
 import { makeSnapshot, validateProvenance, type DatasetProvenance, type DatasetRecord, type DatasetType, type Snapshot } from '../src/lib/data/ingestion/schema.ts';
 
@@ -218,12 +219,6 @@ function parseActiveCap(xml: string, provenance: DatasetProvenance, fetchedAt: s
   }
 }
 
-async function cleanupExpired(db: D1Database, now: number): Promise<number> {
-  const cutoff = retentionCutoff(now);
-  const result = await db.prepare('DELETE FROM observations WHERE first_seen_at <= ? OR (observed_at IS NOT NULL AND observed_at <= ?)').bind(cutoff, cutoff).run();
-  return result.meta.changes;
-}
-
 async function fetchSummary(db: D1Database, env: Env, now: number): Promise<Summary> {
   const cutoff = new Date(now - 30 * DAY_MS).toISOString();
   const approvedIds = enabledSources(env).map(source => source.id);
@@ -249,12 +244,12 @@ async function fetchSummary(db: D1Database, env: Env, now: number): Promise<Summ
     return result;
   }));
   const nowIso = new Date(now).toISOString();
-  const rows = await db.prepare('SELECT kind, COUNT(*) as count FROM observations WHERE first_seen_at > ? AND (observed_at IS NULL OR observed_at > ?)' + sourceClause + ' GROUP BY kind').bind(cutoff, cutoff, ...approvedIds).all<{kind:string; count:number}>();
-  const counts: Record<DatasetType, number> = { warning: 0, earthquake: 0, incident: 0, hazard: 0 };
-  for (const row of rows.results) if (row.kind in counts) counts[row.kind as DatasetType] = row.count;
-  const activeWarnings = await db.prepare("SELECT COUNT(*) AS count FROM observations WHERE kind = 'warning' AND first_seen_at > ? AND (observed_at IS NULL OR observed_at > ?) AND expires_at > ? AND source_id IN (SELECT source_id FROM source_state WHERE last_error IS NULL AND last_success_at > ? AND observations.last_seen_at = last_success_at)" + sourceClause).bind(cutoff, cutoff, nowIso, new Date(now - 15 * 60000).toISOString(), ...approvedIds).first<{count:number}>();
+  const counts = await readObservationCounts(db, approvedIds, now);
+  const nowcast = sources.find(source => source.id === 'bmkg-nowcast');
   let activeWarningCount: number | null = null;
-  if (sources.some(source => source.id === 'bmkg-nowcast' && source.status === 'healthy')) activeWarningCount = activeWarnings?.count ?? 0;
+  if (nowcast?.status === 'healthy' && nowcast.lastSuccessAt) {
+    activeWarningCount = await countActiveWarnings(db, nowcast.lastSuccessAt, now);
+  }
   const records = await db.prepare('SELECT id, kind, observed_at, json_extract(payload_json, \'$.properties\') AS properties_json FROM observations WHERE first_seen_at > ? AND (observed_at IS NULL OR observed_at > ?)' + sourceClause + ' ORDER BY observed_at DESC LIMIT 50').bind(cutoff, cutoff, ...approvedIds).all<{id:string; kind:string; observed_at:string|null; properties_json:string}>();
   const observations = records.results.map(row => ({ id: row.id, type: row.kind as DatasetType, observedAt: row.observed_at, properties: JSON.parse(row.properties_json) as DatasetRecord['properties'] }));
   const derivedInsights = [
@@ -338,7 +333,7 @@ async function ingestOne(source: SourceDefinition, db: D1Database, env: Env, now
 }
 
 export async function runScheduled(db: D1Database, env: Env, now = Date.now()): Promise<{ due: string[]; deleted: number }> {
-  const deleted = await cleanupExpired(db, now);
+  const deleted = await cleanupExpiredObservations(db, now);
   const dueSources = enabledSources(env).slice(0, MAX_FETCHES_PER_RUN);
   for (const source of dueSources) await ingestOne(source, db, env, now);
   const summary = await fetchSummary(db, env, now);
